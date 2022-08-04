@@ -6,7 +6,7 @@ fn criterion_benchmark(c: &mut Criterion) {
     c.bench_function(
         "Construct population", 
         |b| b.iter(|| Population::new(
-            black_box(100), 
+            black_box(1000), 
             black_box(128))));
 }
 
