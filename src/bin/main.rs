@@ -28,7 +28,7 @@ mod tests {
     #[test]
     fn test_individual_new() {
         let mut rng = rand::thread_rng();
-        let ind = Individual::new(128, &mut rng);
+        let ind = Individual::new_bitstring(128, count_ones, &mut rng);
         assert_eq!(ind.genome.len(), 128);
         assert_eq!(ind.fitness, count_ones(&ind.genome));
     }

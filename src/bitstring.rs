@@ -6,21 +6,19 @@ use crate::population::Population;
 
 pub type Bitstring = Vec<bool>;
 
-pub fn count_ones(bits: &[bool]) -> f64 {
+pub fn count_ones(bits: &Bitstring) -> f64 {
     bits.iter().filter(|&&bit| bit).count() as f64
 }
 
+pub fn make_bitstring(len: usize, rng: &mut ThreadRng) -> Bitstring {
+    (0..len).map(|_| rng.gen_bool(0.5)).collect()
+}
+
 impl Individual<Bitstring> {
-    pub fn new(bit_length: usize, rng: &mut ThreadRng) -> Individual<Bitstring> {
-        let mut bits = Vec::with_capacity(bit_length);
-        for _ in 0..bit_length {
-            bits.push(rng.gen_bool(0.5));
-        }
-        let fitness = count_ones(&bits);
-        Individual {
-            genome: bits,
-            fitness,
-        }
+    pub fn new_bitstring(bit_length: usize, compute_fitness: impl Fn(&Bitstring) -> f64, rng: &mut ThreadRng) -> Individual<Bitstring> {
+        Individual::new(
+                || make_bitstring(bit_length, rng), 
+                compute_fitness)
     }
 }
 
@@ -31,7 +29,7 @@ impl Population<Bitstring> {
         // according to the Criterion benchmark results.
         pop.par_extend((0..pop_size).into_par_iter().map(|_| {
             let mut rng = rand::thread_rng();
-            Individual::new(bit_length, &mut rng)
+            Individual::new_bitstring(bit_length, count_ones, &mut rng)
         }));
         // let mut rng = rand::thread_rng();
         // for _ in 0..pop_size {
