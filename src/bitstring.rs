@@ -17,8 +17,9 @@ pub fn make_bitstring(len: usize, rng: &mut ThreadRng) -> Bitstring {
 impl Individual<Bitstring> {
     pub fn new_bitstring(bit_length: usize, compute_fitness: impl Fn(&Bitstring) -> f64, rng: &mut ThreadRng) -> Individual<Bitstring> {
         Individual::new(
-                || make_bitstring(bit_length, rng), 
-                compute_fitness)
+                |rng| make_bitstring(bit_length, rng), 
+                compute_fitness,
+                rng)
     }
 }
 
@@ -27,10 +28,14 @@ impl Population<Bitstring> {
         let mut pop = Vec::with_capacity(pop_size);
         // Using rayon's `par_extend` speeds up the population construction by a factor of 2
         // according to the Criterion benchmark results.
-        pop.par_extend((0..pop_size).into_par_iter().map(|_| {
-            let mut rng = rand::thread_rng();
-            Individual::new_bitstring(bit_length, count_ones, &mut rng)
-        }));
+        pop.par_extend((0..pop_size)
+            .into_par_iter()
+            .map_init(
+                rand::thread_rng,
+                |rng, _| {
+                    Individual::new_bitstring(bit_length, count_ones, rng)
+                })
+        );
         // let mut rng = rand::thread_rng();
         // for _ in 0..pop_size {
         //     let ind = Individual::new(bit_length, &mut rng);
