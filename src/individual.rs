@@ -8,7 +8,7 @@ pub struct Individual<T> {
 
 impl<T> Individual<T> {
     pub fn new(
-            mut make_genome: impl FnMut(&mut ThreadRng) -> T, 
+            make_genome: impl Fn(&mut ThreadRng) -> T, 
             compute_fitness: impl Fn(&T) -> i64,
             rng: &mut ThreadRng) 
         -> Individual<T>
