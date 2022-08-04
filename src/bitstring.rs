@@ -6,8 +6,8 @@ use crate::population::Population;
 
 pub type Bitstring = Vec<bool>;
 
-pub fn count_ones(bits: &Bitstring) -> f64 {
-    bits.iter().filter(|&&bit| bit).count() as f64
+pub fn count_ones(bits: &Bitstring) -> i64 {
+    bits.iter().filter(|&&bit| bit).count() as i64
 }
 
 pub fn make_bitstring(len: usize, rng: &mut ThreadRng) -> Bitstring {
@@ -15,7 +15,7 @@ pub fn make_bitstring(len: usize, rng: &mut ThreadRng) -> Bitstring {
 }
 
 impl Individual<Bitstring> {
-    pub fn new_bitstring(bit_length: usize, compute_fitness: impl Fn(&Bitstring) -> f64, rng: &mut ThreadRng) -> Individual<Bitstring> {
+    pub fn new_bitstring(bit_length: usize, compute_fitness: impl Fn(&Bitstring) -> i64, rng: &mut ThreadRng) -> Individual<Bitstring> {
         Individual::new(
                 |rng| make_bitstring(bit_length, rng), 
                 compute_fitness,

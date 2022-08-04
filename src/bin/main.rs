@@ -2,10 +2,9 @@ use rust_ga::population::Population;
 
 fn main() {
     let population = Population::new(100, 128);
-    let best = population.individuals.iter().fold(
-        &population.individuals[0],
-        |acc, ind| if ind.fitness > acc.fitness { ind } else { acc },
-    );
+    let best = population.individuals.iter().max_by_key(
+        |ind| ind.fitness
+    ).unwrap();
     println!("{:?}", best);
 }
 
@@ -22,7 +21,7 @@ mod tests {
     #[test]
     fn test_count_ones() {
         let bits = vec![true, false, true, false, true, false, true, false];
-        assert_eq!(count_ones(&bits), 4.0);
+        assert_eq!(count_ones(&bits), 4);
     }
 
     #[test]
