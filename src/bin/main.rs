@@ -1,7 +1,11 @@
-use rust_ga::population::Population;
+use rust_ga::{population::Population, bitstring::{make_bitstring, count_ones}};
 
 fn main() {
-    let population = Population::new(100, 128);
+    let population = Population::new(
+        100, 
+        |rng| make_bitstring(128, rng),
+        count_ones
+    );
     let best = population.individuals.iter().max_by_key(
         |ind| ind.fitness
     ).unwrap();
@@ -13,6 +17,7 @@ mod tests {
     use rust_ga::population::Population;
     use rust_ga::individual::Individual;
     use rust_ga::bitstring::count_ones;
+    use rust_ga::bitstring::make_bitstring;
     // use rand::rngs::StdRng;
     // use rand::SeedableRng;
     // use std::time::Instant;
@@ -34,7 +39,10 @@ mod tests {
 
     #[test]
     fn test_population_new() {
-        let pop = Population::new(100, 128);
+        let pop = Population::new(
+            100, 
+            |rng| make_bitstring(128, rng),
+            count_ones);
         assert_eq!(pop.individuals.len(), 100);
         assert_eq!(pop.individuals[0].genome.len(), 128);
         assert_eq!(pop.individuals[0].fitness, count_ones(&pop.individuals[0].genome));

@@ -1,13 +1,16 @@
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
 
 use rust_ga::population::Population;
+use rust_ga::bitstring::make_bitstring;
+use rust_ga::bitstring::count_ones;
 
 fn criterion_benchmark(c: &mut Criterion) {
     c.bench_function(
         "Construct population", 
         |b| b.iter(|| Population::new(
             black_box(1000), 
-            black_box(128))));
+            |rng| make_bitstring(black_box(128), rng),
+            count_ones)));
 }
 
 criterion_group!(benches, criterion_benchmark);

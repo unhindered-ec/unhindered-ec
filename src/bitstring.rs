@@ -24,7 +24,7 @@ impl Individual<Bitstring> {
 }
 
 impl Population<Bitstring> {
-    pub fn new(pop_size: usize, bit_length: usize) -> Population<Bitstring> {
+    pub fn new_bitstring(pop_size: usize, bit_length: usize) -> Population<Bitstring> {
         let mut pop = Vec::with_capacity(pop_size);
         // Using rayon's `par_extend` speeds up the population construction by a factor of 2
         // according to the Criterion benchmark results.
