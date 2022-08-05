@@ -10,8 +10,8 @@ pub struct Population<T> {
 impl<T: Send> Population<T> {
     pub fn new(
             pop_size: usize,
-            make_genome: impl Fn(&mut ThreadRng) -> T + Send + Sync + Clone, 
-            compute_fitness: impl Fn(&T) -> i64 + Send + Sync + Clone) 
+            make_genome: impl Fn(&mut ThreadRng) -> T + Send + Sync, 
+            compute_fitness: impl Fn(&T) -> i64 + Send + Sync) 
         -> Population<T>
     {
         let mut pop = Vec::with_capacity(pop_size);
@@ -20,7 +20,7 @@ impl<T: Send> Population<T> {
             .map_init(
                 rand::thread_rng,
                 |rng, _| {
-                    Individual::new(make_genome.clone(), compute_fitness.clone(), rng)
+                    Individual::new(&make_genome, &compute_fitness, rng)
                 })
         );
         // let mut rng = rand::thread_rng();
