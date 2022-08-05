@@ -1,5 +1,4 @@
 use rand::{rngs::ThreadRng, Rng};
-use rayon::prelude::{ParallelExtend, IntoParallelIterator, ParallelIterator};
 
 use crate::individual::Individual;
 use crate::population::Population;
@@ -23,26 +22,13 @@ impl Individual<Bitstring> {
     }
 }
 
+// Todo: Change this to use the new parameterized constructor.
 impl Population<Bitstring> {
     pub fn new_bitstring(pop_size: usize, bit_length: usize) -> Population<Bitstring> {
-        let mut pop = Vec::with_capacity(pop_size);
-        // Using rayon's `par_extend` speeds up the population construction by a factor of 2
-        // according to the Criterion benchmark results.
-        pop.par_extend((0..pop_size)
-            .into_par_iter()
-            .map_init(
-                rand::thread_rng,
-                |rng, _| {
-                    Individual::new_bitstring(bit_length, count_ones, rng)
-                })
-        );
-        // let mut rng = rand::thread_rng();
-        // for _ in 0..pop_size {
-        //     let ind = Individual::new(bit_length, &mut rng);
-        //     pop.push(ind);
-        // }
-        Population {
-            individuals: pop,
-        }
+        Population::new(
+            pop_size,
+            |rng| make_bitstring(bit_length, rng),
+            count_ones
+        )
     }
 }
