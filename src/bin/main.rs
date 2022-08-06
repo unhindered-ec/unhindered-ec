@@ -12,7 +12,7 @@ fn main() {
 mod tests {
     use rust_ga::population::Population;
     use rust_ga::individual::Individual;
-    use rust_ga::bitstring::count_ones;
+    use rust_ga::bitstring::{count_ones, count_ones_vec};
     // use rand::rngs::StdRng;
     // use rand::SeedableRng;
     // use std::time::Instant;
@@ -27,7 +27,7 @@ mod tests {
     #[test]
     fn test_individual_new() {
         let mut rng = rand::thread_rng();
-        let ind = Individual::new_bitstring(128, count_ones, &mut rng);
+        let ind = Individual::new_bitstring(128, count_ones_vec, &mut rng);
         assert_eq!(ind.genome.len(), 128);
         assert_eq!(ind.fitness, count_ones(&ind.genome));
     }

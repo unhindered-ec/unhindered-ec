@@ -5,8 +5,12 @@ use crate::population::Population;
 
 pub type Bitstring = Vec<bool>;
 
-pub fn count_ones(bits: &Bitstring) -> i64 {
+pub fn count_ones(bits: &[bool]) -> i64 {
     bits.iter().filter(|&&bit| bit).count() as i64
+}
+
+pub fn count_ones_vec(bits: &Vec<bool>) -> i64 {
+    count_ones(bits)
 }
 
 pub fn make_bitstring(len: usize, rng: &mut ThreadRng) -> Bitstring {
@@ -28,7 +32,7 @@ impl Population<Bitstring> {
         Population::new(
             pop_size,
             |rng| make_bitstring(bit_length, rng),
-            count_ones
+            count_ones_vec
         )
     }
 }
