@@ -1,3 +1,5 @@
+use std::borrow::Borrow;
+
 use rand::{rngs::ThreadRng, Rng};
 
 use crate::individual::Individual;
@@ -9,16 +11,16 @@ pub fn count_ones(bits: &[bool]) -> i64 {
     bits.iter().filter(|&&bit| bit).count() as i64
 }
 
-pub fn count_ones_vec(bits: &Vec<bool>) -> i64 {
-    count_ones(bits)
-}
-
 pub fn make_bitstring(len: usize, rng: &mut ThreadRng) -> Bitstring {
     (0..len).map(|_| rng.gen_bool(0.5)).collect()
 }
 
 impl Individual<Bitstring> {
-    pub fn new_bitstring(bit_length: usize, compute_fitness: impl Fn(&Bitstring) -> i64, rng: &mut ThreadRng) -> Individual<Bitstring> {
+    pub fn new_bitstring<R>(bit_length: usize, compute_fitness: impl Fn(&R) -> i64, rng: &mut ThreadRng) -> Individual<Bitstring> 
+    where
+        Bitstring: Borrow<R>,
+        R: ?Sized
+    {
         Individual::new(
                 |rng| make_bitstring(bit_length, rng), 
                 compute_fitness,
@@ -32,7 +34,7 @@ impl Population<Bitstring> {
         Population::new(
             pop_size,
             |rng| make_bitstring(bit_length, rng),
-            count_ones_vec
+            count_ones
         )
     }
 }

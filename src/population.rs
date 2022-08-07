@@ -1,3 +1,5 @@
+use std::borrow::Borrow;
+
 use rand::rngs::ThreadRng;
 use rayon::prelude::{ParallelExtend, IntoParallelIterator, ParallelIterator};
 
@@ -8,11 +10,18 @@ pub struct Population<T> {
 }
 
 impl<T: Send> Population<T> {
-    pub fn new(
+    /*
+     * See the lengthy comment in `individual.rs` on why we need the
+     * whole `Borrow<R>` business.
+     */
+    pub fn new<R>(
             pop_size: usize,
             make_genome: impl Fn(&mut ThreadRng) -> T + Send + Sync, 
-            compute_fitness: impl Fn(&T) -> i64 + Send + Sync) 
+            compute_fitness: impl Fn(&R) -> i64 + Send + Sync) 
         -> Population<T>
+    where
+        T: Borrow<R>,
+        R: ?Sized
     {
         let mut pop = Vec::with_capacity(pop_size);
         pop.par_extend((0..pop_size)
