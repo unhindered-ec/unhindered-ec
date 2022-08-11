@@ -1,16 +1,28 @@
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
 
-use rust_ga::population::Population;
+use rust_ga::{population::Population, bitstring::{count_ones, hiff}};
 
-fn criterion_benchmark(c: &mut Criterion) {
+fn benchmark_construction_count_ones(c: &mut Criterion) {
     c.bench_function(
-        "Construct population", 
+        "Construct population count_ones", 
         |b| b.iter(|| Population::new_bitstring(
             black_box(1000), 
-            black_box(128))));
+            black_box(128),
+            count_ones
+        )));
 }
 
-criterion_group!(benches, criterion_benchmark);
+fn benchmark_construction_hiff(c: &mut Criterion) {
+    c.bench_function(
+        "Construct population HIFF", 
+        |b| b.iter(|| Population::new_bitstring(
+            black_box(1000), 
+            black_box(128),
+            hiff
+        )));
+}
+
+criterion_group!(benches, benchmark_construction_count_ones, benchmark_construction_hiff);
 criterion_main!(benches);
 
 
