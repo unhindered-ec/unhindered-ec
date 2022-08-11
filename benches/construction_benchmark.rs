@@ -9,7 +9,8 @@ fn benchmark_construction_count_ones(c: &mut Criterion) {
             black_box(1000), 
             black_box(128),
             count_ones
-        )));
+        ).best_fitness().fitness
+    ));
 }
 
 fn benchmark_construction_hiff(c: &mut Criterion) {
@@ -19,7 +20,8 @@ fn benchmark_construction_hiff(c: &mut Criterion) {
             black_box(1000), 
             black_box(128),
             hiff
-        )));
+        ).best_fitness().fitness
+    ));
 }
 
 criterion_group!(benches, benchmark_construction_count_ones, benchmark_construction_hiff);

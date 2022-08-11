@@ -42,3 +42,12 @@ impl<T: Send> Population<T> {
         }
     }
 }
+
+impl<T> Population<T> {
+    pub fn best_fitness(&self) -> &Individual<T> {
+        assert!(!self.individuals.is_empty());
+        self.individuals.iter().max_by_key(
+                |ind| ind.fitness
+            ).unwrap()
+    }
+}
