@@ -16,7 +16,7 @@ pub fn make_bitstring(len: usize, rng: &mut ThreadRng) -> Bitstring {
 }
 
 impl Individual<Bitstring> {
-    pub fn new_bitstring<R>(bit_length: usize, compute_fitness: impl Fn(&R) -> i64, rng: &mut ThreadRng) -> Individual<Bitstring> 
+    pub fn new_bitstring<R>(bit_length: usize, compute_fitness: impl Fn(&R) -> i64 + Send + Sync, rng: &mut ThreadRng) -> Individual<Bitstring> 
     where
         Bitstring: Borrow<R>,
         R: ?Sized
@@ -30,11 +30,15 @@ impl Individual<Bitstring> {
 
 // Todo: Change this to use the new parameterized constructor.
 impl Population<Bitstring> {
-    pub fn new_bitstring(pop_size: usize, bit_length: usize) -> Population<Bitstring> {
+    pub fn new_bitstring<R>(pop_size: usize, bit_length: usize, compute_fitness: impl Fn(&R) -> i64 + Send + Sync) -> Population<Bitstring>
+    where
+        Bitstring: Borrow<R>,
+        R: ?Sized
+    {
         Population::new(
             pop_size,
             |rng| make_bitstring(bit_length, rng),
-            count_ones
+            compute_fitness
         )
     }
 }
