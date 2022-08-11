@@ -1,7 +1,18 @@
-use rust_ga::{population::Population};
+#![warn(clippy::pedantic)]
+#![warn(clippy::nursery)]
+#![warn(clippy::unwrap_used)]
+#![warn(clippy::expect_used)]
+
+use rust_ga::{population::Population, bitstring::{hiff}};
 
 fn main() {
-    let population = Population::new_bitstring(100, 128);
+    let population
+        = Population::new_bitstring(
+            100, 
+            128, 
+            hiff);
+    assert!(!population.individuals.is_empty());
+    #[allow(clippy::unwrap_used)]
     let best = population.individuals.iter().max_by_key(
         |ind| ind.fitness
     ).unwrap();
@@ -13,6 +24,7 @@ mod tests {
     use rust_ga::population::Population;
     use rust_ga::individual::Individual;
     use rust_ga::bitstring::count_ones;
+    use rust_ga::bitstring::hiff;
     // use rand::rngs::StdRng;
     // use rand::SeedableRng;
     // use std::time::Instant;
@@ -25,6 +37,12 @@ mod tests {
     }
 
     #[test]
+    fn test_hiff() {
+        let bits = vec![true, false, false, false, true, true, true, true];
+        assert_eq!(hiff(&bits), 10);
+    }
+
+    #[test]
     fn test_individual_new() {
         let mut rng = rand::thread_rng();
         let ind = Individual::new_bitstring(128, count_ones, &mut rng);
@@ -33,10 +51,18 @@ mod tests {
     }
 
     #[test]
-    fn test_population_new() {
-        let pop = Population::new_bitstring(100, 128);
+    fn test_population_new_count_ones() {
+        let pop = Population::new_bitstring(100, 128, count_ones);
         assert_eq!(pop.individuals.len(), 100);
         assert_eq!(pop.individuals[0].genome.len(), 128);
         assert_eq!(pop.individuals[0].fitness, count_ones(&pop.individuals[0].genome));
+    }
+
+    #[test]
+    fn test_population_new_hiff() {
+        let pop = Population::new_bitstring(100, 128, hiff);
+        assert_eq!(pop.individuals.len(), 100);
+        assert_eq!(pop.individuals[0].genome.len(), 128);
+        assert_eq!(pop.individuals[0].fitness, hiff(&pop.individuals[0].genome));
     }
 }
