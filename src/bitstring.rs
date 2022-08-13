@@ -1,6 +1,8 @@
 use std::borrow::Borrow;
 
+use rand::seq::SliceRandom;
 use rand::{rngs::ThreadRng, Rng};
+use rayon::prelude::{IntoParallelIterator, ParallelIterator};
 
 use crate::individual::Individual;
 use crate::population::Population;
@@ -78,5 +80,25 @@ impl Population<Bitstring> {
             |rng| make_bitstring(bit_length, rng),
             compute_fitness
         )
+    }
+
+    // This does uniform selection when it needs to take a parameterized selection function.
+    pub fn next_generation(&self) -> Population<Bitstring> {
+        let previous_individuals = &self.individuals;
+        assert!(!previous_individuals.is_empty());
+        let pop_size = previous_individuals.len();
+        let individuals = (0..pop_size)
+            .into_par_iter()
+            .map_init(
+                rand::thread_rng,
+                |rng, _| {
+                    // These `unwraps()` are OK because we know the previous population isn't empty
+                    // thanks to the assertion a few lines up.
+                    let first_parent = previous_individuals.choose(rng).unwrap();
+                    let second_parent = previous_individuals.choose(rng).unwrap();
+                    first_parent.uniform_xo(second_parent, rng)
+                }
+            ).collect();
+        Population { individuals }
     }
 }
