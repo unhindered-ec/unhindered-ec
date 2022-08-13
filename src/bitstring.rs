@@ -32,6 +32,18 @@ pub fn make_bitstring(len: usize, rng: &mut ThreadRng) -> Bitstring {
     (0..len).map(|_| rng.gen_bool(0.5)).collect()
 }
 
+pub fn uniform_xo(first_parent: &[bool], second_parent: &[bool], rng: &mut ThreadRng) -> Bitstring {
+    // The two parents should have the same length.
+    assert!(first_parent.len() == second_parent.len());
+    let len = first_parent.len();
+    (0..len).map(|i| 
+        if rng.gen_bool(0.5) { 
+            first_parent[i] 
+        } else { 
+            second_parent[i] 
+        }).collect()
+}
+
 impl Individual<Bitstring> {
     pub fn new_bitstring<R>(bit_length: usize, compute_fitness: impl Fn(&R) -> i64 + Send + Sync, rng: &mut ThreadRng) -> Individual<Bitstring> 
     where
@@ -42,6 +54,15 @@ impl Individual<Bitstring> {
                 |rng| make_bitstring(bit_length, rng), 
                 compute_fitness,
                 rng)
+    }
+}
+
+// This has hiff cooked in and needs to be parameterized on the fitness calculator.
+impl Individual<Bitstring> {
+    pub fn uniform_xo(&self, other_parent: &Individual<Bitstring>, rng: &mut ThreadRng) -> Individual<Bitstring> {
+        let genome = uniform_xo(&self.genome, &other_parent.genome, rng);
+        let fitness = hiff(&genome);
+        Individual { genome, fitness }
     }
 }
 
