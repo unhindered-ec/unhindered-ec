@@ -6,17 +6,25 @@
 use rust_ga::{population::Population, bitstring::{hiff}};
 
 fn main() {
-    let population
+    let mut population
         = Population::new_bitstring(
-            100, 
+            1000, 
             128, 
             hiff);
     assert!(!population.individuals.is_empty());
     #[allow(clippy::unwrap_used)]
-    let best = population.individuals.iter().max_by_key(
-        |ind| ind.fitness
-    ).unwrap();
+    let best = population.best_individual();
     println!("{:?}", best);
+    println!("Pop size = {}", population.individuals.len());
+    println!("Bit length = {}", best.genome.len());
+
+    (0..1000).for_each(|generation| {
+        population = population.next_generation();
+        let best = population.best_individual();
+        println!("Generation {} best is {:?}", generation, best);
+        println!("Pop size = {}", population.individuals.len());
+        println!("Bit length = {}", best.genome.len());
+    });
 }
 
 #[cfg(test)]
