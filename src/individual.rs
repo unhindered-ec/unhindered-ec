@@ -1,8 +1,13 @@
+#![warn(clippy::pedantic)]
+#![warn(clippy::nursery)]
+#![warn(clippy::unwrap_used)]
+#![warn(clippy::expect_used)]
+
 use std::borrow::Borrow;
 
 use rand::rngs::ThreadRng;
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub struct Individual<T> {
     pub genome: T,
     pub fitness: i64,
@@ -44,14 +49,14 @@ impl<T> Individual<T> {
             make_genome: impl Fn(&mut ThreadRng) -> T, 
             compute_fitness: impl Fn(&R) -> i64,
             rng: &mut ThreadRng) 
-        -> Individual<T>
+        -> Self
     where
         T: Borrow<R>,
         R: ?Sized
     {
         let genome = make_genome(rng);
         let fitness = compute_fitness(genome.borrow());
-        Individual {
+        Self {
             genome,
             fitness,
         }

@@ -1,3 +1,8 @@
+#![warn(clippy::pedantic)]
+#![warn(clippy::nursery)]
+#![warn(clippy::unwrap_used)]
+#![warn(clippy::expect_used)]
+
 use std::borrow::Borrow;
 
 use rand::seq::SliceRandom;
@@ -9,6 +14,7 @@ use crate::population::Population;
 
 pub type Bitstring = Vec<bool>;
 
+#[must_use]
 pub fn count_ones(bits: &[bool]) -> i64 {
     bits.iter().filter(|&&bit| bit).count() as i64
 }
@@ -17,6 +23,7 @@ fn all_same(bits: &[bool]) -> bool {
     bits.iter().all(|&bit| bit == bits[0])
 }
 
+#[must_use]
 pub fn hiff(bits: &[bool]) -> i64 {
     if bits.len() < 2 {
         0
@@ -30,10 +37,13 @@ pub fn hiff(bits: &[bool]) -> i64 {
     }
 }
 
-pub fn make_bitstring(len: usize, rng: &mut ThreadRng) -> Bitstring {
+pub fn make_random(len: usize, rng: &mut ThreadRng) -> Bitstring {
     (0..len).map(|_| rng.gen_bool(0.5)).collect()
 }
 
+/// # Panics
+///
+/// Will panic if the two parents don't have the same length.
 pub fn uniform_xo(first_parent: &[bool], second_parent: &[bool], rng: &mut ThreadRng) -> Bitstring {
     // The two parents should have the same length.
     assert!(first_parent.len() == second_parent.len());
@@ -47,13 +57,13 @@ pub fn uniform_xo(first_parent: &[bool], second_parent: &[bool], rng: &mut Threa
 }
 
 impl Individual<Bitstring> {
-    pub fn new_bitstring<R>(bit_length: usize, compute_fitness: impl Fn(&R) -> i64 + Send + Sync, rng: &mut ThreadRng) -> Individual<Bitstring> 
+    pub fn new_bitstring<R>(bit_length: usize, compute_fitness: impl Fn(&R) -> i64 + Send + Sync, rng: &mut ThreadRng) -> Self
     where
         Bitstring: Borrow<R>,
         R: ?Sized
     {
-        Individual::new(
-                |rng| make_bitstring(bit_length, rng), 
+        Self::new(
+                |rng| make_random(bit_length, rng), 
                 compute_fitness,
                 rng)
     }
@@ -61,29 +71,34 @@ impl Individual<Bitstring> {
 
 // This has hiff cooked in and needs to be parameterized on the fitness calculator.
 impl Individual<Bitstring> {
-    pub fn uniform_xo(&self, other_parent: &Individual<Bitstring>, rng: &mut ThreadRng) -> Individual<Bitstring> {
+    #[must_use]
+    pub fn uniform_xo(&self, other_parent: &Self, rng: &mut ThreadRng) -> Self {
         let genome = uniform_xo(&self.genome, &other_parent.genome, rng);
         let fitness = hiff(&genome);
-        Individual { genome, fitness }
+        Self { genome, fitness }
     }
 }
 
 // Todo: Change this to use the new parameterized constructor.
 impl Population<Bitstring> {
-    pub fn new_bitstring<R>(pop_size: usize, bit_length: usize, compute_fitness: impl Fn(&R) -> i64 + Send + Sync) -> Population<Bitstring>
+    pub fn new_bitstring<R>(pop_size: usize, bit_length: usize, compute_fitness: impl Fn(&R) -> i64 + Send + Sync) -> Self
     where
         Bitstring: Borrow<R>,
         R: ?Sized
     {
-        Population::new(
+        Self::new(
             pop_size,
-            |rng| make_bitstring(bit_length, rng),
+            |rng| make_random(bit_length, rng),
             compute_fitness
         )
     }
 
+    /// # Panics
+    /// 
+    /// Will panic if the population is empty.
     // This does uniform selection when it needs to take a parameterized selection function.
-    pub fn next_generation(&self) -> Population<Bitstring> {
+    #[must_use]
+    pub fn next_generation(&self) -> Self {
         let previous_individuals = &self.individuals;
         assert!(!previous_individuals.is_empty());
         let pop_size = previous_individuals.len();
@@ -99,6 +114,6 @@ impl Population<Bitstring> {
                     first_parent.uniform_xo(second_parent, rng)
                 }
             ).collect();
-        Population { individuals }
+        Self { individuals }
     }
 }

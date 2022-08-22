@@ -1,3 +1,8 @@
+#![warn(clippy::pedantic)]
+#![warn(clippy::nursery)]
+#![warn(clippy::unwrap_used)]
+#![warn(clippy::expect_used)]
+
 use std::borrow::Borrow;
 
 use rand::rngs::ThreadRng;
@@ -18,7 +23,7 @@ impl<T: Send> Population<T> {
             pop_size: usize,
             make_genome: impl Fn(&mut ThreadRng) -> T + Send + Sync, 
             compute_fitness: impl Fn(&R) -> i64 + Send + Sync) 
-        -> Population<T>
+        -> Self
     where
         T: Borrow<R>,
         R: ?Sized
@@ -37,15 +42,20 @@ impl<T: Send> Population<T> {
         //     let ind = Individual::new(bit_length, &mut rng);
         //     pop.push(ind);
         // }
-        Population {
+        Self {
             individuals: pop,
         }
     }
 }
 
 impl<T> Population<T> {
+    /// # Panics
+    ///
+    /// Will panic if the vector of individuals is empty.
+    #[must_use]
     pub fn best_fitness(&self) -> &Individual<T> {
         assert!(!self.individuals.is_empty());
+        #[allow(clippy::unwrap_used)]
         self.individuals.iter().max_by_key(
                 |ind| ind.fitness
             ).unwrap()
