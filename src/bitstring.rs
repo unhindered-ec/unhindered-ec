@@ -69,6 +69,23 @@ impl Individual<Bitstring> {
     }
 }
 
+// TODO: I need to deal with the fact that this computes the fitness multiple times
+// if I chain things like mutation and crossover. This is related to the need to
+// parameterize the recombination operators, and I'll probably need to have some
+// kind of vector of recombination operatorss that act on the Bitstrings, and then
+// computes the fitness once at the end.
+// 
+// An alternative would be to use the Lazy eval tools and say that the fitness of
+// an individual is computed lazily. That would mean that "intermediate" Individuals
+// wouldn't have their fitness calculated since it's never used. That's a fairly
+// heavy weight solution, though, so it would probably be nice to not go down
+// that road if we don't have to.
+//
+// I also wonder if there are places where implementing the `From` trait would
+// make sense. In principle we should be able to switch back and forth between
+// `Bitstring` and `Individual` pretty freely, but I don't know if we can
+// parameterize that with the fitness function.  
+//
 // This has hiff cooked in and needs to be parameterized on the fitness calculator.
 impl Individual<Bitstring> {
     #[must_use]
