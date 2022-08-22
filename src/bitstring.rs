@@ -77,6 +77,34 @@ impl Individual<Bitstring> {
         let fitness = hiff(&genome);
         Self { genome, fitness }
     }
+
+    #[must_use]
+    pub fn two_point_xo(&self, other_parent: &Self, rng: &mut ThreadRng) -> Self {
+        let len = self.genome.len();
+        let mut genome = self.genome.clone();
+        let other_parent = other_parent.genome.clone();
+        // let mut indices = (0..len).collect::<Vec<usize>>();
+        // indices.shuffle(&mut rng);
+        // let (first, second) = indices.split_at(rng.gen_range(0..len));
+        let first = rng.gen_range(0..len);
+        let second = rng.gen_range(first..len);
+        if first < second {
+            genome[first..second].clone_from_slice(&other_parent[first..second]);
+        } else {
+            genome[second..first].clone_from_slice(&other_parent[second..first]);
+        }
+        let fitness = hiff(&genome);
+        Self { genome, fitness }
+    }
+
+    #[must_use]
+    pub fn mutate(&self, rng: &mut ThreadRng) -> Self {
+        let mut genome = self.genome.clone();
+        let i = rng.gen_range(0..genome.len());
+        genome[i] = !genome[i];
+        let fitness = hiff(&genome);
+        Self { genome, fitness }
+    }
 }
 
 // Todo: Change this to use the new parameterized constructor.
@@ -96,6 +124,18 @@ impl Population<Bitstring> {
     /// # Panics
     /// 
     /// Will panic if the population is empty.
+    #[must_use]
+    pub fn best_individual(&self) -> &Individual<Bitstring> {
+        assert!(!self.individuals.is_empty());
+        #[allow(clippy::unwrap_used)]
+        self.individuals.iter().max_by_key(
+                |ind| ind.fitness
+            ).unwrap()
+    }
+
+    /// # Panics
+    /// 
+    /// Panics if the population is empty.
     // This does uniform selection when it needs to take a parameterized selection function.
     #[must_use]
     pub fn next_generation(&self) -> Self {
@@ -106,12 +146,22 @@ impl Population<Bitstring> {
             .into_par_iter()
             .map_init(
                 rand::thread_rng,
-                |rng, _| {
-                    // These `unwraps()` are OK because we know the previous population isn't empty
-                    // thanks to the assertion a few lines up.
-                    let first_parent = previous_individuals.choose(rng).unwrap();
-                    let second_parent = previous_individuals.choose(rng).unwrap();
-                    first_parent.uniform_xo(second_parent, rng)
+                |rng, i| {
+                    if i > 0 {
+                        // These `unwraps()` are OK because we know the previous population isn't empty
+                        // thanks to the assertion a few lines up.
+                        #[allow(clippy::unwrap_used)]
+                        let first_parent = previous_individuals.choose(rng).unwrap();
+                        // let second_parent = previous_individuals.choose(rng).unwrap();
+                        // let first_parent = self.best_individual();
+                        let second_parent = self.best_individual();
+                        // first_parent.uniform_xo(second_parent, rng).mutate(rng)
+                        first_parent.two_point_xo(second_parent, rng).mutate(rng)
+                    } else {
+                        self
+                            .best_individual()
+                            .clone()
+                    }
                 }
             ).collect();
         Self { individuals }
