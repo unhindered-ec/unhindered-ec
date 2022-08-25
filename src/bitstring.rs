@@ -57,42 +57,42 @@ pub fn uniform_xo(first_parent: &[bool], second_parent: &[bool], rng: &mut Threa
 }
 
 impl Individual<Bitstring> {
-    pub fn new_bitstring<R>(bit_length: usize, compute_fitness: impl Fn(&R) -> i64 + Send + Sync, rng: &mut ThreadRng) -> Self
+    pub fn new_bitstring<R>(bit_length: usize, compute_score: impl Fn(&R) -> i64 + Send + Sync, rng: &mut ThreadRng) -> Self
     where
         Bitstring: Borrow<R>,
         R: ?Sized
     {
         Self::new(
                 |rng| make_random(bit_length, rng), 
-                compute_fitness,
+                compute_score,
                 rng)
     }
 }
 
-// TODO: I need to deal with the fact that this computes the fitness multiple times
+// TODO: I need to deal with the fact that this computes the score multiple times
 // if I chain things like mutation and crossover. This is related to the need to
 // parameterize the recombination operators, and I'll probably need to have some
 // kind of vector of recombination operatorss that act on the Bitstrings, and then
-// computes the fitness once at the end.
+// computes the score once at the end.
 // 
-// An alternative would be to use the Lazy eval tools and say that the fitness of
+// An alternative would be to use the Lazy eval tools and say that the score of
 // an individual is computed lazily. That would mean that "intermediate" Individuals
-// wouldn't have their fitness calculated since it's never used. That's a fairly
+// wouldn't have their score calculated since it's never used. That's a fairly
 // heavy weight solution, though, so it would probably be nice to not go down
 // that road if we don't have to.
 //
 // I also wonder if there are places where implementing the `From` trait would
 // make sense. In principle we should be able to switch back and forth between
 // `Bitstring` and `Individual` pretty freely, but I don't know if we can
-// parameterize that with the fitness function.  
+// parameterize that with the score function.  
 //
-// This has hiff cooked in and needs to be parameterized on the fitness calculator.
+// This has hiff cooked in and needs to be parameterized on the score calculator.
 impl Individual<Bitstring> {
     #[must_use]
     pub fn uniform_xo(&self, other_parent: &Self, rng: &mut ThreadRng) -> Self {
         let genome = uniform_xo(&self.genome, &other_parent.genome, rng);
-        let fitness = hiff(&genome);
-        Self { genome, fitness }
+        let score = hiff(&genome);
+        Self { genome, score }
     }
 
     #[must_use]
@@ -110,8 +110,8 @@ impl Individual<Bitstring> {
         } else {
             genome[second..first].clone_from_slice(&other_parent[second..first]);
         }
-        let fitness = hiff(&genome);
-        Self { genome, fitness }
+        let score = hiff(&genome);
+        Self { genome, score }
     }
 
     #[must_use]
@@ -119,14 +119,18 @@ impl Individual<Bitstring> {
         let mut genome = self.genome.clone();
         let i = rng.gen_range(0..genome.len());
         genome[i] = !genome[i];
-        let fitness = hiff(&genome);
-        Self { genome, fitness }
+        let score = hiff(&genome);
+        Self { genome, score }
     }
 }
 
 // Todo: Change this to use the new parameterized constructor.
 impl Population<Bitstring> {
-    pub fn new_bitstring<R>(pop_size: usize, bit_length: usize, compute_fitness: impl Fn(&R) -> i64 + Send + Sync) -> Self
+    pub fn new_bitstring_population<R>(
+        pop_size: usize, 
+        bit_length: usize, 
+        compute_score: impl Fn(&R) -> i64 + Send + Sync) 
+    -> Self
     where
         Bitstring: Borrow<R>,
         R: ?Sized
@@ -134,7 +138,7 @@ impl Population<Bitstring> {
         Self::new(
             pop_size,
             |rng| make_random(bit_length, rng),
-            compute_fitness
+            compute_score
         )
     }
 
@@ -145,15 +149,21 @@ impl Population<Bitstring> {
     pub fn best_individual(&self) -> &Individual<Bitstring> {
         assert!(!self.individuals.is_empty());
         #[allow(clippy::unwrap_used)]
-        self.individuals.iter().max_by_key(
-                |ind| ind.fitness
-            ).unwrap()
+        self
+            .individuals
+            .iter()
+            .max_by_key(
+                |ind| ind.score
+            )
+            .unwrap()
     }
 
     /// # Panics
     /// 
     /// Panics if the population is empty.
     // This does uniform selection when it needs to take a parameterized selection function.
+    // TODO: Do a performance test to see if there's a difference between this use of
+    // `into_par_iter()` and `collect()` and the approach taken in `population.rs`.
     #[must_use]
     pub fn next_generation(&self) -> Self {
         let previous_individuals = &self.individuals;

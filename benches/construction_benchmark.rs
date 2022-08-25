@@ -5,22 +5,22 @@ use rust_ga::{population::Population, bitstring::{count_ones, hiff}};
 fn benchmark_construction_count_ones(c: &mut Criterion) {
     c.bench_function(
         "Construct population count_ones", 
-        |b| b.iter(|| Population::new_bitstring(
+        |b| b.iter(|| Population::new_bitstring_population(
             black_box(1000), 
             black_box(128),
             count_ones
-        ).best_fitness().fitness
+        ).best_score().score
     ));
 }
 
 fn benchmark_construction_hiff(c: &mut Criterion) {
     c.bench_function(
         "Construct population HIFF", 
-        |b| b.iter(|| Population::new_bitstring(
+        |b| b.iter(|| Population::new_bitstring_population(
             black_box(1000), 
             black_box(128),
             hiff
-        ).best_fitness().fitness
+        ).best_score().score
     ));
 }
 

@@ -22,19 +22,19 @@ impl<T: Send> Population<T> {
     pub fn new<R>(
             pop_size: usize,
             make_genome: impl Fn(&mut ThreadRng) -> T + Send + Sync, 
-            compute_fitness: impl Fn(&R) -> i64 + Send + Sync) 
+            compute_score: impl Fn(&R) -> i64 + Send + Sync) 
         -> Self
     where
         T: Borrow<R>,
         R: ?Sized
     {
-        let mut pop = Vec::with_capacity(pop_size);
-        pop.par_extend((0..pop_size)
+        let mut individuals = Vec::with_capacity(pop_size);
+        individuals.par_extend((0..pop_size)
             .into_par_iter()
             .map_init(
                 rand::thread_rng,
                 |rng, _| {
-                    Individual::new(&make_genome, &compute_fitness, rng)
+                    Individual::new(&make_genome, &compute_score, rng)
                 })
         );
         // let mut rng = rand::thread_rng();
@@ -43,7 +43,7 @@ impl<T: Send> Population<T> {
         //     pop.push(ind);
         // }
         Self {
-            individuals: pop,
+            individuals,
         }
     }
 }
@@ -53,11 +53,11 @@ impl<T> Population<T> {
     ///
     /// Will panic if the vector of individuals is empty.
     #[must_use]
-    pub fn best_fitness(&self) -> &Individual<T> {
+    pub fn best_score(&self) -> &Individual<T> {
         assert!(!self.individuals.is_empty());
         #[allow(clippy::unwrap_used)]
         self.individuals.iter().max_by_key(
-                |ind| ind.fitness
+                |ind| ind.score
             ).unwrap()
     }
 }

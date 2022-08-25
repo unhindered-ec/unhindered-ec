@@ -10,7 +10,7 @@ use rand::rngs::ThreadRng;
 #[derive(Debug, Copy, Clone)]
 pub struct Individual<T> {
     pub genome: T,
-    pub fitness: i64,
+    pub score: i64,
 }
 
 impl<T> Individual<T> {
@@ -18,17 +18,17 @@ impl<T> Individual<T> {
      * The type `R` is needed for circumstances where `T` is a "costly"
      * (to quote the documentation for the `Borrow` trait) type like
      * `Vec<bool>` when a "cheaper" type like `[bool]` would do. We might,
-     * for example, prefer to have `compute_fitness` take a type like `&[bool]`,
+     * for example, prefer to have `compute_score` take a type like `&[bool]`,
      * but have everything written in terms of a more general (and "expensive")
      * type like `Vec<bool>`. If we use `Vec<bool>` for `T`, but specify
-     * `compute_fitness` to take `&[bool]`, then the type checker won't be able
+     * `compute_score` to take `&[bool]`, then the type checker won't be able
      * to link those things up.
      * 
      * The use of `R` fixes that. Saying `T: Borrow<R>` says that `T` (e.g.,
      * `Vec<bool>`) can be borrowed as a reference to the simpler type (e.g.,
      * `[bool]`). So we can use `Vec<bool>` as our "general" type, but this
      * allows the system to know that it can convert (through borrowing) instances
-     * of that to `[bool]`. Thus `compute_fitness` can now take `&[bool]` as an
+     * of that to `[bool]`. Thus `compute_score` can now take `&[bool]` as an
      * argument and the types will work out.
      * 
      * The `R: ?Sized` comes from the definition of the `Borrow` trait and is
@@ -47,7 +47,7 @@ impl<T> Individual<T> {
      */
     pub fn new<R>(
             make_genome: impl Fn(&mut ThreadRng) -> T, 
-            compute_fitness: impl Fn(&R) -> i64,
+            compute_score: impl Fn(&R) -> i64,
             rng: &mut ThreadRng) 
         -> Self
     where
@@ -55,10 +55,10 @@ impl<T> Individual<T> {
         R: ?Sized
     {
         let genome = make_genome(rng);
-        let fitness = compute_fitness(genome.borrow());
+        let score = compute_score(genome.borrow());
         Self {
             genome,
-            fitness,
+            score,
         }
     }
 }

@@ -7,7 +7,7 @@ use rust_ga::{population::Population, bitstring::{hiff}};
 
 fn main() {
     let mut population
-        = Population::new_bitstring(
+        = Population::new_bitstring_population(
             1000, 
             128, 
             hiff);
@@ -55,22 +55,22 @@ mod tests {
         let mut rng = rand::thread_rng();
         let ind = Individual::new_bitstring(128, count_ones, &mut rng);
         assert_eq!(ind.genome.len(), 128);
-        assert_eq!(ind.fitness, count_ones(&ind.genome));
+        assert_eq!(ind.score, count_ones(&ind.genome));
     }
 
     #[test]
     fn test_population_new_count_ones() {
-        let pop = Population::new_bitstring(100, 128, count_ones);
+        let pop = Population::new_bitstring_population(100, 128, count_ones);
         assert_eq!(pop.individuals.len(), 100);
         assert_eq!(pop.individuals[0].genome.len(), 128);
-        assert_eq!(pop.individuals[0].fitness, count_ones(&pop.individuals[0].genome));
+        assert_eq!(pop.individuals[0].score, count_ones(&pop.individuals[0].genome));
     }
 
     #[test]
     fn test_population_new_hiff() {
-        let pop = Population::new_bitstring(100, 128, hiff);
+        let pop = Population::new_bitstring_population(100, 128, hiff);
         assert_eq!(pop.individuals.len(), 100);
         assert_eq!(pop.individuals[0].genome.len(), 128);
-        assert_eq!(pop.individuals[0].fitness, hiff(&pop.individuals[0].genome));
+        assert_eq!(pop.individuals[0].score, hiff(&pop.individuals[0].genome));
     }
 }
