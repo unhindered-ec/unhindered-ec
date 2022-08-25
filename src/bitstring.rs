@@ -96,7 +96,7 @@ impl Individual<Bitstring> {
     }
 
     #[must_use]
-    pub fn two_point_xo(&self, other_parent: &Self, rng: &mut ThreadRng) -> Self {
+    pub fn two_point_xo(&self, other_parent: &Self, compute_score: impl Fn(&[bool]) -> i64, rng: &mut ThreadRng) -> Self {
         let len = self.genome.len();
         let mut genome = self.genome.clone();
         let other_parent = other_parent.genome.clone();
@@ -110,16 +110,16 @@ impl Individual<Bitstring> {
         } else {
             genome[second..first].clone_from_slice(&other_parent[second..first]);
         }
-        let score = hiff(&genome);
+        let score = compute_score(&genome);
         Self { genome, score }
     }
 
     #[must_use]
-    pub fn mutate(&self, rng: &mut ThreadRng) -> Self {
+    pub fn mutate(&self, compute_score: impl Fn(&[bool]) -> i64, rng: &mut ThreadRng) -> Self {
         let mut genome = self.genome.clone();
         let i = rng.gen_range(0..genome.len());
         genome[i] = !genome[i];
-        let score = hiff(&genome);
+        let score = compute_score(&genome);
         Self { genome, score }
     }
 }
@@ -165,7 +165,8 @@ impl Population<Bitstring> {
     // TODO: Do a performance test to see if there's a difference between this use of
     // `into_par_iter()` and `collect()` and the approach taken in `population.rs`.
     #[must_use]
-    pub fn next_generation(&self) -> Self {
+    pub fn next_generation(&self, compute_score: impl Fn(&[bool]) -> i64 + Send + Sync) -> Self 
+    {
         let previous_individuals = &self.individuals;
         assert!(!previous_individuals.is_empty());
         let pop_size = previous_individuals.len();
@@ -183,7 +184,9 @@ impl Population<Bitstring> {
                         // let first_parent = self.best_individual();
                         let second_parent = self.best_individual();
                         // first_parent.uniform_xo(second_parent, rng).mutate(rng)
-                        first_parent.two_point_xo(second_parent, rng).mutate(rng)
+                        first_parent
+                            .two_point_xo(second_parent, &compute_score, rng)
+                            .mutate(&compute_score, rng)
                     } else {
                         self
                             .best_individual()
