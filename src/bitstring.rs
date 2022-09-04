@@ -26,7 +26,7 @@ fn all_same(bits: &[bool]) -> bool {
 #[must_use]
 pub fn hiff(bits: &[bool]) -> i64 {
     if bits.len() < 2 {
-        0
+        bits.len() as i64
     } else {
         let half_len = bits.len() / 2;
         let mut score = hiff(&bits[..half_len]) + hiff(&bits[half_len..]);
