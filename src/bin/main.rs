@@ -48,7 +48,7 @@ mod tests {
     #[test]
     fn test_hiff() {
         let bits = vec![true, false, false, false, true, true, true, true];
-        assert_eq!(hiff(&bits), 10);
+        assert_eq!(hiff(&bits), 18);
     }
 
     #[test]
