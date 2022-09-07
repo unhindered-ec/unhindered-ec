@@ -115,13 +115,61 @@ impl Individual<Bitstring> {
     }
 
     #[must_use]
-    pub fn mutate(&self, compute_score: impl Fn(&[bool]) -> i64, rng: &mut ThreadRng) -> Self {
-        let mut genome = self.genome.clone();
-        let i = rng.gen_range(0..genome.len());
-        genome[i] = !genome[i];
-        let score = compute_score(&genome);
-        Self { genome, score }
+    pub fn mutate_one_over_length(&self, compute_score: impl Fn(&[bool]) -> i64, rng: &mut ThreadRng) -> Self {
+        let length = self.genome.len() as f32;
+        self.mutate_with_rate(1.0 / length, compute_score, rng)
     }
+
+    #[must_use]
+    pub fn mutate_with_rate(&self, mutation_rate: f32, compute_score: impl Fn(&[bool]) -> i64, rng: &mut ThreadRng) -> Self {
+        let new_genome: Vec<bool> = self.genome.iter().map(|bit| {
+            let r: f32 = rng.gen();
+            if r < mutation_rate {
+                !*bit
+            } else {
+                *bit
+            }
+        }).collect();
+        let score = compute_score(&new_genome);
+        Self { genome: new_genome, score }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use std::iter::zip;
+
+    use super::*;
+
+    // This test is stochastic, so I'm going to ignore it most of the time.
+    #[test]
+    #[ignore]
+    fn mutate_one_over_does_not_change_much() {
+        let mut rng = rand::thread_rng();
+        let num_bits = 100;
+        let parent: Individual<Bitstring> = Individual::new_bitstring(num_bits, count_ones, &mut rng);
+        let child = parent.mutate_one_over_length(count_ones, &mut rng);
+
+        let num_differences = zip(parent.genome, child.genome).filter(|(p, c)| *p != *c).count();
+        println!("Num differences = {num_differences}");
+        assert!(0 < num_differences, "We're expecting at least one difference");
+        assert!(num_differences < num_bits / 10, "We're not expecting lots of differences, and got {num_differences}.");
+    }
+
+    // This test is stochastic, so I'm going to ignore it most of the time.
+    #[test]
+    #[ignore]
+    fn mutate_with_rate_does_not_change_much() {
+        let mut rng = rand::thread_rng();
+        let num_bits = 100;
+        let parent: Individual<Bitstring> = Individual::new_bitstring(num_bits, count_ones, &mut rng);
+        let child = parent.mutate_with_rate(0.05, count_ones, &mut rng);
+
+        let num_differences = zip(parent.genome, child.genome).filter(|(p, c)| *p != *c).count();
+        println!("Num differences = {num_differences}");
+        assert!(0 < num_differences, "We're expecting at least one difference");
+        assert!(num_differences < num_bits / 10, "We're not expecting lots of differences, and got {num_differences}.");
+    }    
 }
 
 // Todo: Change this to use the new parameterized constructor.
@@ -186,7 +234,7 @@ impl Population<Bitstring> {
                         // first_parent.uniform_xo(second_parent, rng).mutate(rng)
                         first_parent
                             .two_point_xo(second_parent, &compute_score, rng)
-                            .mutate(&compute_score, rng)
+                            .mutate_one_over_length(&compute_score, rng)
                     } else {
                         self
                             .best_individual()
