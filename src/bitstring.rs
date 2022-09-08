@@ -218,30 +218,31 @@ impl Population<Bitstring> {
         let previous_individuals = &self.individuals;
         assert!(!previous_individuals.is_empty());
         let pop_size = previous_individuals.len();
-        let individuals = (0..pop_size)
-            .into_par_iter()
-            .map_init(
-                rand::thread_rng,
-                |rng, i| {
-                    if i > 0 {
-                        // These `unwraps()` are OK because we know the previous population isn't empty
-                        // thanks to the assertion a few lines up.
-                        #[allow(clippy::unwrap_used)]
-                        let first_parent = previous_individuals.choose(rng).unwrap();
-                        // let second_parent = previous_individuals.choose(rng).unwrap();
-                        // let first_parent = self.best_individual();
-                        let second_parent = self.best_individual();
-                        // first_parent.uniform_xo(second_parent, rng).mutate(rng)
-                        first_parent
-                            .two_point_xo(second_parent, &compute_score, rng)
-                            .mutate_one_over_length(&compute_score, rng)
-                    } else {
-                        self
-                            .best_individual()
-                            .clone()
+        let individuals 
+            = (0..pop_size)
+                .into_par_iter()
+                .map_init(
+                    rand::thread_rng,
+                    |rng, i| {
+                        if i > 0 {
+                            // These `unwraps()` are OK because we know the previous population isn't empty
+                            // thanks to the assertion a few lines up.
+                            #[allow(clippy::unwrap_used)]
+                            let first_parent = previous_individuals.choose(rng).unwrap();
+                            // let second_parent = previous_individuals.choose(rng).unwrap();
+                            // let first_parent = self.best_individual();
+                            let second_parent = self.best_individual();
+                            // first_parent.uniform_xo(second_parent, rng).mutate(rng)
+                            first_parent
+                                .two_point_xo(second_parent, &compute_score, rng)
+                                .mutate_one_over_length(&compute_score, rng)
+                        } else {
+                            self
+                                .best_individual()
+                                .clone()
+                        }
                     }
-                }
-            ).collect();
+                ).collect();
         Self { individuals }
     }
 }
