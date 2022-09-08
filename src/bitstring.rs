@@ -14,12 +14,12 @@ use crate::population::Population;
 
 pub type Bitstring = Vec<bool>;
 
-trait LinearGenome<T> {
+trait LinearCrossover {
     fn uniform_xo(&self, other: &Self, rng: &mut ThreadRng) -> Self;
     fn two_point_xo(&self, other: &Self, rng: &mut ThreadRng) -> Self;
 }
 
-impl<T: Copy> LinearGenome<T> for Vec<T> {
+impl<T: Copy> LinearCrossover for Vec<T> {
     fn uniform_xo(&self, other: &Self, rng: &mut ThreadRng) -> Self {
         // The two parents should have the same length.
         assert!(self.len() == other.len());
@@ -45,6 +45,29 @@ impl<T: Copy> LinearGenome<T> for Vec<T> {
         // We now know that first <= second
         genome[first..second].clone_from_slice(&other[first..second]);
         genome
+    }
+}
+
+trait LinearMutation {
+    fn mutate_with_rate(&self, mutation_rate: f32, rng: &mut ThreadRng) -> Self;
+    fn mutate_one_over_length(&self, rng: &mut ThreadRng) -> Self;
+}
+
+impl LinearMutation for Bitstring {
+    fn mutate_with_rate(&self, mutation_rate: f32, rng: &mut ThreadRng) -> Self {
+        self.iter().map(|bit| {
+            let r: f32 = rng.gen();
+            if r < mutation_rate {
+                !*bit
+            } else {
+                *bit
+            }
+        }).collect()
+    }
+
+    fn mutate_one_over_length(&self, rng: &mut ThreadRng) -> Self {
+        let length = self.len() as f32;
+        self.mutate_with_rate(1.0 / length, rng)
     }
 }
 
@@ -123,20 +146,14 @@ impl Individual<Bitstring> {
 
     #[must_use]
     pub fn mutate_one_over_length(&self, compute_score: impl Fn(&[bool]) -> i64, rng: &mut ThreadRng) -> Self {
-        let length = self.genome.len() as f32;
-        self.mutate_with_rate(1.0 / length, compute_score, rng)
+        let new_genome = self.genome.mutate_one_over_length(rng);
+        let score = compute_score(&new_genome);
+        Self { genome: new_genome, score }
     }
 
     #[must_use]
     pub fn mutate_with_rate(&self, mutation_rate: f32, compute_score: impl Fn(&[bool]) -> i64, rng: &mut ThreadRng) -> Self {
-        let new_genome: Vec<bool> = self.genome.iter().map(|bit| {
-            let r: f32 = rng.gen();
-            if r < mutation_rate {
-                !*bit
-            } else {
-                *bit
-            }
-        }).collect();
+        let new_genome: Vec<bool> = self.genome.mutate_with_rate(mutation_rate, rng);
         let score = compute_score(&new_genome);
         Self { genome: new_genome, score }
     }
