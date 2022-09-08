@@ -257,9 +257,12 @@ impl Population<Bitstring> {
                             // let first_parent = self.best_individual();
                             let second_parent = self.best_individual();
                             // first_parent.uniform_xo(second_parent, rng).mutate(rng)
-                            first_parent
-                                .two_point_xo(second_parent, &compute_score, rng)
-                                .mutate_one_over_length(&compute_score, rng)
+                            let genome
+                                = first_parent.genome
+                                  .two_point_xo(&second_parent.genome, rng)
+                                  .mutate_one_over_length(rng);
+                            let score = compute_score(&genome);
+                            Individual { genome, score }
                         } else {
                             self
                                 .best_individual()
