@@ -14,6 +14,40 @@ use crate::population::Population;
 
 pub type Bitstring = Vec<bool>;
 
+trait LinearGenome<T> {
+    fn uniform_xo(&self, other: &Self, rng: &mut ThreadRng) -> Self;
+    fn two_point_xo(&self, other: &Self, rng: &mut ThreadRng) -> Self;
+}
+
+impl<T: Copy> LinearGenome<T> for Vec<T> {
+    fn uniform_xo(&self, other: &Self, rng: &mut ThreadRng) -> Self {
+        // The two parents should have the same length.
+        assert!(self.len() == other.len());
+        let len = self.len();
+        (0..len).map(|i| 
+            if rng.gen_bool(0.5) { 
+                self[i] 
+            } else { 
+                other[i] 
+            }).collect()
+    }
+
+    fn two_point_xo(&self, other: &Self, rng: &mut ThreadRng) -> Self {
+        let len = self.len();
+        // The two parents should have the same length.
+        assert!(len == other.len());
+        let mut genome = self.clone();
+        let mut first = rng.gen_range(0..len);
+        let mut second = rng.gen_range(0..len);
+        if second < first {
+            (first, second) = (second, first);
+        }
+        // We now know that first <= second
+        genome[first..second].clone_from_slice(&other[first..second]);
+        genome
+    }
+}
+
 #[must_use]
 pub fn count_ones(bits: &[bool]) -> i64 {
     bits.iter().filter(|&&bit| bit).count() as i64
@@ -39,21 +73,6 @@ pub fn hiff(bits: &[bool]) -> i64 {
 
 pub fn make_random(len: usize, rng: &mut ThreadRng) -> Bitstring {
     (0..len).map(|_| rng.gen_bool(0.5)).collect()
-}
-
-/// # Panics
-///
-/// Will panic if the two parents don't have the same length.
-pub fn uniform_xo(first_parent: &[bool], second_parent: &[bool], rng: &mut ThreadRng) -> Bitstring {
-    // The two parents should have the same length.
-    assert!(first_parent.len() == second_parent.len());
-    let len = first_parent.len();
-    (0..len).map(|i| 
-        if rng.gen_bool(0.5) { 
-            first_parent[i] 
-        } else { 
-            second_parent[i] 
-        }).collect()
 }
 
 impl Individual<Bitstring> {
@@ -90,26 +109,14 @@ impl Individual<Bitstring> {
 impl Individual<Bitstring> {
     #[must_use]
     pub fn uniform_xo(&self, other_parent: &Self, rng: &mut ThreadRng) -> Self {
-        let genome = uniform_xo(&self.genome, &other_parent.genome, rng);
+        let genome = self.genome.uniform_xo(&other_parent.genome, rng);
         let score = hiff(&genome);
         Self { genome, score }
     }
 
     #[must_use]
     pub fn two_point_xo(&self, other_parent: &Self, compute_score: impl Fn(&[bool]) -> i64, rng: &mut ThreadRng) -> Self {
-        let len = self.genome.len();
-        let mut genome = self.genome.clone();
-        let other_parent = other_parent.genome.clone();
-        // let mut indices = (0..len).collect::<Vec<usize>>();
-        // indices.shuffle(&mut rng);
-        // let (first, second) = indices.split_at(rng.gen_range(0..len));
-        let first = rng.gen_range(0..len);
-        let second = rng.gen_range(first..len);
-        if first < second {
-            genome[first..second].clone_from_slice(&other_parent[first..second]);
-        } else {
-            genome[second..first].clone_from_slice(&other_parent[second..first]);
-        }
+        let genome = self.genome.two_point_xo(&other_parent.genome, rng);
         let score = compute_score(&genome);
         Self { genome, score }
     }
