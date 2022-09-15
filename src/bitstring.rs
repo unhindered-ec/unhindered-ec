@@ -196,7 +196,6 @@ mod test {
     }    
 }
 
-// Todo: Change this to use the new parameterized constructor.
 impl Population<Bitstring> {
     pub fn new_bitstring_population<R>(
         pop_size: usize, 
@@ -234,8 +233,7 @@ impl Population<Bitstring> {
     /// 
     /// Panics if the population is empty.
     // This does uniform selection when it needs to take a parameterized selection function.
-    // TODO: Do a performance test to see if there's a difference between this use of
-    // `into_par_iter()` and `collect()` and the approach taken in `population.rs`.
+    // TODO: Remove this and replace it with `next_generation_with_selectors.
     #[must_use]
     pub fn next_generation(&self, compute_score: impl Fn(&[bool]) -> i64 + Send + Sync) -> Self 
     {
@@ -273,26 +271,33 @@ impl Population<Bitstring> {
         Self { individuals }
     }
 
+    /// # Panics
+    ///
+    /// This will panic if the population is empty or the set of selectors is empty.
+    #[must_use]
     pub fn next_generation_with_selectors(
         &self,
         selectors: &Vec<&Selector<Bitstring>>,
         compute_score: impl Fn(&[bool]) -> i64 + Send + Sync) -> Self
     {
+        assert!(!selectors.is_empty());
         let previous_individuals = &self.individuals;
         assert!(!previous_individuals.is_empty());
         let pop_size = previous_individuals.len();
-        // let mut parent_iter = self.selection_iter(selectors);
+        let parent_selector = self.parent_selector(selectors);
         let individuals 
             = (0..pop_size)
                 .into_par_iter()
                 .map_init(
-                    // TODO: This ends up creating a new parent iterator at least once per
-                    // thread, and possibly more? Might want to add some println!()
-                    // statements to see how often it gets called.
-                    || (rand::thread_rng(), self.selection_iter(&selectors)),
-                    |(rng, parent_iter), _| {
-                        let first_parent = parent_iter.next().unwrap();
-                        let second_parent = parent_iter.next().unwrap();
+                    rand::thread_rng,
+                    |rng, _| {
+                        // These two `unwrap()`s are OK because we've asserted that the set of selectors
+                        // isn't empty.
+                        #[allow(clippy::unwrap_used)]
+                        let first_parent = parent_selector.get(rng).unwrap();
+                        #[allow(clippy::unwrap_used)]
+                        let second_parent = parent_selector.get(rng).unwrap();
+
                         let genome
                             = first_parent.genome
                             .two_point_xo(&second_parent.genome, rng)
@@ -303,43 +308,4 @@ impl Population<Bitstring> {
                 ).collect();
         Self { individuals }
     }
-
-    // pub fn select_parent(&self,
-    //     selectors: &[(u32, Selector)],
-    //     rng: &mut ThreadRng
-    // ) -> &Individual<Bitstring> {
-    //     let selector = select_selector(selectors, rng);
-    //     selector(&self.individuals, rng)
-    // }
-
-    // #[must_use]
-    // pub fn next_generation_with_selectors(
-    //         &self, 
-    //         selectors: &[(u32, Selector)],
-    //         compute_score: impl Fn(&[bool]) -> i64 + Send + Sync) -> Self {
-    //             todo!()
-    //         }
 }
-
-// type Selector<'s> = Box<dyn for <'a> Fn(&'a [Individual<Bitstring>], &mut ThreadRng) -> &'a Individual<Bitstring> + 's>;
-
-// /// # Panics
-// ///
-// /// This will panic if the vector of selectors is empty.
-// pub fn select_selector<'s>( 
-//     selectors: &'s [(u32, Selector)],
-//     rng: &mut ThreadRng
-// ) -> Selector<'s> 
-// {
-//     assert!(!selectors.is_empty(), "We must have at least one selector");
-//     let total_weight: u32 = selectors.iter().map(|(weight, _)| weight).sum();
-//     let r = rng.gen_range(0..total_weight);
-//     let mut current_weight_total = 0;
-//     for (weight, selector) in selectors {
-//         current_weight_total += weight;
-//         if current_weight_total > r {
-//             return Box::new(selector);
-//         }
-//     }
-//     unreachable!("We should have found a selector in `select_selector`");
-// }

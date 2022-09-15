@@ -3,7 +3,7 @@
 #![warn(clippy::unwrap_used)]
 #![warn(clippy::expect_used)]
 
-use std::{borrow::Borrow, iter::from_fn};
+use std::borrow::Borrow;
 use rand::seq::SliceRandom;
 
 use rand::rngs::ThreadRng;
@@ -46,29 +46,48 @@ impl<T: Send> Population<T> {
 
 pub type Selector<T> = dyn Fn(&Population<T>) -> Option<&Individual<T>> + Sync + Send;
 
-impl<T> Population<T> {
-    // TODO: This iterator is sequential, and we might want it to become parallel,
-    // if that is feasible. I'll need to better understand how to implement Rayon's
-    // parallel iterator trait.
-    pub fn selection_iter<'a>(&'a self, selectors: &'a Vec<&'a Selector<T>>) -> impl Iterator<Item = &'a Individual<T>> {
-        // TODO: We might want or need to move this somewhere else if we convert
-        // to parallel iterators.
-        // println!("We're calling selection_iter");
-        from_fn(move || {
-            let mut rng = rand::thread_rng();
-            let s = selectors.choose(&mut rng)?;
-            s(self)
-        })
+pub struct ParentSelector<'a, T> {
+    population: &'a Population<T>,
+    selectors: &'a Vec<&'a Selector<T>>,
+}
+
+impl<'a, T> ParentSelector<'a, T> {
+    fn new(population: &'a Population<T>, selectors: &'a Vec<&'a Selector<T>>) -> Self {
+        ParentSelector {
+            population,
+            selectors
+        }
+    }
+
+    pub fn get(&self, rng: &mut ThreadRng) -> Option<&'a Individual<T>> {
+        let s = self.selectors.choose(rng)?;
+        s(self.population)
     }
 }
 
 impl<T> Population<T> {
+    // TODO: This iterator is sequential, and we might want it to become parallel,
+    // if that is feasible. I'll need to better understand how to implement Rayon's
+    // parallel iterator trait.
+    #[must_use]
+    pub fn parent_selector<'a>(&'a self, selectors: &'a Vec<&'a Selector<T>>) -> ParentSelector<T> {
+        // TODO: We might want or need to move this somewhere else if we convert
+        // to parallel iterators.
+        ParentSelector::new(self, selectors)
+    }
+}
+
+impl<T> Population<T> {
+    /// # Panics
+    ///
+    /// This will panic if the population is empty.
     #[must_use]
     pub fn best_score(&self) -> Option<&Individual<T>> {
         assert!(!self.individuals.is_empty());
         self.individuals.iter().max_by_key(|ind| ind.score)
     }
 
+    #[must_use]
     pub fn random(&self) -> Option<&Individual<T>> {
         self.individuals.choose(&mut rand::thread_rng())
     }
