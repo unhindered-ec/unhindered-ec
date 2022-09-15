@@ -18,7 +18,15 @@ pub fn do_main() {
     println!("Pop size = {}", population.individuals.len());
     println!("Bit length = {}", best.genome.len());
 
-    let selectors: Vec<&Selector<Bitstring>> = vec![&Population::best_score, &Population::random];
+    let binary_tournament = Population::<Bitstring>::make_tournament_selector(2);
+    let decimal_tournament = Population::<Bitstring>::make_tournament_selector(10);
+
+    let selectors: Vec<&Selector<Bitstring>> 
+        = vec![&Population::best_score,
+               &Population::random, 
+               &binary_tournament,
+               &binary_tournament,
+               &decimal_tournament];
 
     (0..100).for_each(|generation| {
         population = population.next_generation_with_selectors(&selectors, scorer);

@@ -91,6 +91,19 @@ impl<T> Population<T> {
     pub fn random(&self) -> Option<&Individual<T>> {
         self.individuals.choose(&mut rand::thread_rng())
     }
+
+    pub fn make_tournament_selector(tournament_size: usize) -> impl Fn(&Self) -> Option<&Individual<T>> {
+        move |pop: &Self| {
+            pop.tournament(tournament_size)
+        }
+    }
+
+    #[must_use]
+    pub fn tournament(&self, tournament_size: usize) -> Option<&Individual<T>> {
+        self.individuals
+            .choose_multiple(&mut rand::thread_rng(), tournament_size)
+            .max_by_key(|ind| ind.score)
+    }
 }
 
 
