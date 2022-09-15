@@ -10,7 +10,7 @@ use rand::{rngs::ThreadRng, Rng};
 use rayon::prelude::{IntoParallelIterator, ParallelIterator};
 
 use crate::individual::Individual;
-use crate::population::Population;
+use crate::population::{Population, Selector};
 
 pub type Bitstring = Vec<bool>;
 
@@ -273,42 +273,73 @@ impl Population<Bitstring> {
         Self { individuals }
     }
 
-    pub fn select_parent(&self,
-        selectors: &[(u32, Selector)],
-        rng: &mut ThreadRng
-    ) -> &Individual<Bitstring> {
-        let selector = select_selector(selectors, rng);
-        selector(&self.individuals, rng)
-    }
-
-    #[must_use]
     pub fn next_generation_with_selectors(
-            &self, 
-            selectors: &[(u32, Selector)],
-            compute_score: impl Fn(&[bool]) -> i64 + Send + Sync) -> Self {
-                todo!()
-            }
-}
-
-type Selector<'s> = Box<dyn for <'a> Fn(&'a [Individual<Bitstring>], &mut ThreadRng) -> &'a Individual<Bitstring> + 's>;
-
-/// # Panics
-///
-/// This will panic if the vector of selectors is empty.
-pub fn select_selector<'s>( 
-    selectors: &'s [(u32, Selector)],
-    rng: &mut ThreadRng
-) -> Selector<'s> 
-{
-    assert!(!selectors.is_empty(), "We must have at least one selector");
-    let total_weight: u32 = selectors.iter().map(|(weight, _)| weight).sum();
-    let r = rng.gen_range(0..total_weight);
-    let mut current_weight_total = 0;
-    for (weight, selector) in selectors {
-        current_weight_total += weight;
-        if current_weight_total > r {
-            return Box::new(selector);
-        }
+        &self,
+        selectors: &Vec<&Selector<Bitstring>>,
+        compute_score: impl Fn(&[bool]) -> i64 + Send + Sync) -> Self
+    {
+        let previous_individuals = &self.individuals;
+        assert!(!previous_individuals.is_empty());
+        let pop_size = previous_individuals.len();
+        // let mut parent_iter = self.selection_iter(selectors);
+        let individuals 
+            = (0..pop_size)
+                .into_par_iter()
+                .map_init(
+                    // TODO: This ends up creating a new parent iterator at least once per
+                    // thread, and possibly more? Might want to add some println!()
+                    // statements to see how often it gets called.
+                    || (rand::thread_rng(), self.selection_iter(&selectors)),
+                    |(rng, parent_iter), _| {
+                        let first_parent = parent_iter.next().unwrap();
+                        let second_parent = parent_iter.next().unwrap();
+                        let genome
+                            = first_parent.genome
+                            .two_point_xo(&second_parent.genome, rng)
+                            .mutate_one_over_length(rng);
+                        let score = compute_score(&genome);
+                        Individual { genome, score }
+                    }
+                ).collect();
+        Self { individuals }
     }
-    unreachable!("We should have found a selector in `select_selector`");
+
+    // pub fn select_parent(&self,
+    //     selectors: &[(u32, Selector)],
+    //     rng: &mut ThreadRng
+    // ) -> &Individual<Bitstring> {
+    //     let selector = select_selector(selectors, rng);
+    //     selector(&self.individuals, rng)
+    // }
+
+    // #[must_use]
+    // pub fn next_generation_with_selectors(
+    //         &self, 
+    //         selectors: &[(u32, Selector)],
+    //         compute_score: impl Fn(&[bool]) -> i64 + Send + Sync) -> Self {
+    //             todo!()
+    //         }
 }
+
+// type Selector<'s> = Box<dyn for <'a> Fn(&'a [Individual<Bitstring>], &mut ThreadRng) -> &'a Individual<Bitstring> + 's>;
+
+// /// # Panics
+// ///
+// /// This will panic if the vector of selectors is empty.
+// pub fn select_selector<'s>( 
+//     selectors: &'s [(u32, Selector)],
+//     rng: &mut ThreadRng
+// ) -> Selector<'s> 
+// {
+//     assert!(!selectors.is_empty(), "We must have at least one selector");
+//     let total_weight: u32 = selectors.iter().map(|(weight, _)| weight).sum();
+//     let r = rng.gen_range(0..total_weight);
+//     let mut current_weight_total = 0;
+//     for (weight, selector) in selectors {
+//         current_weight_total += weight;
+//         if current_weight_total > r {
+//             return Box::new(selector);
+//         }
+//     }
+//     unreachable!("We should have found a selector in `select_selector`");
+// }

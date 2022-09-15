@@ -3,11 +3,10 @@
 #![warn(clippy::unwrap_used)]
 #![warn(clippy::expect_used)]
 
-use rust_ga::{population::Population, bitstring::{hiff, count_ones}};
-use rust_ga::do_main;
+use rust_ga::{population::{Population, Selector}, bitstring::{hiff, count_ones, Bitstring}, individual::Individual, do_main};
 
-pub fn main() {
-    do_main()
+fn main() {
+    do_main();
 }
 
 #[cfg(test)]
