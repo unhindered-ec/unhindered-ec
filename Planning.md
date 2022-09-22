@@ -25,6 +25,11 @@ Some things that we could/should deal with include:
   - It would probably be reasonable to add a `parallel` feature
     to the project so people could leave out parallelism (& Rayon)
     if they didn't want any of that.
+- Should the `scorer` be inside the generation so we don't have to
+  keep capturing it and passing it around?
+  - Or should there actually be a `Run` type (or a `RunParams` type)
+    that holds all this stuff and is used to make them available to
+    types like `Generation` and `Population`?
 
 ## Wednesday, 21 Sep 2022 (7-9pm)
 

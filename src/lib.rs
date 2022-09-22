@@ -27,15 +27,7 @@ pub fn do_main() {
     assert!(!population.is_empty());
 
     let make_child = move |rng: &mut ThreadRng, generation: &Generation<Bitstring>| {
-            let first_parent = generation.get_parent(rng);
-            let second_parent = generation.get_parent(rng);
-
-            let genome
-                = first_parent.genome
-                .two_point_xo(&second_parent.genome, rng)
-                .mutate_one_over_length(rng);
-            let score = scorer(&genome);
-            Individual { genome, score }
+        make_child(scorer, rng, generation)
     };
 
     let mut generation = Generation::new(
@@ -55,4 +47,16 @@ pub fn do_main() {
         let best = generation.best_individual();
         println!("Generation {} best is {:?}", generation_number, best);
     });
+}
+
+fn make_child(scorer: impl Fn(&[bool]) -> i64, rng: &mut ThreadRng, generation: &Generation<Bitstring>) -> Individual<Bitstring> {
+    let first_parent = generation.get_parent(rng);
+    let second_parent = generation.get_parent(rng);
+
+    let genome
+        = first_parent.genome
+            .two_point_xo(&second_parent.genome, rng)
+            .mutate_one_over_length(rng);
+    let score = scorer(&genome);
+    Individual { genome, score }
 }

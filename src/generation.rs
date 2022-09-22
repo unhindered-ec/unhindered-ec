@@ -9,6 +9,11 @@ pub type ChildMaker<T> = dyn Fn(&mut ThreadRng, &Generation<T>) -> Individual<T>
 // TODO: Extend the vector of Selectors to a WeightedParentSelector that is essentially
 //   a wrapper around `rand::distributions::WeightedChoice` so we can
 //   provide weights on the different selectors.
+// TODO: Should the `scorer` be inside the generation so we don't have to keep
+//   capturing it and passing it around?
+// TODO: Should there actually be a `Run` type (or a `RunParams` type) that
+//   holds all this stuff and is used to make them available to types like
+//   `Generation` and `Population`?
 pub struct Generation<'a, T> {
     pub population: Population<T>,
     selectors: &'a Vec<&'a Selector<T>>,
