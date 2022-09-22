@@ -1,10 +1,14 @@
 use rand::{rngs::ThreadRng, seq::SliceRandom};
 use rayon::prelude::{IntoParallelIterator, ParallelIterator};
 
-use crate::{population::{Population, Selector}, individual::Individual};
+use crate::{population::{Population}, individual::Individual};
 
-type ChildMaker<T> = dyn Fn(&mut ThreadRng, &Generation<T>) -> Individual<T> + Send + Sync;
+pub type Selector<T> = dyn Fn(&Population<T>) -> Option<&Individual<T>> + Sync + Send;
+pub type ChildMaker<T> = dyn Fn(&mut ThreadRng, &Generation<T>) -> Individual<T> + Send + Sync;
 
+// TODO: Extend the vector of Selectors to a WeightedParentSelector that is essentially
+//   a wrapper around `rand::distributions::WeightedChoice` so we can
+//   provide weights on the different selectors.
 pub struct Generation<'a, T> {
     pub population: Population<T>,
     selectors: &'a Vec<&'a Selector<T>>,

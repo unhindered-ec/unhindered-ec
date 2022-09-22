@@ -72,7 +72,6 @@ impl<T> Population<T> {
     }
 }
 
-pub type Selector<T> = dyn Fn(&Population<T>) -> Option<&Individual<T>> + Sync + Send;
 impl<T> Population<T> {
     /// # Panics
     ///
