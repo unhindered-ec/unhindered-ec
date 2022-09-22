@@ -1,8 +1,12 @@
-# Rust-GA live stream planning
+# Rust-GA live stream planning <!-- omit in toc -->
 
 I'm going to use this to do some planning and documentation for the
 live stream. Not sure how well that will work out, but just putting
 `TODO`s in the code doesn't always provide any kind of "big picture".
+
+- [Issues to address](#issues-to-address)
+- [Wednesday, 21 Sep 2022 (7-9pm)](#wednesday-21-sep-2022-7-9pm)
+  - [What actually happened](#what-actually-happened)
 
 ## Issues to address
 
