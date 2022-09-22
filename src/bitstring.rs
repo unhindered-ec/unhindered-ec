@@ -5,12 +5,10 @@
 
 use std::borrow::Borrow;
 
-use rand::seq::SliceRandom;
 use rand::{rngs::ThreadRng, Rng};
-use rayon::prelude::{IntoParallelIterator, ParallelIterator};
 
 use crate::individual::Individual;
-use crate::population::{Population, Selector};
+use crate::population::Population;
 
 pub type Bitstring = Vec<bool>;
 
@@ -215,85 +213,5 @@ impl Population<Bitstring> {
             |rng| make_random(bit_length, rng),
             compute_score
         )
-    }
-
-    /// # Panics
-    /// 
-    /// Panics if the population is empty.
-    // This does uniform selection when it needs to take a parameterized selection function.
-    // TODO: Remove this and replace it with `next_generation_with_selectors.
-    #[must_use]
-    pub fn next_generation(&self, compute_score: impl Fn(&[bool]) -> i64 + Send + Sync) -> Self 
-    {
-        let previous_individuals = &self.individuals;
-        assert!(!previous_individuals.is_empty());
-        let pop_size = previous_individuals.len();
-        let individuals 
-            = (0..pop_size)
-                .into_par_iter()
-                .map_init(
-                    rand::thread_rng,
-                    |rng, i| {
-                        if i > 0 {
-                            // These `unwraps()` are OK because we know the previous population isn't empty
-                            // thanks to the assertion a few lines up.
-                            #[allow(clippy::unwrap_used)]
-                            let first_parent = previous_individuals.choose(rng).unwrap();
-                            // let second_parent = previous_individuals.choose(rng).unwrap();
-                            // let first_parent = self.best_individual();
-                            let second_parent = self.best_individual();
-                            // first_parent.uniform_xo(second_parent, rng).mutate(rng)
-                            let genome
-                                = first_parent.genome
-                                  .two_point_xo(&second_parent.genome, rng)
-                                  .mutate_one_over_length(rng);
-                            let score = compute_score(&genome);
-                            Individual { genome, score }
-                        } else {
-                            self
-                                .best_individual()
-                                .clone()
-                        }
-                    }
-                ).collect();
-        Self { individuals }
-    }
-
-    /// # Panics
-    ///
-    /// This will panic if the population is empty or the set of selectors is empty.
-    #[must_use]
-    pub fn next_generation_with_selectors(
-        &self,
-        selectors: &Vec<&Selector<Bitstring>>,
-        compute_score: impl Fn(&[bool]) -> i64 + Send + Sync) -> Self
-    {
-        assert!(!selectors.is_empty());
-        let previous_individuals = &self.individuals;
-        assert!(!previous_individuals.is_empty());
-        let pop_size = previous_individuals.len();
-        let parent_selector = self.parent_selector(selectors);
-        let individuals 
-            = (0..pop_size)
-                .into_par_iter()
-                .map_init(
-                    rand::thread_rng,
-                    |rng, _| {
-                        // These two `unwrap()`s are OK because we've asserted that the set of selectors
-                        // isn't empty.
-                        #[allow(clippy::unwrap_used)]
-                        let first_parent = parent_selector.get(rng).unwrap();
-                        #[allow(clippy::unwrap_used)]
-                        let second_parent = parent_selector.get(rng).unwrap();
-
-                        let genome
-                            = first_parent.genome
-                            .two_point_xo(&second_parent.genome, rng)
-                            .mutate_one_over_length(rng);
-                        let score = compute_score(&genome);
-                        Individual { genome, score }
-                    }
-                ).collect();
-        Self { individuals }
     }
 }
