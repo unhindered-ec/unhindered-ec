@@ -46,6 +46,13 @@ impl<T: Send> Population<T> {
 
 pub type Selector<T> = dyn Fn(&Population<T>) -> Option<&Individual<T>> + Sync + Send;
 
+// TODO: Should this just become part of the `Population` type?
+//   We could provide a set of selectors in the constructor (or
+//   a builder) for `Population`, and then just have a `get_parent()`
+//   method there.
+// TODO: Extend this to a WeightedParentSelector that is essentially
+//   a wrapper around `rand::distributions::WeightedChoice` so we can
+//   provide weights on the different selectors.
 pub struct ParentSelector<'a, T> {
     population: &'a Population<T>,
     selectors: &'a Vec<&'a Selector<T>>,
