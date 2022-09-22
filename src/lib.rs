@@ -1,6 +1,6 @@
 use rand::rngs::ThreadRng;
 
-use crate::{bitstring::{hiff, Bitstring, LinearCrossover, LinearMutation}, population::{Population, Selector}, generation::Generation, individual::Individual};
+use crate::{bitstring::{hiff, Bitstring, LinearCrossover, LinearMutation}, population::Population, generation::{Generation, Selector}, individual::Individual};
 
 pub mod individual;
 pub mod population;
