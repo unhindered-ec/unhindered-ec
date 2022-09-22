@@ -47,6 +47,9 @@ impl<'a, T: Send + Sync> Generation<'a, T> {
         let individuals 
             = (0..pop_size)
                 .into_par_iter()
+                // "Convert" the individual number (which we never use) into
+                // the current `Generation` object so the `make_child` closure
+                // will have access to the selectors and population.
                 .map(|_| self)
                 .map_init(rand::thread_rng, self.make_child)
                 .collect();

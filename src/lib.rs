@@ -27,12 +27,8 @@ pub fn do_main() {
     assert!(!population.is_empty());
 
     let make_child = move |rng: &mut ThreadRng, generation: &Generation<Bitstring>| {
-            // These two `unwrap()`s are OK because we've asserted that the set of selectors
-            // isn't empty.
-            #[allow(clippy::unwrap_used)]
-            let first_parent = generation.get_parent(rng); // parent_selector.get(rng).unwrap();
-            #[allow(clippy::unwrap_used)]
-            let second_parent = generation.get_parent(rng); // parent_selector.get(rng).unwrap();
+            let first_parent = generation.get_parent(rng);
+            let second_parent = generation.get_parent(rng);
 
             let genome
                 = first_parent.genome
@@ -40,7 +36,6 @@ pub fn do_main() {
                 .mutate_one_over_length(rng);
             let score = scorer(&genome);
             Individual { genome, score }
-            // todo!()
     };
 
     let mut generation = Generation::new(

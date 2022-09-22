@@ -116,7 +116,7 @@ impl Individual<Bitstring> {
 // TODO: I need to deal with the fact that this computes the score multiple times
 // if I chain things like mutation and crossover. This is related to the need to
 // parameterize the recombination operators, and I'll probably need to have some
-// kind of vector of recombination operatorss that act on the Bitstrings, and then
+// kind of vector of recombination operators that act on the Bitstrings, and then
 // computes the score once at the end.
 // 
 // An alternative would be to use the Lazy eval tools and say that the score of
