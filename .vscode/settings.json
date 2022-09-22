@@ -4,7 +4,9 @@
         "Bitstrings",
         "esitsu",
         "hiff",
+        "lexicase",
         "rngs",
+        "Scorable",
         "scottmcm's"
     ]
 }

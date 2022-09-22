@@ -4,36 +4,130 @@ I'm going to use this to do some planning and documentation for the
 live stream. Not sure how well that will work out, but just putting
 `TODO`s in the code doesn't always provide any kind of "big picture".
 
+I could do a lot of this using GitHub Issues, and just use this
+as a "diary" document to track what happened in each session? I
+guess it depends a lot on how many items make it into the "Issue
+to address" list; if there are only a few keeping them here probably
+works well, but if there get to be a lot of them moving to GitHub
+Issues might make more sense.
+
 - [Issues to address](#issues-to-address)
+  - [Use `clap` to support command-line args for parameters](#use-clap-to-support-command-line-args-for-parameters)
+  - [Implement lexicase selection](#implement-lexicase-selection)
+  - [Replace `Individual` with traits?](#replace-individual-with-traits)
+  - [Create mutation/recombination pipeline](#create-mutationrecombination-pipeline)
+  - [Supported weighted parent selection](#supported-weighted-parent-selection)
+  - [Implement non-threaded `Generation::next()`](#implement-non-threaded-generationnext)
+  - [Move `scorer` inside `Generation`?](#move-scorer-inside-generation)
 - [Wednesday, 21 Sep 2022 (7-9pm)](#wednesday-21-sep-2022-7-9pm)
   - [What actually happened](#what-actually-happened)
 
 ## Issues to address
 
-Some things that we could/should deal with include:
+Below are some things that we could/should deal with, in no
+particular order.
 
-- I think we have the parent selection thing in a reasonable
-  place, but still we need to work out pipelines of mutation
-  and recombination operators.
-  - The addition of a closure that captures most of this pipeline
-    in the construction of a `Generation` type may essentially
-    resolve this issue, or at least suggests a way to approach it.
-- Extend `PopulationSelector` to a `WeightedParentSelector` that
-  is essentially a wrapper around `rand::distributions::WeightedChoice`
-  so we can provide weights on the different selectors.
-- Implement a non-threaded `Generation::next()` method that
-  creates a new generation without using the Rayon `into_par_iter()`.
-  - If we did this we could also benchmark both parallel and serial
-    versions of the system to see how much faster things run in
-    parallel.
-  - It would probably be reasonable to add a `parallel` feature
-    to the project so people could leave out parallelism (& Rayon)
-    if they didn't want any of that.
-- Should the `scorer` be inside the generation so we don't have to
+### Use `clap` to support command-line args for parameters
+
+Using `clap` in [the Rust echo client-server](https://github.com/NicMcPhee/rust-echo-client-server)
+was really easy, and worked quite nicely. We should add `clap`
+support for the various parameters that we might want to
+vary via the command line. At the moment that would include:
+
+- Population size
+- Length of bitstrings
+- Selectors
+- Mutation/recombination tools
+- Target problem
+
+Some of these may depend on others. The length of bitstrings
+makes sense here because that's the only genome we're using, but
+if we add other genomes (like tree-based GP or Push) then that
+won't make any sense.
+
+I'm not sure, but it seems possible that this kind of
+interdependence may create type problems for us in Rust. Maybe
+traits would be the way to address this?
+
+### Implement lexicase selection
+
+I would really like to try the HIFF problem with lexicase selection,
+which requires actually implementing lexicase selection.
+
+This is going to require extending `Individual` so that it
+contains a vector of errors and not just total error. I'll also
+need to change the name of the `error` field to `total_error`.
+
+Should this be a trait in some way? Should there be a trait that
+"requires" a vector of errors and we implement lexicase selection
+on a `Vector` of things that satisfy that trait? Then we could
+(I think) say things like "You can use lexicase selection on a
+population of things of type `T` where `T` implements the
+`HasErrorVector` trait"?
+
+### Replace `Individual` with traits?
+
+I'm not sure about this, but ["Implement lexicase selection"](#implement-lexicase-selection) makes me wonder if we the
+`Individual` type even makes sense, and whether it should be
+replaced by one or more traits that specify that various
+attributes that different kinds of `Individual`s should have.
+
+If you look at `Population`, e.g., currently that only makes
+two assumptions about `Individual`:
+
+- We can construct one, which I think the `Default` trait would
+  take care of for us, and
+- We can call `.score()`, which a new `HasScore` or `Scorable`
+  or whatever trait could take care of.
+
+Then when we add lexicase selection that could require that the
+individuals implement the `HasErrorVector` trait or similar. And
+when we get into GP, we might have traits like `HasTree` and
+`HasPlushy`.
+
+I'm not entirely sure how this all would work out, but I feel
+like this would be the more Rust-y (and ultimately more flexible)
+approach than having a "fixed" `Individual` type. This would
+be something like what I did with the `LinearCrossover` and
+`LinearMutation` traits.
+
+### Create mutation/recombination pipeline
+
+I think we have the parent selection thing in a reasonable
+place, but still we need to work out pipelines of mutation
+and recombination operators.
+
+The addition of a closure that captures most of this pipeline
+in the construction of a `Generation` type may essentially
+resolve this issue, or at least suggests a way to approach it.
+
+### Supported weighted parent selection
+
+We should extend `PopulationSelector` to a `WeightedParentSelector` that
+is essentially a wrapper around `rand::distributions::WeightedChoice`
+so we can provide weights on the different selectors.
+
+### Implement non-threaded `Generation::next()`
+
+We should probably implement a non-threaded `Generation::next()`
+method that creates a new generation without using the Rayon `into_par_iter()`.
+
+If we did this we could also benchmark both parallel and serial
+versions of the system to see how much faster things run in
+parallel.
+
+It would might also be reasonable to add a `parallel` feature
+to the project so people could leave out parallelism (& Rayon)
+if they didn't want any of that.
+
+### Move `scorer` inside `Generation`?
+
+Should the `scorer` be inside the generation so we don't have to
   keep capturing it and passing it around?
-  - Or should there actually be a `Run` type (or a `RunParams` type)
-    that holds all this stuff and is used to make them available to
-    types like `Generation` and `Population`?
+
+Or should there actually be a `Run` type (or a `RunParams` type)
+that holds all this stuff and is used to make them available to
+types like `Generation` and `Population`?
 
 ## Wednesday, 21 Sep 2022 (7-9pm)
 
