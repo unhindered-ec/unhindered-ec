@@ -44,6 +44,34 @@ impl<T: Send> Population<T> {
     }
 }
 
+impl<T> Population<T> {
+    #[must_use]
+    pub fn is_empty(&self) -> bool {
+        self.individuals.is_empty()
+    }
+
+    #[must_use]
+    pub fn size(&self) -> usize {
+        self.individuals.len()
+    }
+
+    /// # Panics
+    /// 
+    /// Will panic if the population is empty.
+    #[must_use]
+    pub fn best_individual(&self) -> &Individual<T> {
+        assert!(!self.individuals.is_empty());
+        #[allow(clippy::unwrap_used)]
+        self
+            .individuals
+            .iter()
+            .max_by_key(
+                |ind| ind.score
+            )
+            .unwrap()
+    }
+}
+
 pub type Selector<T> = dyn Fn(&Population<T>) -> Option<&Individual<T>> + Sync + Send;
 
 // TODO: Should this just become part of the `Population` type?

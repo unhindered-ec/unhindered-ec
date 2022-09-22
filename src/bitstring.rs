@@ -14,8 +14,10 @@ use crate::population::{Population, Selector};
 
 pub type Bitstring = Vec<bool>;
 
-trait LinearCrossover {
+pub trait LinearCrossover {
+    #[must_use]
     fn uniform_xo(&self, other: &Self, rng: &mut ThreadRng) -> Self;
+    #[must_use]
     fn two_point_xo(&self, other: &Self, rng: &mut ThreadRng) -> Self;
 }
 
@@ -48,8 +50,10 @@ impl<T: Copy> LinearCrossover for Vec<T> {
     }
 }
 
-trait LinearMutation {
+pub trait LinearMutation {
+    #[must_use]
     fn mutate_with_rate(&self, mutation_rate: f32, rng: &mut ThreadRng) -> Self;
+    #[must_use]
     fn mutate_one_over_length(&self, rng: &mut ThreadRng) -> Self;
 }
 
@@ -211,22 +215,6 @@ impl Population<Bitstring> {
             |rng| make_random(bit_length, rng),
             compute_score
         )
-    }
-
-    /// # Panics
-    /// 
-    /// Will panic if the population is empty.
-    #[must_use]
-    pub fn best_individual(&self) -> &Individual<Bitstring> {
-        assert!(!self.individuals.is_empty());
-        #[allow(clippy::unwrap_used)]
-        self
-            .individuals
-            .iter()
-            .max_by_key(
-                |ind| ind.score
-            )
-            .unwrap()
     }
 
     /// # Panics
