@@ -1,13 +1,18 @@
+use args::{RunModel, TargetProblem, Args};
 use rand::rngs::ThreadRng;
 
-use crate::{bitstring::{hiff, Bitstring, LinearCrossover, LinearMutation}, population::Population, generation::{Generation, Selector}, individual::Individual};
+use bitstring::{Bitstring, LinearCrossover, LinearMutation, count_ones, hiff};
+use population::Population;
+use generation::{Generation, Selector}; 
+use individual::Individual;
 
+pub mod args;
 pub mod individual;
 pub mod population;
 pub mod generation;
 pub mod bitstring;
 
-pub fn do_main() {
+pub fn do_main(args: Args) {
     let scorer = hiff;
 
     let binary_tournament = Population::<Bitstring>::make_tournament_selector(2);
@@ -21,9 +26,12 @@ pub fn do_main() {
 
     let population
         = Population::new_bitstring_population(
-            1000, 
-            128, 
-            scorer);
+            args.population_size, 
+            args.bit_length, 
+            match args.target_problem {
+                TargetProblem::CountOnes => count_ones,
+                TargetProblem::Hiff => hiff
+            });
     assert!(!population.is_empty());
 
     let make_child = move |rng: &mut ThreadRng, generation: &Generation<Bitstring>| {
@@ -42,8 +50,11 @@ pub fn do_main() {
     println!("Pop size = {}", generation.population.size());
     println!("Bit length = {}", best.genome.len());
 
-    (0..100).for_each(|generation_number| {
-        generation = generation.par_next();
+    (0..args.num_generations).for_each(|generation_number| {
+        generation = match args.run_model {
+            RunModel::Serial => generation.next(),
+            RunModel::Parallel => generation.par_next()
+        };
         let best = generation.best_individual();
         println!("Generation {} best is {:?}", generation_number, best);
     });
