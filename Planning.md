@@ -28,6 +28,10 @@ particular order.
 
 ### Use `clap` to support command-line args for parameters
 
+> 25 Sep 2022: I've added support for most of this. The one thing
+> I don't have any command line support for yet is the selectors
+> and the mutation/recombination pipelines.
+
 Using `clap` in [the Rust echo client-server](https://github.com/NicMcPhee/rust-echo-client-server)
 was really easy, and worked quite nicely. We should add `clap`
 support for the various parameters that we might want to
