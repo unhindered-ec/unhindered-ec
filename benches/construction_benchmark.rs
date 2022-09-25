@@ -1,6 +1,19 @@
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
 
-use rust_ga::{population::Population, bitstring::{count_ones, hiff}, do_main};
+use rust_ga::{
+    population::Population, 
+    bitstring::{count_ones, hiff}, 
+    do_main, 
+    args::{TargetProblem, Args, RunModel}
+};
+
+const DEFAULT_ARGS: Args = Args {
+    run_model: RunModel::Parallel,
+    target_problem: TargetProblem::Hiff,
+    population_size: 1000,
+    bit_length: 128,
+    num_generations: 100,
+};
 
 fn benchmark_construction_count_ones(c: &mut Criterion) {
     c.bench_function(
@@ -24,47 +37,62 @@ fn benchmark_construction_hiff(c: &mut Criterion) {
     ));
 }
 
-fn benchmark_main_hiff(c: &mut Criterion) {
+fn benchmark_run_count_ones_serial(c: &mut Criterion) {
+    let args = Args {
+        run_model: RunModel::Serial,
+        target_problem: TargetProblem::CountOnes,
+        ..DEFAULT_ARGS
+    };
     c.bench_function(
-        "Run main() on HIFF", 
-        |b| b.iter(|| do_main())
+        "Run main() serially on Count Ones", 
+        |b| b.iter(|| {
+            do_main(black_box(args))
+        })
+    );
+}
+
+fn benchmark_run_count_ones_parallel(c: &mut Criterion) {
+    let args = Args {
+        run_model: RunModel::Parallel,
+        target_problem: TargetProblem::CountOnes,
+        ..DEFAULT_ARGS
+    };
+    c.bench_function(
+        "Run main() in parallel on Count Ones", 
+        |b| b.iter(|| {
+            do_main(black_box(args))
+        })
+    );
+}
+
+fn benchmark_run_hiff_serial(c: &mut Criterion) {
+    let args = Args {
+        run_model: RunModel::Serial,
+        target_problem: TargetProblem::Hiff,
+        ..DEFAULT_ARGS
+    };
+    c.bench_function(
+        "Run main() serially on HIFF", 
+        |b| b.iter(|| {
+            do_main(black_box(args))
+        })
+    );
+}
+
+fn benchmark_run_hiff_parallel(c: &mut Criterion) {
+    let args = Args {
+        run_model: RunModel::Parallel,
+        target_problem: TargetProblem::Hiff,
+        ..DEFAULT_ARGS
+    };
+    c.bench_function(
+        "Run main() in parallel on HIFF", 
+        |b| b.iter(|| {
+            do_main(black_box(args))
+        })
     );
 }
 
 criterion_group!(construction_benches, benchmark_construction_count_ones, benchmark_construction_hiff);
-criterion_group!(main_benches, benchmark_main_hiff);
+criterion_group!(main_benches, benchmark_run_count_ones_serial, benchmark_run_count_ones_parallel, benchmark_run_hiff_serial, benchmark_run_hiff_parallel);
 criterion_main!(main_benches);
-
-
-
-
-    // #[bench]
-    // fn bench_count_ones(b: &mut Bencher) {
-    //     let mut rng = StdRng::seed_from_u64(0);
-    //     b.iter(|| {
-    //         let bits = vec![rng.gen_bool(0.5); 128];
-    //         count_ones(&bits)
-    //     });
-    // }
-
-    // #[bench]
-    // fn bench_individual_new(b: &mut Bencher) {
-    //     let mut rng = StdRng::seed_from_u64(0);
-    //     b.iter(|| Individual::new(128, &mut rng));
-    // }
-
-    // #[bench]
-    // fn bench_population_new(b: &mut Bencher) {
-    //     let mut rng = StdRng::seed_from_u64(0);
-    //     b.iter(|| Population::new(100, 128, &mut rng));
-    // }
-
-    // #[bench]
-    // fn bench_population_iter(b: &mut Bencher) {
-    //     let population = Population::new(100, 128, &mut rand::thread_rng());
-    //     b.iter(|| {
-    //         for ind in population.individuals.iter() {
-    //             ind.fitness
-    //         }
-    //     });
-    // }

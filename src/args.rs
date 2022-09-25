@@ -1,19 +1,19 @@
 use clap::Parser;
 
-#[derive(clap::ValueEnum, Clone, Debug)]
+#[derive(clap::ValueEnum, Copy, Clone, Debug)]
 pub enum RunModel {
     Serial,
     Parallel
 }
 
-#[derive(clap::ValueEnum, Clone, Debug)]
+#[derive(clap::ValueEnum, Copy, Clone, Debug)]
 pub enum TargetProblem {
     CountOnes,
     Hiff
 }
 
 /// Simple genetic algorithm in Rust
-#[derive(Parser, Debug)]
+#[derive(Parser, Debug, Copy, Clone)]
 #[clap(author, version, about, long_about = None)]
 pub struct Args {
     /// Should we use parallelism when doing the run?
