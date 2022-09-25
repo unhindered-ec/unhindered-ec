@@ -17,7 +17,6 @@ Issues might make more sense.
   - [Replace `Individual` with traits?](#replace-individual-with-traits)
   - [Create mutation/recombination pipeline](#create-mutationrecombination-pipeline)
   - [Supported weighted parent selection](#supported-weighted-parent-selection)
-  - [Implement non-threaded `Generation::next()`](#implement-non-threaded-generationnext)
   - [Move `scorer` inside `Generation`?](#move-scorer-inside-generation)
 - [Wednesday, 21 Sep 2022 (7-9pm)](#wednesday-21-sep-2022-7-9pm)
   - [What actually happened](#what-actually-happened)
@@ -106,19 +105,6 @@ resolve this issue, or at least suggests a way to approach it.
 We should extend `PopulationSelector` to a `WeightedParentSelector` that
 is essentially a wrapper around `rand::distributions::WeightedChoice`
 so we can provide weights on the different selectors.
-
-### Implement non-threaded `Generation::next()`
-
-We should probably implement a non-threaded `Generation::next()`
-method that creates a new generation without using the Rayon `into_par_iter()`.
-
-If we did this we could also benchmark both parallel and serial
-versions of the system to see how much faster things run in
-parallel.
-
-It would might also be reasonable to add a `parallel` feature
-to the project so people could leave out parallelism (& Rayon)
-if they didn't want any of that.
 
 ### Move `scorer` inside `Generation`?
 

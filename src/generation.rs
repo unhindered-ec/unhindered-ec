@@ -46,6 +46,7 @@ impl<'a, T> Generation<'a, T> {
 }
 
 impl<'a, T: Send + Sync> Generation<'a, T> {
+    /// Make the next generation using a Rayon parallel iterator.
     pub fn par_next(&self) -> Self {
         let previous_individuals = &self.population.individuals;
         let pop_size = previous_individuals.len();
@@ -65,5 +66,19 @@ impl<'a, T: Send + Sync> Generation<'a, T> {
         }
     }
 
-    // TODO: Create a `next()` that doesn't use parallelism, i.e., skips the `into_par_iter()` bit.
+    /// Make the next generation serially.
+    pub fn next(&self) -> Self {
+        let previous_individuals = &self.population.individuals;
+        let pop_size = previous_individuals.len();
+        let mut rng = rand::thread_rng();
+        let individuals 
+            = (0..pop_size)
+                .map(|_| (self.make_child)(&mut rng, self))
+                .collect();
+        Self { 
+            population: Population { individuals },
+            selectors: self.selectors,
+            make_child: self.make_child
+        }
+    }
 }
