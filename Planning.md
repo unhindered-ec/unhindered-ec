@@ -20,6 +20,7 @@ Issues might make more sense.
   - [Move `scorer` inside `Generation`?](#move-scorer-inside-generation)
 - [Wednesday, 21 Sep 2022 (7-9pm)](#wednesday-21-sep-2022-7-9pm)
   - [What actually happened](#what-actually-happened)
+- [Wednesday, 28 Sep 2022 (7-9pm)](#wednesday-28-sep-2022-7-9pm)
 
 ## Issues to address
 
@@ -70,7 +71,7 @@ population of things of type `T` where `T` implements the
 
 ### Replace `Individual` with traits?
 
-I'm not sure about this, but ["Implement lexicase selection"](#implement-lexicase-selection) makes me wonder if we the
+I'm not sure about this, but ["Implement lexicase selection"](#implement-lexicase-selection) makes me wonder if the
 `Individual` type even makes sense, and whether it should be
 replaced by one or more traits that specify that various
 attributes that different kinds of `Individual`s should have.
@@ -113,7 +114,7 @@ so we can provide weights on the different selectors.
 ### Move `scorer` inside `Generation`?
 
 Should the `scorer` be inside the generation so we don't have to
-  keep capturing it and passing it around?
+keep capturing it and passing it around?
 
 Or should there actually be a `Run` type (or a `RunParams` type)
 that holds all this stuff and is used to make them available to
@@ -158,3 +159,18 @@ that everything worked.
 After the stream ended I removed the `next_generation()` logic and
 `ParentSelector` type from `Population`, moving the former into
 `Generation` and deleting the latter altogether.
+
+## Wednesday, 28 Sep 2022 (7-9pm)
+
+I should start by going over the `clap` work that I added off-line,
+including the ability to choose things like the `TargetProblem`.
+
+
+
+Things to work on this week:
+
+- Extend `PopulationSelector` to a `WeightedParentSelector` that
+  is essentially a wrapper around `rand::distributions::WeightedChoice`
+  so we can provide weights on the different selectors.
+- If that get done quickly, then we can look at the problem of
+  pipelining mutation and recombination operators.
