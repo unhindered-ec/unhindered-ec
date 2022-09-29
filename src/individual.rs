@@ -7,10 +7,12 @@ use std::borrow::Borrow;
 
 use rand::rngs::ThreadRng;
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Clone)]
 pub struct Individual<T> {
     pub genome: T,
-    pub score: i64,
+    // TODO: Maybe make the score here a new generic type S
+    pub total_score: i64,
+    pub scores: Vec<i64>
 }
 
 impl<T> Individual<T> {
@@ -47,7 +49,7 @@ impl<T> Individual<T> {
      */
     pub fn new<R>(
             make_genome: impl Fn(&mut ThreadRng) -> T, 
-            compute_score: impl Fn(&R) -> i64,
+            compute_score: impl Fn(&R) -> Vec<i64>,
             rng: &mut ThreadRng) 
         -> Self
     where
@@ -55,10 +57,11 @@ impl<T> Individual<T> {
         R: ?Sized
     {
         let genome = make_genome(rng);
-        let score = compute_score(genome.borrow());
+        let scores = compute_score(genome.borrow());
         Self {
             genome,
-            score,
+            total_score: scores.iter().sum(),
+            scores
         }
     }
 }

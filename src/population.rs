@@ -23,7 +23,7 @@ impl<T: Send> Population<T> {
     pub fn new<R>(
             pop_size: usize,
             make_genome: impl Fn(&mut ThreadRng) -> T + Send + Sync, 
-            compute_score: impl Fn(&R) -> i64 + Send + Sync) 
+            compute_score: impl Fn(&R) -> Vec<i64> + Send + Sync) 
         -> Self
     where
         T: Borrow<R>,
@@ -66,7 +66,7 @@ impl<T> Population<T> {
             .individuals
             .iter()
             .max_by_key(
-                |ind| ind.score
+                |ind| ind.total_score
             )
             .unwrap()
     }
@@ -79,7 +79,7 @@ impl<T> Population<T> {
     #[must_use]
     pub fn best_score(&self) -> Option<&Individual<T>> {
         assert!(!self.individuals.is_empty());
-        self.individuals.iter().max_by_key(|ind| ind.score)
+        self.individuals.iter().max_by_key(|ind| ind.total_score)
     }
 
     #[must_use]
@@ -97,7 +97,7 @@ impl<T> Population<T> {
     pub fn tournament(&self, tournament_size: usize) -> Option<&Individual<T>> {
         self.individuals
             .choose_multiple(&mut rand::thread_rng(), tournament_size)
-            .max_by_key(|ind| ind.score)
+            .max_by_key(|ind| ind.total_score)
     }
 }
 

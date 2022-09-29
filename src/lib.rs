@@ -13,7 +13,10 @@ pub mod generation;
 pub mod bitstring;
 
 pub fn do_main(args: Args) {
-    let scorer = hiff;
+    let scorer = match args.target_problem {
+        TargetProblem::CountOnes => count_ones,
+        TargetProblem::Hiff => hiff
+    };
 
     let binary_tournament = Population::<Bitstring>::make_tournament_selector(2);
     let decimal_tournament = Population::<Bitstring>::make_tournament_selector(10);
@@ -27,10 +30,7 @@ pub fn do_main(args: Args) {
         = Population::new_bitstring_population(
             args.population_size, 
             args.bit_length, 
-            match args.target_problem {
-                TargetProblem::CountOnes => count_ones,
-                TargetProblem::Hiff => hiff
-            });
+            scorer);
     assert!(!population.is_empty());
 
     let make_child = move |rng: &mut ThreadRng, generation: &Generation<Bitstring>| {
@@ -61,7 +61,7 @@ pub fn do_main(args: Args) {
     });
 }
 
-fn make_child(scorer: impl Fn(&[bool]) -> i64, rng: &mut ThreadRng, generation: &Generation<Bitstring>) -> Individual<Bitstring> {
+fn make_child(scorer: impl Fn(&[bool]) -> Vec<i64>, rng: &mut ThreadRng, generation: &Generation<Bitstring>) -> Individual<Bitstring> {
     let first_parent = generation.get_parent(rng);
     let second_parent = generation.get_parent(rng);
 
@@ -69,6 +69,6 @@ fn make_child(scorer: impl Fn(&[bool]) -> i64, rng: &mut ThreadRng, generation: 
         = first_parent.genome
             .two_point_xo(&second_parent.genome, rng)
             .mutate_one_over_length(rng);
-    let score = scorer(&genome);
-    Individual { genome, score }
+    let scores = scorer(&genome);
+    Individual { genome, total_score: scores.iter().sum(), scores }
 }

@@ -75,8 +75,8 @@ impl LinearMutation for Bitstring {
 }
 
 #[must_use]
-pub fn count_ones(bits: &[bool]) -> i64 {
-    bits.iter().filter(|&&bit| bit).count() as i64
+pub fn count_ones(bits: &[bool]) -> Vec<i64> {
+    bits.iter().map(|bit| { if *bit { 1 } else { 0 }}).collect()
 }
 
 fn all_same(bits: &[bool]) -> bool {
@@ -84,16 +84,19 @@ fn all_same(bits: &[bool]) -> bool {
 }
 
 #[must_use]
-pub fn hiff(bits: &[bool]) -> i64 {
+pub fn hiff(bits: &[bool]) -> Vec<i64> {
     if bits.len() < 2 {
-        bits.len() as i64
+        vec![bits.len() as i64]
     } else {
         let half_len = bits.len() / 2;
-        let mut score = hiff(&bits[..half_len]) + hiff(&bits[half_len..]);
+        let mut scores = hiff(&bits[..half_len]);
+        scores.extend(hiff(&bits[half_len..]));
         if all_same(bits) {
-            score += bits.len() as i64;
+            scores.push(bits.len() as i64);
+        } else {
+            scores.push(0);
         }
-        score
+        scores
     }
 }
 
@@ -102,7 +105,7 @@ pub fn make_random(len: usize, rng: &mut ThreadRng) -> Bitstring {
 }
 
 impl Individual<Bitstring> {
-    pub fn new_bitstring<R>(bit_length: usize, compute_score: impl Fn(&R) -> i64 + Send + Sync, rng: &mut ThreadRng) -> Self
+    pub fn new_bitstring<R>(bit_length: usize, compute_score: impl Fn(&R) -> Vec<i64> + Send + Sync, rng: &mut ThreadRng) -> Self
     where
         Bitstring: Borrow<R>,
         R: ?Sized
@@ -124,7 +127,7 @@ impl Display for Individual<Bitstring> {
                 result.push('0');
             }
         }
-        write!(f, "[{}] ({})", result, self.score)
+        write!(f, "[{}]\n{:?}\n({})", result, self.scores, self.total_score)
     }
 }
 
@@ -150,29 +153,29 @@ impl Individual<Bitstring> {
     #[must_use]
     pub fn uniform_xo(&self, other_parent: &Self, rng: &mut ThreadRng) -> Self {
         let genome = self.genome.uniform_xo(&other_parent.genome, rng);
-        let score = hiff(&genome);
-        Self { genome, score }
+        let scores = hiff(&genome);
+        Self { genome, total_score: scores.iter().sum(), scores }
     }
 
     #[must_use]
-    pub fn two_point_xo(&self, other_parent: &Self, compute_score: impl Fn(&[bool]) -> i64, rng: &mut ThreadRng) -> Self {
+    pub fn two_point_xo(&self, other_parent: &Self, compute_score: impl Fn(&[bool]) -> Vec<i64>, rng: &mut ThreadRng) -> Self {
         let genome = self.genome.two_point_xo(&other_parent.genome, rng);
-        let score = compute_score(&genome);
-        Self { genome, score }
+        let scores = compute_score(&genome);
+        Self { genome, total_score: scores.iter().sum(), scores }
     }
 
     #[must_use]
-    pub fn mutate_one_over_length(&self, compute_score: impl Fn(&[bool]) -> i64, rng: &mut ThreadRng) -> Self {
+    pub fn mutate_one_over_length(&self, compute_score: impl Fn(&[bool]) -> Vec<i64>, rng: &mut ThreadRng) -> Self {
         let new_genome = self.genome.mutate_one_over_length(rng);
-        let score = compute_score(&new_genome);
-        Self { genome: new_genome, score }
+        let scores = compute_score(&new_genome);
+        Self { genome: new_genome, total_score: scores.iter().sum(), scores }
     }
 
     #[must_use]
-    pub fn mutate_with_rate(&self, mutation_rate: f32, compute_score: impl Fn(&[bool]) -> i64, rng: &mut ThreadRng) -> Self {
+    pub fn mutate_with_rate(&self, mutation_rate: f32, compute_score: impl Fn(&[bool]) -> Vec<i64>, rng: &mut ThreadRng) -> Self {
         let new_genome: Vec<bool> = self.genome.mutate_with_rate(mutation_rate, rng);
-        let score = compute_score(&new_genome);
-        Self { genome: new_genome, score }
+        let scores = compute_score(&new_genome);
+        Self { genome: new_genome, total_score: scores.iter().sum(), scores }
     }
 }
 
@@ -217,7 +220,7 @@ impl Population<Bitstring> {
     pub fn new_bitstring_population<R>(
         pop_size: usize, 
         bit_length: usize, 
-        compute_score: impl Fn(&R) -> i64 + Send + Sync) 
+        compute_score: impl Fn(&R) -> Vec<i64> + Send + Sync) 
     -> Self
     where
         Bitstring: Borrow<R>,

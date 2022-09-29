@@ -21,6 +21,7 @@ Issues might make more sense.
 - [Wednesday, 21 Sep 2022 (7-9pm)](#wednesday-21-sep-2022-7-9pm)
   - [What actually happened](#what-actually-happened)
 - [Wednesday, 28 Sep 2022 (7-9pm)](#wednesday-28-sep-2022-7-9pm)
+  - [What actually happened](#what-actually-happened-1)
 
 ## Issues to address
 
@@ -173,3 +174,20 @@ Things to work on this week:
 - Implement Lexicase Selection.
 - If that get done quickly, then we can look at the problem of
   pipelining mutation and recombination operators.
+
+### What actually happened
+
+We got weighted selecting working nicely, using `SliceRandom::choose_weighted`
+(as suggested by `esitsu@Twitch`). This (and some reasonable weights) seemed
+to have substantially improved the performance of the system on both the
+test problems.
+
+`esitsu` also suggested having `Individual<Bitstring>` implement the `Display`
+trait so we could print genomes out as 0s and 1s instead of `true`s and `false`s.
+This really improved the readability of the output.
+
+We then started the process of implementing lexicase selection. We started
+by storing vectors of scores in individuals, which bled across the code base
+quite a lot. I could have used generics to make that less of a problem in the
+future, but I wanted to try to wrap this up so we could get to the proper
+performance comparison with Clojure.

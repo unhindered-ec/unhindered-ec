@@ -22,7 +22,7 @@ fn benchmark_construction_count_ones(c: &mut Criterion) {
             black_box(1000), 
             black_box(128),
             count_ones
-        ).best_score().unwrap().score
+        ).best_score().unwrap().total_score
     ));
 }
 
@@ -33,7 +33,7 @@ fn benchmark_construction_hiff(c: &mut Criterion) {
             black_box(1000), 
             black_box(128),
             hiff
-        ).best_score().unwrap().score
+        ).best_score().unwrap().total_score
     ));
 }
 
