@@ -83,20 +83,57 @@ fn all_same(bits: &[bool]) -> bool {
     bits.iter().all(|&bit| bit == bits[0])
 }
 
+// #[must_use]
+// pub fn hiff(bits: &[bool]) -> Vec<i64> {
+//     if bits.len() < 2 {
+//         vec![bits.len() as i64]
+//     } else {
+//         let half_len = bits.len() / 2;
+//         // let scores = [hiff(&bits[..half_len]), hiff(&bits[half_len..])];
+//         // let mut scores = scores.concat();
+//         // let (mut scores, mut right) = (hiff(&bits[..half_len]), hiff(&bits[half_len..]));
+//         // scores.append(&mut right);
+//         let mut scores = hiff(&bits[..half_len]);
+//         scores.extend(hiff(&bits[half_len..]));
+//         // let mut scores = Vec::with_capacity(bits.len() * 2 - 1);
+//         // scores.extend(hiff(&bits[..half_len]));
+//         // scores.extend(hiff(&bits[half_len..]));
+//         if all_same(bits) {
+//             scores.push(bits.len() as i64);
+//         } else {
+//             scores.push(0);
+//         }
+//         scores
+//     }
+// }
+
 #[must_use]
 pub fn hiff(bits: &[bool]) -> Vec<i64> {
-    if bits.len() < 2 {
-        vec![bits.len() as i64]
+    let num_scores = 2*bits.len() - 1;
+    let mut scores = vec![0; num_scores];
+    do_hiff(bits, &mut scores, 0);
+    scores
+}
+
+// `current_index` is the index in `scores` we would next write to. We return a `usize` that
+// is the index that the next call would write to, so it's important to capture
+// that value and use it on the subsequent write.
+pub fn do_hiff(bits: &[bool], scores: &mut [i64], current_index: usize) -> (bool, usize) {
+    let len = bits.len();
+    if len < 2 {
+        scores[current_index] = len as i64;
+        return (true, current_index+1);
     } else {
-        let half_len = bits.len() / 2;
-        let mut scores = hiff(&bits[..half_len]);
-        scores.extend(hiff(&bits[half_len..]));
-        if all_same(bits) {
-            scores.push(bits.len() as i64);
+        let half_len = len / 2;
+        let (left_all_same, offset) = do_hiff(&bits[..half_len], scores, current_index);
+        let (right_all_same, offset) = do_hiff(&bits[half_len..], scores, offset);
+        if left_all_same && right_all_same && bits[0] == bits[half_len] {
+            scores[offset] = bits.len() as i64;
+            return (true, offset+1);
         } else {
-            scores.push(0);
+            scores[offset] = 0;
+            return (false, offset+1);
         }
-        scores
     }
 }
 
