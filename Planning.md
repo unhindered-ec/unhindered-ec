@@ -165,12 +165,11 @@ After the stream ended I removed the `next_generation()` logic and
 I should start by going over the `clap` work that I added off-line,
 including the ability to choose things like the `TargetProblem`.
 
-
-
 Things to work on this week:
 
 - Extend `PopulationSelector` to a `WeightedParentSelector` that
   is essentially a wrapper around `rand::distributions::WeightedChoice`
   so we can provide weights on the different selectors.
+- Implement Lexicase Selection.
 - If that get done quickly, then we can look at the problem of
   pipelining mutation and recombination operators.

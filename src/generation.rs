@@ -4,6 +4,7 @@ use rayon::prelude::{IntoParallelIterator, ParallelIterator};
 use crate::{population::{Population}, individual::Individual};
 
 pub type Selector<T> = dyn Fn(&Population<T>) -> Option<&Individual<T>> + Sync + Send;
+pub type WeightedSelector<'a, T> = (&'a Selector<T>, usize);
 pub type ChildMaker<T> = dyn Fn(&mut ThreadRng, &Generation<T>) -> Individual<T> + Send + Sync;
 
 // TODO: Extend the vector of Selectors to a WeightedParentSelector that is essentially
@@ -16,17 +17,17 @@ pub type ChildMaker<T> = dyn Fn(&mut ThreadRng, &Generation<T>) -> Individual<T>
 //   `Generation` and `Population`?
 pub struct Generation<'a, T> {
     pub population: Population<T>,
-    selectors: &'a Vec<&'a Selector<T>>,
+    weighted_selectors: &'a Vec<WeightedSelector<'a, T>>,
     make_child: &'a ChildMaker<T>
 }
 
 impl<'a, T> Generation<'a, T> {
-    pub fn new(population: Population<T>, selectors: &'a Vec<&Selector<T>>, make_child: &'a ChildMaker<T>) -> Self {
+    pub fn new(population: Population<T>, weighted_selectors: &'a Vec<WeightedSelector<'a, T>>, make_child: &'a ChildMaker<T>) -> Self {
         assert!(!population.is_empty());
-        assert!(!selectors.is_empty());
+        assert!(!weighted_selectors.is_empty());
         Self {
             population,
-            selectors,
+            weighted_selectors,
             make_child
         }
     }
@@ -38,7 +39,10 @@ impl<'a, T> Generation<'a, T> {
     pub fn get_parent(&self, rng: &mut ThreadRng) -> &Individual<T> {
         // The set of selectors should be non-empty, and if it is, then we
         // should be able to safely unwrap the `choose()` call.
-        let s = self.selectors.choose(rng).unwrap();
+        let s 
+            = self.weighted_selectors.choose_weighted(rng, |item| item.1).unwrap().0;
+        // choices.choose_weighted(&mut rng, |item| item.1).unwrap().0)
+
         // The population should be non-empty, and if it is, then we should be
         // able to safely unwrap the selection call.
         s(&self.population).unwrap()
@@ -61,7 +65,7 @@ impl<'a, T: Send + Sync> Generation<'a, T> {
                 .collect();
         Self { 
             population: Population { individuals },
-            selectors: self.selectors,
+            weighted_selectors: self.weighted_selectors,
             make_child: self.make_child
         }
     }
@@ -77,7 +81,7 @@ impl<'a, T: Send + Sync> Generation<'a, T> {
                 .collect();
         Self { 
             population: Population { individuals },
-            selectors: self.selectors,
+            weighted_selectors: self.weighted_selectors,
             make_child: self.make_child
         }
     }

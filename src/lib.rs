@@ -3,7 +3,7 @@ use rand::rngs::ThreadRng;
 
 use bitstring::{Bitstring, LinearCrossover, LinearMutation, count_ones, hiff};
 use population::Population;
-use generation::{Generation, Selector}; 
+use generation::{Generation, WeightedSelector}; 
 use individual::Individual;
 
 pub mod args;
@@ -17,12 +17,11 @@ pub fn do_main(args: Args) {
 
     let binary_tournament = Population::<Bitstring>::make_tournament_selector(2);
     let decimal_tournament = Population::<Bitstring>::make_tournament_selector(10);
-    let selectors: Vec<&Selector<Bitstring>> 
-        = vec![&Population::best_score,
-               &Population::random, 
-               &binary_tournament,
-               &binary_tournament,
-               &decimal_tournament];
+    let weighted_selectors: Vec<WeightedSelector<Bitstring>> 
+        = vec![(&Population::best_score, 5),
+               (&Population::random, 20),
+               (&binary_tournament, 50),
+               (&decimal_tournament, 25)];
 
     let population
         = Population::new_bitstring_population(
@@ -40,7 +39,7 @@ pub fn do_main(args: Args) {
 
     let mut generation = Generation::new(
         population,
-        &selectors,
+        &weighted_selectors,
         &make_child
     );
 
