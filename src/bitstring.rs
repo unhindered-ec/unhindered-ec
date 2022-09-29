@@ -110,29 +110,26 @@ fn all_same(bits: &[bool]) -> bool {
 #[must_use]
 pub fn hiff(bits: &[bool]) -> Vec<i64> {
     let num_scores = 2*bits.len() - 1;
-    let mut scores = vec![0; num_scores];
-    do_hiff(bits, &mut scores, 0);
+    let mut scores = Vec::with_capacity(num_scores);
+    do_hiff(bits, &mut scores);
     scores
 }
 
-// `current_index` is the index in `scores` we would next write to. We return a `usize` that
-// is the index that the next call would write to, so it's important to capture
-// that value and use it on the subsequent write.
-pub fn do_hiff(bits: &[bool], scores: &mut [i64], current_index: usize) -> (bool, usize) {
+pub fn do_hiff(bits: &[bool], scores: &mut Vec<i64>) -> bool {
     let len = bits.len();
     if len < 2 {
-        scores[current_index] = len as i64;
-        return (true, current_index+1);
+        scores.push(len as i64);
+        return true;
     } else {
         let half_len = len / 2;
-        let (left_all_same, offset) = do_hiff(&bits[..half_len], scores, current_index);
-        let (right_all_same, offset) = do_hiff(&bits[half_len..], scores, offset);
+        let left_all_same = do_hiff(&bits[..half_len], scores);
+        let right_all_same = do_hiff(&bits[half_len..], scores);
         if left_all_same && right_all_same && bits[0] == bits[half_len] {
-            scores[offset] = bits.len() as i64;
-            return (true, offset+1);
+            scores.push(bits.len() as i64);
+            return true;
         } else {
-            scores[offset] = 0;
-            return (false, offset+1);
+            scores.push(0);
+            return false;
         }
     }
 }
