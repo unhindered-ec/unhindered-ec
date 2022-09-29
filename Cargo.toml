@@ -16,3 +16,7 @@ criterion = "0.3"
 [[bench]]
 name = "construction_benchmark"
 harness = false
+
+[[bench]]
+name = "hiff_benchmark"
+harness = false
