@@ -4,6 +4,7 @@
 #![warn(clippy::expect_used)]
 
 use std::borrow::Borrow;
+use std::fmt::Display;
 
 use rand::{rngs::ThreadRng, Rng};
 
@@ -110,6 +111,20 @@ impl Individual<Bitstring> {
                 |rng| make_random(bit_length, rng), 
                 compute_score,
                 rng)
+    }
+}
+
+impl Display for Individual<Bitstring> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let mut result = String::new();
+        for bit in &self.genome {
+            if *bit {
+                result.push('1');
+            } else {
+                result.push('0');
+            }
+        }
+        write!(f, "[{}] ({})", result, self.score)
     }
 }
 

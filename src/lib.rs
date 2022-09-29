@@ -45,7 +45,7 @@ pub fn do_main(args: Args) {
 
     assert!(!generation.population.is_empty());
     let best = generation.best_individual();
-    println!("{:?}", best);
+    println!("{}", best);
     println!("Pop size = {}", generation.population.size());
     println!("Bit length = {}", best.genome.len());
 
@@ -55,7 +55,9 @@ pub fn do_main(args: Args) {
             RunModel::Parallel => generation.par_next()
         };
         let best = generation.best_individual();
-        println!("Generation {} best is {:?}", generation_number, best);
+        // TODO: Change 2 to be the smallest number of digits needed for
+        //  args.num_generations-1.
+        println!("Generation {:2} best is {}", generation_number, best);
     });
 }
 
