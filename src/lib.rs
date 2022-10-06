@@ -21,10 +21,13 @@ pub fn do_main(args: Args) {
     let binary_tournament = Population::<Bitstring>::make_tournament_selector(2);
     let decimal_tournament = Population::<Bitstring>::make_tournament_selector(10);
     let weighted_selectors: Vec<WeightedSelector<Bitstring>> 
-        = vec![(&Population::best_score, 5),
-               (&Population::random, 20),
-               (&binary_tournament, 50),
-               (&decimal_tournament, 25)];
+        = vec![
+            //    (&Population::best_score, 5),
+            //    (&Population::random, 20),
+            //    (&binary_tournament, 50),
+            //    (&decimal_tournament, 25)
+               (&Population::lexicase, 75)
+               ];
 
     let population
         = Population::new_bitstring_population(
