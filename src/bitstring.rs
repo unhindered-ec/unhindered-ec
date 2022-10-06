@@ -83,30 +83,6 @@ fn all_same(bits: &[bool]) -> bool {
     bits.iter().all(|&bit| bit == bits[0])
 }
 
-// #[must_use]
-// pub fn hiff(bits: &[bool]) -> Vec<i64> {
-//     if bits.len() < 2 {
-//         vec![bits.len() as i64]
-//     } else {
-//         let half_len = bits.len() / 2;
-//         // let scores = [hiff(&bits[..half_len]), hiff(&bits[half_len..])];
-//         // let mut scores = scores.concat();
-//         // let (mut scores, mut right) = (hiff(&bits[..half_len]), hiff(&bits[half_len..]));
-//         // scores.append(&mut right);
-//         let mut scores = hiff(&bits[..half_len]);
-//         scores.extend(hiff(&bits[half_len..]));
-//         // let mut scores = Vec::with_capacity(bits.len() * 2 - 1);
-//         // scores.extend(hiff(&bits[..half_len]));
-//         // scores.extend(hiff(&bits[half_len..]));
-//         if all_same(bits) {
-//             scores.push(bits.len() as i64);
-//         } else {
-//             scores.push(0);
-//         }
-//         scores
-//     }
-// }
-
 #[must_use]
 pub fn hiff(bits: &[bool]) -> Vec<i64> {
     let num_scores = 2*bits.len() - 1;
