@@ -26,7 +26,7 @@ pub fn do_main(args: Args) {
             //    (&Population::random, 20),
             //    (&binary_tournament, 50),
             //    (&decimal_tournament, 25)
-               (&Population::lexicase, 75)
+               (&Population::simple_lexicase, 75)
                ];
 
     let population

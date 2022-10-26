@@ -7,14 +7,6 @@ use rust_ga::{
     args::{TargetProblem, Args, RunModel}
 };
 
-const DEFAULT_ARGS: Args = Args {
-    run_model: RunModel::Parallel,
-    target_problem: TargetProblem::Hiff,
-    population_size: 1000,
-    bit_length: 128,
-    num_generations: 100,
-};
-
 fn benchmark_construction_count_ones(c: &mut Criterion) {
     c.bench_function(
         "Construct population count_ones", 
@@ -37,62 +29,5 @@ fn benchmark_construction_hiff(c: &mut Criterion) {
     ));
 }
 
-fn benchmark_run_count_ones_serial(c: &mut Criterion) {
-    let args = Args {
-        run_model: RunModel::Serial,
-        target_problem: TargetProblem::CountOnes,
-        ..DEFAULT_ARGS
-    };
-    c.bench_function(
-        "Run main() serially on Count Ones", 
-        |b| b.iter(|| {
-            do_main(black_box(args))
-        })
-    );
-}
-
-fn benchmark_run_count_ones_parallel(c: &mut Criterion) {
-    let args = Args {
-        run_model: RunModel::Parallel,
-        target_problem: TargetProblem::CountOnes,
-        ..DEFAULT_ARGS
-    };
-    c.bench_function(
-        "Run main() in parallel on Count Ones", 
-        |b| b.iter(|| {
-            do_main(black_box(args))
-        })
-    );
-}
-
-fn benchmark_run_hiff_serial(c: &mut Criterion) {
-    let args = Args {
-        run_model: RunModel::Serial,
-        target_problem: TargetProblem::Hiff,
-        ..DEFAULT_ARGS
-    };
-    c.bench_function(
-        "Run main() serially on HIFF", 
-        |b| b.iter(|| {
-            do_main(black_box(args))
-        })
-    );
-}
-
-fn benchmark_run_hiff_parallel(c: &mut Criterion) {
-    let args = Args {
-        run_model: RunModel::Parallel,
-        target_problem: TargetProblem::Hiff,
-        ..DEFAULT_ARGS
-    };
-    c.bench_function(
-        "Run main() in parallel on HIFF", 
-        |b| b.iter(|| {
-            do_main(black_box(args))
-        })
-    );
-}
-
 criterion_group!(construction_benches, benchmark_construction_count_ones, benchmark_construction_hiff);
-criterion_group!(main_benches, benchmark_run_count_ones_serial, benchmark_run_count_ones_parallel, benchmark_run_hiff_serial, benchmark_run_hiff_parallel);
-criterion_main!(main_benches);
+criterion_main!(construction_benches);

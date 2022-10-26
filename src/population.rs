@@ -101,7 +101,7 @@ impl<T> Population<T> {
             .max_by_key(|ind| ind.total_score)
     }
 
-    pub fn lexicase(&self) -> Option<&Individual<T>> {
+    pub fn simple_lexicase(&self) -> Option<&Individual<T>> {
         // Candidate set is initially the whole population.
         // Shuffle the (indices of the) test cases.
         // For each test in turn:
@@ -112,23 +112,21 @@ impl<T> Population<T> {
         // Go until you get to a single individual or you run
         // out of test cases.
 
-        // TODO: Compute this once when the population is initially constructed
+        // TODO: Compute these bits once when the population is initially constructed
         //   and then just look it up when necessary instead of recomputing it
         //   for every selection.
         let first_individual = &self.individuals[0];
         let first_scores = &first_individual.scores;
         let num_scores = first_scores.len();
         let mut case_indices: Vec<usize> = (0..num_scores).collect();
+
         case_indices.shuffle(&mut rand::thread_rng());
 
         let mut candidates: Vec<&Individual<T>> = self.individuals
             .iter()
-            // .unique_by(|ind| &ind.scores)
             .collect();
-        // let mut cases_checked = 0;
 
         for test_case_index in case_indices {
-            // print!("{} ", candidates.len());
             assert!(!candidates.is_empty(), "The set of lexicase candidates shouldn't be empty");
             if candidates.len() == 1 {
                 break;
@@ -139,9 +137,46 @@ impl<T> Population<T> {
             candidates = candidates.into_iter().filter(|ind| {
                 ind.scores[test_case_index] == max_score
             }).collect();
-            // cases_checked += 1;
         }
-        // println!(" [{}]", cases_checked);
+
+        Some(candidates[0])
+    }
+
+    pub fn lexicase_with_dup_removal(&self) -> Option<&Individual<T>> {
+        // Candidate set is initially the whole population.
+        // Shuffle the (indices of the) test cases.
+        // For each test in turn:
+        //   * Find the best score of any individual still in
+        //     in the candidate set on that test case.
+        //   * Remove any individual from the candidate set that
+        //     is worse than that best score on that test case.
+        // Go until you get to a single individual or you run
+        // out of test cases.
+
+        let first_individual = &self.individuals[0];
+        let first_scores = &first_individual.scores;
+        let num_scores = first_scores.len();
+        let mut case_indices: Vec<usize> = (0..num_scores).collect();
+
+        case_indices.shuffle(&mut rand::thread_rng());
+
+        let mut candidates: Vec<&Individual<T>> = self.individuals
+            .iter()
+            .unique_by(|ind| &ind.scores)
+            .collect();
+
+        for test_case_index in case_indices {
+            assert!(!candidates.is_empty(), "The set of lexicase candidates shouldn't be empty");
+            if candidates.len() == 1 {
+                break;
+            }
+            let max_score = candidates.iter().max_by_key(|ind| {
+                ind.scores[test_case_index]
+            }).unwrap().scores[test_case_index];
+            candidates = candidates.into_iter().filter(|ind| {
+                ind.scores[test_case_index] == max_score
+            }).collect();
+        }
 
         Some(candidates[0])
     }
