@@ -3,7 +3,7 @@
 #![warn(clippy::unwrap_used)]
 #![warn(clippy::expect_used)]
 
-use clap::{Parser};
+use clap::Parser;
 use rust_ga::args::Args;
 use rust_ga::do_main;
 
@@ -15,10 +15,10 @@ fn main() {
 
 #[cfg(test)]
 mod tests {
-    use rust_ga::population::Population;
-    use rust_ga::individual::Individual;
     use rust_ga::bitstring::count_ones;
     use rust_ga::bitstring::hiff;
+    use rust_ga::individual::Individual;
+    use rust_ga::population::Population;
     // use rand::rngs::StdRng;
     // use rand::SeedableRng;
     // use std::time::Instant;
@@ -33,7 +33,10 @@ mod tests {
     #[test]
     fn test_hiff() {
         let bits = vec![true, false, false, false, true, true, true, true];
-        assert_eq!(hiff(&bits), vec![1, 1, 0, 1, 1, 2, 0, 1, 1, 2, 1, 1, 2, 4, 0]);
+        assert_eq!(
+            hiff(&bits),
+            vec![1, 1, 0, 1, 1, 2, 0, 1, 1, 2, 1, 1, 2, 4, 0]
+        );
     }
 
     #[test]
@@ -50,8 +53,14 @@ mod tests {
         let pop = Population::new_bitstring_population(100, 128, count_ones);
         assert_eq!(pop.individuals.len(), 100);
         assert_eq!(pop.individuals[0].genome.len(), 128);
-        assert_eq!(pop.individuals[0].scores, count_ones(&pop.individuals[0].genome));
-        assert_eq!(pop.individuals[0].total_score, count_ones(&pop.individuals[0].genome).iter().sum());
+        assert_eq!(
+            pop.individuals[0].scores,
+            count_ones(&pop.individuals[0].genome)
+        );
+        assert_eq!(
+            pop.individuals[0].total_score,
+            count_ones(&pop.individuals[0].genome).iter().sum()
+        );
     }
 
     #[test]
@@ -60,6 +69,9 @@ mod tests {
         assert_eq!(pop.individuals.len(), 100);
         assert_eq!(pop.individuals[0].genome.len(), 128);
         assert_eq!(pop.individuals[0].scores, hiff(&pop.individuals[0].genome));
-        assert_eq!(pop.individuals[0].total_score, hiff(&pop.individuals[0].genome).iter().sum());
+        assert_eq!(
+            pop.individuals[0].total_score,
+            hiff(&pop.individuals[0].genome).iter().sum()
+        );
     }
 }

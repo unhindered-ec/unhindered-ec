@@ -25,12 +25,9 @@ impl<T: Copy> LinearCrossover for Vec<T> {
         // The two parents should have the same length.
         assert!(self.len() == other.len());
         let len = self.len();
-        (0..len).map(|i| 
-            if rng.gen_bool(0.5) { 
-                self[i] 
-            } else { 
-                other[i] 
-            }).collect()
+        (0..len)
+            .map(|i| if rng.gen_bool(0.5) { self[i] } else { other[i] })
+            .collect()
     }
 
     fn two_point_xo(&self, other: &Self, rng: &mut ThreadRng) -> Self {
@@ -58,14 +55,16 @@ pub trait LinearMutation {
 
 impl LinearMutation for Bitstring {
     fn mutate_with_rate(&self, mutation_rate: f32, rng: &mut ThreadRng) -> Self {
-        self.iter().map(|bit| {
-            let r: f32 = rng.gen();
-            if r < mutation_rate {
-                !*bit
-            } else {
-                *bit
-            }
-        }).collect()
+        self.iter()
+            .map(|bit| {
+                let r: f32 = rng.gen();
+                if r < mutation_rate {
+                    !*bit
+                } else {
+                    *bit
+                }
+            })
+            .collect()
     }
 
     fn mutate_one_over_length(&self, rng: &mut ThreadRng) -> Self {
@@ -76,7 +75,7 @@ impl LinearMutation for Bitstring {
 
 #[must_use]
 pub fn count_ones(bits: &[bool]) -> Vec<i64> {
-    bits.iter().map(|bit| { if *bit { 1 } else { 0 }}).collect()
+    bits.iter().map(|bit| if *bit { 1 } else { 0 }).collect()
 }
 
 fn all_same(bits: &[bool]) -> bool {
@@ -85,7 +84,7 @@ fn all_same(bits: &[bool]) -> bool {
 
 #[must_use]
 pub fn hiff(bits: &[bool]) -> Vec<i64> {
-    let num_scores = 2*bits.len() - 1;
+    let num_scores = 2 * bits.len() - 1;
     let mut scores = Vec::with_capacity(num_scores);
     do_hiff(bits, &mut scores);
     scores
@@ -115,15 +114,16 @@ pub fn make_random(len: usize, rng: &mut ThreadRng) -> Bitstring {
 }
 
 impl Individual<Bitstring> {
-    pub fn new_bitstring<R>(bit_length: usize, compute_score: impl Fn(&R) -> Vec<i64> + Send + Sync, rng: &mut ThreadRng) -> Self
+    pub fn new_bitstring<R>(
+        bit_length: usize,
+        compute_score: impl Fn(&R) -> Vec<i64> + Send + Sync,
+        rng: &mut ThreadRng,
+    ) -> Self
     where
         Bitstring: Borrow<R>,
-        R: ?Sized
+        R: ?Sized,
     {
-        Self::new(
-                |rng| make_random(bit_length, rng), 
-                compute_score,
-                rng)
+        Self::new(|rng| make_random(bit_length, rng), compute_score, rng)
     }
 }
 
@@ -146,7 +146,7 @@ impl Display for Individual<Bitstring> {
 // parameterize the recombination operators, and I'll probably need to have some
 // kind of vector of recombination operators that act on the Bitstrings, and then
 // computes the score once at the end.
-// 
+//
 // An alternative would be to use the Lazy eval tools and say that the score of
 // an individual is computed lazily. That would mean that "intermediate" Individuals
 // wouldn't have their score calculated since it's never used. That's a fairly
@@ -156,7 +156,7 @@ impl Display for Individual<Bitstring> {
 // I also wonder if there are places where implementing the `From` trait would
 // make sense. In principle we should be able to switch back and forth between
 // `Bitstring` and `Individual` pretty freely, but I don't know if we can
-// parameterize that with the score function.  
+// parameterize that with the score function.
 //
 // This has hiff cooked in and needs to be parameterized on the score calculator.
 impl Individual<Bitstring> {
@@ -164,28 +164,58 @@ impl Individual<Bitstring> {
     pub fn uniform_xo(&self, other_parent: &Self, rng: &mut ThreadRng) -> Self {
         let genome = self.genome.uniform_xo(&other_parent.genome, rng);
         let scores = hiff(&genome);
-        Self { genome, total_score: scores.iter().sum(), scores }
+        Self {
+            genome,
+            total_score: scores.iter().sum(),
+            scores,
+        }
     }
 
     #[must_use]
-    pub fn two_point_xo(&self, other_parent: &Self, compute_score: impl Fn(&[bool]) -> Vec<i64>, rng: &mut ThreadRng) -> Self {
+    pub fn two_point_xo(
+        &self,
+        other_parent: &Self,
+        compute_score: impl Fn(&[bool]) -> Vec<i64>,
+        rng: &mut ThreadRng,
+    ) -> Self {
         let genome = self.genome.two_point_xo(&other_parent.genome, rng);
         let scores = compute_score(&genome);
-        Self { genome, total_score: scores.iter().sum(), scores }
+        Self {
+            genome,
+            total_score: scores.iter().sum(),
+            scores,
+        }
     }
 
     #[must_use]
-    pub fn mutate_one_over_length(&self, compute_score: impl Fn(&[bool]) -> Vec<i64>, rng: &mut ThreadRng) -> Self {
+    pub fn mutate_one_over_length(
+        &self,
+        compute_score: impl Fn(&[bool]) -> Vec<i64>,
+        rng: &mut ThreadRng,
+    ) -> Self {
         let new_genome = self.genome.mutate_one_over_length(rng);
         let scores = compute_score(&new_genome);
-        Self { genome: new_genome, total_score: scores.iter().sum(), scores }
+        Self {
+            genome: new_genome,
+            total_score: scores.iter().sum(),
+            scores,
+        }
     }
 
     #[must_use]
-    pub fn mutate_with_rate(&self, mutation_rate: f32, compute_score: impl Fn(&[bool]) -> Vec<i64>, rng: &mut ThreadRng) -> Self {
+    pub fn mutate_with_rate(
+        &self,
+        mutation_rate: f32,
+        compute_score: impl Fn(&[bool]) -> Vec<i64>,
+        rng: &mut ThreadRng,
+    ) -> Self {
         let new_genome: Vec<bool> = self.genome.mutate_with_rate(mutation_rate, rng);
         let scores = compute_score(&new_genome);
-        Self { genome: new_genome, total_score: scores.iter().sum(), scores }
+        Self {
+            genome: new_genome,
+            total_score: scores.iter().sum(),
+            scores,
+        }
     }
 }
 
@@ -201,13 +231,22 @@ mod test {
     fn mutate_one_over_does_not_change_much() {
         let mut rng = rand::thread_rng();
         let num_bits = 100;
-        let parent: Individual<Bitstring> = Individual::new_bitstring(num_bits, count_ones, &mut rng);
+        let parent: Individual<Bitstring> =
+            Individual::new_bitstring(num_bits, count_ones, &mut rng);
         let child = parent.mutate_one_over_length(count_ones, &mut rng);
 
-        let num_differences = zip(parent.genome, child.genome).filter(|(p, c)| *p != *c).count();
+        let num_differences = zip(parent.genome, child.genome)
+            .filter(|(p, c)| *p != *c)
+            .count();
         println!("Num differences = {num_differences}");
-        assert!(0 < num_differences, "We're expecting at least one difference");
-        assert!(num_differences < num_bits / 10, "We're not expecting lots of differences, and got {num_differences}.");
+        assert!(
+            0 < num_differences,
+            "We're expecting at least one difference"
+        );
+        assert!(
+            num_differences < num_bits / 10,
+            "We're not expecting lots of differences, and got {num_differences}."
+        );
     }
 
     // This test is stochastic, so I'm going to ignore it most of the time.
@@ -216,30 +255,35 @@ mod test {
     fn mutate_with_rate_does_not_change_much() {
         let mut rng = rand::thread_rng();
         let num_bits = 100;
-        let parent: Individual<Bitstring> = Individual::new_bitstring(num_bits, count_ones, &mut rng);
+        let parent: Individual<Bitstring> =
+            Individual::new_bitstring(num_bits, count_ones, &mut rng);
         let child = parent.mutate_with_rate(0.05, count_ones, &mut rng);
 
-        let num_differences = zip(parent.genome, child.genome).filter(|(p, c)| *p != *c).count();
+        let num_differences = zip(parent.genome, child.genome)
+            .filter(|(p, c)| *p != *c)
+            .count();
         println!("Num differences = {num_differences}");
-        assert!(0 < num_differences, "We're expecting at least one difference");
-        assert!(num_differences < num_bits / 10, "We're not expecting lots of differences, and got {num_differences}.");
-    }    
+        assert!(
+            0 < num_differences,
+            "We're expecting at least one difference"
+        );
+        assert!(
+            num_differences < num_bits / 10,
+            "We're not expecting lots of differences, and got {num_differences}."
+        );
+    }
 }
 
 impl Population<Bitstring> {
     pub fn new_bitstring_population<R>(
-        pop_size: usize, 
-        bit_length: usize, 
-        compute_score: impl Fn(&R) -> Vec<i64> + Send + Sync) 
-    -> Self
+        pop_size: usize,
+        bit_length: usize,
+        compute_score: impl Fn(&R) -> Vec<i64> + Send + Sync,
+    ) -> Self
     where
         Bitstring: Borrow<R>,
-        R: ?Sized
+        R: ?Sized,
     {
-        Self::new(
-            pop_size,
-            |rng| make_random(bit_length, rng),
-            compute_score
-        )
+        Self::new(pop_size, |rng| make_random(bit_length, rng), compute_score)
     }
 }
