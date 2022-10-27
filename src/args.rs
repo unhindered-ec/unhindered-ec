@@ -12,6 +12,14 @@ pub enum TargetProblem {
     Hiff
 }
 
+#[derive(clap::ValueEnum, Copy, Clone, Debug)]
+pub enum LexicaseSelection {
+    Simple,
+    RemoveDuplicates,
+    OnePass,
+    ReuseVector
+}
+
 /// Simple genetic algorithm in Rust
 #[derive(Parser, Debug, Copy, Clone)]
 #[clap(author, version, about, long_about = None)]
@@ -23,6 +31,10 @@ pub struct Args {
     /// The target problem to run
     #[clap(short, long, value_enum, default_value_t = TargetProblem::Hiff)]
     pub target_problem: TargetProblem,
+
+    /// The (optional) version of lexicase selection to use
+    #[arg(short, long, value_enum)]
+    pub lexicase_selection: Option<LexicaseSelection>,
 
     /// Population size
     #[clap(short, long, value_parser, default_value_t = 100)]

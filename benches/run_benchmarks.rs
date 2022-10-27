@@ -1,7 +1,7 @@
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use rust_ga::{
     args::{
-        Args, RunModel, TargetProblem
+        Args, RunModel, TargetProblem, LexicaseSelection
     }, 
     do_main
 };
@@ -12,6 +12,7 @@ const DEFAULT_ARGS: Args = Args {
     population_size: 1000,
     bit_length: 128,
     num_generations: 100,
+    lexicase_selection: Some(LexicaseSelection::Simple),
 };
 
 fn benchmark_run_count_ones_serial(c: &mut Criterion) {
