@@ -140,6 +140,7 @@ impl<T> Population<T> {
             }).collect();
         }
 
+        // TODO: Change `shuffle` to `.choose()`.
         candidates.shuffle(&mut rand::thread_rng());
         Some(candidates[0])
     }

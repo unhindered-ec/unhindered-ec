@@ -12,7 +12,7 @@ const DEFAULT_ARGS: Args = Args {
     run_model: RunModel::Parallel,
     target_problem: TargetProblem::CountOnes,
     population_size: 1000,
-    bit_length: 128,
+    bit_length: 512,
     num_generations: 50,
     lexicase_selection: Some(LexicaseSelection::Simple),
 };
@@ -20,13 +20,13 @@ const DEFAULT_ARGS: Args = Args {
 fn bench_lexicase_runs(c: &mut Criterion) {
     let mut group = c.benchmark_group("Lexicase Runs");
     for (problem, problem_label) in [
-        (TargetProblem::CountOnes, "count-ones"),
+        // (TargetProblem::CountOnes, "count-ones"),
         (TargetProblem::Hiff, "HIFF")
     ] {
         for (selector, label) in [
-            (LexicaseSelection::Simple, "simple"),
-            (LexicaseSelection::RemoveDuplicates, "remove-dups"),
-            (LexicaseSelection::OnePass, "one-pass"),
+            // (LexicaseSelection::Simple, "simple"),
+            // (LexicaseSelection::RemoveDuplicates, "remove-dups"),
+            // (LexicaseSelection::OnePass, "one-pass"),
             (LexicaseSelection::ReuseVector, "reuse-vector")
         ] {
             let args = Args {
