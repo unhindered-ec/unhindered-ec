@@ -3,19 +3,86 @@
 #![warn(clippy::unwrap_used)]
 #![warn(clippy::expect_used)]
 
-use std::borrow::Borrow;
+use std::{borrow::Borrow, cmp::Ordering};
 
 use rand::rngs::ThreadRng;
 
-#[derive(Debug, Clone)]
-pub struct Individual<T> {
-    pub genome: T,
-    // TODO: Maybe make the score here a new generic type S
-    pub total_score: i64,
-    pub scores: Vec<i64>
+trait ScoreTrait {
+    type Value: Ord;
+    fn next(&mut self) -> Option<Self::Item>;
 }
 
-impl<T> Individual<T> {
+pub enum TestResult<V> {
+    Score(Score<V>),
+    Error(Error<V>)
+}
+
+impl<V> PartialOrd for TestResult<V> {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        match (self, other) {
+            (Self::Score(self_score), Self::Score(other_score)) 
+                => Some(self_score.cmp(other_score)),
+            (Self::Error(self_error), Self::Error(other_error))
+                => Some(self_error.cmp(&other_error)),
+            _ => None
+        }
+    }
+}
+
+/// Score implicitly follows a "bigger is better" model.
+#[derive(Ord)]
+pub struct Score<V: Ord> {
+    pub score: V
+}
+
+type I64Score = Score<i64>;
+
+/// Error implicitly follows a "smaller is better" model
+pub struct Error<V: Ord> {
+    pub error: V
+}
+
+type I64Error = Error<i64>;
+
+impl<V> Ord for Error<V> {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.error.cmp(&other.error).reverse()
+    }
+}
+
+struct TestResults<V> {
+    pub totalScore: TestResult<V>,
+    pub scores: Vec<TestResult<V>>
+}
+
+impl<V> Ord for TestResults<V> {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.totalScore.cmp(&other.error)
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct Individual<T, S> {
+    pub genome: T,
+    pub score: S,
+    // TODO: Maybe make the score here a new generic type S
+    // pub total_score: S,
+    // pub scores: Vec<S>
+}
+
+impl<T, S: Ord> Ord for Individual<T, S> {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.score.cmp(&other.score)
+    }
+}
+
+impl<T, S: PartialOrd> PartialOrd for Individual<T, S> {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        self.score.partial_cmp(&other.score)
+    }
+}
+
+impl<T, S> Individual<T, S> {
     /*
      * The type `R` is needed for circumstances where `T` is a "costly"
      * (to quote the documentation for the `Borrow` trait) type like
@@ -49,7 +116,7 @@ impl<T> Individual<T> {
      */
     pub fn new<R>(
             make_genome: impl Fn(&mut ThreadRng) -> T, 
-            compute_score: impl Fn(&R) -> Vec<i64>,
+            run_tests: impl Fn(&R) -> TestResult<S>,
             rng: &mut ThreadRng) 
         -> Self
     where
@@ -57,11 +124,12 @@ impl<T> Individual<T> {
         R: ?Sized
     {
         let genome = make_genome(rng);
-        let scores = compute_score(genome.borrow());
+        let test_results = run_tests(genome.borrow());
         Self {
             genome,
-            total_score: scores.iter().sum(),
-            scores
+            score: test_results,
+            // total_score: scores.iter().sum(),
+            // scores
         }
     }
 }
