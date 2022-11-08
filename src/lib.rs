@@ -6,6 +6,8 @@ use population::Population;
 use generation::{Generation, WeightedSelector}; 
 use individual::Individual;
 
+use crate::args::LexicaseSelection;
+
 pub mod args;
 pub mod individual;
 pub mod population;
@@ -13,24 +15,36 @@ pub mod generation;
 pub mod bitstring;
 
 pub fn do_main(args: Args) {
-    let scorer = hiff;
+    let scorer = match args.target_problem {
+        TargetProblem::CountOnes => count_ones,
+        TargetProblem::Hiff => hiff
+    };
 
-    let binary_tournament = Population::<Bitstring>::make_tournament_selector(2);
-    let decimal_tournament = Population::<Bitstring>::make_tournament_selector(10);
-    let weighted_selectors: Vec<WeightedSelector<Bitstring>> 
-        = vec![(&Population::best_score, 5),
-               (&Population::random, 20),
-               (&binary_tournament, 50),
-               (&decimal_tournament, 25)];
+    // let binary_tournament = Population::<Bitstring>::make_tournament_selector(2);
+    // let decimal_tournament = Population::<Bitstring>::make_tournament_selector(10);
+    // let weighted_selectors: Vec<WeightedSelector<Bitstring>> 
+    //     = vec![
+    //         //    (&Population::best_score, 5),
+    //         //    (&Population::random, 20),
+    //         //    (&binary_tournament, 50),
+    //         //    (&decimal_tournament, 25)
+    //            (&Population::simple_lexicase, 75)
+    //            ];
+    let weighted_selectors: Vec<WeightedSelector<Bitstring>> =
+        vec![(
+            match args.lexicase_selection {
+                Some(LexicaseSelection::Simple) => &Population::simple_lexicase,
+                Some(LexicaseSelection::RemoveDuplicates) => &Population::lexicase_with_dup_removal,
+                Some(LexicaseSelection::OnePass) => &Population::one_pass_lexicase,
+                Some(LexicaseSelection::ReuseVector) => &Population::reuse_vector_lexicase,
+                None => panic!("We need to specify a selection mechanism!")
+            }, 1)];
 
     let population
         = Population::new_bitstring_population(
             args.population_size, 
             args.bit_length, 
-            match args.target_problem {
-                TargetProblem::CountOnes => count_ones,
-                TargetProblem::Hiff => hiff
-            });
+            scorer);
     assert!(!population.is_empty());
 
     let make_child = move |rng: &mut ThreadRng, generation: &Generation<Bitstring>| {
@@ -45,9 +59,9 @@ pub fn do_main(args: Args) {
 
     assert!(!generation.population.is_empty());
     let best = generation.best_individual();
-    println!("{}", best);
-    println!("Pop size = {}", generation.population.size());
-    println!("Bit length = {}", best.genome.len());
+    // println!("{}", best);
+    // println!("Pop size = {}", generation.population.size());
+    // println!("Bit length = {}", best.genome.len());
 
     (0..args.num_generations).for_each(|generation_number| {
         generation = match args.run_model {
@@ -57,11 +71,11 @@ pub fn do_main(args: Args) {
         let best = generation.best_individual();
         // TODO: Change 2 to be the smallest number of digits needed for
         //  args.num_generations-1.
-        println!("Generation {:2} best is {}", generation_number, best);
+        // println!("Generation {:2} best is {}", generation_number, best);
     });
 }
 
-fn make_child(scorer: impl Fn(&[bool]) -> i64, rng: &mut ThreadRng, generation: &Generation<Bitstring>) -> Individual<Bitstring> {
+fn make_child(scorer: impl Fn(&[bool]) -> Vec<i64>, rng: &mut ThreadRng, generation: &Generation<Bitstring>) -> Individual<Bitstring> {
     let first_parent = generation.get_parent(rng);
     let second_parent = generation.get_parent(rng);
 
@@ -69,6 +83,6 @@ fn make_child(scorer: impl Fn(&[bool]) -> i64, rng: &mut ThreadRng, generation: 
         = first_parent.genome
             .two_point_xo(&second_parent.genome, rng)
             .mutate_one_over_length(rng);
-    let score = scorer(&genome);
-    Individual { genome, score }
+    let scores = scorer(&genome);
+    Individual { genome, total_score: scores.iter().sum(), scores }
 }
