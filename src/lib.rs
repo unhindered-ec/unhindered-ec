@@ -17,6 +17,10 @@ pub mod population;
 pub mod generation;
 pub mod bitstring;
 
+/// # Panics
+/// 
+/// This can panic for a whole host of reasons, mostly because the
+/// population or the collection of selectors is empty.
 pub fn do_main(args: Args) {
     let scorer = match args.target_problem {
         TargetProblem::CountOnes => count_ones,
@@ -88,7 +92,7 @@ fn make_child(scorer: impl Fn(&[bool]) -> Vec<i64>,
     let results = scorer(&genome);
     let total_result = results.iter().sum();
     Individual { 
-        genome: genome.to_vec(), 
+        genome,
         test_results: TestResults { total_result, results }
     }
 }

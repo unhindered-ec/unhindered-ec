@@ -38,9 +38,6 @@ harness = false
 # harness = false
 
 [[bin]]
-name = "scoring"
-
-[[bin]]
 name = "ga"
 
 [[bin]]

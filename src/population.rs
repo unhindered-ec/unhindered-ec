@@ -89,6 +89,10 @@ impl<G: Eq, R: Ord> Population<G, R> {
 
     #[must_use]
     pub fn tournament(&self, tournament_size: usize) -> &Individual<G, R> {
+        assert!(self.individuals.len()>=tournament_size && tournament_size>0);
+        // Since we know that the population and tournament aren't empty, we
+        // can safely unwrap() the `.max()` call.
+        #[allow(clippy::unwrap_used)]
         self.individuals
             .choose_multiple(&mut rand::thread_rng(), tournament_size)
             .max()

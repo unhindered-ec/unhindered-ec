@@ -22,6 +22,10 @@ pub struct Generation<'a, G, R> {
 }
 
 impl<'a, G: Eq, R: Ord> Generation<'a, G, R> {
+    /// # Panics
+    ///
+    /// This can panic if the population is empty or the weighted set of
+    /// selectors is empty.
     pub fn new(population: Population<G, R>, weighted_selectors: &'a Vec<WeightedSelector<'a, G, R>>, make_child: &'a ChildMaker<G, R>) -> Self {
         assert!(!population.is_empty());
         assert!(!weighted_selectors.is_empty());
@@ -32,13 +36,18 @@ impl<'a, G: Eq, R: Ord> Generation<'a, G, R> {
         }
     }
 
+    #[must_use]
     pub fn best_individual(&self) -> &Individual<G, R> {
         self.population.best_individual()
     }
 
+    /// # Panics
+    /// 
+    /// This can panic if the set of selectors is empty.
     pub fn get_parent(&self, rng: &mut ThreadRng) -> &Individual<G, R> {
         // The set of selectors should be non-empty, and if it is, then we
         // should be able to safely unwrap the `choose()` call.
+        #[allow(clippy::unwrap_used)]
         let s 
             = self.weighted_selectors.choose_weighted(rng, |item| item.1).unwrap().0;
         s(&self.population)
@@ -47,6 +56,7 @@ impl<'a, G: Eq, R: Ord> Generation<'a, G, R> {
 
 impl<'a, G: Send + Sync, R: Send + Sync> Generation<'a, G, R> {
     /// Make the next generation using a Rayon parallel iterator.
+    #[must_use]
     pub fn par_next(&self) -> Self {
         let previous_individuals = &self.population.individuals;
         let pop_size = previous_individuals.len();
@@ -67,6 +77,7 @@ impl<'a, G: Send + Sync, R: Send + Sync> Generation<'a, G, R> {
     }
 
     /// Make the next generation serially.
+    #[must_use]
     pub fn next(&self) -> Self {
         let previous_individuals = &self.population.individuals;
         let pop_size = previous_individuals.len();

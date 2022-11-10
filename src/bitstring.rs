@@ -2,7 +2,6 @@
 #![warn(clippy::nursery)]
 #![warn(clippy::unwrap_used)]
 #![warn(clippy::expect_used)]
-#![allow(clippy::redundant_else)]
 
 use std::borrow::Borrow;
 use std::fmt::{Display, Debug};
@@ -35,21 +34,22 @@ pub fn do_hiff(bits: &[bool], scores: &mut Vec<i64>) -> bool {
     let len = bits.len();
     if len < 2 {
         scores.push(len as i64);
-        return true;
+        true
     } else {
         let half_len = len / 2;
         let left_all_same = do_hiff(&bits[..half_len], scores);
         let right_all_same = do_hiff(&bits[half_len..], scores);
         if left_all_same && right_all_same && bits[0] == bits[half_len] {
             scores.push(bits.len() as i64);
-            return true;
+            true
         } else {
             scores.push(0);
-            return false;
+            false
         }
     }
 }
 
+#[must_use]
 pub fn fitness_vec_to_test_results(results: Vec<i64>) -> TestResults<i64> {
     let total_result = results.iter().sum();
     TestResults { total_result, results }
@@ -111,7 +111,10 @@ impl LinearMutation for Bitstring {
     }
 
     fn mutate_one_over_length(&self, rng: &mut ThreadRng) -> Self {
-        let length = self.len() as f32;
+        // We're probably OK losing a little precision if necessary here,
+        // but we might want to look into either the `num_traits` or
+        // `conv` crate for this conversion.
+        let length: f32 = self.len() as f32;
         self.mutate_with_rate(1.0 / length, rng)
     }
 }
