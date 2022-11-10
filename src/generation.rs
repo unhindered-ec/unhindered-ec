@@ -3,9 +3,9 @@ use rayon::prelude::{IntoParallelIterator, ParallelIterator};
 
 use crate::{population::{Population}, individual::Individual};
 
-pub type Selector<T> = dyn Fn(&Population<T>) -> Option<&Individual<T>> + Sync + Send;
-pub type WeightedSelector<'a, T> = (&'a Selector<T>, usize);
-pub type ChildMaker<T> = dyn Fn(&mut ThreadRng, &Generation<T>) -> Individual<T> + Send + Sync;
+pub type Selector<G, R> = dyn Fn(&Population<G, R>) -> &Individual<G, R> + Sync + Send;
+pub type WeightedSelector<'a, G, R> = (&'a Selector<G, R>, usize);
+pub type ChildMaker<G, R> = dyn Fn(&mut ThreadRng, &Generation<G, R>) -> Individual<G, R> + Send + Sync;
 
 // TODO: Extend the vector of Selectors to a WeightedParentSelector that is essentially
 //   a wrapper around `rand::distributions::WeightedChoice` so we can
@@ -15,14 +15,14 @@ pub type ChildMaker<T> = dyn Fn(&mut ThreadRng, &Generation<T>) -> Individual<T>
 // TODO: Should there actually be a `Run` type (or a `RunParams` type) that
 //   holds all this stuff and is used to make them available to types like
 //   `Generation` and `Population`?
-pub struct Generation<'a, T> {
-    pub population: Population<T>,
-    weighted_selectors: &'a Vec<WeightedSelector<'a, T>>,
-    make_child: &'a ChildMaker<T>
+pub struct Generation<'a, G, R> {
+    pub population: Population<G, R>,
+    weighted_selectors: &'a Vec<WeightedSelector<'a, G, R>>,
+    make_child: &'a ChildMaker<G, R>
 }
 
-impl<'a, T> Generation<'a, T> {
-    pub fn new(population: Population<T>, weighted_selectors: &'a Vec<WeightedSelector<'a, T>>, make_child: &'a ChildMaker<T>) -> Self {
+impl<'a, G: Eq, R: Ord> Generation<'a, G, R> {
+    pub fn new(population: Population<G, R>, weighted_selectors: &'a Vec<WeightedSelector<'a, G, R>>, make_child: &'a ChildMaker<G, R>) -> Self {
         assert!(!population.is_empty());
         assert!(!weighted_selectors.is_empty());
         Self {
@@ -32,24 +32,20 @@ impl<'a, T> Generation<'a, T> {
         }
     }
 
-    pub fn best_individual(&self) -> &Individual<T> {
+    pub fn best_individual(&self) -> &Individual<G, R> {
         self.population.best_individual()
     }
 
-    pub fn get_parent(&self, rng: &mut ThreadRng) -> &Individual<T> {
+    pub fn get_parent(&self, rng: &mut ThreadRng) -> &Individual<G, R> {
         // The set of selectors should be non-empty, and if it is, then we
         // should be able to safely unwrap the `choose()` call.
         let s 
             = self.weighted_selectors.choose_weighted(rng, |item| item.1).unwrap().0;
-        // choices.choose_weighted(&mut rng, |item| item.1).unwrap().0)
-
-        // The population should be non-empty, and if it is, then we should be
-        // able to safely unwrap the selection call.
-        s(&self.population).unwrap()
+        s(&self.population)
     }
 }
 
-impl<'a, T: Send + Sync> Generation<'a, T> {
+impl<'a, G: Send + Sync, R: Send + Sync> Generation<'a, G, R> {
     /// Make the next generation using a Rayon parallel iterator.
     pub fn par_next(&self) -> Self {
         let previous_individuals = &self.population.individuals;

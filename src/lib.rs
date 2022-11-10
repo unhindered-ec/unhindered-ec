@@ -1,11 +1,15 @@
+#![warn(clippy::pedantic)]
+#![warn(clippy::nursery)]
+#![warn(clippy::unwrap_used)]
+#![warn(clippy::expect_used)]
+
 use args::{RunModel, TargetProblem, Args};
 use rand::rngs::ThreadRng;
 
 use bitstring::{Bitstring, LinearCrossover, LinearMutation, count_ones, hiff};
 use population::Population;
 use generation::{Generation, WeightedSelector}; 
-use individual::Individual;
-
+use individual::{Individual, TestResults};
 
 pub mod args;
 pub mod individual;
@@ -31,10 +35,19 @@ pub fn do_main(args: Args) {
         = Population::new_bitstring_population(
             args.population_size, 
             args.bit_length, 
-            scorer);
+            // TODO: I should really have a function somewhere that converts functions
+            //   that return vectors of scores to `TestResults` structs.
+            |bitstring| {
+                let results = scorer(bitstring);
+                let total_result = results.iter().sum();
+                TestResults {
+                    total_result,
+                    results
+                }
+            });
     assert!(!population.is_empty());
 
-    let make_child = move |rng: &mut ThreadRng, generation: &Generation<Bitstring>| {
+    let make_child = move |rng: &mut ThreadRng, generation: &Generation<Bitstring, TestResults<i64>>| {
         make_child(scorer, rng, generation)
     };
 
@@ -45,7 +58,7 @@ pub fn do_main(args: Args) {
     );
 
     assert!(!generation.population.is_empty());
-    let best = generation.best_individual();
+    // let best = generation.best_individual();
     // println!("{}", best);
     // println!("Pop size = {}", generation.population.size());
     // println!("Bit length = {}", best.genome.len());
@@ -58,11 +71,13 @@ pub fn do_main(args: Args) {
         let best = generation.best_individual();
         // TODO: Change 2 to be the smallest number of digits needed for
         //  args.num_generations-1.
-        // println!("Generation {:2} best is {}", generation_number, best);
+        println!("Generation {:2} best is {}", generation_number, best);
     });
 }
 
-fn make_child(scorer: impl Fn(&[bool]) -> Vec<i64>, rng: &mut ThreadRng, generation: &Generation<Bitstring>) -> Individual<Bitstring> {
+fn make_child(scorer: impl Fn(&[bool]) -> Vec<i64>,
+              rng: &mut ThreadRng, 
+              generation: &Generation<Bitstring, TestResults<i64>>) -> Individual<Bitstring, TestResults<i64>> {
     let first_parent = generation.get_parent(rng);
     let second_parent = generation.get_parent(rng);
 
@@ -70,6 +85,10 @@ fn make_child(scorer: impl Fn(&[bool]) -> Vec<i64>, rng: &mut ThreadRng, generat
         = first_parent.genome
             .two_point_xo(&second_parent.genome, rng)
             .mutate_one_over_length(rng);
-    let scores = scorer(&genome);
-    Individual { genome, total_score: scores.iter().sum(), scores }
+    let results = scorer(&genome);
+    let total_result = results.iter().sum();
+    Individual { 
+        genome: genome.to_vec(), 
+        test_results: TestResults { total_result, results }
+    }
 }
