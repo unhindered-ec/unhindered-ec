@@ -11,6 +11,8 @@ use population::Population;
 use generation::{Generation, WeightedSelector}; 
 use individual::{Individual, TestResults};
 
+use crate::individual::Error;
+
 pub mod args;
 pub mod individual;
 pub mod population;
@@ -29,7 +31,7 @@ pub fn do_main(args: Args) {
 
     // Use lexicase selection almost exclusively, but typically carry forward
     // at least one copy of the best individual (as measured by total fitness).
-    let weighted_selectors: Vec<WeightedSelector<Bitstring, TestResults<i64>>> =
+    let weighted_selectors: Vec<WeightedSelector<Bitstring, TestResults<Error>>> =
         vec![
                 (&Population::best_individual, 1),
                 (&Population::lexicase, args.population_size-1)
@@ -43,15 +45,15 @@ pub fn do_main(args: Args) {
             //   that return vectors of scores to `TestResults` structs.
             |bitstring| {
                 let results = scorer(bitstring);
-                let total_result = results.iter().sum();
+                let total_result = Error { error: results.iter().sum() };
                 TestResults {
                     total_result,
-                    results
+                    results: results.iter().map(|r| Error{ error: *r }).collect()
                 }
             });
     assert!(!population.is_empty());
 
-    let make_child = move |rng: &mut ThreadRng, generation: &Generation<Bitstring, TestResults<i64>>| {
+    let make_child = move |rng: &mut ThreadRng, generation: &Generation<Bitstring, TestResults<Error>>| {
         make_child(scorer, rng, generation)
     };
 
@@ -81,7 +83,7 @@ pub fn do_main(args: Args) {
 
 fn make_child(scorer: impl Fn(&[bool]) -> Vec<i64>,
               rng: &mut ThreadRng, 
-              generation: &Generation<Bitstring, TestResults<i64>>) -> Individual<Bitstring, TestResults<i64>> {
+              generation: &Generation<Bitstring, TestResults<Error>>) -> Individual<Bitstring, TestResults<Error>> {
     let first_parent = generation.get_parent(rng);
     let second_parent = generation.get_parent(rng);
 
@@ -93,6 +95,6 @@ fn make_child(scorer: impl Fn(&[bool]) -> Vec<i64>,
     let total_result = results.iter().sum();
     Individual { 
         genome,
-        test_results: TestResults { total_result, results }
+        test_results: TestResults { total_result: Error { error: total_result }, results: results.iter().map(|r| Error { error: *r }).collect() }
     }
 }
