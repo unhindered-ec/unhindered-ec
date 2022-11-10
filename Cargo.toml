@@ -29,13 +29,13 @@ harness = false
 name = "run_benchmarks"
 harness = false
 
-[[bench]]
-name = "lexicase_benchmarks"
-harness = false
+# [[bench]]
+# name = "lexicase_benchmarks"
+# harness = false
 
-[[bench]]
-name = "lexicase_run_benchmarks"
-harness = false
+# [[bench]]
+# name = "lexicase_run_benchmarks"
+# harness = false
 
 [[bin]]
 name = "scoring"

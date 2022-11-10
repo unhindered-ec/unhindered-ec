@@ -6,7 +6,6 @@ use population::Population;
 use generation::{Generation, WeightedSelector}; 
 use individual::Individual;
 
-use crate::args::LexicaseSelection;
 
 pub mod args;
 pub mod individual;
@@ -20,25 +19,13 @@ pub fn do_main(args: Args) {
         TargetProblem::Hiff => hiff
     };
 
-    // let binary_tournament = Population::<Bitstring>::make_tournament_selector(2);
-    // let decimal_tournament = Population::<Bitstring>::make_tournament_selector(10);
-    // let weighted_selectors: Vec<WeightedSelector<Bitstring>> 
-    //     = vec![
-    //         //    (&Population::best_score, 5),
-    //         //    (&Population::random, 20),
-    //         //    (&binary_tournament, 50),
-    //         //    (&decimal_tournament, 25)
-    //            (&Population::simple_lexicase, 75)
-    //            ];
-    let weighted_selectors: Vec<WeightedSelector<Bitstring>> =
-        vec![(
-            match args.lexicase_selection {
-                Some(LexicaseSelection::Simple) => &Population::simple_lexicase,
-                Some(LexicaseSelection::RemoveDuplicates) => &Population::lexicase_with_dup_removal,
-                Some(LexicaseSelection::OnePass) => &Population::one_pass_lexicase,
-                Some(LexicaseSelection::ReuseVector) => &Population::reuse_vector_lexicase,
-                None => panic!("We need to specify a selection mechanism!")
-            }, 1)];
+    // Use lexicase selection almost exclusively, but typically carry forward
+    // at least one copy of the best individual (as measured by total fitness).
+    let weighted_selectors: Vec<WeightedSelector<Bitstring, TestResults<i64>>> =
+        vec![
+                (&Population::best_individual, 1),
+                (&Population::lexicase, args.population_size-1)
+            ];
 
     let population
         = Population::new_bitstring_population(
