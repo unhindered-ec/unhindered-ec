@@ -128,30 +128,28 @@ impl<R: PartialOrd> PartialOrd for TestResults<R> {
 pub struct Individual<G, R> {
     pub genome: G,
     pub test_results: R,
-    // pub total_score: i64,
-    // pub scores: Vec<i64>,
 }
 
 impl<G, R> Individual<G, R> {
     /*
-     * The type `R` is needed for circumstances where `T` is a "costly"
+     * The type `H` is needed for circumstances where `G` is a "costly"
      * (to quote the documentation for the `Borrow` trait) type like
      * `Vec<bool>` when a "cheaper" type like `[bool]` would do. We might,
      * for example, prefer to have `compute_score` take a type like `&[bool]`,
      * but have everything written in terms of a more general (and "expensive")
-     * type like `Vec<bool>`. If we use `Vec<bool>` for `T`, but specify
+     * type like `Vec<bool>`. If we use `Vec<bool>` for `G`, but specify
      * `compute_score` to take `&[bool]`, then the type checker won't be able
      * to link those things up.
      * 
-     * The use of `R` fixes that. Saying `T: Borrow<R>` says that `T` (e.g.,
+     * The use of `H` fixes that. Saying `G: Borrow<H>` says that `G` (e.g.,
      * `Vec<bool>`) can be borrowed as a reference to the simpler type (e.g.,
      * `[bool]`). So we can use `Vec<bool>` as our "general" type, but this
      * allows the system to know that it can convert (through borrowing) instances
      * of that to `[bool]`. Thus `compute_score` can now take `&[bool]` as an
      * argument and the types will work out.
      * 
-     * The `R: ?Sized` comes from the definition of the `Borrow` trait and is
-     * necessary to say that `R` doesn't necessarily have a size that is known
+     * The `H: ?Sized` comes from the definition of the `Borrow` trait and is
+     * necessary to say that `H` doesn't necessarily have a size that is known
      * at compile time. This is important because we're borrowing from `Vec<bool>`
      * (which has a known size) to `[bool]` (whose size depends on how many items
      * there are in the array, i.e., it's not known at compile time). Type generics

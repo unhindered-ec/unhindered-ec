@@ -1,4 +1,4 @@
-use criterion::{black_box, criterion_group, criterion_main, Criterion};
+use criterion::{criterion_group, criterion_main, Criterion};
 use rust_ga::bitstring::hiff;
 use rust_ga::individual::Individual;
 
@@ -20,7 +20,7 @@ fn compute_hiff(c: &mut Criterion) {
         |b| b.iter(|| {
             let bits = [false; NUM_BITS].to_vec();
             let scores = hiff(&bits);
-            assert!(scores.len() >= 0);
+            assert!(scores.len() >= 2*NUM_BITS - 1);
         })
     );
 }
@@ -34,7 +34,7 @@ fn construct_hiff_individual(c: &mut Criterion) {
                 hiff, 
                 &mut rand::thread_rng()
             );
-            assert!(ind.total_score >= 0);
+            assert!(ind.genome.len() == NUM_BITS);
         })
     );
 }

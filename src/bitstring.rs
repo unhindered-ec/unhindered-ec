@@ -9,13 +9,50 @@ use std::fmt::{Display, Debug};
 
 use rand::{rngs::ThreadRng, Rng};
 
-use crate::individual::Individual;
+use crate::individual::{Individual, TestResults};
 use crate::population::Population;
 
 pub type Bitstring = Vec<bool>;
 
 pub fn make_random(len: usize, rng: &mut ThreadRng) -> Bitstring {
     (0..len).map(|_| rng.gen_bool(0.5)).collect()
+}
+
+#[must_use]
+pub fn count_ones(bits: &[bool]) -> Vec<i64> {
+    bits.iter().map(|bit| { if *bit { 1 } else { 0 }}).collect()
+}
+
+#[must_use]
+pub fn hiff(bits: &[bool]) -> Vec<i64> {
+    let num_scores = 2*bits.len() - 1;
+    let mut scores = Vec::with_capacity(num_scores);
+    do_hiff(bits, &mut scores);
+    scores
+}
+
+pub fn do_hiff(bits: &[bool], scores: &mut Vec<i64>) -> bool {
+    let len = bits.len();
+    if len < 2 {
+        scores.push(len as i64);
+        return true;
+    } else {
+        let half_len = len / 2;
+        let left_all_same = do_hiff(&bits[..half_len], scores);
+        let right_all_same = do_hiff(&bits[half_len..], scores);
+        if left_all_same && right_all_same && bits[0] == bits[half_len] {
+            scores.push(bits.len() as i64);
+            return true;
+        } else {
+            scores.push(0);
+            return false;
+        }
+    }
+}
+
+pub fn fitness_vec_to_test_results(results: Vec<i64>) -> TestResults<i64> {
+    let total_result = results.iter().sum();
+    TestResults { total_result, results }
 }
 
 pub trait LinearCrossover {
@@ -114,38 +151,6 @@ mod genetic_operator_tests {
         assert!(0 < num_differences, "We're expecting at least one difference");
         assert!(num_differences < num_bits / 10, "We're not expecting lots of differences, and got {num_differences}.");
     }    
-}
-
-#[must_use]
-pub fn count_ones(bits: &[bool]) -> Vec<i64> {
-    bits.iter().map(|bit| { if *bit { 1 } else { 0 }}).collect()
-}
-
-#[must_use]
-pub fn hiff(bits: &[bool]) -> Vec<i64> {
-    let num_scores = 2*bits.len() - 1;
-    let mut scores = Vec::with_capacity(num_scores);
-    do_hiff(bits, &mut scores);
-    scores
-}
-
-pub fn do_hiff(bits: &[bool], scores: &mut Vec<i64>) -> bool {
-    let len = bits.len();
-    if len < 2 {
-        scores.push(len as i64);
-        return true;
-    } else {
-        let half_len = len / 2;
-        let left_all_same = do_hiff(&bits[..half_len], scores);
-        let right_all_same = do_hiff(&bits[half_len..], scores);
-        if left_all_same && right_all_same && bits[0] == bits[half_len] {
-            scores.push(bits.len() as i64);
-            return true;
-        } else {
-            scores.push(0);
-            return false;
-        }
-    }
 }
 
 impl<R> Individual<Bitstring, R> {
