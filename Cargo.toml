@@ -36,3 +36,12 @@ harness = false
 [[bench]]
 name = "lexicase_run_benchmarks"
 harness = false
+
+[[bin]]
+name = "scoring"
+
+[[bin]]
+name = "ga"
+
+[[bin]]
+name = "pushgp"
