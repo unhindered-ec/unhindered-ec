@@ -3,8 +3,6 @@ use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use rust_ga::{
     population::Population, 
     bitstring::{count_ones, hiff}, 
-    do_main, 
-    args::{TargetProblem, Args, RunModel}
 };
 
 fn benchmark_construction_count_ones(c: &mut Criterion) {
@@ -14,7 +12,7 @@ fn benchmark_construction_count_ones(c: &mut Criterion) {
             black_box(1000), 
             black_box(128),
             count_ones
-        ).best_score().unwrap().total_score
+        ).best_individual().test_results.clone()
     ));
 }
 
@@ -25,7 +23,7 @@ fn benchmark_construction_hiff(c: &mut Criterion) {
             black_box(1000), 
             black_box(128),
             hiff
-        ).best_score().unwrap().total_score
+        ).best_individual().test_results.clone()
     ));
 }
 
