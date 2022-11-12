@@ -114,8 +114,7 @@ impl LinearMutation for Bitstring {
         // anyway.
         let mutation_rate: f32 = self.len()
             .to_f32()
-            .map(|l| 1.0 / l)
-            .unwrap_or(f32::MIN_POSITIVE);
+            .map_or(f32::MIN_POSITIVE, |l| 1.0 / l);
         self.mutate_with_rate(mutation_rate, rng)
     }
 }
