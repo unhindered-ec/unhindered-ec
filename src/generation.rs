@@ -7,6 +7,16 @@ pub type Selector<G, R> = dyn Fn(&Population<G, R>) -> &Individual<G, R> + Sync 
 pub type WeightedSelector<'a, G, R> = (&'a Selector<G, R>, usize);
 pub type ChildMaker<G, R> = dyn Fn(&mut ThreadRng, &Generation<G, R>) -> Individual<G, R> + Send + Sync;
 
+// TODO: Maybe change the `Fn` types above to be impl's of these traits.
+// TODO: Maybe go from `&Selector` to `Arc<dyn Selector>`, etc.
+pub trait SelectorTrait<G, R> {
+    fn select(&self, population: &Population<G, R>) -> &Individual<G, R>;
+}
+
+pub trait ChildMakerTrait<G, R> {
+    fn make_child(&self, rng: &mut ThreadRng, generation: &Generation<G, R>) -> Individual<G, R>;
+}
+
 // TODO: Extend the vector of Selectors to a WeightedParentSelector that is essentially
 //   a wrapper around `rand::distributions::WeightedChoice` so we can
 //   provide weights on the different selectors.
