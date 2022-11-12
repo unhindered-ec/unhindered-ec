@@ -3,17 +3,19 @@
 #![warn(clippy::unwrap_used)]
 #![warn(clippy::expect_used)]
 
+use std::iter::Sum;
+
 use args::{RunModel, TargetProblem, Args};
 use rand::rngs::ThreadRng;
 
 use bitstring::{Bitstring, LinearCrossover, LinearMutation, count_ones, hiff};
 use population::Population;
 use generation::{Generation, WeightedSelector}; 
-use individual::{Individual, TestResults};
-
-use crate::individual::Error;
+use test_results::{TestResults, Score, Error};
+use individual::{Individual};
 
 pub mod args;
+pub mod test_results;
 pub mod individual;
 pub mod population;
 pub mod generation;
@@ -31,7 +33,7 @@ pub fn do_main(args: Args) {
 
     // Use lexicase selection almost exclusively, but typically carry forward
     // at least one copy of the best individual (as measured by total fitness).
-    let weighted_selectors: Vec<WeightedSelector<Bitstring, TestResults<Error>>> =
+    let weighted_selectors: Vec<WeightedSelector<Bitstring, TestResults<_>>> =
         vec![
                 (&Population::best_individual, 1),
                 (&Population::lexicase, args.population_size-1)
@@ -44,17 +46,17 @@ pub fn do_main(args: Args) {
             // TODO: I should really have a function somewhere that converts functions
             //   that return vectors of scores to `TestResults` structs.
             |bitstring| {
-                let results = scorer(bitstring);
-                let total_result = Error { error: results.iter().sum() };
-                TestResults {
-                    total_result,
-                    results: results.iter().map(|r| Error{ error: *r }).collect()
-                }
+                scorer(bitstring).into_iter()
+                    .map(From::from)
+                    .sum()
             });
     assert!(!population.is_empty());
 
-    let make_child = move |rng: &mut ThreadRng, generation: &Generation<Bitstring, TestResults<Error>>| {
-        make_child(scorer, rng, generation)
+    let make_child = move |rng: &mut ThreadRng, generation: &Generation<Bitstring, TestResults<_>>| {
+        // TODO: We probably want `scorer` to be generating the `TestResults` values
+        //   and it is "in charge" of whether we're using `Score` or `Error`. Then
+        //   `make_child` shouldn't need to care.
+        make_child::<Error>(scorer, rng, generation)
     };
 
     let mut generation = Generation::new(
@@ -81,9 +83,9 @@ pub fn do_main(args: Args) {
     });
 }
 
-fn make_child(scorer: impl Fn(&[bool]) -> Vec<i64>,
+fn make_child<R: Ord + Sum + Copy + From<i64>>(scorer: impl Fn(&[bool]) -> Vec<i64>,
               rng: &mut ThreadRng, 
-              generation: &Generation<Bitstring, TestResults<Error>>) -> Individual<Bitstring, TestResults<Error>> {
+              generation: &Generation<Bitstring, TestResults<R>>) -> Individual<Bitstring, TestResults<R>> {
     let first_parent = generation.get_parent(rng);
     let second_parent = generation.get_parent(rng);
 
@@ -91,10 +93,12 @@ fn make_child(scorer: impl Fn(&[bool]) -> Vec<i64>,
         = first_parent.genome
             .two_point_xo(&second_parent.genome, rng)
             .mutate_one_over_length(rng);
-    let results = scorer(&genome);
-    let total_result = results.iter().sum();
+    let test_results = scorer(&genome)
+        .into_iter()
+        .map(From::from)
+        .sum();
     Individual { 
         genome,
-        test_results: TestResults { total_result: Error { error: total_result }, results: results.iter().map(|r| Error { error: *r }).collect() }
+        test_results
     }
 }
