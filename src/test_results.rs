@@ -1,5 +1,9 @@
 use std::{cmp::Ordering, iter::Sum};
 
+// TODO: We can probably use things in the `num` family of traits
+//   (https://github.com/rust-num/num) to genericize `Score` and
+//   `Error` so they're not tied to `i64`s anymore.
+
 /// Score implicitly follows a "bigger is better" model.
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
 pub struct Score {
