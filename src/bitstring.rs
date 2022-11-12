@@ -1,11 +1,7 @@
-#![warn(clippy::pedantic)]
-#![warn(clippy::nursery)]
-#![warn(clippy::unwrap_used)]
-#![warn(clippy::expect_used)]
-
 use std::borrow::Borrow;
 use std::fmt::{Display, Debug};
 
+use num_traits::ToPrimitive;
 use rand::{rngs::ThreadRng, Rng};
 
 use crate::individual::{Individual, TestResults};
@@ -111,11 +107,16 @@ impl LinearMutation for Bitstring {
     }
 
     fn mutate_one_over_length(&self, rng: &mut ThreadRng) -> Self {
-        // We're probably OK losing a little precision if necessary here,
-        // but we might want to look into either the `num_traits` or
-        // `conv` crate for this conversion.
-        let length: f32 = self.len() as f32;
-        self.mutate_with_rate(1.0 / length, rng)
+        // This uses the smallest possible positive `f32` value as the
+        // mutation rate if the length of the genome is too big to fit
+        // in an `f32`. This could behave weirdly if we have _really_ long
+        // genomes, but those are likely to need special mutation operators
+        // anyway.
+        let mutation_rate: f32 = self.len()
+            .to_f32()
+            .map(|l| 1.0 / l)
+            .unwrap_or(f32::MIN_POSITIVE);
+        self.mutate_with_rate(mutation_rate, rng)
     }
 }
 

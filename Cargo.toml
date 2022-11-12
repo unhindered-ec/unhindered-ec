@@ -8,6 +8,7 @@ edition = "2021"
 [dependencies]
 clap = { version = "4.0.10", features = ["derive"] }
 itertools = "0.10.5"
+num-traits = "0.2.15"
 rand = { version = "0.8.5", features = ["alloc"] }
 rayon = "1.5.3"
 

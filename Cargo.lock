@@ -510,6 +510,7 @@ dependencies = [
  "clap 4.0.22",
  "criterion",
  "itertools",
+ "num-traits",
  "rand",
  "rayon",
 ]
