@@ -4,7 +4,8 @@ use std::fmt::{Display, Debug};
 use num_traits::ToPrimitive;
 use rand::{rngs::ThreadRng, Rng};
 
-use crate::individual::{Individual, TestResults};
+use crate::test_results::TestResults;
+use crate::individual::Individual;
 use crate::population::Population;
 
 pub type Bitstring = Vec<bool>;

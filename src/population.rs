@@ -6,7 +6,8 @@ use rand::seq::SliceRandom;
 use rand::rngs::ThreadRng;
 use rayon::prelude::{ParallelExtend, IntoParallelIterator, ParallelIterator};
 
-use crate::individual::{Individual, TestResults};
+use crate::test_results::TestResults;
+use crate::individual::Individual;
 
 pub struct Population<G, R> {
     pub individuals: Vec<Individual<G, R>>,
