@@ -50,7 +50,7 @@ pub fn do_main(args: Args) {
                     .map(From::from)
                     .sum()
             });
-    assert!(!population.is_empty());
+    assert!(population.is_empty().not());
 
     // TODO: We probably want `scorer` to be generating the `TestResults` values
     //   and have it be "in charge" of whether we're using `Score` or `Error`. Then
@@ -67,7 +67,7 @@ pub fn do_main(args: Args) {
         &child_maker
     );
 
-    assert!(!generation.population.is_empty());
+    assert!(generation.population.is_empty().not());
     // let best = generation.best_individual();
     // println!("{}", best);
     // println!("Pop size = {}", generation.population.size());

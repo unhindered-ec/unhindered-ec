@@ -51,7 +51,7 @@ impl<G, R: Ord> Selector<G, TestResults<R>> for Lexicase {
 
         let mut winners = Vec::with_capacity(candidates.len());
         for test_case_index in case_indices {
-            assert!(!candidates.is_empty(), "The set of lexicase candidates shouldn't be empty");
+            assert!(candidates.is_empty().not(), "The set of lexicase candidates shouldn't be empty");
             if candidates.len() == 1 {
                 break;
             }

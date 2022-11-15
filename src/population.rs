@@ -59,7 +59,7 @@ impl<G: Eq, R: Ord> Population<G, R> {
     /// Will panic if the population is empty.
     #[must_use]
     pub fn best_individual(&self) -> &Individual<G, R> {
-        assert!(!self.individuals.is_empty());
+        assert!(self.individuals.is_empty().not());
         #[allow(clippy::unwrap_used)]
         self
             .individuals

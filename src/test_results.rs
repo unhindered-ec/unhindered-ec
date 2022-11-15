@@ -78,6 +78,8 @@ impl Sum for Error {
 
 #[cfg(test)]
 mod score_error_tests {
+    use std::ops::Not;
+
     use super::*;
 
     #[test]
@@ -86,7 +88,7 @@ mod score_error_tests {
         let second = Score { score: 82 };
         assert!(first < second);
         assert!(first != second);
-        assert!(!(first > second));
+        assert!((first > second).not());
     }
 
     #[test]
@@ -95,7 +97,7 @@ mod score_error_tests {
         let second = Error { error: 82 };
         assert!(first > second);
         assert!(first != second);
-        assert!(!(first < second));
+        assert!((first < second).not());
     }
 }
 
@@ -121,6 +123,8 @@ impl PartialOrd for TestResult {
 
 #[cfg(test)]
 mod test_result_tests {
+    use std::ops::Not;
+
     use super::*;
 
     #[test]
@@ -129,7 +133,7 @@ mod test_result_tests {
         let second = TestResult::Score(Score { score: 87 });
         assert!(first < second);
         assert!(first != second);
-        assert!(!(first > second));
+        assert!((first > second).not());
     }
 
     #[test]
@@ -138,16 +142,16 @@ mod test_result_tests {
         let second = TestResult::Error(Error { error: 87 });
         assert!(first > second);
         assert!(first != second);
-        assert!(!(first < second));
+        assert!((first < second).not());
     }
 
     #[test]
     fn error_and_score_incomparable() {
         let first = TestResult::Score(Score { score: 32 });
         let second = TestResult::Error(Error { error: 87 });
-        assert!(!(first > second));
+        assert!((first > second).not());
         assert!(first != second);
-        assert!(!(first < second));
+        assert!((first < second).not());
         assert!(first.partial_cmp(&second).is_none());
         assert!(second.partial_cmp(&first).is_none());
     }
