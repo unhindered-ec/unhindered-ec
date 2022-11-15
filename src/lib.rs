@@ -52,19 +52,19 @@ pub fn do_main(args: Args) {
             });
     assert!(!population.is_empty());
 
-    // Using `Error` in `TestResults<Error>` will have the run favor smaller
-    // values, where using `Score` (e.g., `TestResults<Score>`) will have the run
-    // favor larger values.
     // TODO: We probably want `scorer` to be generating the `TestResults` values
     //   and have it be "in charge" of whether we're using `Score` or `Error`. Then
     //   the child maker shouldn't need to care and we can just use `TestResults<R>` here.
-    let child_maker: &dyn ChildMaker<Bitstring, TestResults<Error>>
-        = &TwoPointXoMutateChildMaker::new(&scorer);
+    let child_maker
+        = TwoPointXoMutateChildMaker::new(&scorer);
 
-    let mut generation = Generation::new(
+    // Using `Error` in `TestResults<Error>` will have the run favor smaller
+    // values, where using `Score` (e.g., `TestResults<Score>`) will have the run
+    // favor larger values.
+    let mut generation: Generation<Bitstring, TestResults<Score>> = Generation::new(
         population,
         &weighted_selectors,
-        child_maker
+        &child_maker
     );
 
     assert!(!generation.population.is_empty());
