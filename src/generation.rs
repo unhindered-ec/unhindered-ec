@@ -1,16 +1,9 @@
-use rand::{rngs::ThreadRng, seq::SliceRandom};
+use std::ops::Not;
+
+use rand::rngs::ThreadRng;
 use rayon::prelude::{IntoParallelIterator, ParallelIterator};
 
-use crate::{population::{Population}, individual::Individual};
-
-pub type Selector<G, R> = dyn Fn(&Population<G, R>) -> &Individual<G, R> + Sync + Send;
-pub type WeightedSelector<'a, G, R> = (&'a Selector<G, R>, usize);
-
-// TODO: Maybe change the `Fn` types above to be impl's of these traits.
-// TODO: Maybe go from `&Selector` to `Arc<dyn Selector>`, etc.
-pub trait SelectorTrait<G, R> {
-    fn select(&self, population: &Population<G, R>) -> &Individual<G, R>;
-}
+use crate::{population::{Population}, individual::Individual, selectors::Selector};
 
 pub trait ChildMaker<G, R>: Sync {
     fn make_child(&self, rng: &mut ThreadRng, generation: &Generation<G, R>) -> Individual<G, R>;
@@ -24,9 +17,13 @@ pub trait ChildMaker<G, R>: Sync {
 // TODO: Should there actually be a `Run` type (or a `RunParams` type) that
 //   holds all this stuff and is used to make them available to types like
 //   `Generation` and `Population`?
+// TODO: Maybe go from `&Selector` to `Arc<dyn Selector>`, etc. This would
+//  require changing all the lifetime references to be `Arc`s (so both
+//  `weighted_selectors` and `child_maker`). It would be good to benchmark
+//  both versions to see what the costs are.
 pub struct Generation<'a, G, R> {
     pub population: Population<G, R>,
-    weighted_selectors: &'a Vec<WeightedSelector<'a, G, R>>,
+    selector: &'a dyn Selector<G, R>,
     child_maker: &'a dyn ChildMaker<G, R>
 }
 
@@ -35,12 +32,11 @@ impl<'a, G: Eq, R: Ord> Generation<'a, G, R> {
     ///
     /// This can panic if the population is empty or the weighted set of
     /// selectors is empty.
-    pub fn new(population: Population<G, R>, weighted_selectors: &'a Vec<WeightedSelector<'a, G, R>>, child_maker: &'a dyn ChildMaker<G, R>) -> Self {
-        assert!(!population.is_empty());
-        assert!(!weighted_selectors.is_empty());
+    pub fn new(population: Population<G, R>, selector: &'a dyn Selector<G, R>, child_maker: &'a dyn ChildMaker<G, R>) -> Self {
+        assert!(population.is_empty().not());
         Self {
             population,
-            weighted_selectors,
+            selector,
             child_maker
         }
     }
@@ -57,9 +53,7 @@ impl<'a, G: Eq, R: Ord> Generation<'a, G, R> {
         // The set of selectors should be non-empty, and if it is, then we
         // should be able to safely unwrap the `choose()` call.
         #[allow(clippy::unwrap_used)]
-        let s 
-            = self.weighted_selectors.choose_weighted(rng, |item| item.1).unwrap().0;
-        s(&self.population)
+        self.selector.select(rng, &self.population)
     }
 }
 
@@ -80,7 +74,7 @@ impl<'a, G: Send + Sync, R: Send + Sync> Generation<'a, G, R> {
                 .collect();
         Self { 
             population: Population { individuals },
-            weighted_selectors: self.weighted_selectors,
+            selector: self.selector,
             child_maker: self.child_maker
         }
     }
@@ -97,7 +91,7 @@ impl<'a, G: Send + Sync, R: Send + Sync> Generation<'a, G, R> {
                 .collect();
         Self { 
             population: Population { individuals },
-            weighted_selectors: self.weighted_selectors,
+            selector: self.selector,
             child_maker: self.child_maker
         }
     }
