@@ -3,7 +3,7 @@
 use std::{borrow::Borrow, ops::Not};
 
 use rand::rngs::ThreadRng;
-use rayon::prelude::{ParallelExtend, IntoParallelIterator, ParallelIterator};
+use rayon::prelude::{IntoParallelIterator, ParallelExtend, ParallelIterator};
 
 use crate::individual::Individual;
 
@@ -17,26 +17,23 @@ impl<G: Send, R: Send> Population<G, R> {
      * whole `Borrow<H>` business.
      */
     pub fn new<H>(
-            pop_size: usize,
-            make_genome: impl Fn(&mut ThreadRng) -> G + Send + Sync, 
-            run_tests: impl Fn(&H) -> R + Send + Sync) 
-        -> Self
+        pop_size: usize,
+        make_genome: impl Fn(&mut ThreadRng) -> G + Send + Sync,
+        run_tests: impl Fn(&H) -> R + Send + Sync,
+    ) -> Self
     where
         G: Borrow<H>,
-        H: ?Sized
+        H: ?Sized,
     {
         let mut individuals = Vec::with_capacity(pop_size);
-        individuals.par_extend((0..pop_size)
-            .into_par_iter()
-            .map_init(
-                rand::thread_rng,
-                |rng, _| {
+        individuals.par_extend(
+            (0..pop_size)
+                .into_par_iter()
+                .map_init(rand::thread_rng, |rng, _| {
                     Individual::new(&make_genome, &run_tests, rng)
-                })
+                }),
         );
-        Self {
-            individuals,
-        }
+        Self { individuals }
     }
 }
 
@@ -54,16 +51,12 @@ impl<G, R> Population<G, R> {
 
 impl<G: Eq, R: Ord> Population<G, R> {
     /// # Panics
-    /// 
+    ///
     /// Will panic if the population is empty.
     #[must_use]
     pub fn best_individual(&self) -> &Individual<G, R> {
         assert!(self.individuals.is_empty().not());
         #[allow(clippy::unwrap_used)]
-        self
-            .individuals
-            .iter()
-            .max()
-            .unwrap()
+        self.individuals.iter().max().unwrap()
     }
 }

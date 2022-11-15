@@ -1,12 +1,12 @@
 use std::borrow::Borrow;
-use std::fmt::{Display, Debug};
+use std::fmt::{Debug, Display};
 
 use num_traits::ToPrimitive;
 use rand::{rngs::ThreadRng, Rng};
 
-use crate::test_results::TestResults;
 use crate::individual::Individual;
 use crate::population::Population;
+use crate::test_results::TestResults;
 
 pub type Bitstring = Vec<bool>;
 
@@ -16,12 +16,12 @@ pub fn make_random(len: usize, rng: &mut ThreadRng) -> Bitstring {
 
 #[must_use]
 pub fn count_ones(bits: &[bool]) -> Vec<i64> {
-    bits.iter().map(|bit| { if *bit { 1 } else { 0 }}).collect()
+    bits.iter().map(|bit| if *bit { 1 } else { 0 }).collect()
 }
 
 #[must_use]
 pub fn hiff(bits: &[bool]) -> Vec<i64> {
-    let num_scores = 2*bits.len() - 1;
+    let num_scores = 2 * bits.len() - 1;
     let mut scores = Vec::with_capacity(num_scores);
     do_hiff(bits, &mut scores);
     scores
@@ -49,7 +49,10 @@ pub fn do_hiff(bits: &[bool], scores: &mut Vec<i64>) -> bool {
 #[must_use]
 pub fn fitness_vec_to_test_results(results: Vec<i64>) -> TestResults<i64> {
     let total_result = results.iter().sum();
-    TestResults { total_result, results }
+    TestResults {
+        total_result,
+        results,
+    }
 }
 
 pub trait LinearCrossover {
@@ -64,12 +67,9 @@ impl<T: Copy> LinearCrossover for Vec<T> {
         // The two parents should have the same length.
         assert!(self.len() == other.len());
         let len = self.len();
-        (0..len).map(|i| 
-            if rng.gen_bool(0.5) { 
-                self[i] 
-            } else { 
-                other[i] 
-            }).collect()
+        (0..len)
+            .map(|i| if rng.gen_bool(0.5) { self[i] } else { other[i] })
+            .collect()
     }
 
     fn two_point_xo(&self, other: &Self, rng: &mut ThreadRng) -> Self {
@@ -97,14 +97,16 @@ pub trait LinearMutation {
 
 impl LinearMutation for Bitstring {
     fn mutate_with_rate(&self, mutation_rate: f32, rng: &mut ThreadRng) -> Self {
-        self.iter().map(|bit| {
-            let r: f32 = rng.gen();
-            if r < mutation_rate {
-                !*bit
-            } else {
-                *bit
-            }
-        }).collect()
+        self.iter()
+            .map(|bit| {
+                let r: f32 = rng.gen();
+                if r < mutation_rate {
+                    !*bit
+                } else {
+                    *bit
+                }
+            })
+            .collect()
     }
 
     fn mutate_one_over_length(&self, rng: &mut ThreadRng) -> Self {
@@ -113,9 +115,7 @@ impl LinearMutation for Bitstring {
         // in an `f32`. This could behave weirdly if we have _really_ long
         // genomes, but those are likely to need special mutation operators
         // anyway.
-        let mutation_rate: f32 = self.len()
-            .to_f32()
-            .map_or(f32::MIN_POSITIVE, |l| 1.0 / l);
+        let mutation_rate: f32 = self.len().to_f32().map_or(f32::MIN_POSITIVE, |l| 1.0 / l);
         self.mutate_with_rate(mutation_rate, rng)
     }
 }
@@ -135,10 +135,18 @@ mod genetic_operator_tests {
         let parent_bits = make_random(num_bits, &mut rng);
         let child_bits = parent_bits.mutate_one_over_length(&mut rng);
 
-        let num_differences = zip(parent_bits, child_bits).filter(|(p, c)| *p != *c).count();
+        let num_differences = zip(parent_bits, child_bits)
+            .filter(|(p, c)| *p != *c)
+            .count();
         println!("Num differences = {num_differences}");
-        assert!(0 < num_differences, "We're expecting at least one difference");
-        assert!(num_differences < num_bits / 10, "We're not expecting lots of differences, and got {num_differences}.");
+        assert!(
+            0 < num_differences,
+            "We're expecting at least one difference"
+        );
+        assert!(
+            num_differences < num_bits / 10,
+            "We're not expecting lots of differences, and got {num_differences}."
+        );
     }
 
     // This test is stochastic, so I'm going to ignore it most of the time.
@@ -150,23 +158,32 @@ mod genetic_operator_tests {
         let parent_bits = make_random(num_bits, &mut rng);
         let child_bits = parent_bits.mutate_one_over_length(&mut rng);
 
-        let num_differences = zip(parent_bits, child_bits).filter(|(p, c)| *p != *c).count();
+        let num_differences = zip(parent_bits, child_bits)
+            .filter(|(p, c)| *p != *c)
+            .count();
         println!("Num differences = {num_differences}");
-        assert!(0 < num_differences, "We're expecting at least one difference");
-        assert!(num_differences < num_bits / 10, "We're not expecting lots of differences, and got {num_differences}.");
-    }    
+        assert!(
+            0 < num_differences,
+            "We're expecting at least one difference"
+        );
+        assert!(
+            num_differences < num_bits / 10,
+            "We're not expecting lots of differences, and got {num_differences}."
+        );
+    }
 }
 
 impl<R> Individual<Bitstring, R> {
-    pub fn new_bitstring<H>(bit_length: usize, run_tests: impl Fn(&H) -> R, rng: &mut ThreadRng) -> Self
+    pub fn new_bitstring<H>(
+        bit_length: usize,
+        run_tests: impl Fn(&H) -> R,
+        rng: &mut ThreadRng,
+    ) -> Self
     where
         Bitstring: Borrow<H>,
-        H: ?Sized
+        H: ?Sized,
     {
-        Self::new(
-                |rng| make_random(bit_length, rng), 
-                run_tests,
-                rng)
+        Self::new(|rng| make_random(bit_length, rng), run_tests, rng)
     }
 }
 
@@ -188,18 +205,14 @@ impl<R: Debug> Display for Individual<Bitstring, R> {
 
 impl<R: Send> Population<Bitstring, R> {
     pub fn new_bitstring_population<H>(
-        pop_size: usize, 
-        bit_length: usize, 
-        run_tests: impl Fn(&H) -> R + Send + Sync) 
-    -> Self
+        pop_size: usize,
+        bit_length: usize,
+        run_tests: impl Fn(&H) -> R + Send + Sync,
+    ) -> Self
     where
         Bitstring: Borrow<H>,
-        H: ?Sized
+        H: ?Sized,
     {
-        Self::new(
-            pop_size,
-            |rng| make_random(bit_length, rng),
-            run_tests
-        )
+        Self::new(pop_size, |rng| make_random(bit_length, rng), run_tests)
     }
 }

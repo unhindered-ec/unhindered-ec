@@ -3,7 +3,7 @@ use std::ops::Not;
 use rand::rngs::ThreadRng;
 use rayon::prelude::{IntoParallelIterator, ParallelIterator};
 
-use crate::{population::{Population}, individual::Individual, selectors::Selector};
+use crate::{individual::Individual, population::Population, selectors::Selector};
 
 pub trait ChildMaker<G, R>: Sync {
     fn make_child(&self, rng: &mut ThreadRng, generation: &Generation<G, R>) -> Individual<G, R>;
@@ -24,7 +24,7 @@ pub trait ChildMaker<G, R>: Sync {
 pub struct Generation<'a, G, R> {
     pub population: Population<G, R>,
     selector: &'a dyn Selector<G, R>,
-    child_maker: &'a dyn ChildMaker<G, R>
+    child_maker: &'a dyn ChildMaker<G, R>,
 }
 
 impl<'a, G: Eq, R: Ord> Generation<'a, G, R> {
@@ -32,12 +32,16 @@ impl<'a, G: Eq, R: Ord> Generation<'a, G, R> {
     ///
     /// This can panic if the population is empty or the weighted set of
     /// selectors is empty.
-    pub fn new(population: Population<G, R>, selector: &'a dyn Selector<G, R>, child_maker: &'a dyn ChildMaker<G, R>) -> Self {
+    pub fn new(
+        population: Population<G, R>,
+        selector: &'a dyn Selector<G, R>,
+        child_maker: &'a dyn ChildMaker<G, R>,
+    ) -> Self {
         assert!(population.is_empty().not());
         Self {
             population,
             selector,
-            child_maker
+            child_maker,
         }
     }
 
@@ -47,7 +51,7 @@ impl<'a, G: Eq, R: Ord> Generation<'a, G, R> {
     }
 
     /// # Panics
-    /// 
+    ///
     /// This can panic if the set of selectors is empty.
     pub fn get_parent(&self, rng: &mut ThreadRng) -> &Individual<G, R> {
         // The set of selectors should be non-empty, and if it is, then we
@@ -63,19 +67,20 @@ impl<'a, G: Send + Sync, R: Send + Sync> Generation<'a, G, R> {
     pub fn par_next(&self) -> Self {
         let previous_individuals = &self.population.individuals;
         let pop_size = previous_individuals.len();
-        let individuals 
-            = (0..pop_size)
-                .into_par_iter()
-                // "Convert" the individual number (which we never use) into
-                // the current `Generation` object so the `make_child` closure
-                // will have access to the selectors and population.
-                .map(|_| self)
-                .map_init(rand::thread_rng, |rng, _| self.child_maker.make_child(rng, self))
-                .collect();
-        Self { 
+        let individuals = (0..pop_size)
+            .into_par_iter()
+            // "Convert" the individual number (which we never use) into
+            // the current `Generation` object so the `make_child` closure
+            // will have access to the selectors and population.
+            .map(|_| self)
+            .map_init(rand::thread_rng, |rng, _| {
+                self.child_maker.make_child(rng, self)
+            })
+            .collect();
+        Self {
             population: Population { individuals },
             selector: self.selector,
-            child_maker: self.child_maker
+            child_maker: self.child_maker,
         }
     }
 
@@ -85,14 +90,13 @@ impl<'a, G: Send + Sync, R: Send + Sync> Generation<'a, G, R> {
         let previous_individuals = &self.population.individuals;
         let pop_size = previous_individuals.len();
         let mut rng = rand::thread_rng();
-        let individuals 
-            = (0..pop_size)
-                .map(|_| self.child_maker.make_child(&mut rng, self))
-                .collect();
-        Self { 
+        let individuals = (0..pop_size)
+            .map(|_| self.child_maker.make_child(&mut rng, self))
+            .collect();
+        Self {
             population: Population { individuals },
             selector: self.selector,
-            child_maker: self.child_maker
+            child_maker: self.child_maker,
         }
     }
 }

@@ -2,9 +2,9 @@
 
 // use criterion::{criterion_group, criterion_main, Criterion, BenchmarkId};
 // use rust_ga::{
-//     bitstring::{Bitstring, count_ones}, 
-//     population::Population, 
-//     individual::Individual, 
+//     bitstring::{Bitstring, count_ones},
+//     population::Population,
+//     individual::Individual,
 //     args::{Args, RunModel, TargetProblem, LexicaseSelection}, do_main
 // };
 

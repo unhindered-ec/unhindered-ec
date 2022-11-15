@@ -31,24 +31,24 @@
 // fn bench_lexicase(c: &mut Criterion) {
 //     let mut group = c.benchmark_group("Lexicase");
 //     for (population, pop_name) in make_benchmark_populations().iter() {
-//         group.bench_with_input(BenchmarkId::new("simple_lexicase", pop_name), population, 
+//         group.bench_with_input(BenchmarkId::new("simple_lexicase", pop_name), population,
 //             |b, p| b.iter(|| p.simple_lexicase()));
-//         group.bench_with_input(BenchmarkId::new("lexicase_with_dup_removal", pop_name), population, 
+//         group.bench_with_input(BenchmarkId::new("lexicase_with_dup_removal", pop_name), population,
 //             |b, p| b.iter(|| p.lexicase_with_dup_removal()));
-//             group.bench_with_input(BenchmarkId::new("one_pass_lexicase", pop_name), population, 
+//             group.bench_with_input(BenchmarkId::new("one_pass_lexicase", pop_name), population,
 //             |b, p| b.iter(|| p.one_pass_lexicase()));
-//         group.bench_with_input(BenchmarkId::new("reuse_vector_lexicase", pop_name), population, 
+//         group.bench_with_input(BenchmarkId::new("reuse_vector_lexicase", pop_name), population,
 //             |b, p| b.iter(|| p.lexicase()));
 //     }
 //     for num_groups in [10, 20, 25, 40, 50, 100, 200, 500, 1000] {
 //         let population = make_num_distinct_pop(num_groups);
-//         group.bench_with_input(BenchmarkId::new("simple_lexicase", num_groups), &population, 
+//         group.bench_with_input(BenchmarkId::new("simple_lexicase", num_groups), &population,
 //             |b, p| b.iter(|| p.simple_lexicase()));
-//         group.bench_with_input(BenchmarkId::new("lexicase_with_dup_removal", num_groups), &population, 
+//         group.bench_with_input(BenchmarkId::new("lexicase_with_dup_removal", num_groups), &population,
 //             |b, p| b.iter(|| p.lexicase_with_dup_removal()));
-//         group.bench_with_input(BenchmarkId::new("one_pass_lexicase", num_groups), &population, 
+//         group.bench_with_input(BenchmarkId::new("one_pass_lexicase", num_groups), &population,
 //             |b, p| b.iter(|| p.one_pass_lexicase()));
-//         group.bench_with_input(BenchmarkId::new("reuse_vector_lexicase", num_groups), &population, 
+//         group.bench_with_input(BenchmarkId::new("reuse_vector_lexicase", num_groups), &population,
 //             |b, p| b.iter(|| p.lexicase()));
 //     }
 //     group.finish();

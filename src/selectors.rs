@@ -2,42 +2,59 @@ use std::{mem::swap, ops::Not};
 
 use rand::{rngs::ThreadRng, seq::SliceRandom};
 
-use crate::{population::Population, individual::Individual, test_results::TestResults};
+use crate::{individual::Individual, population::Population, test_results::TestResults};
 
 // TODO: Is there a circumstance where selection should fail? If so, do we want to have
 //  it return `Option<Individual>` or even `Result<Individual, Error>`? Not sure.
 //  esitsu@Twitch suggested, for example, having a selector with a threshhold and then
 //  a composite that keeps trying selectors until it finds one that works.
 pub trait Selector<G, R>: Sync {
-    fn select<'a>(&self, rng: &mut ThreadRng, population: &'a Population<G, R>) -> &'a Individual<G, R>;
+    fn select<'a>(
+        &self,
+        rng: &mut ThreadRng,
+        population: &'a Population<G, R>,
+    ) -> &'a Individual<G, R>;
 }
 
-pub struct Random { }
+pub struct Random {}
 
 impl<G, R: Ord> Selector<G, R> for Random {
     #[must_use]
-    fn select<'a>(&self, rng: &mut ThreadRng, population: &'a Population<G, R>) -> &'a Individual<G, R> {
+    fn select<'a>(
+        &self,
+        rng: &mut ThreadRng,
+        population: &'a Population<G, R>,
+    ) -> &'a Individual<G, R> {
         // The population should never be empty here.
-        assert!(population.individuals.is_empty().not(), "The population should not be empty");
+        assert!(
+            population.individuals.is_empty().not(),
+            "The population should not be empty"
+        );
         #[allow(clippy::unwrap_used)]
         population.individuals.choose(rng).unwrap()
     }
-
 }
 
-pub struct Best { }
+pub struct Best {}
 
 impl<G: Eq, R: Ord> Selector<G, R> for Best {
     #[must_use]
-    fn select<'a>(&self, _: &mut ThreadRng, population: &'a Population<G, R>) -> &'a Individual<G, R> {
+    fn select<'a>(
+        &self,
+        _: &mut ThreadRng,
+        population: &'a Population<G, R>,
+    ) -> &'a Individual<G, R> {
         // The population should never be empty here.
-        assert!(population.individuals.is_empty().not(), "The population should not be empty");
+        assert!(
+            population.individuals.is_empty().not(),
+            "The population should not be empty"
+        );
         population.best_individual()
     }
 }
 
 pub struct Tournament {
-    size: usize
+    size: usize,
 }
 
 impl Tournament {
@@ -48,12 +65,17 @@ impl Tournament {
 }
 
 impl<G: Eq, R: Ord> Selector<G, R> for Tournament {
-    fn select<'a>(&self, rng: &mut ThreadRng, population: &'a Population<G, R>) -> &'a Individual<G, R> {
-        assert!(population.individuals.len()>=self.size && self.size>0);
+    fn select<'a>(
+        &self,
+        rng: &mut ThreadRng,
+        population: &'a Population<G, R>,
+    ) -> &'a Individual<G, R> {
+        assert!(population.individuals.len() >= self.size && self.size > 0);
         // Since we know that the population and tournament aren't empty, we
         // can safely unwrap() the `.max()` call.
         #[allow(clippy::unwrap_used)]
-        population.individuals
+        population
+            .individuals
             .choose_multiple(rng, self.size)
             .max()
             .unwrap()
@@ -61,20 +83,22 @@ impl<G: Eq, R: Ord> Selector<G, R> for Tournament {
 }
 
 pub struct Lexicase {
-    num_test_cases: usize
+    num_test_cases: usize,
 }
 
 impl Lexicase {
     #[must_use]
     pub const fn new(num_test_cases: usize) -> Self {
-        Self { 
-            num_test_cases
-        }
+        Self { num_test_cases }
     }
 }
 
 impl<G, R: Ord> Selector<G, TestResults<R>> for Lexicase {
-    fn select<'a>(&self, rng: &mut ThreadRng, population: &'a Population<G, TestResults<R>>) -> &'a Individual<G, TestResults<R>> {
+    fn select<'a>(
+        &self,
+        rng: &mut ThreadRng,
+        population: &'a Population<G, TestResults<R>>,
+    ) -> &'a Individual<G, TestResults<R>> {
         // Candidate set is initially the whole population.
         // Shuffle the (indices of the) test cases.
         // For each test in turn:
@@ -94,13 +118,14 @@ impl<G, R: Ord> Selector<G, TestResults<R>> for Lexicase {
         let mut case_indices: Vec<usize> = (0..self.num_test_cases).collect();
         case_indices.shuffle(rng);
 
-        let mut candidates: Vec<_> = population.individuals
-            .iter()
-            .collect();
+        let mut candidates: Vec<_> = population.individuals.iter().collect();
 
         let mut winners = Vec::with_capacity(candidates.len());
         for test_case_index in case_indices {
-            assert!(candidates.is_empty().not(), "The set of lexicase candidates shouldn't be empty");
+            assert!(
+                candidates.is_empty().not(),
+                "The set of lexicase candidates shouldn't be empty"
+            );
             if candidates.len() == 1 {
                 break;
             }
@@ -110,10 +135,14 @@ impl<G, R: Ord> Selector<G, TestResults<R>> for Lexicase {
                 // I find the `if-else` to be easier to read than Clippy's preferred
                 // use of `match`.
                 #[allow(clippy::comparison_chain)]
-                if c.test_results.results[test_case_index] > winners[0].test_results.results[test_case_index] {
+                if c.test_results.results[test_case_index]
+                    > winners[0].test_results.results[test_case_index]
+                {
                     winners.clear();
                     winners.push(c);
-                } else if c.test_results.results[test_case_index] == winners[0].test_results.results[test_case_index] {
+                } else if c.test_results.results[test_case_index]
+                    == winners[0].test_results.results[test_case_index]
+                {
                     winners.push(c);
                 }
             }
@@ -126,7 +155,7 @@ impl<G, R: Ord> Selector<G, TestResults<R>> for Lexicase {
 }
 
 pub struct Weighted<'a, G, R> {
-    selectors: Vec<(&'a dyn Selector<G, R>, usize)>
+    selectors: Vec<(&'a dyn Selector<G, R>, usize)>,
 }
 
 impl<'a, G, R> Weighted<'a, G, R> {
@@ -135,7 +164,9 @@ impl<'a, G, R> Weighted<'a, G, R> {
     // guaranteed to never be empty.
     #[must_use]
     pub fn new(selector: &'a dyn Selector<G, R>, weight: usize) -> Self {
-        Self { selectors: vec![ (selector, weight) ] }
+        Self {
+            selectors: vec![(selector, weight)],
+        }
     }
 
     #[must_use]
@@ -146,13 +177,17 @@ impl<'a, G, R> Weighted<'a, G, R> {
 }
 
 impl<'a, G, R> Selector<G, R> for Weighted<'a, G, R> {
-    fn select<'b>(&self, rng: &mut ThreadRng, population: &'b Population<G, R>) -> &'b Individual<G, R> {
-        assert!(self.selectors.is_empty().not(), "The collection of selectors should be non-empty");
+    fn select<'b>(
+        &self,
+        rng: &mut ThreadRng,
+        population: &'b Population<G, R>,
+    ) -> &'b Individual<G, R> {
+        assert!(
+            self.selectors.is_empty().not(),
+            "The collection of selectors should be non-empty"
+        );
         #[allow(clippy::unwrap_used)]
-        let (selector, _) = self
-            .selectors
-            .choose_weighted(rng, |(_, w)| *w)
-            .unwrap();
+        let (selector, _) = self.selectors.choose_weighted(rng, |(_, w)| *w).unwrap();
         selector.select(rng, population)
     }
 }

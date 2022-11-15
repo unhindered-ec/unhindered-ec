@@ -3,7 +3,7 @@
 #![warn(clippy::unwrap_used)]
 #![warn(clippy::expect_used)]
 
-use clap::{Parser};
+use clap::Parser;
 use rust_ga::args::Args;
 use rust_ga::do_main;
 

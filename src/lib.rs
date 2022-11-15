@@ -68,7 +68,7 @@ pub fn do_main(args: Args) {
     // Using `Error` in `TestResults<Error>` will have the run favor smaller
     // values, where using `Score` (e.g., `TestResults<Score>`) will have the run
     // favor larger values.
-    let mut generation: Generation<Bitstring, TestResults<Score>> =
+    let mut generation: Generation<Bitstring, TestResults<Error>> =
         Generation::new(population, &selector, &child_maker);
 
     assert!(generation.population.is_empty().not());
