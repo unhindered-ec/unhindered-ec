@@ -10,7 +10,7 @@ use rand::rngs::ThreadRng;
 
 use bitstring::{Bitstring, LinearCrossover, LinearMutation, count_ones, hiff};
 use population::Population;
-use generation::{Generation, WeightedSelector}; 
+use generation::{Generation, WeightedSelector, ChildMaker}; 
 use test_results::{TestResults, Score, Error};
 use individual::{Individual};
 
@@ -52,17 +52,19 @@ pub fn do_main(args: Args) {
             });
     assert!(!population.is_empty());
 
-    let make_child = move |rng: &mut ThreadRng, generation: &Generation<Bitstring, TestResults<_>>| {
-        // TODO: We probably want `scorer` to be generating the `TestResults` values
-        //   and it is "in charge" of whether we're using `Score` or `Error`. Then
-        //   `make_child` shouldn't need to care.
-        make_child::<Error>(scorer, rng, generation)
-    };
+    // Using `Error` in `TestResults<Error>` will have the run favor smaller
+    // values, where using `Score` (e.g., `TestResults<Score>`) will have the run
+    // favor larger values.
+    // TODO: We probably want `scorer` to be generating the `TestResults` values
+    //   and have it be "in charge" of whether we're using `Score` or `Error`. Then
+    //   the child maker shouldn't need to care and we can just use `TestResults<R>` here.
+    let child_maker: &dyn ChildMaker<Bitstring, TestResults<Error>>
+        = &TwoPointXoMutateChildMaker::new(&scorer);
 
     let mut generation = Generation::new(
         population,
         &weighted_selectors,
-        &make_child
+        child_maker
     );
 
     assert!(!generation.population.is_empty());
@@ -83,22 +85,35 @@ pub fn do_main(args: Args) {
     });
 }
 
-fn make_child<R: Ord + Sum + Copy + From<i64>>(scorer: impl Fn(&[bool]) -> Vec<i64>,
-              rng: &mut ThreadRng, 
-              generation: &Generation<Bitstring, TestResults<R>>) -> Individual<Bitstring, TestResults<R>> {
-    let first_parent = generation.get_parent(rng);
-    let second_parent = generation.get_parent(rng);
+struct TwoPointXoMutateChildMaker<'a> {
+    scorer: &'a (dyn Fn(&[bool]) -> Vec<i64> + Sync)
+}
 
-    let genome
-        = first_parent.genome
-            .two_point_xo(&second_parent.genome, rng)
-            .mutate_one_over_length(rng);
-    let test_results = scorer(&genome)
-        .into_iter()
-        .map(From::from)
-        .sum();
-    Individual { 
-        genome,
-        test_results
+impl<'a> TwoPointXoMutateChildMaker<'a> {
+    fn new(scorer: &(dyn Fn(&[bool]) -> Vec<i64> + Sync)) -> TwoPointXoMutateChildMaker {
+        TwoPointXoMutateChildMaker { scorer }
+    }
+}
+
+impl<'a, R: Ord + Sum + Copy + From<i64>> ChildMaker<Bitstring, TestResults<R>> for TwoPointXoMutateChildMaker<'a> {
+    //     fn make_child(&self, rng: &mut ThreadRng, generation: &Generation<G, R>) -> Individual<G, R>;
+    fn make_child(&self, 
+                rng: &mut ThreadRng, 
+                generation: &Generation<Bitstring, TestResults<R>>) -> Individual<Bitstring, TestResults<R>> {
+        let first_parent = generation.get_parent(rng);
+        let second_parent = generation.get_parent(rng);
+
+        let genome
+            = first_parent.genome
+                .two_point_xo(&second_parent.genome, rng)
+                .mutate_one_over_length(rng);
+        let test_results = (self.scorer)(&genome)
+            .into_iter()
+            .map(From::from)
+            .sum();
+        Individual { 
+            genome,
+            test_results
+        }
     }
 }

@@ -5,7 +5,6 @@ use crate::{population::{Population}, individual::Individual};
 
 pub type Selector<G, R> = dyn Fn(&Population<G, R>) -> &Individual<G, R> + Sync + Send;
 pub type WeightedSelector<'a, G, R> = (&'a Selector<G, R>, usize);
-pub type ChildMaker<G, R> = dyn Fn(&mut ThreadRng, &Generation<G, R>) -> Individual<G, R> + Send + Sync;
 
 // TODO: Maybe change the `Fn` types above to be impl's of these traits.
 // TODO: Maybe go from `&Selector` to `Arc<dyn Selector>`, etc.
@@ -13,7 +12,7 @@ pub trait SelectorTrait<G, R> {
     fn select(&self, population: &Population<G, R>) -> &Individual<G, R>;
 }
 
-pub trait ChildMakerTrait<G, R> {
+pub trait ChildMaker<G, R>: Sync {
     fn make_child(&self, rng: &mut ThreadRng, generation: &Generation<G, R>) -> Individual<G, R>;
 }
 
@@ -28,7 +27,7 @@ pub trait ChildMakerTrait<G, R> {
 pub struct Generation<'a, G, R> {
     pub population: Population<G, R>,
     weighted_selectors: &'a Vec<WeightedSelector<'a, G, R>>,
-    make_child: &'a ChildMaker<G, R>
+    child_maker: &'a dyn ChildMaker<G, R>
 }
 
 impl<'a, G: Eq, R: Ord> Generation<'a, G, R> {
@@ -36,13 +35,13 @@ impl<'a, G: Eq, R: Ord> Generation<'a, G, R> {
     ///
     /// This can panic if the population is empty or the weighted set of
     /// selectors is empty.
-    pub fn new(population: Population<G, R>, weighted_selectors: &'a Vec<WeightedSelector<'a, G, R>>, make_child: &'a ChildMaker<G, R>) -> Self {
+    pub fn new(population: Population<G, R>, weighted_selectors: &'a Vec<WeightedSelector<'a, G, R>>, child_maker: &'a dyn ChildMaker<G, R>) -> Self {
         assert!(!population.is_empty());
         assert!(!weighted_selectors.is_empty());
         Self {
             population,
             weighted_selectors,
-            make_child
+            child_maker
         }
     }
 
@@ -77,12 +76,12 @@ impl<'a, G: Send + Sync, R: Send + Sync> Generation<'a, G, R> {
                 // the current `Generation` object so the `make_child` closure
                 // will have access to the selectors and population.
                 .map(|_| self)
-                .map_init(rand::thread_rng, self.make_child)
+                .map_init(rand::thread_rng, |rng, _| self.child_maker.make_child(rng, self))
                 .collect();
         Self { 
             population: Population { individuals },
             weighted_selectors: self.weighted_selectors,
-            make_child: self.make_child
+            child_maker: self.child_maker
         }
     }
 
@@ -94,12 +93,12 @@ impl<'a, G: Send + Sync, R: Send + Sync> Generation<'a, G, R> {
         let mut rng = rand::thread_rng();
         let individuals 
             = (0..pop_size)
-                .map(|_| (self.make_child)(&mut rng, self))
+                .map(|_| self.child_maker.make_child(&mut rng, self))
                 .collect();
         Self { 
             population: Population { individuals },
             weighted_selectors: self.weighted_selectors,
-            make_child: self.make_child
+            child_maker: self.child_maker
         }
     }
 }
