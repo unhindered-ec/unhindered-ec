@@ -1,14 +1,63 @@
-// pub type Selector<G, R> = dyn Fn(&Population<G, R>) -> &Individual<G, R> + Sync + Send;
-// pub type WeightedSelector<'a, G, R> = (&'a dyn SelectorTrait<G, R>, usize);
-
-use std::mem::swap;
+use std::{mem::swap, ops::Not};
 
 use rand::{rngs::ThreadRng, seq::SliceRandom};
 
 use crate::{population::Population, individual::Individual, test_results::TestResults};
 
+// TODO: Is there a circumstance where selection should fail? If so, do we want to have
+//  it return `Option<Individual>` or even `Result<Individual, Error>`? Not sure.
+//  esitsu@Twitch suggested, for example, having a selector with a threshhold and then
+//  a composite that keeps trying selectors until it finds one that works.
 pub trait Selector<G, R>: Sync {
     fn select<'a>(&self, rng: &mut ThreadRng, population: &'a Population<G, R>) -> &'a Individual<G, R>;
+}
+
+pub struct Random { }
+
+impl<G, R: Ord> Selector<G, R> for Random {
+    #[must_use]
+    fn select<'a>(&self, rng: &mut ThreadRng, population: &'a Population<G, R>) -> &'a Individual<G, R> {
+        // The population should never be empty here.
+        assert!(population.individuals.is_empty().not(), "The population should not be empty");
+        #[allow(clippy::unwrap_used)]
+        population.individuals.choose(rng).unwrap()
+    }
+
+}
+
+pub struct Best { }
+
+impl<G: Eq, R: Ord> Selector<G, R> for Best {
+    #[must_use]
+    fn select<'a>(&self, _: &mut ThreadRng, population: &'a Population<G, R>) -> &'a Individual<G, R> {
+        // The population should never be empty here.
+        assert!(population.individuals.is_empty().not(), "The population should not be empty");
+        population.best_individual()
+    }
+}
+
+pub struct Tournament {
+    size: usize
+}
+
+impl Tournament {
+    #[must_use]
+    pub const fn new(size: usize) -> Self {
+        Self { size }
+    }
+}
+
+impl<G: Eq, R: Ord> Selector<G, R> for Tournament {
+    fn select<'a>(&self, rng: &mut ThreadRng, population: &'a Population<G, R>) -> &'a Individual<G, R> {
+        assert!(population.individuals.len()>=self.size && self.size>0);
+        // Since we know that the population and tournament aren't empty, we
+        // can safely unwrap() the `.max()` call.
+        #[allow(clippy::unwrap_used)]
+        population.individuals
+            .choose_multiple(rng, self.size)
+            .max()
+            .unwrap()
+    }
 }
 
 pub struct Lexicase {

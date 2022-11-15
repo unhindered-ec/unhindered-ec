@@ -1,7 +1,6 @@
 #![allow(clippy::missing_panics_doc)]
 
-use std::borrow::Borrow;
-use rand::seq::SliceRandom;
+use std::{borrow::Borrow, ops::Not};
 
 use rand::rngs::ThreadRng;
 use rayon::prelude::{ParallelExtend, IntoParallelIterator, ParallelIterator};
@@ -64,33 +63,6 @@ impl<G: Eq, R: Ord> Population<G, R> {
         self
             .individuals
             .iter()
-            .max()
-            .unwrap()
-    }
-}
-
-impl<G, R> Population<G, R> {
-    #[must_use]
-    pub fn random(&self) -> Option<&Individual<G, R>> {
-        self.individuals.choose(&mut rand::thread_rng())
-    }
-}
-
-impl<G: Eq, R: Ord> Population<G, R> {
-    pub fn make_tournament_selector(tournament_size: usize) -> impl Fn(&Self) -> &Individual<G, R> {
-        move |pop: &Self| {
-            pop.tournament(tournament_size)
-        }
-    }
-
-    #[must_use]
-    pub fn tournament(&self, tournament_size: usize) -> &Individual<G, R> {
-        assert!(self.individuals.len()>=tournament_size && tournament_size>0);
-        // Since we know that the population and tournament aren't empty, we
-        // can safely unwrap() the `.max()` call.
-        #[allow(clippy::unwrap_used)]
-        self.individuals
-            .choose_multiple(&mut rand::thread_rng(), tournament_size)
             .max()
             .unwrap()
     }
