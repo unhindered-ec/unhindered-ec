@@ -47,9 +47,10 @@ pub fn do_main(args: Args) {
     let binary_tournament = Tournament::new(2);
     let best = Best {};
 
-    let selector = Weighted::new(&lexicase, args.population_size - 1)
-        .with_selector(&binary_tournament, 1)
-        .with_selector(&best, 1);
+    let selector = Weighted::new(&best, 1)
+        // .with_selector(&lexicase, args.population_size - 1)
+        .with_selector(&binary_tournament, args.population_size - 1)
+        ;
 
     let population = Population::new_bitstring_population(
         args.population_size,
