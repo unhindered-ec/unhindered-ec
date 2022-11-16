@@ -4,9 +4,13 @@ use rand::{rngs::ThreadRng, seq::SliceRandom};
 
 use crate::{individual::Individual, population::Population, test_results::TestResults};
 
+// TODO: Change `Selector` so it acts on a more general collection than `Population`.
+//  I think that all we need are some sort of collection or iterator, and then all
+//  dependency on `Population` and `Individual` should be able to be removed from
+//  this module.
 // TODO: Is there a circumstance where selection should fail? If so, do we want to have
 //  it return `Option<Individual>` or even `Result<Individual, Error>`? Not sure.
-//  esitsu@Twitch suggested, for example, having a selector with a threshhold and then
+//  esitsu@Twitch suggested, for example, having a selector with a thresh hold and then
 //  a composite that keeps trying selectors until it finds one that works.
 pub trait Selector<G, R>: Sync {
     fn select<'a>(
@@ -108,13 +112,6 @@ impl<G, R: Ord> Selector<G, TestResults<R>> for Lexicase {
         //     is worse than that best score on that test case.
         // Go until you get to a single individual or you run
         // out of test cases.
-
-        // TODO: Compute these bits once when the population is initially constructed
-        //   and then just look it up when necessary instead of recomputing it
-        //   for every selection.
-        // let first_individual = &population.individuals[0];
-        // let first_results = &first_individual.test_results.results;
-        // let num_results = first_results.len();
         let mut case_indices: Vec<usize> = (0..self.num_test_cases).collect();
         case_indices.shuffle(rng);
 
