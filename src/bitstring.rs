@@ -16,7 +16,25 @@ pub fn make_random(len: usize, rng: &mut ThreadRng) -> Bitstring {
 
 #[must_use]
 pub fn count_ones(bits: &[bool]) -> Vec<i64> {
-    bits.iter().map(|bit| if *bit { 1 } else { 0 }).collect()
+    bits.iter().map(|bit| i64::from(*bit)).collect()
+}
+
+#[cfg(test)]
+mod test_count_ones {
+    use super::count_ones;
+
+    #[test]
+    fn empty() {
+        let empty_vec: Vec<i64> = Vec::new();
+        assert_eq!(empty_vec, count_ones(&[]));
+    }
+
+    #[test]
+    fn non_empty() {
+        let input = [false, true, true, true, false, true];
+        let output = vec![0, 1, 1, 1, 0, 1];
+        assert_eq!(output, count_ones(&input));
+    }
 }
 
 #[must_use]
