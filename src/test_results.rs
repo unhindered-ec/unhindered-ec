@@ -1,13 +1,19 @@
-use std::{cmp::Ordering, iter::Sum};
+use std::{cmp::Ordering, iter::Sum, fmt::Debug};
 
 // TODO: We can probably use things in the `num` family of traits
 //   (https://github.com/rust-num/num) to genericize `Score` and
 //   `Error` so they're not tied to `i64`s anymore.
 
 /// Score implicitly follows a "bigger is better" model.
-#[derive(Debug, Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
+#[derive(Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
 pub struct Score {
     pub score: i64,
+}
+
+impl Debug for Score {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_fmt(format_args!("{}", self.score))
+    }
 }
 
 // TODO: Write tests for the `From` and `Sum` trait implementations.
@@ -37,9 +43,15 @@ impl Sum for Score {
 }
 
 /// Error implicitly follows a "smaller is better" model
-#[derive(Debug, Clone, Copy, Eq, PartialEq)]
+#[derive(Clone, Copy, Eq, PartialEq)]
 pub struct Error {
     pub error: i64,
+}
+
+impl Debug for Error {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_fmt(format_args!("{}", self.error))
+    }
 }
 
 impl Ord for Error {
