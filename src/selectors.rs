@@ -12,6 +12,9 @@ use crate::{individual::Individual, population::Population, test_results::TestRe
 //  it return `Option<Individual>` or even `Result<Individual, Error>`? Not sure.
 //  esitsu@Twitch suggested, for example, having a selector with a thresh hold and then
 //  a composite that keeps trying selectors until it finds one that works.
+// TODO: Change the name of this lifetime from `'a` to `'pop` (or something similar that
+//  actually conveys some useful information). This is probably a "grinding" sort of
+//  activity and best done outside of the stream.
 pub trait Selector<G, R>: Sync {
     fn select<'a>(
         &self,
