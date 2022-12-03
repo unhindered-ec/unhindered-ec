@@ -1,1 +1,1 @@
-pub mod ec_individual;
+pub mod ec;

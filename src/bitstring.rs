@@ -4,7 +4,7 @@ use std::fmt::{Debug, Display};
 use num_traits::ToPrimitive;
 use rand::{rngs::ThreadRng, Rng};
 
-use crate::individual::ec_individual::EcIndividual;
+use crate::individual::ec::EcIndividual;
 use crate::population::VecPop;
 use crate::test_results::TestResults;
 

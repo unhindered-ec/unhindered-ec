@@ -1,6 +1,6 @@
 use criterion::{criterion_group, criterion_main, Criterion};
 use rust_ga::bitstring::hiff;
-use rust_ga::individual::ec_individual::EcIndividual;
+use rust_ga::individual::ec::EcIndividual;
 
 const NUM_BITS: usize = 128;
 

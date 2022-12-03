@@ -18,7 +18,7 @@ mod tests {
     use rust_ga::bitstring::count_ones;
     use rust_ga::bitstring::fitness_vec_to_test_results;
     use rust_ga::bitstring::hiff;
-    use rust_ga::individual::ec_individual::EcIndividual;
+    use rust_ga::individual::ec::EcIndividual;
     use rust_ga::population::VecPop;
 
     #[test]

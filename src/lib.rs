@@ -11,7 +11,7 @@ use rand::rngs::ThreadRng;
 
 use bitstring::{count_ones, hiff, Bitstring, LinearCrossover, LinearMutation};
 use generation::{ChildMaker, Generation};
-use individual::ec_individual::EcIndividual;
+use individual::ec::EcIndividual;
 use population::VecPop;
 use selectors::Lexicase;
 use test_results::{Error, Score, TestResults};
@@ -48,7 +48,7 @@ pub fn do_main(args: Args) {
     let best = Best {};
 
     let selector = Weighted::new(&best, 1)
-        // .with_selector(&lexicase, args.population_size - 1)
+        .with_selector(&lexicase, 5)
         .with_selector(&binary_tournament, args.population_size - 1)
         ;
 

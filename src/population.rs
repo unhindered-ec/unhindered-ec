@@ -5,7 +5,7 @@ use std::{borrow::Borrow, ops::Not, slice::Iter};
 use rand::rngs::ThreadRng;
 use rayon::prelude::{IntoParallelIterator, ParallelExtend, ParallelIterator, FromParallelIterator};
 
-use crate::individual::ec_individual::EcIndividual;
+use crate::individual::ec::EcIndividual;
 
 pub struct VecPop<G, R> {
     individuals: Vec<EcIndividual<G, R>>,
