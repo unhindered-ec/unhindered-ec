@@ -2,16 +2,20 @@ use std::{borrow::Borrow, cmp::Ordering};
 
 use rand::rngs::ThreadRng;
 
-// pub trait Individual {
-//     type Genome;
-//     type TestResults;
-// }
+use crate::test_results::TestResult;
+
+use super::{Generate, Individual};
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 #[allow(clippy::module_name_repetitions)]
 pub struct EcIndividual<G, R> {
     genome: G,
     test_results: R,
+}
+
+impl<G, R> Individual for EcIndividual<G, R> {
+    type Genome = G;
+    type TestResults = R;
 }
 
 impl<G, R> EcIndividual<G, R> {
@@ -28,7 +32,9 @@ impl<G, R> EcIndividual<G, R> {
     pub const fn new(genome: G, test_results: R) -> Self {
         Self { genome, test_results }
     }
+}
 
+impl<G, R> Generate for EcIndividual<G, R> {
     /*
      * The type `H` is needed for circumstances where `G` is a "costly"
      * (to quote the documentation for the `Borrow` trait) type like
@@ -60,7 +66,7 @@ impl<G, R> EcIndividual<G, R> {
      * The documentation for the `Borrow` trait was very helpful:
      * https://doc.rust-lang.org/std/borrow/trait.Borrow.html
      */
-    pub fn generate<H>(
+    fn generate<H>(
         make_genome: impl Fn(&mut ThreadRng) -> G,
         // TODO: Should this be a special EC-specific trait instead of the general `Fn`?
         run_tests: impl Fn(&H) -> R,
