@@ -4,6 +4,7 @@ use rand::{rngs::ThreadRng, seq::SliceRandom};
 
 use rand::prelude::IteratorRandom;
 
+use crate::individual::Individual;
 use crate::{individual::ec::EcIndividual, population::VecPop, test_results::TestResults};
 
 // TODO: Change `Selector` so it acts on a more general collection than `Population`.

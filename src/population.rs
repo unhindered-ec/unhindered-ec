@@ -89,13 +89,13 @@ impl<I: Send> FromParallelIterator<I> for VecPop<I> {
 mod vec_pop_tests {
     use rand::RngCore;
 
-    use crate::individual::ec::EcIndividual;
+    use crate::individual::{ec::EcIndividual, Individual};
 
     use super::*;
 
     #[test]
     fn new_works() {
-        let vec_pop: VecPop<EcIndividual<_, _>> = VecPop::generate(
+        let vec_pop = VecPop::<EcIndividual<_, _>>::generate(
             10, 
             |rng| rng.next_u32() % 20,
             |g| (*g)+100

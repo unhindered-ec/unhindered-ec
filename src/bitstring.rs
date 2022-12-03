@@ -5,7 +5,7 @@ use num_traits::ToPrimitive;
 use rand::{rngs::ThreadRng, Rng};
 
 use crate::individual::ec::EcIndividual;
-use crate::individual::Generate;
+use crate::individual::{Generate, Individual};
 use crate::population::VecPop;
 use crate::test_results::TestResults;
 

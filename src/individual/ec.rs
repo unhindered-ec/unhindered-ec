@@ -14,14 +14,12 @@ pub struct EcIndividual<G, R> {
 impl<G, R> Individual for EcIndividual<G, R> {
     type Genome = G;
     type TestResults = R;
-}
 
-impl<G, R> EcIndividual<G, R> {
-    pub const fn genome(&self) -> &G {
+    fn genome(&self) -> &Self::Genome {
         &self.genome
     }
 
-    pub const fn test_results(&self) -> &R {
+    fn test_results(&self) -> &Self::TestResults {
         &self.test_results
     }
 }

@@ -7,6 +7,7 @@ use std::iter::Sum;
 use std::ops::Not;
 
 use args::{Args, RunModel, TargetProblem};
+use individual::Individual;
 use rand::rngs::ThreadRng;
 
 use bitstring::{count_ones, hiff, Bitstring, LinearCrossover, LinearMutation};
