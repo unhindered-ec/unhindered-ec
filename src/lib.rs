@@ -12,7 +12,7 @@ use rand::rngs::ThreadRng;
 use bitstring::{count_ones, hiff, Bitstring, LinearCrossover, LinearMutation};
 use generation::{ChildMaker, Generation};
 use individual::Individual;
-use population::Population;
+use population::VecPop;
 use selectors::Lexicase;
 use test_results::{Error, Score, TestResults};
 
@@ -52,7 +52,7 @@ pub fn do_main(args: Args) {
         .with_selector(&binary_tournament, args.population_size - 1)
         ;
 
-    let population = Population::new_bitstring_population(
+    let population = VecPop::new_bitstring_population(
         args.population_size,
         args.bit_length,
         // TODO: I should really have a function somewhere that converts functions

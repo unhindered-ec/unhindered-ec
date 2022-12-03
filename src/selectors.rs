@@ -2,7 +2,9 @@ use std::{mem::swap, ops::Not};
 
 use rand::{rngs::ThreadRng, seq::SliceRandom};
 
-use crate::{individual::Individual, population::Population, test_results::TestResults};
+use rand::prelude::IteratorRandom;
+
+use crate::{individual::Individual, population::VecPop, test_results::TestResults};
 
 // TODO: Change `Selector` so it acts on a more general collection than `Population`.
 //  I think that all we need are some sort of collection or iterator, and then all
@@ -19,7 +21,7 @@ pub trait Selector<G, R>: Sync {
     fn select<'a>(
         &self,
         rng: &mut ThreadRng,
-        population: &'a Population<G, R>,
+        population: &'a VecPop<G, R>,
     ) -> &'a Individual<G, R>;
 }
 
@@ -30,15 +32,15 @@ impl<G, R: Ord> Selector<G, R> for Random {
     fn select<'a>(
         &self,
         rng: &mut ThreadRng,
-        population: &'a Population<G, R>,
+        population: &'a VecPop<G, R>,
     ) -> &'a Individual<G, R> {
         // The population should never be empty here.
         assert!(
-            population.individuals.is_empty().not(),
+            population.is_empty().not(),
             "The population should not be empty"
         );
         #[allow(clippy::unwrap_used)]
-        population.individuals.choose(rng).unwrap()
+        population.iter().choose(rng).unwrap()
     }
 }
 
@@ -49,11 +51,11 @@ impl<G: Eq, R: Ord> Selector<G, R> for Best {
     fn select<'a>(
         &self,
         _: &mut ThreadRng,
-        population: &'a Population<G, R>,
+        population: &'a VecPop<G, R>,
     ) -> &'a Individual<G, R> {
         // The population should never be empty here.
         assert!(
-            population.individuals.is_empty().not(),
+            population.is_empty().not(),
             "The population should not be empty"
         );
         population.best_individual()
@@ -75,15 +77,16 @@ impl<G: Eq, R: Ord> Selector<G, R> for Tournament {
     fn select<'a>(
         &self,
         rng: &mut ThreadRng,
-        population: &'a Population<G, R>,
+        population: &'a VecPop<G, R>,
     ) -> &'a Individual<G, R> {
-        assert!(population.individuals.len() >= self.size && self.size > 0);
+        assert!(population.size() >= self.size && self.size > 0);
         // Since we know that the population and tournament aren't empty, we
         // can safely unwrap() the `.max()` call.
         #[allow(clippy::unwrap_used)]
         population
-            .individuals
+            .iter()
             .choose_multiple(rng, self.size)
+            .iter()
             .max()
             .unwrap()
     }
@@ -104,7 +107,7 @@ impl<G, R: Ord> Selector<G, TestResults<R>> for Lexicase {
     fn select<'a>(
         &self,
         rng: &mut ThreadRng,
-        population: &'a Population<G, TestResults<R>>,
+        population: &'a VecPop<G, TestResults<R>>,
     ) -> &'a Individual<G, TestResults<R>> {
         // Candidate set is initially the whole population.
         // Shuffle the (indices of the) test cases.
@@ -118,7 +121,7 @@ impl<G, R: Ord> Selector<G, TestResults<R>> for Lexicase {
         let mut case_indices: Vec<usize> = (0..self.num_test_cases).collect();
         case_indices.shuffle(rng);
 
-        let mut candidates: Vec<_> = population.individuals.iter().collect();
+        let mut candidates: Vec<_> = population.iter().collect();
 
         let mut winners = Vec::with_capacity(candidates.len());
         for test_case_index in case_indices {
@@ -180,7 +183,7 @@ impl<'a, G, R> Selector<G, R> for Weighted<'a, G, R> {
     fn select<'b>(
         &self,
         rng: &mut ThreadRng,
-        population: &'b Population<G, R>,
+        population: &'b VecPop<G, R>,
     ) -> &'b Individual<G, R> {
         assert!(
             self.selectors.is_empty().not(),

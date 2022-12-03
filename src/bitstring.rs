@@ -5,7 +5,7 @@ use num_traits::ToPrimitive;
 use rand::{rngs::ThreadRng, Rng};
 
 use crate::individual::Individual;
-use crate::population::Population;
+use crate::population::VecPop;
 use crate::test_results::TestResults;
 
 pub type Bitstring = Vec<bool>;
@@ -221,7 +221,7 @@ impl<R: Debug> Display for Individual<Bitstring, R> {
     }
 }
 
-impl<R: Send> Population<Bitstring, R> {
+impl<R: Send> VecPop<Bitstring, R> {
     pub fn new_bitstring_population<H>(
         pop_size: usize,
         bit_length: usize,

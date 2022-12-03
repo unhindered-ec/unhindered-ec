@@ -19,7 +19,7 @@ mod tests {
     use rust_ga::bitstring::fitness_vec_to_test_results;
     use rust_ga::bitstring::hiff;
     use rust_ga::individual::Individual;
-    use rust_ga::population::Population;
+    use rust_ga::population::VecPop;
 
     #[test]
     fn test_count_ones() {
@@ -54,7 +54,7 @@ mod tests {
 
     #[test]
     fn test_population_new_count_ones() {
-        let pop = Population::new_bitstring_population(100, 128, |bits| {
+        let pop = VecPop::new_bitstring_population(100, 128, |bits| {
             fitness_vec_to_test_results(count_ones(bits))
         });
         assert_eq!(pop.individuals.len(), 100);
@@ -71,7 +71,7 @@ mod tests {
 
     #[test]
     fn test_population_new_hiff() {
-        let pop = Population::new_bitstring_population(100, 128, |bits| {
+        let pop = VecPop::new_bitstring_population(100, 128, |bits| {
             fitness_vec_to_test_results(hiff(bits))
         });
         assert_eq!(pop.individuals.len(), 100);
