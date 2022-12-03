@@ -114,7 +114,7 @@ impl<'a, R: Ord + Sum + Copy + From<i64>> ChildMaker<Bitstring, TestResults<R>>
 
         let genome = first_parent
             .genome()
-            .two_point_xo(&second_parent.genome(), rng)
+            .two_point_xo(second_parent.genome(), rng)
             .mutate_one_over_length(rng);
         let test_results = (self.scorer)(&genome).into_iter().map(From::from).sum();
         EcIndividual::new(genome, test_results)

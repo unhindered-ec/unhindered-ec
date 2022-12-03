@@ -8,23 +8,24 @@ use rand::rngs::ThreadRng;
 // }
 
 #[derive(Debug, Clone, Eq, PartialEq)]
+#[allow(clippy::module_name_repetitions)]
 pub struct EcIndividual<G, R> {
     genome: G,
     test_results: R,
 }
 
 impl<G, R> EcIndividual<G, R> {
-    pub fn genome(&self) -> &G {
+    pub const fn genome(&self) -> &G {
         &self.genome
     }
 
-    pub fn test_results(&self) -> &R {
+    pub const fn test_results(&self) -> &R {
         &self.test_results
     }
 }
 
 impl<G, R> EcIndividual<G, R> {
-    pub fn new(genome: G, test_results: R) -> Self {
+    pub const fn new(genome: G, test_results: R) -> Self {
         Self { genome, test_results }
     }
 
