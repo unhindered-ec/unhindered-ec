@@ -138,13 +138,13 @@ impl<G, R: Ord> Selector<G, TestResults<R>> for Lexicase {
                 // I find the `if-else` to be easier to read than Clippy's preferred
                 // use of `match`.
                 #[allow(clippy::comparison_chain)]
-                if c.test_results.results[test_case_index]
-                    > winners[0].test_results.results[test_case_index]
+                if c.test_results().results[test_case_index]
+                    > winners[0].test_results().results[test_case_index]
                 {
                     winners.clear();
                     winners.push(c);
-                } else if c.test_results.results[test_case_index]
-                    == winners[0].test_results.results[test_case_index]
+                } else if c.test_results().results[test_case_index]
+                    == winners[0].test_results().results[test_case_index]
                 {
                     winners.push(c);
                 }

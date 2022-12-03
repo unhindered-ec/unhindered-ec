@@ -27,7 +27,7 @@ fn construct_hiff_individual(c: &mut Criterion) {
     c.bench_function("XYZ: Construct a HIFF individual on a random vector", |b| {
         b.iter(|| {
             let ind = Individual::new_bitstring(NUM_BITS, hiff, &mut rand::thread_rng());
-            assert!(ind.genome.len() == NUM_BITS);
+            assert!(ind.genome().len() == NUM_BITS);
         })
     });
 }

@@ -113,13 +113,10 @@ impl<'a, R: Ord + Sum + Copy + From<i64>> ChildMaker<Bitstring, TestResults<R>>
         let second_parent = generation.get_parent(rng);
 
         let genome = first_parent
-            .genome
-            .two_point_xo(&second_parent.genome, rng)
+            .genome()
+            .two_point_xo(&second_parent.genome(), rng)
             .mutate_one_over_length(rng);
         let test_results = (self.scorer)(&genome).into_iter().map(From::from).sum();
-        Individual {
-            genome,
-            test_results,
-        }
+        Individual::new(genome, test_results)
     }
 }

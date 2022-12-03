@@ -4,11 +4,25 @@ use rand::rngs::ThreadRng;
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct Individual<G, R> {
-    pub genome: G,
-    pub test_results: R,
+    genome: G,
+    test_results: R,
 }
 
 impl<G, R> Individual<G, R> {
+    pub fn genome(&self) -> &G {
+        &self.genome
+    }
+
+    pub fn test_results(&self) -> &R {
+        &self.test_results
+    }
+}
+
+impl<G, R> Individual<G, R> {
+    pub fn new(genome: G, test_results: R) -> Self {
+        Self { genome, test_results }
+    }
+
     /*
      * The type `H` is needed for circumstances where `G` is a "costly"
      * (to quote the documentation for the `Borrow` trait) type like
@@ -40,7 +54,7 @@ impl<G, R> Individual<G, R> {
      * The documentation for the `Borrow` trait was very helpful:
      * https://doc.rust-lang.org/std/borrow/trait.Borrow.html
      */
-    pub fn new<H>(
+    pub fn generate<H>(
         make_genome: impl Fn(&mut ThreadRng) -> G,
         // TODO: Should this be a special EC-specific trait instead of the general `Fn`?
         run_tests: impl Fn(&H) -> R,

@@ -44,11 +44,11 @@ mod tests {
             |bits| fitness_vec_to_test_results(count_ones(bits)),
             &mut rng,
         );
-        assert_eq!(ind.genome.len(), 128);
-        assert_eq!(ind.test_results.results, count_ones(&ind.genome));
+        assert_eq!(ind.genome().len(), 128);
+        assert_eq!(ind.test_results().results, count_ones(&ind.genome()));
         assert_eq!(
-            ind.test_results.total_result,
-            count_ones(&ind.genome).iter().sum()
+            ind.test_results().total_result,
+            count_ones(&ind.genome()).iter().sum()
         );
     }
 
@@ -57,15 +57,16 @@ mod tests {
         let pop = VecPop::new_bitstring_population(100, 128, |bits| {
             fitness_vec_to_test_results(count_ones(bits))
         });
-        assert_eq!(pop.individuals.len(), 100);
-        assert_eq!(pop.individuals[0].genome.len(), 128);
+        assert_eq!(pop.size(), 100);
+        let first_individual = pop.iter().next().unwrap();
+        assert_eq!(first_individual.genome().len(), 128);
         assert_eq!(
-            pop.individuals[0].test_results.results,
-            count_ones(&pop.individuals[0].genome)
+            first_individual.test_results().results,
+            count_ones(first_individual.genome())
         );
         assert_eq!(
-            pop.individuals[0].test_results.total_result,
-            count_ones(&pop.individuals[0].genome).iter().sum()
+            first_individual.test_results().total_result,
+            count_ones(first_individual.genome()).iter().sum()
         );
     }
 
@@ -74,15 +75,16 @@ mod tests {
         let pop = VecPop::new_bitstring_population(100, 128, |bits| {
             fitness_vec_to_test_results(hiff(bits))
         });
-        assert_eq!(pop.individuals.len(), 100);
-        assert_eq!(pop.individuals[0].genome.len(), 128);
+        assert_eq!(pop.size(), 100);
+        let first_individual = pop.iter().next().unwrap();
+        assert_eq!(first_individual.genome().len(), 128);
         assert_eq!(
-            pop.individuals[0].test_results.results,
-            hiff(&pop.individuals[0].genome)
+            first_individual.test_results().results,
+            hiff(&first_individual.genome())
         );
         assert_eq!(
-            pop.individuals[0].test_results.total_result,
-            hiff(&pop.individuals[0].genome).iter().sum()
+            first_individual.test_results().total_result,
+            hiff(&first_individual.genome()).iter().sum()
         );
     }
 }

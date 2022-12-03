@@ -201,7 +201,7 @@ impl<R> Individual<Bitstring, R> {
         Bitstring: Borrow<H>,
         H: ?Sized,
     {
-        Self::new(|rng| make_random(bit_length, rng), run_tests, rng)
+        Self::generate(|rng| make_random(bit_length, rng), run_tests, rng)
     }
 }
 
@@ -210,14 +210,14 @@ impl<R> Individual<Bitstring, R> {
 impl<R: Debug> Display for Individual<Bitstring, R> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let mut result = String::new();
-        for bit in &self.genome {
+        for bit in self.genome() {
             if *bit {
                 result.push('1');
             } else {
                 result.push('0');
             }
         }
-        write!(f, "[{}]\n{:?}", result, self.test_results)
+        write!(f, "[{}]\n{:?}", result, self.test_results())
     }
 }
 

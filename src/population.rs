@@ -30,7 +30,7 @@ impl<G: Send, R: Send> VecPop<G, R> {
             (0..pop_size)
                 .into_par_iter()
                 .map_init(rand::thread_rng, |rng, _| {
-                    Individual::new(&make_genome, &run_tests, rng)
+                    Individual::generate(&make_genome, &run_tests, rng)
                 }),
         );
         Self { individuals }
@@ -101,15 +101,15 @@ mod vec_pop_tests {
         assert!(vec_pop.is_empty().not());
         assert_eq!(10, vec_pop.size());
         let ind = vec_pop.iter().next().unwrap();
-        assert!(ind.genome < 20);
-        assert!(100 <= ind.test_results && ind.test_results < 120);
+        assert!(*ind.genome() < 20);
+        assert!(100 <= *ind.test_results() && *ind.test_results() < 120);
     }
 
     #[test]
     fn from_iter() {
-        let first_ind = Individual { genome: "First".to_string(), test_results: vec![5, 8, 9] };
-        let second_ind = Individual { genome: "Second".to_string(), test_results: vec![3, 2, 0] };
-        let third_ind = Individual { genome: "Third".to_string(), test_results: vec![6, 3, 2] };
+        let first_ind = Individual::new("First".to_string(), vec![5, 8, 9]);
+        let second_ind = Individual::new("Second".to_string(), vec![3, 2, 0]);
+        let third_ind = Individual::new("Third".to_string(), vec![6, 3, 2]);
         let inds = vec![first_ind, second_ind, third_ind];
         let vec_pop = VecPop::from_iter(inds.clone());
         assert!(vec_pop.is_empty().not());
