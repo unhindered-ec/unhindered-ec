@@ -232,6 +232,6 @@ impl<R: Send> VecPop<Bitstring, R> {
         Bitstring: Borrow<H>,
         H: ?Sized,
     {
-        Self::new(pop_size, |rng| make_random(bit_length, rng), run_tests)
+        Self::generate(pop_size, |rng| make_random(bit_length, rng), run_tests)
     }
 }

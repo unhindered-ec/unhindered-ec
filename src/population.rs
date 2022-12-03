@@ -13,18 +13,18 @@ pub struct VecPopI<I> {
     individuals: Vec<I>,
 }
 
-impl<G: Send, R: Send> VecPop<G, R> {
+impl<I: Generate + Send> VecPopI<I> {
     /*
      * See the lengthy comment in `individual.rs` on why we need the
      * whole `Borrow<H>` business.
      */
-    pub fn new<H>(
+    pub fn generate<H>(
         pop_size: usize,
-        make_genome: impl Fn(&mut ThreadRng) -> G + Send + Sync,
-        run_tests: impl Fn(&H) -> R + Send + Sync,
+        make_genome: impl Fn(&mut ThreadRng) -> I::Genome + Send + Sync,
+        run_tests: impl Fn(&H) -> I::TestResults + Send + Sync,
     ) -> Self
     where
-        G: Borrow<H>,
+        I::Genome: Borrow<H>,
         H: ?Sized,
     {
         let mut individuals = Vec::with_capacity(pop_size);
@@ -32,7 +32,7 @@ impl<G: Send, R: Send> VecPop<G, R> {
             (0..pop_size)
                 .into_par_iter()
                 .map_init(rand::thread_rng, |rng, _| {
-                    EcIndividual::generate(&make_genome, &run_tests, rng)
+                    I::generate(&make_genome, &run_tests, rng)
                 }),
         );
         Self { individuals }
@@ -95,7 +95,7 @@ mod vec_pop_tests {
 
     #[test]
     fn new_works() {
-        let vec_pop = VecPop::new(
+        let vec_pop = VecPop::generate(
             10, 
             |rng| rng.next_u32() % 20,
             |g| (*g)+100
