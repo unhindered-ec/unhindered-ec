@@ -3,7 +3,7 @@ use std::ops::Not;
 use rand::rngs::ThreadRng;
 use rayon::prelude::{IntoParallelIterator, ParallelIterator};
 
-use crate::{individual::Individual, population::Population, selectors::Selector};
+use crate::{individual::Individual, population::VecPop, selectors::Selector};
 
 pub trait ChildMaker<G, R>: Sync {
     fn make_child(&self, rng: &mut ThreadRng, generation: &Generation<G, R>) -> Individual<G, R>;
@@ -22,7 +22,7 @@ pub trait ChildMaker<G, R>: Sync {
 //  `weighted_selectors` and `child_maker`). It would be good to benchmark
 //  both versions to see what the costs are.
 pub struct Generation<'a, G, R> {
-    pub population: Population<G, R>,
+    pub population: VecPop<G, R>,
     selector: &'a dyn Selector<G, R>,
     child_maker: &'a dyn ChildMaker<G, R>,
 }
@@ -33,7 +33,7 @@ impl<'a, G: Eq, R: Ord> Generation<'a, G, R> {
     /// This can panic if the population is empty or the weighted set of
     /// selectors is empty.
     pub fn new(
-        population: Population<G, R>,
+        population: VecPop<G, R>,
         selector: &'a dyn Selector<G, R>,
         child_maker: &'a dyn ChildMaker<G, R>,
     ) -> Self {
@@ -65,9 +65,8 @@ impl<'a, G: Send + Sync, R: Send + Sync> Generation<'a, G, R> {
     /// Make the next generation using a Rayon parallel iterator.
     #[must_use]
     pub fn par_next(&self) -> Self {
-        let previous_individuals = &self.population.individuals;
-        let pop_size = previous_individuals.len();
-        let individuals = (0..pop_size)
+        let pop_size = self.population.size();
+        let population = (0..pop_size)
             .into_par_iter()
             // "Convert" the individual number (which we never use) into
             // the current `Generation` object so the `make_child` closure
@@ -78,23 +77,24 @@ impl<'a, G: Send + Sync, R: Send + Sync> Generation<'a, G, R> {
             })
             .collect();
         Self {
-            population: Population { individuals },
+            population,
             selector: self.selector,
             child_maker: self.child_maker,
         }
     }
+}
 
+impl<'a, G, R> Generation<'a, G, R> {
     /// Make the next generation serially.
     #[must_use]
     pub fn next(&self) -> Self {
-        let previous_individuals = &self.population.individuals;
-        let pop_size = previous_individuals.len();
+        let pop_size = self.population.size();
         let mut rng = rand::thread_rng();
-        let individuals = (0..pop_size)
+        let population = (0..pop_size)
             .map(|_| self.child_maker.make_child(&mut rng, self))
             .collect();
         Self {
-            population: Population { individuals },
+            population,
             selector: self.selector,
             child_maker: self.child_maker,
         }
