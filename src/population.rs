@@ -5,15 +5,13 @@ use std::{borrow::Borrow, ops::Not, slice::Iter};
 use rand::rngs::ThreadRng;
 use rayon::prelude::{IntoParallelIterator, ParallelExtend, ParallelIterator, FromParallelIterator};
 
-use crate::individual::{ec::EcIndividual, Individual, Generate};
+use crate::individual::Generate;
 
-pub type VecPop<G, R> = VecPopI<EcIndividual<G, R>>;
-
-pub struct VecPopI<I> {
+pub struct VecPop<I> {
     individuals: Vec<I>,
 }
 
-impl<I: Generate + Send> VecPopI<I> {
+impl<I: Generate + Send> VecPop<I> {
     /*
      * See the lengthy comment in `individual.rs` on why we need the
      * whole `Borrow<H>` business.
@@ -39,7 +37,7 @@ impl<I: Generate + Send> VecPopI<I> {
     }
 }
 
-impl<I> VecPopI<I> {
+impl<I> VecPop<I> {
     #[must_use]
     pub fn is_empty(&self) -> bool {
         self.individuals.is_empty()
@@ -55,7 +53,7 @@ impl<I> VecPopI<I> {
     }
 }
 
-impl<I: Ord> VecPopI<I> {
+impl<I: Ord> VecPop<I> {
     /// # Panics
     ///
     /// Will panic if the population is empty.
@@ -67,7 +65,7 @@ impl<I: Ord> VecPopI<I> {
     }
 }
 
-impl<I> FromIterator<I> for VecPopI<I> {
+impl<I> FromIterator<I> for VecPop<I> {
     fn from_iter<T>(iter: T) -> Self 
     where
         T: IntoIterator<Item = I>
@@ -77,7 +75,7 @@ impl<I> FromIterator<I> for VecPopI<I> {
     }
 }
 
-impl<I: Send> FromParallelIterator<I> for VecPopI<I> {
+impl<I: Send> FromParallelIterator<I> for VecPop<I> {
     fn from_par_iter<T>(par_iter: T) -> Self
     where
         T: IntoParallelIterator<Item = I>
@@ -91,11 +89,13 @@ impl<I: Send> FromParallelIterator<I> for VecPopI<I> {
 mod vec_pop_tests {
     use rand::RngCore;
 
+    use crate::individual::ec::EcIndividual;
+
     use super::*;
 
     #[test]
     fn new_works() {
-        let vec_pop = VecPop::generate(
+        let vec_pop: VecPop<EcIndividual<_, _>> = VecPop::generate(
             10, 
             |rng| rng.next_u32() % 20,
             |g| (*g)+100

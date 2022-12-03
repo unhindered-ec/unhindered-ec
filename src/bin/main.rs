@@ -48,7 +48,7 @@ mod tests {
         assert_eq!(ind.test_results().results, count_ones(&ind.genome()));
         assert_eq!(
             ind.test_results().total_result,
-            count_ones(&ind.genome()).iter().sum()
+            count_ones(&ind.genome()).iter().sum::<i64>()
         );
     }
 
@@ -66,7 +66,7 @@ mod tests {
         );
         assert_eq!(
             first_individual.test_results().total_result,
-            count_ones(first_individual.genome()).iter().sum()
+            count_ones(first_individual.genome()).iter().sum::<i64>()
         );
     }
 
@@ -84,7 +84,7 @@ mod tests {
         );
         assert_eq!(
             first_individual.test_results().total_result,
-            hiff(&first_individual.genome()).iter().sum()
+            hiff(&first_individual.genome()).iter().sum::<i64>()
         );
     }
 }

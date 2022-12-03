@@ -2,8 +2,6 @@ use std::{borrow::Borrow, cmp::Ordering};
 
 use rand::rngs::ThreadRng;
 
-use crate::test_results::TestResult;
-
 use super::{Generate, Individual};
 
 #[derive(Debug, Clone, Eq, PartialEq)]

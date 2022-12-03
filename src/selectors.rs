@@ -21,7 +21,7 @@ pub trait Selector<G, R>: Sync {
     fn select<'a>(
         &self,
         rng: &mut ThreadRng,
-        population: &'a VecPop<G, R>,
+        population: &'a VecPop<EcIndividual<G, R>>,
     ) -> &'a EcIndividual<G, R>;
 }
 
@@ -32,7 +32,7 @@ impl<G, R: Ord> Selector<G, R> for Random {
     fn select<'a>(
         &self,
         rng: &mut ThreadRng,
-        population: &'a VecPop<G, R>,
+        population: &'a VecPop<EcIndividual<G, R>>,
     ) -> &'a EcIndividual<G, R> {
         // The population should never be empty here.
         assert!(
@@ -51,7 +51,7 @@ impl<G: Eq, R: Ord> Selector<G, R> for Best {
     fn select<'a>(
         &self,
         _: &mut ThreadRng,
-        population: &'a VecPop<G, R>,
+        population: &'a VecPop<EcIndividual<G, R>>,
     ) -> &'a EcIndividual<G, R> {
         // The population should never be empty here.
         assert!(
@@ -77,7 +77,7 @@ impl<G: Eq, R: Ord> Selector<G, R> for Tournament {
     fn select<'a>(
         &self,
         rng: &mut ThreadRng,
-        population: &'a VecPop<G, R>,
+        population: &'a VecPop<EcIndividual<G, R>>,
     ) -> &'a EcIndividual<G, R> {
         assert!(population.size() >= self.size && self.size > 0);
         // Since we know that the population and tournament aren't empty, we
@@ -107,7 +107,7 @@ impl<G, R: Ord> Selector<G, TestResults<R>> for Lexicase {
     fn select<'a>(
         &self,
         rng: &mut ThreadRng,
-        population: &'a VecPop<G, TestResults<R>>,
+        population: &'a VecPop<EcIndividual<G, TestResults<R>>>,
     ) -> &'a EcIndividual<G, TestResults<R>> {
         // Candidate set is initially the whole population.
         // Shuffle the (indices of the) test cases.
@@ -183,7 +183,7 @@ impl<'a, G, R> Selector<G, R> for Weighted<'a, G, R> {
     fn select<'b>(
         &self,
         rng: &mut ThreadRng,
-        population: &'b VecPop<G, R>,
+        population: &'b VecPop<EcIndividual<G, R>>,
     ) -> &'b EcIndividual<G, R> {
         assert!(
             self.selectors.is_empty().not(),

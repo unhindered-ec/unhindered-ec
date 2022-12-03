@@ -22,7 +22,7 @@ pub trait ChildMaker<G, R>: Sync {
 //  `weighted_selectors` and `child_maker`). It would be good to benchmark
 //  both versions to see what the costs are.
 pub struct Generation<'a, G, R> {
-    pub population: VecPop<G, R>,
+    pub population: VecPop<EcIndividual<G, R>>,
     selector: &'a dyn Selector<G, R>,
     child_maker: &'a dyn ChildMaker<G, R>,
 }
@@ -33,7 +33,7 @@ impl<'a, G: Eq, R: Ord> Generation<'a, G, R> {
     /// This can panic if the population is empty or the weighted set of
     /// selectors is empty.
     pub fn new(
-        population: VecPop<G, R>,
+        population: VecPop<EcIndividual<G, R>>,
         selector: &'a dyn Selector<G, R>,
         child_maker: &'a dyn ChildMaker<G, R>,
     ) -> Self {

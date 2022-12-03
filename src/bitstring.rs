@@ -222,7 +222,7 @@ impl<R: Debug> Display for EcIndividual<Bitstring, R> {
     }
 }
 
-impl<R: Send> VecPop<Bitstring, R> {
+impl<R: Send> VecPop<EcIndividual<Bitstring, R>> {
     pub fn new_bitstring_population<H>(
         pop_size: usize,
         bit_length: usize,
