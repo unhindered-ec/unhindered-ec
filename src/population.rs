@@ -5,10 +5,10 @@ use std::{borrow::Borrow, ops::Not, slice::Iter};
 use rand::rngs::ThreadRng;
 use rayon::prelude::{IntoParallelIterator, ParallelExtend, ParallelIterator, FromParallelIterator};
 
-use crate::individual::Individual;
+use crate::individual::ec_individual::EcIndividual;
 
 pub struct VecPop<G, R> {
-    individuals: Vec<Individual<G, R>>,
+    individuals: Vec<EcIndividual<G, R>>,
 }
 
 impl<G: Send, R: Send> VecPop<G, R> {
@@ -30,7 +30,7 @@ impl<G: Send, R: Send> VecPop<G, R> {
             (0..pop_size)
                 .into_par_iter()
                 .map_init(rand::thread_rng, |rng, _| {
-                    Individual::generate(&make_genome, &run_tests, rng)
+                    EcIndividual::generate(&make_genome, &run_tests, rng)
                 }),
         );
         Self { individuals }
@@ -48,7 +48,7 @@ impl<G, R> VecPop<G, R> {
         self.individuals.len()
     }
 
-    pub fn iter(&self) -> Iter<Individual<G, R>> {
+    pub fn iter(&self) -> Iter<EcIndividual<G, R>> {
         self.individuals.iter()
     }
 }
@@ -58,27 +58,27 @@ impl<G: Eq, R: Ord> VecPop<G, R> {
     ///
     /// Will panic if the population is empty.
     #[must_use]
-    pub fn best_individual(&self) -> &Individual<G, R> {
+    pub fn best_individual(&self) -> &EcIndividual<G, R> {
         assert!(self.individuals.is_empty().not());
         #[allow(clippy::unwrap_used)]
         self.individuals.iter().max().unwrap()
     }
 }
 
-impl<G, R> FromIterator<Individual<G, R>> for VecPop<G, R> {
+impl<G, R> FromIterator<EcIndividual<G, R>> for VecPop<G, R> {
     fn from_iter<T>(iter: T) -> Self 
     where
-        T: IntoIterator<Item = Individual<G, R>>
+        T: IntoIterator<Item = EcIndividual<G, R>>
     {
         let individuals = iter.into_iter().collect();
         Self { individuals }
     }
 }
 
-impl<G: Send, R: Send> FromParallelIterator<Individual<G, R>> for VecPop<G, R> {
+impl<G: Send, R: Send> FromParallelIterator<EcIndividual<G, R>> for VecPop<G, R> {
     fn from_par_iter<I>(par_iter: I) -> Self
     where
-        I: IntoParallelIterator<Item = Individual<G, R>>
+        I: IntoParallelIterator<Item = EcIndividual<G, R>>
     {
         let individuals = par_iter.into_par_iter().collect();
         Self { individuals }
@@ -107,14 +107,14 @@ mod vec_pop_tests {
 
     #[test]
     fn from_iter() {
-        let first_ind = Individual::new("First".to_string(), vec![5, 8, 9]);
-        let second_ind = Individual::new("Second".to_string(), vec![3, 2, 0]);
-        let third_ind = Individual::new("Third".to_string(), vec![6, 3, 2]);
+        let first_ind = EcIndividual::new("First".to_string(), vec![5, 8, 9]);
+        let second_ind = EcIndividual::new("Second".to_string(), vec![3, 2, 0]);
+        let third_ind = EcIndividual::new("Third".to_string(), vec![6, 3, 2]);
         let inds = vec![first_ind, second_ind, third_ind];
         let vec_pop = VecPop::from_iter(inds.clone());
         assert!(vec_pop.is_empty().not());
         assert_eq!(3, vec_pop.size());
-        let pop_inds: Vec<Individual<String, Vec<i32>>> = vec_pop.iter().cloned().collect();
+        let pop_inds: Vec<EcIndividual<String, Vec<i32>>> = vec_pop.iter().cloned().collect();
         assert_eq!(inds, pop_inds);
     }
 }

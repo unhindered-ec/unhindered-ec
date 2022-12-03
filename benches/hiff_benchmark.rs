@@ -1,6 +1,6 @@
 use criterion::{criterion_group, criterion_main, Criterion};
 use rust_ga::bitstring::hiff;
-use rust_ga::individual::Individual;
+use rust_ga::individual::ec_individual::EcIndividual;
 
 const NUM_BITS: usize = 128;
 
@@ -26,7 +26,7 @@ fn compute_hiff(c: &mut Criterion) {
 fn construct_hiff_individual(c: &mut Criterion) {
     c.bench_function("XYZ: Construct a HIFF individual on a random vector", |b| {
         b.iter(|| {
-            let ind = Individual::new_bitstring(NUM_BITS, hiff, &mut rand::thread_rng());
+            let ind = EcIndividual::new_bitstring(NUM_BITS, hiff, &mut rand::thread_rng());
             assert!(ind.genome().len() == NUM_BITS);
         })
     });

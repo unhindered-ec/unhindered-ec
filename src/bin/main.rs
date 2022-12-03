@@ -18,7 +18,7 @@ mod tests {
     use rust_ga::bitstring::count_ones;
     use rust_ga::bitstring::fitness_vec_to_test_results;
     use rust_ga::bitstring::hiff;
-    use rust_ga::individual::Individual;
+    use rust_ga::individual::ec_individual::EcIndividual;
     use rust_ga::population::VecPop;
 
     #[test]
@@ -39,7 +39,7 @@ mod tests {
     #[test]
     fn test_individual_new() {
         let mut rng = rand::thread_rng();
-        let ind = Individual::new_bitstring(
+        let ind = EcIndividual::new_bitstring(
             128,
             |bits| fitness_vec_to_test_results(count_ones(bits)),
             &mut rng,

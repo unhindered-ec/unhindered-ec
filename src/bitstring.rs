@@ -4,7 +4,7 @@ use std::fmt::{Debug, Display};
 use num_traits::ToPrimitive;
 use rand::{rngs::ThreadRng, Rng};
 
-use crate::individual::Individual;
+use crate::individual::ec_individual::EcIndividual;
 use crate::population::VecPop;
 use crate::test_results::TestResults;
 
@@ -191,7 +191,7 @@ mod genetic_operator_tests {
     }
 }
 
-impl<R> Individual<Bitstring, R> {
+impl<R> EcIndividual<Bitstring, R> {
     pub fn new_bitstring<H>(
         bit_length: usize,
         run_tests: impl Fn(&H) -> R,
@@ -207,7 +207,7 @@ impl<R> Individual<Bitstring, R> {
 
 // TODO: Maybe change R to implement `Display` and have `TestResults` have a
 //   nice-ish display function.
-impl<R: Debug> Display for Individual<Bitstring, R> {
+impl<R: Debug> Display for EcIndividual<Bitstring, R> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let mut result = String::new();
         for bit in self.genome() {

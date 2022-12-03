@@ -3,10 +3,10 @@ use std::ops::Not;
 use rand::rngs::ThreadRng;
 use rayon::prelude::{IntoParallelIterator, ParallelIterator};
 
-use crate::{individual::Individual, population::VecPop, selectors::Selector};
+use crate::{individual::ec_individual::EcIndividual, population::VecPop, selectors::Selector};
 
 pub trait ChildMaker<G, R>: Sync {
-    fn make_child(&self, rng: &mut ThreadRng, generation: &Generation<G, R>) -> Individual<G, R>;
+    fn make_child(&self, rng: &mut ThreadRng, generation: &Generation<G, R>) -> EcIndividual<G, R>;
 }
 
 // TODO: Extend the vector of Selectors to a WeightedParentSelector that is essentially
@@ -46,14 +46,14 @@ impl<'a, G: Eq, R: Ord> Generation<'a, G, R> {
     }
 
     #[must_use]
-    pub fn best_individual(&self) -> &Individual<G, R> {
+    pub fn best_individual(&self) -> &EcIndividual<G, R> {
         self.population.best_individual()
     }
 
     /// # Panics
     ///
     /// This can panic if the set of selectors is empty.
-    pub fn get_parent(&self, rng: &mut ThreadRng) -> &Individual<G, R> {
+    pub fn get_parent(&self, rng: &mut ThreadRng) -> &EcIndividual<G, R> {
         // The set of selectors should be non-empty, and if it is, then we
         // should be able to safely unwrap the `choose()` call.
         #[allow(clippy::unwrap_used)]

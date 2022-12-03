@@ -11,7 +11,7 @@ use rand::rngs::ThreadRng;
 
 use bitstring::{count_ones, hiff, Bitstring, LinearCrossover, LinearMutation};
 use generation::{ChildMaker, Generation};
-use individual::Individual;
+use individual::ec_individual::EcIndividual;
 use population::VecPop;
 use selectors::Lexicase;
 use test_results::{Error, Score, TestResults};
@@ -108,7 +108,7 @@ impl<'a, R: Ord + Sum + Copy + From<i64>> ChildMaker<Bitstring, TestResults<R>>
         &self,
         rng: &mut ThreadRng,
         generation: &Generation<Bitstring, TestResults<R>>,
-    ) -> Individual<Bitstring, TestResults<R>> {
+    ) -> EcIndividual<Bitstring, TestResults<R>> {
         let first_parent = generation.get_parent(rng);
         let second_parent = generation.get_parent(rng);
 
@@ -117,6 +117,6 @@ impl<'a, R: Ord + Sum + Copy + From<i64>> ChildMaker<Bitstring, TestResults<R>>
             .two_point_xo(&second_parent.genome(), rng)
             .mutate_one_over_length(rng);
         let test_results = (self.scorer)(&genome).into_iter().map(From::from).sum();
-        Individual::new(genome, test_results)
+        EcIndividual::new(genome, test_results)
     }
 }

@@ -2,13 +2,18 @@ use std::{borrow::Borrow, cmp::Ordering};
 
 use rand::rngs::ThreadRng;
 
+// pub trait Individual {
+//     type Genome;
+//     type TestResults;
+// }
+
 #[derive(Debug, Clone, Eq, PartialEq)]
-pub struct Individual<G, R> {
+pub struct EcIndividual<G, R> {
     genome: G,
     test_results: R,
 }
 
-impl<G, R> Individual<G, R> {
+impl<G, R> EcIndividual<G, R> {
     pub fn genome(&self) -> &G {
         &self.genome
     }
@@ -18,7 +23,7 @@ impl<G, R> Individual<G, R> {
     }
 }
 
-impl<G, R> Individual<G, R> {
+impl<G, R> EcIndividual<G, R> {
     pub fn new(genome: G, test_results: R) -> Self {
         Self { genome, test_results }
     }
@@ -73,13 +78,13 @@ impl<G, R> Individual<G, R> {
     }
 }
 
-impl<G: Eq, R: Ord> Ord for Individual<G, R> {
+impl<G: Eq, R: Ord> Ord for EcIndividual<G, R> {
     fn cmp(&self, other: &Self) -> Ordering {
         self.test_results.cmp(&other.test_results)
     }
 }
 
-impl<G: PartialEq, R: PartialOrd> PartialOrd for Individual<G, R> {
+impl<G: PartialEq, R: PartialOrd> PartialOrd for EcIndividual<G, R> {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         self.test_results.partial_cmp(&other.test_results)
     }

@@ -4,7 +4,7 @@ use rand::{rngs::ThreadRng, seq::SliceRandom};
 
 use rand::prelude::IteratorRandom;
 
-use crate::{individual::Individual, population::VecPop, test_results::TestResults};
+use crate::{individual::ec_individual::EcIndividual, population::VecPop, test_results::TestResults};
 
 // TODO: Change `Selector` so it acts on a more general collection than `Population`.
 //  I think that all we need are some sort of collection or iterator, and then all
@@ -22,7 +22,7 @@ pub trait Selector<G, R>: Sync {
         &self,
         rng: &mut ThreadRng,
         population: &'a VecPop<G, R>,
-    ) -> &'a Individual<G, R>;
+    ) -> &'a EcIndividual<G, R>;
 }
 
 pub struct Random {}
@@ -33,7 +33,7 @@ impl<G, R: Ord> Selector<G, R> for Random {
         &self,
         rng: &mut ThreadRng,
         population: &'a VecPop<G, R>,
-    ) -> &'a Individual<G, R> {
+    ) -> &'a EcIndividual<G, R> {
         // The population should never be empty here.
         assert!(
             population.is_empty().not(),
@@ -52,7 +52,7 @@ impl<G: Eq, R: Ord> Selector<G, R> for Best {
         &self,
         _: &mut ThreadRng,
         population: &'a VecPop<G, R>,
-    ) -> &'a Individual<G, R> {
+    ) -> &'a EcIndividual<G, R> {
         // The population should never be empty here.
         assert!(
             population.is_empty().not(),
@@ -78,7 +78,7 @@ impl<G: Eq, R: Ord> Selector<G, R> for Tournament {
         &self,
         rng: &mut ThreadRng,
         population: &'a VecPop<G, R>,
-    ) -> &'a Individual<G, R> {
+    ) -> &'a EcIndividual<G, R> {
         assert!(population.size() >= self.size && self.size > 0);
         // Since we know that the population and tournament aren't empty, we
         // can safely unwrap() the `.max()` call.
@@ -108,7 +108,7 @@ impl<G, R: Ord> Selector<G, TestResults<R>> for Lexicase {
         &self,
         rng: &mut ThreadRng,
         population: &'a VecPop<G, TestResults<R>>,
-    ) -> &'a Individual<G, TestResults<R>> {
+    ) -> &'a EcIndividual<G, TestResults<R>> {
         // Candidate set is initially the whole population.
         // Shuffle the (indices of the) test cases.
         // For each test in turn:
@@ -184,7 +184,7 @@ impl<'a, G, R> Selector<G, R> for Weighted<'a, G, R> {
         &self,
         rng: &mut ThreadRng,
         population: &'b VecPop<G, R>,
-    ) -> &'b Individual<G, R> {
+    ) -> &'b EcIndividual<G, R> {
         assert!(
             self.selectors.is_empty().not(),
             "The collection of selectors should be non-empty"
