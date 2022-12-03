@@ -39,7 +39,7 @@ impl<I: Generate + Send> VecPopI<I> {
     }
 }
 
-impl<G, R> VecPop<G, R> {
+impl<I> VecPopI<I> {
     #[must_use]
     pub fn is_empty(&self) -> bool {
         self.individuals.is_empty()
@@ -50,17 +50,17 @@ impl<G, R> VecPop<G, R> {
         self.individuals.len()
     }
 
-    pub fn iter(&self) -> Iter<EcIndividual<G, R>> {
+    pub fn iter(&self) -> Iter<I> {
         self.individuals.iter()
     }
 }
 
-impl<G: Eq, R: Ord> VecPop<G, R> {
+impl<I: Ord> VecPopI<I> {
     /// # Panics
     ///
     /// Will panic if the population is empty.
     #[must_use]
-    pub fn best_individual(&self) -> &EcIndividual<G, R> {
+    pub fn best_individual(&self) -> &I {
         assert!(self.individuals.is_empty().not());
         #[allow(clippy::unwrap_used)]
         self.individuals.iter().max().unwrap()
