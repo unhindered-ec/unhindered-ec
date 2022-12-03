@@ -84,3 +84,37 @@ impl<G: Send, R: Send> FromParallelIterator<Individual<G, R>> for VecPop<G, R> {
         Self { individuals }
     }
 }
+
+#[cfg(test)]
+mod vec_pop_tests {
+    use rand::RngCore;
+
+    use super::*;
+
+    #[test]
+    fn new_works() {
+        let vec_pop = VecPop::new(
+            10, 
+            |rng| rng.next_u32() % 20,
+            |g| (*g)+100
+        );
+        assert!(vec_pop.is_empty().not());
+        assert_eq!(10, vec_pop.size());
+        let ind = vec_pop.iter().next().unwrap();
+        assert!(ind.genome < 20);
+        assert!(100 <= ind.test_results && ind.test_results < 120);
+    }
+
+    #[test]
+    fn from_iter() {
+        let first_ind = Individual { genome: "First".to_string(), test_results: vec![5, 8, 9] };
+        let second_ind = Individual { genome: "Second".to_string(), test_results: vec![3, 2, 0] };
+        let third_ind = Individual { genome: "Third".to_string(), test_results: vec![6, 3, 2] };
+        let inds = vec![first_ind, second_ind, third_ind];
+        let vec_pop = VecPop::from_iter(inds.clone());
+        assert!(vec_pop.is_empty().not());
+        assert_eq!(3, vec_pop.size());
+        let pop_inds: Vec<Individual<String, Vec<i32>>> = vec_pop.iter().cloned().collect();
+        assert_eq!(inds, pop_inds);
+    }
+}
