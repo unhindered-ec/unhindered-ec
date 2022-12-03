@@ -67,20 +67,20 @@ impl<I: Ord> VecPopI<I> {
     }
 }
 
-impl<G, R> FromIterator<EcIndividual<G, R>> for VecPop<G, R> {
+impl<I> FromIterator<I> for VecPopI<I> {
     fn from_iter<T>(iter: T) -> Self 
     where
-        T: IntoIterator<Item = EcIndividual<G, R>>
+        T: IntoIterator<Item = I>
     {
         let individuals = iter.into_iter().collect();
         Self { individuals }
     }
 }
 
-impl<G: Send, R: Send> FromParallelIterator<EcIndividual<G, R>> for VecPop<G, R> {
-    fn from_par_iter<I>(par_iter: I) -> Self
+impl<I: Send> FromParallelIterator<I> for VecPopI<I> {
+    fn from_par_iter<T>(par_iter: T) -> Self
     where
-        I: IntoParallelIterator<Item = EcIndividual<G, R>>
+        T: IntoParallelIterator<Item = I>
     {
         let individuals = par_iter.into_par_iter().collect();
         Self { individuals }
