@@ -18,7 +18,7 @@ use selectors::selectors::Lexicase;
 use test_results::{Error, Score, TestResults};
 
 use crate::selectors::best::Best;
-use crate::selectors::selectors::Tournament;
+use crate::selectors::tournament::Tournament;
 use crate::selectors::selectors::Weighted;
 
 pub mod args;
