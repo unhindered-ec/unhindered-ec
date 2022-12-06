@@ -3,7 +3,7 @@ use rand::rngs::ThreadRng;
 
 use crate::{population::VecPop};
 
-use super::{SelectorI};
+use super::{Selector};
 
 pub struct Tournament {
     size: usize,
@@ -16,7 +16,7 @@ impl Tournament {
     }
 }
 
-impl<I: Ord> SelectorI<I> for Tournament {
+impl<I: Ord> Selector<I> for Tournament {
     fn select<'a>(
         &self,
         rng: &mut ThreadRng,

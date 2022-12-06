@@ -4,10 +4,10 @@ use rand::{rngs::ThreadRng, seq::SliceRandom};
 
 use crate::{population::VecPop};
 
-use super::{SelectorI};
+use super::{Selector};
 
 pub struct Weighted<'a, I> {
-    selectors: Vec<(&'a dyn SelectorI<I>, usize)>,
+    selectors: Vec<(&'a dyn Selector<I>, usize)>,
 }
 
 impl<'a, I> Weighted<'a, I> {
@@ -15,20 +15,20 @@ impl<'a, I> Weighted<'a, I> {
     // the `new` implementation takes an initial selector so `selectors` is
     // guaranteed to never be empty.
     #[must_use]
-    pub fn new(selector: &'a dyn SelectorI<I>, weight: usize) -> Self {
+    pub fn new(selector: &'a dyn Selector<I>, weight: usize) -> Self {
         Self {
             selectors: vec![(selector, weight)],
         }
     }
 
     #[must_use]
-    pub fn with_selector(mut self, selector: &'a dyn SelectorI<I>, weight: usize) -> Self {
+    pub fn with_selector(mut self, selector: &'a dyn Selector<I>, weight: usize) -> Self {
         self.selectors.push((selector, weight));
         self
     }
 }
 
-impl<'a, I> SelectorI<I> for Weighted<'a, I> {
+impl<'a, I> Selector<I> for Weighted<'a, I> {
     fn select<'b>(
         &self,
         rng: &mut ThreadRng,

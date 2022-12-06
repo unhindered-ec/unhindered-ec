@@ -5,7 +5,7 @@ use rand::rngs::ThreadRng;
 
 use crate::{test_results::TestResults, population::VecPop, individual::Individual};
 
-use super::SelectorI;
+use super::Selector;
 
 pub struct Lexicase {
     num_test_cases: usize,
@@ -18,7 +18,7 @@ impl Lexicase {
     }
 }
 
-impl<R, I> SelectorI<I> for Lexicase 
+impl<R, I> Selector<I> for Lexicase 
 where
     R: PartialEq + PartialOrd,
     I: Individual<TestResults = TestResults<R>>,

@@ -4,11 +4,11 @@ use rand::rngs::ThreadRng;
 
 use crate::{population::VecPop};
 
-use super::{SelectorI};
+use super::{Selector};
 
 pub struct Best {}
 
-impl<I: Ord> SelectorI<I> for Best {
+impl<I: Ord> Selector<I> for Best {
     #[must_use]
     fn select<'a>(
         &self,

@@ -5,11 +5,11 @@ use rand::rngs::ThreadRng;
 
 use crate::{individual::Individual, population::VecPop};
 
-use super::{SelectorI};
+use super::{Selector};
 
 pub struct Random {}
 
-impl<I: Individual> SelectorI<I> for Random {
+impl<I: Individual> Selector<I> for Random {
     #[must_use]
     fn select<'a>(
         &self,
