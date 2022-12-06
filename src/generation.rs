@@ -3,7 +3,7 @@ use std::ops::Not;
 use rand::rngs::ThreadRng;
 use rayon::prelude::{IntoParallelIterator, ParallelIterator};
 
-use crate::{individual::ec::EcIndividual, population::VecPop, selectors::Selector, child_maker::ChildMakerI};
+use crate::{individual::ec::EcIndividual, population::VecPop, selectors::Selector, child_maker::ChildMaker};
 
 // TODO: Extend the vector of Selectors to a WeightedParentSelector that is essentially
 //   a wrapper around `rand::distributions::WeightedChoice` so we can
@@ -18,9 +18,10 @@ use crate::{individual::ec::EcIndividual, population::VecPop, selectors::Selecto
 //  `weighted_selectors` and `child_maker`). It would be good to benchmark
 //  both versions to see what the costs are.
 pub struct Generation<'a, G, R> {
+    // TODO: Turn this into a trait
     pub population: VecPop<EcIndividual<G, R>>,
     selector: &'a dyn Selector<EcIndividual<G, R>>,
-    child_maker: &'a (dyn ChildMakerI<EcIndividual<G, R>> + Sync + Send),
+    child_maker: &'a (dyn ChildMaker<EcIndividual<G, R>> + Sync + Send),
 }
 
 impl<'a, G, R> Generation<'a, G, R> {
@@ -38,7 +39,7 @@ impl<'a, G: Eq, R: Ord> Generation<'a, G, R> {
     pub fn new(
         population: VecPop<EcIndividual<G, R>>,
         selector: &'a dyn Selector<EcIndividual<G, R>>,
-        child_maker: &'a (dyn ChildMakerI<EcIndividual<G, R>> + Sync + Send),
+        child_maker: &'a (dyn ChildMaker<EcIndividual<G, R>> + Sync + Send),
     ) -> Self {
         assert!(population.is_empty().not());
         Self {
@@ -76,7 +77,7 @@ impl<'a, G: Send + Sync, R: Send + Sync> Generation<'a, G, R> {
             // will have access to the selectors and population.
             .map(|_| self)
             .map_init(rand::thread_rng, |rng, _| {
-                self.child_maker.make_child_i(rng, &self.population, self.selector)
+                self.child_maker.make_child(rng, &self.population, self.selector)
             })
             .collect();
         Self {
@@ -94,7 +95,7 @@ impl<'a, G, R> Generation<'a, G, R> {
         let pop_size = self.population.size();
         let mut rng = rand::thread_rng();
         let population = (0..pop_size)
-            .map(|_| self.child_maker.make_child_i(&mut rng, &self.population, self.selector))
+            .map(|_| self.child_maker.make_child(&mut rng, &self.population, self.selector))
             .collect();
         Self {
             population,

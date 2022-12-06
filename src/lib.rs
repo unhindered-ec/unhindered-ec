@@ -11,7 +11,7 @@ use individual::Individual;
 use rand::rngs::ThreadRng;
 
 use bitstring::{count_ones, hiff, Bitstring, LinearCrossover, LinearMutation};
-use child_maker::ChildMakerI;
+use child_maker::ChildMaker;
 use generation::Generation;
 use individual::ec::EcIndividual;
 use population::VecPop;
@@ -104,11 +104,11 @@ impl<'a> TwoPointXoMutateChildMaker<'a> {
     }
 }
 
-impl<'a, R> ChildMakerI<EcIndividual<Bitstring, TestResults<R>>> for TwoPointXoMutateChildMaker<'a>
+impl<'a, R> ChildMaker<EcIndividual<Bitstring, TestResults<R>>> for TwoPointXoMutateChildMaker<'a>
 where
     R: Sum + Copy + From<i64>
 {
-    fn make_child_i(
+    fn make_child(
         &self,
         rng: &mut ThreadRng,
         population: &VecPop<EcIndividual<Bitstring, TestResults<R>>>,
