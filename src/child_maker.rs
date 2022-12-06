@@ -1,6 +1,6 @@
 use rand::rngs::ThreadRng;
 
-use crate::{selectors::Selector, population::VecPop};
+use crate::{selector::Selector, population::VecPop};
 
 pub trait ChildMaker<I> {
     // TODO: Instead of passing 2/3 of  Generation` to this function, is there a trait

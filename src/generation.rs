@@ -3,7 +3,7 @@ use std::ops::Not;
 use rand::rngs::ThreadRng;
 use rayon::prelude::{IntoParallelIterator, ParallelIterator};
 
-use crate::{individual::ec::EcIndividual, population::VecPop, selectors::Selector, child_maker::ChildMaker};
+use crate::{individual::ec::EcIndividual, population::VecPop, selector::Selector, child_maker::ChildMaker};
 
 // TODO: Extend the vector of Selectors to a WeightedParentSelector that is essentially
 //   a wrapper around `rand::distributions::WeightedChoice` so we can

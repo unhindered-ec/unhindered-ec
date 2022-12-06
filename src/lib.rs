@@ -15,13 +15,13 @@ use child_maker::ChildMaker;
 use generation::Generation;
 use individual::ec::EcIndividual;
 use population::VecPop;
-use selectors::Selector;
-use selectors::lexicase::Lexicase;
+use selector::Selector;
+use selector::lexicase::Lexicase;
 use test_results::{Error, Score, TestResults};
 
-use crate::selectors::best::Best;
-use crate::selectors::tournament::Tournament;
-use crate::selectors::weighted::Weighted;
+use crate::selector::best::Best;
+use crate::selector::tournament::Tournament;
+use crate::selector::weighted::Weighted;
 
 pub mod args;
 pub mod bitstring;
@@ -29,7 +29,7 @@ pub mod child_maker;
 pub mod generation;
 pub mod individual;
 pub mod population;
-pub mod selectors;
+pub mod selector;
 pub mod test_results;
 
 /// # Panics
