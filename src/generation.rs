@@ -27,6 +27,13 @@ pub struct Generation<'a, G, R> {
     child_maker: &'a dyn ChildMaker<G, R>,
 }
 
+impl<'a, G, R> Generation<'a, G, R> {
+    #[must_use]
+    pub fn selector(&self) -> &'a dyn Selector<EcIndividual<G, R>> {
+        self.selector
+    }
+}
+
 impl<'a, G: Eq, R: Ord> Generation<'a, G, R> {
     /// # Panics
     ///
