@@ -23,7 +23,7 @@ pub trait ChildMaker<G, R>: Sync {
 //  both versions to see what the costs are.
 pub struct Generation<'a, G, R> {
     pub population: VecPop<EcIndividual<G, R>>,
-    selector: &'a dyn Selector<G, R>,
+    selector: &'a dyn Selector<EcIndividual<G, R>>,
     child_maker: &'a dyn ChildMaker<G, R>,
 }
 
@@ -34,7 +34,7 @@ impl<'a, G: Eq, R: Ord> Generation<'a, G, R> {
     /// selectors is empty.
     pub fn new(
         population: VecPop<EcIndividual<G, R>>,
-        selector: &'a dyn Selector<G, R>,
+        selector: &'a dyn Selector<EcIndividual<G, R>>,
         child_maker: &'a dyn ChildMaker<G, R>,
     ) -> Self {
         assert!(population.is_empty().not());
