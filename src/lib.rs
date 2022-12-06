@@ -14,7 +14,7 @@ use bitstring::{count_ones, hiff, Bitstring, LinearCrossover, LinearMutation};
 use generation::{ChildMaker, Generation};
 use individual::ec::EcIndividual;
 use population::VecPop;
-use selectors::selectors::Lexicase;
+use selectors::lexicase::Lexicase;
 use test_results::{Error, Score, TestResults};
 
 use crate::selectors::best::Best;
