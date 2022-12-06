@@ -3,7 +3,7 @@ use std::ops::Not;
 use rand::rngs::ThreadRng;
 use rayon::prelude::{IntoParallelIterator, ParallelIterator};
 
-use crate::{individual::ec::EcIndividual, population::VecPop, selectors::Selector};
+use crate::{individual::ec::EcIndividual, population::VecPop, selectors::selectors::Selector};
 
 pub trait ChildMaker<G, R>: Sync {
     fn make_child(&self, rng: &mut ThreadRng, generation: &Generation<G, R>) -> EcIndividual<G, R>;
