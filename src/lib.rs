@@ -11,9 +11,11 @@ use individual::Individual;
 use rand::rngs::ThreadRng;
 
 use bitstring::{count_ones, hiff, Bitstring, LinearCrossover, LinearMutation};
-use generation::{ChildMaker, Generation};
+use child_maker::ChildMakerI;
+use generation::Generation;
 use individual::ec::EcIndividual;
 use population::VecPop;
+use selectors::Selector;
 use selectors::lexicase::Lexicase;
 use test_results::{Error, Score, TestResults};
 
@@ -23,6 +25,7 @@ use crate::selectors::weighted::Weighted;
 
 pub mod args;
 pub mod bitstring;
+pub mod child_maker;
 pub mod generation;
 pub mod individual;
 pub mod population;
@@ -101,17 +104,18 @@ impl<'a> TwoPointXoMutateChildMaker<'a> {
     }
 }
 
-impl<'a, R: Ord + Sum + Copy + From<i64>> ChildMaker<Bitstring, TestResults<R>>
-    for TwoPointXoMutateChildMaker<'a>
+impl<'a, R> ChildMakerI<EcIndividual<Bitstring, TestResults<R>>> for TwoPointXoMutateChildMaker<'a>
+where
+    R: Sum + Copy + From<i64>
 {
-    //     fn make_child(&self, rng: &mut ThreadRng, generation: &Generation<G, R>) -> Individual<G, R>;
-    fn make_child(
+    fn make_child_i(
         &self,
         rng: &mut ThreadRng,
-        generation: &Generation<Bitstring, TestResults<R>>,
+        population: &VecPop<EcIndividual<Bitstring, TestResults<R>>>,
+        selector: &dyn Selector<EcIndividual<Bitstring, TestResults<R>>>,
     ) -> EcIndividual<Bitstring, TestResults<R>> {
-        let first_parent = generation.get_parent(rng);
-        let second_parent = generation.get_parent(rng);
+        let first_parent = selector.select(rng, population);
+        let second_parent = selector.select(rng, population);
 
         let genome = first_parent
             .genome()
