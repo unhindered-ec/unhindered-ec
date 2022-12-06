@@ -17,7 +17,7 @@ use population::VecPop;
 use selectors::selectors::Lexicase;
 use test_results::{Error, Score, TestResults};
 
-use crate::selectors::selectors::Best;
+use crate::selectors::best::Best;
 use crate::selectors::selectors::Tournament;
 use crate::selectors::selectors::Weighted;
 

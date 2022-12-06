@@ -3,6 +3,8 @@ use rand::rngs::ThreadRng;
 use crate::{individual::ec::EcIndividual, population::VecPop};
 
 pub mod selectors;
+pub mod random;
+pub mod best;
 
 // TODO: Change `Selector` so it acts on a more general collection than `Population`.
 //  I think that all we need are some sort of collection or iterator, and then all
