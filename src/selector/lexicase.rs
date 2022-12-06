@@ -23,7 +23,7 @@ where
     R: PartialEq + PartialOrd,
     I: Individual<TestResults = TestResults<R>>,
 {
-    fn select<'a>(&self, rng: &mut ThreadRng, population: &'a VecPop<I>) -> &'a I {
+    fn select<'pop>(&self, rng: &mut ThreadRng, population: &'pop VecPop<I>) -> &'pop I {
         // Candidate set is initially the whole population.
         // Shuffle the (indices of the) test cases.
         // For each test in turn:

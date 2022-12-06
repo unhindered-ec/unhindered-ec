@@ -6,30 +6,30 @@ use crate::population::VecPop;
 
 use super::Selector;
 
-pub struct Weighted<'a, I> {
-    selectors: Vec<(&'a dyn Selector<I>, usize)>,
+pub struct Weighted<'sel, I> {
+    selectors: Vec<(&'sel dyn Selector<I>, usize)>,
 }
 
-impl<'a, I> Weighted<'a, I> {
+impl<'sel, I> Weighted<'sel, I> {
     // Since we should never have an empty collection of weighted selectors,
     // the `new` implementation takes an initial selector so `selectors` is
     // guaranteed to never be empty.
     #[must_use]
-    pub fn new(selector: &'a dyn Selector<I>, weight: usize) -> Self {
+    pub fn new(selector: &'sel dyn Selector<I>, weight: usize) -> Self {
         Self {
             selectors: vec![(selector, weight)],
         }
     }
 
     #[must_use]
-    pub fn with_selector(mut self, selector: &'a dyn Selector<I>, weight: usize) -> Self {
+    pub fn with_selector(mut self, selector: &'sel dyn Selector<I>, weight: usize) -> Self {
         self.selectors.push((selector, weight));
         self
     }
 }
 
-impl<'a, I> Selector<I> for Weighted<'a, I> {
-    fn select<'b>(&self, rng: &mut ThreadRng, population: &'b VecPop<I>) -> &'b I {
+impl<'sel, I> Selector<I> for Weighted<'sel, I> {
+    fn select<'pop>(&self, rng: &mut ThreadRng, population: &'pop VecPop<I>) -> &'pop I {
         assert!(
             self.selectors.is_empty().not(),
             "The collection of selectors should be non-empty"

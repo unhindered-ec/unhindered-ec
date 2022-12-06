@@ -17,7 +17,7 @@ impl Tournament {
 }
 
 impl<I: Ord> Selector<I> for Tournament {
-    fn select<'a>(&self, rng: &mut ThreadRng, population: &'a VecPop<I>) -> &'a I {
+    fn select<'pop>(&self, rng: &mut ThreadRng, population: &'pop VecPop<I>) -> &'pop I {
         assert!(population.size() >= self.size && self.size > 0);
         // Since we know that the population and tournament aren't empty, we
         // can safely unwrap() the `.max()` call.

@@ -16,10 +16,7 @@ pub mod weighted;
 //  it return `Option<Individual>` or even `Result<Individual, Error>`? Not sure.
 //  esitsu@Twitch suggested, for example, having a selector with a thresh hold and then
 //  a composite that keeps trying selectors until it finds one that works.
-// TODO: Change the name of this lifetime from `'a` to `'pop` (or something similar that
-//  actually conveys some useful information). This is probably a "grinding" sort of
-//  activity and best done outside of the stream.
 
 pub trait Selector<I>: Sync {
-    fn select<'a>(&self, rng: &mut ThreadRng, population: &'a VecPop<I>) -> &'a I;
+    fn select<'pop>(&self, rng: &mut ThreadRng, population: &'pop VecPop<I>) -> &'pop I;
 }
