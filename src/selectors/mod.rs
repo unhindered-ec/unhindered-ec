@@ -19,10 +19,21 @@ pub mod weighted;
 // TODO: Change the name of this lifetime from `'a` to `'pop` (or something similar that
 //  actually conveys some useful information). This is probably a "grinding" sort of
 //  activity and best done outside of the stream.
-pub trait Selector<G, R>: Sync {
+
+pub trait Selector<G, R>: SelectorI<EcIndividual<G, R>> { }
+
+impl<T, G, R> Selector<G, R> for T
+where
+    T: SelectorI<EcIndividual<G, R>>
+{
+    // We don't need anything here, because `SelectorI`
+    // specifies the necessary `select` method.
+}
+
+pub trait SelectorI<I>: Sync {
     fn select<'a>(
         &self,
         rng: &mut ThreadRng,
-        population: &'a VecPop<EcIndividual<G, R>>,
-    ) -> &'a EcIndividual<G, R>;
+        population: &'a VecPop<I>,
+    ) -> &'a I;
 }

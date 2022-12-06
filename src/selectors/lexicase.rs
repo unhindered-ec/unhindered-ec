@@ -3,9 +3,9 @@ use std::{ops::Not, mem::swap};
 use rand::prelude::SliceRandom;
 use rand::rngs::ThreadRng;
 
-use crate::{test_results::TestResults, population::VecPop, individual::{ec::EcIndividual, Individual}};
+use crate::{test_results::TestResults, population::VecPop, individual::Individual};
 
-use super::Selector;
+use super::SelectorI;
 
 pub struct Lexicase {
     num_test_cases: usize,
@@ -18,12 +18,16 @@ impl Lexicase {
     }
 }
 
-impl<G, R: Ord> Selector<G, TestResults<R>> for Lexicase {
+impl<R, I> SelectorI<I> for Lexicase 
+where
+    R: PartialEq + PartialOrd,
+    I: Individual<TestResults = TestResults<R>>,
+{
     fn select<'a>(
         &self,
         rng: &mut ThreadRng,
-        population: &'a VecPop<EcIndividual<G, TestResults<R>>>,
-    ) -> &'a EcIndividual<G, TestResults<R>> {
+        population: &'a VecPop<I>,
+    ) -> &'a I {
         // Candidate set is initially the whole population.
         // Shuffle the (indices of the) test cases.
         // For each test in turn:

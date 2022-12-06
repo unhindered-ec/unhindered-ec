@@ -3,19 +3,19 @@ use std::ops::Not;
 use rand::prelude::IteratorRandom;
 use rand::rngs::ThreadRng;
 
-use crate::{individual::ec::EcIndividual, population::VecPop};
+use crate::{individual::Individual, population::VecPop};
 
-use super::Selector;
+use super::{SelectorI};
 
 pub struct Random {}
 
-impl<G, R: Ord> Selector<G, R> for Random {
+impl<I: Individual> SelectorI<I> for Random {
     #[must_use]
     fn select<'a>(
         &self,
         rng: &mut ThreadRng,
-        population: &'a VecPop<EcIndividual<G, R>>,
-    ) -> &'a EcIndividual<G, R> {
+        population: &'a VecPop<I>,
+    ) -> &'a I {
         // The population should never be empty here.
         assert!(
             population.is_empty().not(),

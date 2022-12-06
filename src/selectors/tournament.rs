@@ -1,9 +1,9 @@
 use rand::prelude::IteratorRandom;
 use rand::rngs::ThreadRng;
 
-use crate::{individual::ec::EcIndividual, population::VecPop};
+use crate::{population::VecPop};
 
-use super::Selector;
+use super::{SelectorI};
 
 pub struct Tournament {
     size: usize,
@@ -16,12 +16,12 @@ impl Tournament {
     }
 }
 
-impl<G: Eq, R: Ord> Selector<G, R> for Tournament {
+impl<I: Ord> SelectorI<I> for Tournament {
     fn select<'a>(
         &self,
         rng: &mut ThreadRng,
-        population: &'a VecPop<EcIndividual<G, R>>,
-    ) -> &'a EcIndividual<G, R> {
+        population: &'a VecPop<I>,
+    ) -> &'a I {
         assert!(population.size() >= self.size && self.size > 0);
         // Since we know that the population and tournament aren't empty, we
         // can safely unwrap() the `.max()` call.

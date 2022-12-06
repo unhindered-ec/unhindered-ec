@@ -2,19 +2,19 @@ use std::ops::Not;
 
 use rand::rngs::ThreadRng;
 
-use crate::{individual::ec::EcIndividual, population::VecPop};
+use crate::{population::VecPop};
 
-use super::Selector;
+use super::{SelectorI};
 
 pub struct Best {}
 
-impl<G: Eq, R: Ord> Selector<G, R> for Best {
+impl<I: Ord> SelectorI<I> for Best {
     #[must_use]
     fn select<'a>(
         &self,
         _: &mut ThreadRng,
-        population: &'a VecPop<EcIndividual<G, R>>,
-    ) -> &'a EcIndividual<G, R> {
+        population: &'a VecPop<I>,
+    ) -> &'a I {
         // The population should never be empty here.
         assert!(
             population.is_empty().not(),
