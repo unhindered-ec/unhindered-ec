@@ -3,7 +3,9 @@
 use std::{borrow::Borrow, ops::Not, slice::Iter};
 
 use rand::rngs::ThreadRng;
-use rayon::prelude::{IntoParallelIterator, ParallelExtend, ParallelIterator, FromParallelIterator};
+use rayon::prelude::{
+    FromParallelIterator, IntoParallelIterator, ParallelExtend, ParallelIterator,
+};
 
 use crate::individual::Generate;
 
@@ -66,9 +68,9 @@ impl<I: Ord> VecPop<I> {
 }
 
 impl<I> FromIterator<I> for VecPop<I> {
-    fn from_iter<T>(iter: T) -> Self 
+    fn from_iter<T>(iter: T) -> Self
     where
-        T: IntoIterator<Item = I>
+        T: IntoIterator<Item = I>,
     {
         let individuals = iter.into_iter().collect();
         Self { individuals }
@@ -78,7 +80,7 @@ impl<I> FromIterator<I> for VecPop<I> {
 impl<I: Send> FromParallelIterator<I> for VecPop<I> {
     fn from_par_iter<T>(par_iter: T) -> Self
     where
-        T: IntoParallelIterator<Item = I>
+        T: IntoParallelIterator<Item = I>,
     {
         let individuals = par_iter.into_par_iter().collect();
         Self { individuals }
@@ -95,13 +97,11 @@ mod vec_pop_tests {
 
     #[test]
     fn new_works() {
-        let vec_pop = VecPop::<EcIndividual<_, _>>::generate(
-            10, 
-            |rng| rng.next_u32() % 20,
-            |g| (*g)+100
-        );
+        let vec_pop =
+            VecPop::<EcIndividual<_, _>>::generate(10, |rng| rng.next_u32() % 20, |g| (*g) + 100);
         assert!(vec_pop.is_empty().not());
         assert_eq!(10, vec_pop.size());
+        #[allow(clippy::unwrap_used)] // The population shouldn't be empty
         let ind = vec_pop.iter().next().unwrap();
         assert!(*ind.genome() < 20);
         assert!(100 <= *ind.test_results() && *ind.test_results() < 120);

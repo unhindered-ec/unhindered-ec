@@ -2,7 +2,8 @@ use criterion::{black_box, criterion_group, criterion_main, Criterion};
 
 use rust_ga::{
     bitstring::{count_ones, hiff},
-    population::VecPop, individual::Individual,
+    individual::Individual,
+    population::VecPop,
 };
 
 fn benchmark_construction_count_ones(c: &mut Criterion) {

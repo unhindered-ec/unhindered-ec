@@ -3,7 +3,9 @@ use std::ops::Not;
 use rand::rngs::ThreadRng;
 use rayon::prelude::{IntoParallelIterator, ParallelIterator};
 
-use crate::{individual::ec::EcIndividual, population::VecPop, selector::Selector, child_maker::ChildMaker};
+use crate::{
+    child_maker::ChildMaker, individual::ec::EcIndividual, population::VecPop, selector::Selector,
+};
 
 // TODO: Extend the vector of Selectors to a WeightedParentSelector that is essentially
 //   a wrapper around `rand::distributions::WeightedChoice` so we can
@@ -77,7 +79,8 @@ impl<'a, G: Send + Sync, R: Send + Sync> Generation<'a, G, R> {
             // will have access to the selectors and population.
             .map(|_| self)
             .map_init(rand::thread_rng, |rng, _| {
-                self.child_maker.make_child(rng, &self.population, self.selector)
+                self.child_maker
+                    .make_child(rng, &self.population, self.selector)
             })
             .collect();
         Self {
@@ -95,7 +98,10 @@ impl<'a, G, R> Generation<'a, G, R> {
         let pop_size = self.population.size();
         let mut rng = rand::thread_rng();
         let population = (0..pop_size)
-            .map(|_| self.child_maker.make_child(&mut rng, &self.population, self.selector))
+            .map(|_| {
+                self.child_maker
+                    .make_child(&mut rng, &self.population, self.selector)
+            })
             .collect();
         Self {
             population,

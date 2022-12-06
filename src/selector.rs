@@ -1,11 +1,11 @@
 use rand::rngs::ThreadRng;
 
-use crate::{population::VecPop};
+use crate::population::VecPop;
 
-pub mod random;
 pub mod best;
-pub mod tournament;
 pub mod lexicase;
+pub mod random;
+pub mod tournament;
 pub mod weighted;
 
 // TODO: Change `Selector` so it acts on a more general collection than `Population`.
@@ -21,9 +21,5 @@ pub mod weighted;
 //  activity and best done outside of the stream.
 
 pub trait Selector<I>: Sync {
-    fn select<'a>(
-        &self,
-        rng: &mut ThreadRng,
-        population: &'a VecPop<I>,
-    ) -> &'a I;
+    fn select<'a>(&self, rng: &mut ThreadRng, population: &'a VecPop<I>) -> &'a I;
 }

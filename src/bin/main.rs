@@ -18,8 +18,8 @@ mod tests {
     use rust_ga::bitstring::count_ones;
     use rust_ga::bitstring::fitness_vec_to_test_results;
     use rust_ga::bitstring::hiff;
-    use rust_ga::individual::Individual;
     use rust_ga::individual::ec::EcIndividual;
+    use rust_ga::individual::Individual;
     use rust_ga::population::VecPop;
 
     #[test]
@@ -46,10 +46,10 @@ mod tests {
             &mut rng,
         );
         assert_eq!(ind.genome().len(), 128);
-        assert_eq!(ind.test_results().results, count_ones(&ind.genome()));
+        assert_eq!(ind.test_results().results, count_ones(ind.genome()));
         assert_eq!(
             ind.test_results().total_result,
-            count_ones(&ind.genome()).iter().sum::<i64>()
+            count_ones(ind.genome()).iter().sum::<i64>()
         );
     }
 
@@ -59,6 +59,7 @@ mod tests {
             fitness_vec_to_test_results(count_ones(bits))
         });
         assert_eq!(pop.size(), 100);
+        #[allow(clippy::unwrap_used)] // The population shouldn't be empty
         let first_individual = pop.iter().next().unwrap();
         assert_eq!(first_individual.genome().len(), 128);
         assert_eq!(
@@ -77,15 +78,16 @@ mod tests {
             fitness_vec_to_test_results(hiff(bits))
         });
         assert_eq!(pop.size(), 100);
+        #[allow(clippy::unwrap_used)] // The population shouldn't be empty
         let first_individual = pop.iter().next().unwrap();
         assert_eq!(first_individual.genome().len(), 128);
         assert_eq!(
             first_individual.test_results().results,
-            hiff(&first_individual.genome())
+            hiff(first_individual.genome())
         );
         assert_eq!(
             first_individual.test_results().total_result,
-            hiff(&first_individual.genome()).iter().sum::<i64>()
+            hiff(first_individual.genome()).iter().sum::<i64>()
         );
     }
 }

@@ -26,7 +26,10 @@ impl<G, R> Individual for EcIndividual<G, R> {
 
 impl<G, R> EcIndividual<G, R> {
     pub const fn new(genome: G, test_results: R) -> Self {
-        Self { genome, test_results }
+        Self {
+            genome,
+            test_results,
+        }
     }
 }
 

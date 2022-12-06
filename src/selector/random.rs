@@ -5,17 +5,13 @@ use rand::rngs::ThreadRng;
 
 use crate::{individual::Individual, population::VecPop};
 
-use super::{Selector};
+use super::Selector;
 
 pub struct Random {}
 
 impl<I: Individual> Selector<I> for Random {
     #[must_use]
-    fn select<'a>(
-        &self,
-        rng: &mut ThreadRng,
-        population: &'a VecPop<I>,
-    ) -> &'a I {
+    fn select<'a>(&self, rng: &mut ThreadRng, population: &'a VecPop<I>) -> &'a I {
         // The population should never be empty here.
         assert!(
             population.is_empty().not(),

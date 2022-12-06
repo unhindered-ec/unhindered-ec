@@ -2,9 +2,9 @@ use std::ops::Not;
 
 use rand::{rngs::ThreadRng, seq::SliceRandom};
 
-use crate::{population::VecPop};
+use crate::population::VecPop;
 
-use super::{Selector};
+use super::Selector;
 
 pub struct Weighted<'a, I> {
     selectors: Vec<(&'a dyn Selector<I>, usize)>,
@@ -29,11 +29,7 @@ impl<'a, I> Weighted<'a, I> {
 }
 
 impl<'a, I> Selector<I> for Weighted<'a, I> {
-    fn select<'b>(
-        &self,
-        rng: &mut ThreadRng,
-        population: &'b VecPop<I>,
-    ) -> &'b I {
+    fn select<'b>(&self, rng: &mut ThreadRng, population: &'b VecPop<I>) -> &'b I {
         assert!(
             self.selectors.is_empty().not(),
             "The collection of selectors should be non-empty"

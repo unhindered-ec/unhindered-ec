@@ -1,9 +1,9 @@
-use std::{ops::Not, mem::swap};
+use std::{mem::swap, ops::Not};
 
 use rand::prelude::SliceRandom;
 use rand::rngs::ThreadRng;
 
-use crate::{test_results::TestResults, population::VecPop, individual::Individual};
+use crate::{individual::Individual, population::VecPop, test_results::TestResults};
 
 use super::Selector;
 
@@ -18,16 +18,12 @@ impl Lexicase {
     }
 }
 
-impl<R, I> Selector<I> for Lexicase 
+impl<R, I> Selector<I> for Lexicase
 where
     R: PartialEq + PartialOrd,
     I: Individual<TestResults = TestResults<R>>,
 {
-    fn select<'a>(
-        &self,
-        rng: &mut ThreadRng,
-        population: &'a VecPop<I>,
-    ) -> &'a I {
+    fn select<'a>(&self, rng: &mut ThreadRng, population: &'a VecPop<I>) -> &'a I {
         // Candidate set is initially the whole population.
         // Shuffle the (indices of the) test cases.
         // For each test in turn:

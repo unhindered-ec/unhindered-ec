@@ -4,7 +4,7 @@ use rand::rngs::ThreadRng;
 
 pub mod ec;
 
-pub trait Generate: Individual {    
+pub trait Generate: Individual {
     fn generate<H>(
         make_genome: impl Fn(&mut ThreadRng) -> Self::Genome,
         // TODO: Should this be a special EC-specific trait instead of the general `Fn`?

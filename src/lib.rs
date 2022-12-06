@@ -15,8 +15,9 @@ use child_maker::ChildMaker;
 use generation::Generation;
 use individual::ec::EcIndividual;
 use population::VecPop;
-use selector::Selector;
 use selector::lexicase::Lexicase;
+use selector::Selector;
+#[allow(unused_imports)]
 use test_results::{Error, Score, TestResults};
 
 use crate::selector::best::Best;
@@ -53,8 +54,7 @@ pub fn do_main(args: Args) {
 
     let selector = Weighted::new(&best, 1)
         .with_selector(&lexicase, 5)
-        .with_selector(&binary_tournament, args.population_size - 1)
-        ;
+        .with_selector(&binary_tournament, args.population_size - 1);
 
     let population = VecPop::new_bitstring_population(
         args.population_size,
@@ -106,7 +106,7 @@ impl<'a> TwoPointXoMutateChildMaker<'a> {
 
 impl<'a, R> ChildMaker<EcIndividual<Bitstring, TestResults<R>>> for TwoPointXoMutateChildMaker<'a>
 where
-    R: Sum + Copy + From<i64>
+    R: Sum + Copy + From<i64>,
 {
     fn make_child(
         &self,
