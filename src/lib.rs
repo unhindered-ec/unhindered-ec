@@ -19,7 +19,7 @@ use test_results::{Error, Score, TestResults};
 
 use crate::selectors::best::Best;
 use crate::selectors::tournament::Tournament;
-use crate::selectors::selectors::Weighted;
+use crate::selectors::weighted::Weighted;
 
 pub mod args;
 pub mod bitstring;

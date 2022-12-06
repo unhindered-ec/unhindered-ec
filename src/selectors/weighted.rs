@@ -1,8 +1,8 @@
-use std::{ops::Not};
+use std::ops::Not;
 
 use rand::{rngs::ThreadRng, seq::SliceRandom};
 
-use crate::{individual::ec::EcIndividual, population::VecPop};
+use crate::{population::VecPop, individual::ec::EcIndividual};
 
 use super::Selector;
 
