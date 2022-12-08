@@ -6,7 +6,7 @@ use crate::population::{Population, VecPop};
 
 use super::Selector;
 
-pub struct Best {}
+pub struct Best;
 
 impl<I: Ord> Selector<I> for Best {
     #[must_use]
@@ -16,6 +16,7 @@ impl<I: Ord> Selector<I> for Best {
             population.is_empty().not(),
             "The population should not be empty"
         );
-        population.best_individual()
+        #[allow(clippy::unwrap_used)]
+        population.iter().max().unwrap()
     }
 }

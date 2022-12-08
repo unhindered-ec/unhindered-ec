@@ -51,11 +51,6 @@ impl<'a, G: Eq, R: Ord> Generation<'a, G, R> {
         }
     }
 
-    #[must_use]
-    pub fn best_individual(&self) -> &EcIndividual<G, R> {
-        self.population.best_individual()
-    }
-
     /// # Panics
     ///
     /// This can panic if the set of selectors is empty.

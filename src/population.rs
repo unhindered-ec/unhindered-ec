@@ -76,18 +76,6 @@ impl<I> VecPop<I> {
     }
 }
 
-impl<I: Ord> VecPop<I> {
-    /// # Panics
-    ///
-    /// Will panic if the population is empty.
-    #[must_use]
-    pub fn best_individual(&self) -> &I {
-        assert!(self.individuals.is_empty().not());
-        #[allow(clippy::unwrap_used)]
-        self.individuals.iter().max().unwrap()
-    }
-}
-
 impl<I> FromIterator<I> for VecPop<I> {
     fn from_iter<T>(iter: T) -> Self
     where
