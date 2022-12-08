@@ -7,7 +7,7 @@ use crate::population::Population;
 
 use super::Selector;
 
-pub struct Random {}
+pub struct Random;
 
 impl<P: Population> Selector<P> for Random {
     #[must_use]

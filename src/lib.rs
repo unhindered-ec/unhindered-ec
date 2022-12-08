@@ -50,9 +50,8 @@ pub fn do_main(args: Args) {
 
     let lexicase = Lexicase::new(num_test_cases);
     let binary_tournament = Tournament::new(2);
-    let best = Best {};
 
-    let selector = Weighted::new(&best, 1)
+    let selector = Weighted::new(&Best, 1)
         .with_selector(&lexicase, 5)
         .with_selector(&binary_tournament, args.population_size - 1);
 
