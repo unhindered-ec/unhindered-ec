@@ -1,5 +1,6 @@
-use rand::prelude::IteratorRandom;
+use rand::prelude::SliceRandom;
 use rand::rngs::ThreadRng;
+// use rand::seq::IteratorRandom;
 
 use crate::population::VecPop;
 
@@ -21,12 +22,39 @@ impl<I: Ord> Selector<I> for Tournament {
         assert!(population.size() >= self.size && self.size > 0);
         // Since we know that the population and tournament aren't empty, we
         // can safely unwrap() the `.max()` call.
+
+        // 106ns, 203ns, 1.19µs
+        // #[allow(clippy::unwrap_used)]
+        // population
+        //     .slice()
+        //     .choose_multiple(rng, self.size)
+        //     .max()
+        //     .unwrap()
+
+        // 101ns, 201ns, 1.20µs
+        // #[allow(clippy::unwrap_used)]
+        // population
+        //     .individuals()
+        //     .choose_multiple(rng, self.size)
+        //     .max()
+        //     .unwrap()
+
+        // 102ns, 199ns, 1.23µs
         #[allow(clippy::unwrap_used)]
         population
             .iter()
+            .as_slice()
             .choose_multiple(rng, self.size)
-            .iter()
             .max()
             .unwrap()
+
+        // 11.0µs, 11.1µs, 11.6µs
+        // #[allow(clippy::unwrap_used)]
+        // population
+        //     .iter()
+        //     .choose_multiple(rng, self.size)
+        //     .iter()
+        //     .max()
+        //     .unwrap()
     }
 }
