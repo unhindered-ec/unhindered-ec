@@ -1,4 +1,4 @@
-use std::{cmp::Ordering, iter::Sum, fmt::Debug};
+use std::{cmp::Ordering, fmt::Debug, iter::Sum};
 
 // TODO: We can probably use things in the `num` family of traits
 //   (https://github.com/rust-num/num) to genericize `Score` and

@@ -7,25 +7,30 @@ use std::iter::Sum;
 use std::ops::Not;
 
 use args::{Args, RunModel, TargetProblem};
+use individual::Individual;
 use rand::rngs::ThreadRng;
 
 use bitstring::{count_ones, hiff, Bitstring, LinearCrossover, LinearMutation};
-use generation::{ChildMaker, Generation};
-use individual::Individual;
-use population::Population;
-use selectors::Lexicase;
+use child_maker::ChildMaker;
+use generation::Generation;
+use individual::ec::EcIndividual;
+use population::{Population, VecPop};
+use selector::lexicase::Lexicase;
+use selector::Selector;
+#[allow(unused_imports)]
 use test_results::{Error, Score, TestResults};
 
-use crate::selectors::Best;
-use crate::selectors::Tournament;
-use crate::selectors::Weighted;
+use crate::selector::best::Best;
+use crate::selector::tournament::Tournament;
+use crate::selector::weighted::Weighted;
 
 pub mod args;
 pub mod bitstring;
+pub mod child_maker;
 pub mod generation;
 pub mod individual;
 pub mod population;
-pub mod selectors;
+pub mod selector;
 pub mod test_results;
 
 /// # Panics
@@ -45,14 +50,12 @@ pub fn do_main(args: Args) {
 
     let lexicase = Lexicase::new(num_test_cases);
     let binary_tournament = Tournament::new(2);
-    let best = Best {};
 
-    let selector = Weighted::new(&best, 1)
-        // .with_selector(&lexicase, args.population_size - 1)
-        .with_selector(&binary_tournament, args.population_size - 1)
-        ;
+    let selector = Weighted::new(&Best, 1)
+        .with_selector(&lexicase, 5)
+        .with_selector(&binary_tournament, args.population_size - 1);
 
-    let population = Population::new_bitstring_population(
+    let population = VecPop::new_bitstring_population(
         args.population_size,
         args.bit_length,
         // TODO: I should really have a function somewhere that converts functions
@@ -69,10 +72,12 @@ pub fn do_main(args: Args) {
     // Using `Error` in `TestResults<Error>` will have the run favor smaller
     // values, where using `Score` (e.g., `TestResults<Score>`) will have the run
     // favor larger values.
-    let mut generation: Generation<Bitstring, TestResults<Error>> =
+    let mut generation: Generation<VecPop<EcIndividual<Bitstring, TestResults<Error>>>> =
         Generation::new(population, &selector, &child_maker);
 
-    assert!(generation.population.is_empty().not());
+    let mut rng = rand::thread_rng();
+
+    assert!(generation.population().is_empty().not());
     // let best = generation.best_individual();
     // println!("{}", best);
     // println!("Pop size = {}", generation.population.size());
@@ -83,7 +88,7 @@ pub fn do_main(args: Args) {
             RunModel::Serial => generation.next(),
             RunModel::Parallel => generation.par_next(),
         };
-        let best = generation.best_individual();
+        let best = Best.select(&mut rng, generation.population());
         // TODO: Change 2 to be the smallest number of digits needed for
         //  args.num_generations-1.
         println!("Generation {:2} best is {}", generation_number, best);
@@ -100,26 +105,24 @@ impl<'a> TwoPointXoMutateChildMaker<'a> {
     }
 }
 
-impl<'a, R: Ord + Sum + Copy + From<i64>> ChildMaker<Bitstring, TestResults<R>>
-    for TwoPointXoMutateChildMaker<'a>
+impl<'a, R> ChildMaker<VecPop<EcIndividual<Bitstring, TestResults<R>>>> for TwoPointXoMutateChildMaker<'a>
+where
+    R: Sum + Copy + From<i64>,
 {
-    //     fn make_child(&self, rng: &mut ThreadRng, generation: &Generation<G, R>) -> Individual<G, R>;
     fn make_child(
         &self,
         rng: &mut ThreadRng,
-        generation: &Generation<Bitstring, TestResults<R>>,
-    ) -> Individual<Bitstring, TestResults<R>> {
-        let first_parent = generation.get_parent(rng);
-        let second_parent = generation.get_parent(rng);
+        population: &VecPop<EcIndividual<Bitstring, TestResults<R>>>,
+        selector: &dyn Selector<VecPop<EcIndividual<Bitstring, TestResults<R>>>>,
+    ) -> EcIndividual<Bitstring, TestResults<R>> {
+        let first_parent = selector.select(rng, population);
+        let second_parent = selector.select(rng, population);
 
         let genome = first_parent
-            .genome
-            .two_point_xo(&second_parent.genome, rng)
+            .genome()
+            .two_point_xo(second_parent.genome(), rng)
             .mutate_one_over_length(rng);
         let test_results = (self.scorer)(&genome).into_iter().map(From::from).sum();
-        Individual {
-            genome,
-            test_results,
-        }
+        EcIndividual::new(genome, test_results)
     }
 }

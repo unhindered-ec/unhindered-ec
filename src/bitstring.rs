@@ -4,8 +4,9 @@ use std::fmt::{Debug, Display};
 use num_traits::ToPrimitive;
 use rand::{rngs::ThreadRng, Rng};
 
-use crate::individual::Individual;
-use crate::population::Population;
+use crate::individual::ec::EcIndividual;
+use crate::individual::{Generate, Individual};
+use crate::population::VecPop;
 use crate::test_results::TestResults;
 
 pub type Bitstring = Vec<bool>;
@@ -191,7 +192,7 @@ mod genetic_operator_tests {
     }
 }
 
-impl<R> Individual<Bitstring, R> {
+impl<R> EcIndividual<Bitstring, R> {
     pub fn new_bitstring<H>(
         bit_length: usize,
         run_tests: impl Fn(&H) -> R,
@@ -201,27 +202,27 @@ impl<R> Individual<Bitstring, R> {
         Bitstring: Borrow<H>,
         H: ?Sized,
     {
-        Self::new(|rng| make_random(bit_length, rng), run_tests, rng)
+        Self::generate(|rng| make_random(bit_length, rng), run_tests, rng)
     }
 }
 
 // TODO: Maybe change R to implement `Display` and have `TestResults` have a
 //   nice-ish display function.
-impl<R: Debug> Display for Individual<Bitstring, R> {
+impl<R: Debug> Display for EcIndividual<Bitstring, R> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let mut result = String::new();
-        for bit in &self.genome {
+        for bit in self.genome() {
             if *bit {
                 result.push('1');
             } else {
                 result.push('0');
             }
         }
-        write!(f, "[{}]\n{:?}", result, self.test_results)
+        write!(f, "[{}]\n{:?}", result, self.test_results())
     }
 }
 
-impl<R: Send> Population<Bitstring, R> {
+impl<R: Send> VecPop<EcIndividual<Bitstring, R>> {
     pub fn new_bitstring_population<H>(
         pop_size: usize,
         bit_length: usize,
@@ -231,6 +232,6 @@ impl<R: Send> Population<Bitstring, R> {
         Bitstring: Borrow<H>,
         H: ?Sized,
     {
-        Self::new(pop_size, |rng| make_random(bit_length, rng), run_tests)
+        Self::generate(pop_size, |rng| make_random(bit_length, rng), run_tests)
     }
 }

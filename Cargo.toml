@@ -30,6 +30,10 @@ harness = false
 name = "run_benchmarks"
 harness = false
 
+[[bench]]
+name = "tournament"
+harness = false
+
 # [[bench]]
 # name = "lexicase_benchmarks"
 # harness = false
