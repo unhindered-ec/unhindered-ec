@@ -3,7 +3,7 @@ use std::{mem::swap, ops::Not};
 use rand::prelude::SliceRandom;
 use rand::rngs::ThreadRng;
 
-use crate::{individual::Individual, population::VecPop, test_results::TestResults};
+use crate::{individual::{Individual, ec::EcIndividual}, population::Population, test_results::TestResults};
 
 use super::Selector;
 
@@ -18,12 +18,14 @@ impl Lexicase {
     }
 }
 
-impl<R, I> Selector<I> for Lexicase
+impl<G, R, P> Selector<P> for Lexicase
 where
-    R: PartialEq + PartialOrd,
-    I: Individual<TestResults = TestResults<R>>,
+    // TODO: We want P::Individual to implement some new trait
+    //   that gives us access to `TestResults`.
+    P: Population<Individual = EcIndividual<G, TestResults<R>>>,
+    R: Ord
 {
-    fn select<'pop>(&self, rng: &mut ThreadRng, population: &'pop VecPop<I>) -> &'pop I {
+    fn select<'pop>(&self, rng: &mut ThreadRng, population: &'pop P) -> &'pop P::Individual {
         // Candidate set is initially the whole population.
         // Shuffle the (indices of the) test cases.
         // For each test in turn:

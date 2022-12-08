@@ -2,15 +2,19 @@ use std::ops::Not;
 
 use rand::rngs::ThreadRng;
 
-use crate::population::{Population, VecPop};
+use crate::population::Population;
 
 use super::Selector;
 
 pub struct Best;
 
-impl<I: Ord> Selector<I> for Best {
+impl<P> Selector<P> for Best
+where
+    P: Population,
+    P::Individual: Ord
+{
     #[must_use]
-    fn select<'pop>(&self, _: &mut ThreadRng, population: &'pop VecPop<I>) -> &'pop I {
+    fn select<'pop>(&self, _: &mut ThreadRng, population: &'pop P) -> &'pop P::Individual {
         // The population should never be empty here.
         assert!(
             population.is_empty().not(),

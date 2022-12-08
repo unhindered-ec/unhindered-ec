@@ -2,7 +2,7 @@ use rand::prelude::SliceRandom;
 use rand::rngs::ThreadRng;
 // use rand::seq::IteratorRandom;
 
-use crate::population::{Population, VecPop};
+use crate::population::Population;
 
 use super::Selector;
 
@@ -17,8 +17,12 @@ impl Tournament {
     }
 }
 
-impl<I: Ord> Selector<I> for Tournament {
-    fn select<'pop>(&self, rng: &mut ThreadRng, population: &'pop VecPop<I>) -> &'pop I {
+impl<P> Selector<P> for Tournament
+where
+    P: Population,
+    P::Individual: Ord
+{
+    fn select<'pop>(&self, rng: &mut ThreadRng, population: &'pop P) -> &'pop P::Individual {
         assert!(population.size() >= self.size && self.size > 0);
         // Since we know that the population and tournament aren't empty, we
         // can safely unwrap() the `.max()` call.

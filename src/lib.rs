@@ -106,7 +106,7 @@ impl<'a> TwoPointXoMutateChildMaker<'a> {
     }
 }
 
-impl<'a, R> ChildMaker<EcIndividual<Bitstring, TestResults<R>>> for TwoPointXoMutateChildMaker<'a>
+impl<'a, R> ChildMaker<VecPop<EcIndividual<Bitstring, TestResults<R>>>> for TwoPointXoMutateChildMaker<'a>
 where
     R: Sum + Copy + From<i64>,
 {
@@ -114,7 +114,7 @@ where
         &self,
         rng: &mut ThreadRng,
         population: &VecPop<EcIndividual<Bitstring, TestResults<R>>>,
-        selector: &dyn Selector<EcIndividual<Bitstring, TestResults<R>>>,
+        selector: &dyn Selector<VecPop<EcIndividual<Bitstring, TestResults<R>>>>,
     ) -> EcIndividual<Bitstring, TestResults<R>> {
         let first_parent = selector.select(rng, population);
         let second_parent = selector.select(rng, population);

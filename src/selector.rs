@@ -1,6 +1,6 @@
 use rand::rngs::ThreadRng;
 
-use crate::population::VecPop;
+use crate::population::Population;
 
 pub mod best;
 pub mod lexicase;
@@ -17,6 +17,6 @@ pub mod weighted;
 //  esitsu@Twitch suggested, for example, having a selector with a thresh hold and then
 //  a composite that keeps trying selectors until it finds one that works.
 
-pub trait Selector<I>: Sync {
-    fn select<'pop>(&self, rng: &mut ThreadRng, population: &'pop VecPop<I>) -> &'pop I;
+pub trait Selector<P: Population>: Sync {
+    fn select<'pop>(&self, rng: &mut ThreadRng, population: &'pop P) -> &'pop P::Individual;
 }

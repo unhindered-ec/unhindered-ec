@@ -1,6 +1,6 @@
 #![allow(clippy::missing_panics_doc)]
 
-use std::{borrow::Borrow, ops::Not, slice::Iter};
+use std::{borrow::Borrow, slice::Iter};
 
 use rand::rngs::ThreadRng;
 use rayon::prelude::{
@@ -17,6 +17,9 @@ pub trait Population {
     }
 
     fn size(&self) -> usize;
+
+    #[deprecated]
+    fn iter(&self) -> Iter<Self::Individual>;
 }
 
 pub struct VecPop<I> {
@@ -56,13 +59,13 @@ impl<I> Population for VecPop<I> {
     fn size(&self) -> usize {
         self.individuals.len()
     }
+
+    fn iter(&self) -> Iter<I> {
+        self.individuals.iter()
+    }
 }
 
 impl<I> VecPop<I> {
-    pub fn iter(&self) -> Iter<I> {
-        self.individuals.iter()
-    }
-
     #[deprecated = "After we trait-ify `Population` we should see if we want/need this."]
     #[must_use]
     pub fn slice(&self) -> &[I] {
@@ -98,6 +101,8 @@ impl<I: Send> FromParallelIterator<I> for VecPop<I> {
 
 #[cfg(test)]
 mod vec_pop_tests {
+    use std::ops::Not;
+
     use rand::RngCore;
 
     use crate::individual::{ec::EcIndividual, Individual};

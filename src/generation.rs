@@ -22,13 +22,13 @@ use crate::{
 pub struct Generation<'a, G, R> {
     // TODO: Turn this into a trait
     pub population: VecPop<EcIndividual<G, R>>,
-    selector: &'a dyn Selector<EcIndividual<G, R>>,
-    child_maker: &'a (dyn ChildMaker<EcIndividual<G, R>> + Sync + Send),
+    selector: &'a dyn Selector<VecPop<EcIndividual<G, R>>>,
+    child_maker: &'a (dyn ChildMaker<VecPop<EcIndividual<G, R>>> + Sync + Send),
 }
 
 impl<'a, G, R> Generation<'a, G, R> {
     #[must_use]
-    pub fn selector(&self) -> &'a dyn Selector<EcIndividual<G, R>> {
+    pub fn selector(&self) -> &'a dyn Selector<VecPop<EcIndividual<G, R>>> {
         self.selector
     }
 }
@@ -40,8 +40,8 @@ impl<'a, G: Eq, R: Ord> Generation<'a, G, R> {
     /// selectors is empty.
     pub fn new(
         population: VecPop<EcIndividual<G, R>>,
-        selector: &'a dyn Selector<EcIndividual<G, R>>,
-        child_maker: &'a (dyn ChildMaker<EcIndividual<G, R>> + Sync + Send),
+        selector: &'a dyn Selector<VecPop<EcIndividual<G, R>>>,
+        child_maker: &'a (dyn ChildMaker<VecPop<EcIndividual<G, R>>> + Sync + Send),
     ) -> Self {
         assert!(population.is_empty().not());
         Self {
