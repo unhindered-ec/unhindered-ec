@@ -7,11 +7,6 @@ use crate::{
     child_maker::ChildMaker, population::Population, selector::Selector,
 };
 
-// TODO: Extend the vector of Selectors to a WeightedParentSelector that is essentially
-//   a wrapper around `rand::distributions::WeightedChoice` so we can
-//   provide weights on the different selectors.
-// TODO: Should the `scorer` be inside the generation so we don't have to keep
-//   capturing it and passing it around?
 // TODO: Should there actually be a `Run` type (or a `RunParams` type) that
 //   holds all this stuff and is used to make them available to types like
 //   `Generation` and `Population`?
@@ -20,8 +15,7 @@ use crate::{
 //  `weighted_selectors` and `child_maker`). It would be good to benchmark
 //  both versions to see what the costs are.
 pub struct Generation<'a, P: Population> {
-    // TODO: Turn this into a trait
-    pub population: P,
+    population: P,
     selector: &'a dyn Selector<P>,
     child_maker: &'a (dyn ChildMaker<P> + Sync + Send),
 }
@@ -30,6 +24,10 @@ impl<'a, P: Population> Generation<'a, P> {
     #[must_use]
     pub fn selector(&self) -> &'a dyn Selector<P> {
         self.selector
+    }
+
+    pub fn population(&self) -> &P {
+        &self.population
     }
 }
 

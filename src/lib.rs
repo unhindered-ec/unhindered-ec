@@ -78,7 +78,7 @@ pub fn do_main(args: Args) {
 
     let mut rng = rand::thread_rng();
 
-    assert!(generation.population.is_empty().not());
+    assert!(generation.population().is_empty().not());
     // let best = generation.best_individual();
     // println!("{}", best);
     // println!("Pop size = {}", generation.population.size());
@@ -89,7 +89,7 @@ pub fn do_main(args: Args) {
             RunModel::Serial => generation.next(),
             RunModel::Parallel => generation.par_next(),
         };
-        let best = Best.select(&mut rng, &generation.population);
+        let best = Best.select(&mut rng, generation.population());
         // TODO: Change 2 to be the smallest number of digits needed for
         //  args.num_generations-1.
         println!("Generation {:2} best is {}", generation_number, best);
