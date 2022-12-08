@@ -2,7 +2,7 @@ use std::ops::Not;
 
 use rand::rngs::ThreadRng;
 
-use crate::population::VecPop;
+use crate::population::{Population, VecPop};
 
 use super::Selector;
 

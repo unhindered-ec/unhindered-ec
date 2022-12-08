@@ -14,7 +14,7 @@ use bitstring::{count_ones, hiff, Bitstring, LinearCrossover, LinearMutation};
 use child_maker::ChildMaker;
 use generation::Generation;
 use individual::ec::EcIndividual;
-use population::VecPop;
+use population::{Population, VecPop};
 use selector::lexicase::Lexicase;
 use selector::Selector;
 #[allow(unused_imports)]

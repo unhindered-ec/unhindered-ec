@@ -3,7 +3,7 @@ use std::ops::Not;
 use rand::prelude::IteratorRandom;
 use rand::rngs::ThreadRng;
 
-use crate::{individual::Individual, population::VecPop};
+use crate::{individual::Individual, population::{Population, VecPop}};
 
 use super::Selector;
 

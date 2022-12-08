@@ -4,7 +4,7 @@ use rand::rngs::ThreadRng;
 use rayon::prelude::{IntoParallelIterator, ParallelIterator};
 
 use crate::{
-    child_maker::ChildMaker, individual::ec::EcIndividual, population::VecPop, selector::Selector,
+    child_maker::ChildMaker, individual::ec::EcIndividual, population::Population, population::VecPop, selector::Selector,
 };
 
 // TODO: Extend the vector of Selectors to a WeightedParentSelector that is essentially

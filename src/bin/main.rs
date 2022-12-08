@@ -20,7 +20,7 @@ mod tests {
     use rust_ga::bitstring::hiff;
     use rust_ga::individual::ec::EcIndividual;
     use rust_ga::individual::Individual;
-    use rust_ga::population::VecPop;
+    use rust_ga::population::{Population, VecPop};
 
     #[test]
     fn test_count_ones() {

@@ -9,6 +9,16 @@ use rayon::prelude::{
 
 use crate::individual::Generate;
 
+pub trait Population {
+    type Individual;
+
+    fn is_empty(&self) -> bool {
+        self.size() == 0
+    }
+
+    fn size(&self) -> usize;
+}
+
 pub struct VecPop<I> {
     individuals: Vec<I>,
 }
@@ -39,17 +49,16 @@ impl<I: Generate + Send> VecPop<I> {
     }
 }
 
-impl<I> VecPop<I> {
-    #[must_use]
-    pub fn is_empty(&self) -> bool {
-        self.individuals.is_empty()
-    }
+impl<I> Population for VecPop<I> {
+    type Individual = I;
 
     #[must_use]
-    pub fn size(&self) -> usize {
+    fn size(&self) -> usize {
         self.individuals.len()
     }
+}
 
+impl<I> VecPop<I> {
     pub fn iter(&self) -> Iter<I> {
         self.individuals.iter()
     }
