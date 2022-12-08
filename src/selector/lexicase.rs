@@ -3,7 +3,7 @@ use std::{mem::swap, ops::Not};
 use rand::prelude::SliceRandom;
 use rand::rngs::ThreadRng;
 
-use crate::{individual::{Individual, ec::EcIndividual}, population::Population, test_results::TestResults};
+use crate::{individual::Individual, population::Population, test_results::TestResults};
 
 use super::Selector;
 
@@ -18,11 +18,10 @@ impl Lexicase {
     }
 }
 
-impl<G, R, P> Selector<P> for Lexicase
+impl<P, R> Selector<P> for Lexicase
 where
-    // TODO: We want P::Individual to implement some new trait
-    //   that gives us access to `TestResults`.
-    P: Population<Individual = EcIndividual<G, TestResults<R>>>,
+    P: Population,
+    P::Individual: Individual<TestResults = TestResults<R>>,
     R: Ord
 {
     fn select<'pop>(&self, rng: &mut ThreadRng, population: &'pop P) -> &'pop P::Individual {
