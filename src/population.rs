@@ -53,6 +53,18 @@ impl<I> VecPop<I> {
     pub fn iter(&self) -> Iter<I> {
         self.individuals.iter()
     }
+
+    #[deprecated = "After we trait-ify `Population` we should see if we want/need this."]
+    #[must_use]
+    pub fn slice(&self) -> &[I] {
+        &self.individuals
+    }
+
+    #[must_use]
+    #[deprecated = "We'd rather not expose the details of the implementation like this."]
+    pub const fn individuals(&self) -> &Vec<I> {
+        &self.individuals
+    }
 }
 
 impl<I: Ord> VecPop<I> {
