@@ -73,7 +73,7 @@ pub fn do_main(args: Args) {
     // Using `Error` in `TestResults<Error>` will have the run favor smaller
     // values, where using `Score` (e.g., `TestResults<Score>`) will have the run
     // favor larger values.
-    let mut generation: Generation<Bitstring, TestResults<Error>> =
+    let mut generation: Generation<VecPop<EcIndividual<Bitstring, TestResults<Error>>>> =
         Generation::new(population, &selector, &child_maker);
 
     let mut rng = rand::thread_rng();

@@ -1,10 +1,10 @@
 use std::ops::Not;
 
 use rand::rngs::ThreadRng;
-use rayon::prelude::{IntoParallelIterator, ParallelIterator};
+use rayon::prelude::{IntoParallelIterator, ParallelIterator, FromParallelIterator};
 
 use crate::{
-    child_maker::ChildMaker, individual::ec::EcIndividual, population::Population, population::VecPop, selector::Selector,
+    child_maker::ChildMaker, population::Population, selector::Selector,
 };
 
 // TODO: Extend the vector of Selectors to a WeightedParentSelector that is essentially
@@ -19,29 +19,29 @@ use crate::{
 //  require changing all the lifetime references to be `Arc`s (so both
 //  `weighted_selectors` and `child_maker`). It would be good to benchmark
 //  both versions to see what the costs are.
-pub struct Generation<'a, G, R> {
+pub struct Generation<'a, P: Population> {
     // TODO: Turn this into a trait
-    pub population: VecPop<EcIndividual<G, R>>,
-    selector: &'a dyn Selector<VecPop<EcIndividual<G, R>>>,
-    child_maker: &'a (dyn ChildMaker<VecPop<EcIndividual<G, R>>> + Sync + Send),
+    pub population: P,
+    selector: &'a dyn Selector<P>,
+    child_maker: &'a (dyn ChildMaker<P> + Sync + Send),
 }
 
-impl<'a, G, R> Generation<'a, G, R> {
+impl<'a, P: Population> Generation<'a, P> {
     #[must_use]
-    pub fn selector(&self) -> &'a dyn Selector<VecPop<EcIndividual<G, R>>> {
+    pub fn selector(&self) -> &'a dyn Selector<P> {
         self.selector
     }
 }
 
-impl<'a, G: Eq, R: Ord> Generation<'a, G, R> {
+impl<'a, P: Population> Generation<'a, P> {
     /// # Panics
     ///
     /// This can panic if the population is empty or the weighted set of
     /// selectors is empty.
     pub fn new(
-        population: VecPop<EcIndividual<G, R>>,
-        selector: &'a dyn Selector<VecPop<EcIndividual<G, R>>>,
-        child_maker: &'a (dyn ChildMaker<VecPop<EcIndividual<G, R>>> + Sync + Send),
+        population: P,
+        selector: &'a dyn Selector<P>,
+        child_maker: &'a (dyn ChildMaker<P> + Sync + Send),
     ) -> Self {
         assert!(population.is_empty().not());
         Self {
@@ -54,7 +54,7 @@ impl<'a, G: Eq, R: Ord> Generation<'a, G, R> {
     /// # Panics
     ///
     /// This can panic if the set of selectors is empty.
-    pub fn get_parent(&self, rng: &mut ThreadRng) -> &EcIndividual<G, R> {
+    pub fn get_parent(&self, rng: &mut ThreadRng) -> &P::Individual {
         // The set of selectors should be non-empty, and if it is, then we
         // should be able to safely unwrap the `choose()` call.
         #[allow(clippy::unwrap_used)]
@@ -62,7 +62,11 @@ impl<'a, G: Eq, R: Ord> Generation<'a, G, R> {
     }
 }
 
-impl<'a, G: Send + Sync, R: Send + Sync> Generation<'a, G, R> {
+impl<'a, P> Generation<'a, P>
+where
+    P: Population + FromParallelIterator<P::Individual> + Sync,
+    P::Individual: Send
+{
     /// Make the next generation using a Rayon parallel iterator.
     #[must_use]
     pub fn par_next(&self) -> Self {
@@ -86,7 +90,10 @@ impl<'a, G: Send + Sync, R: Send + Sync> Generation<'a, G, R> {
     }
 }
 
-impl<'a, G, R> Generation<'a, G, R> {
+impl<'a, P> Generation<'a, P> 
+where
+    P: Population + FromIterator<P::Individual>,
+{
     /// Make the next generation serially.
     #[must_use]
     pub fn next(&self) -> Self {
