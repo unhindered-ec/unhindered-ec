@@ -4,7 +4,7 @@ use rand::rngs::ThreadRng;
 
 use super::{Generate, Individual};
 
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Eq, PartialEq)]
 #[allow(clippy::module_name_repetitions)]
 pub struct EcIndividual<G, R> {
     genome: G,
