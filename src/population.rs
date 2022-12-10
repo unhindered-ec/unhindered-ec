@@ -79,6 +79,15 @@ impl<I> VecPop<I> {
     }
 }
 
+impl<'pop, I> IntoIterator for &'pop VecPop<I> {
+    type Item = &'pop I;
+    type IntoIter = std::slice::Iter<'pop, I>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.individuals.iter()
+    }
+}
+
 impl<I> FromIterator<I> for VecPop<I> {
     fn from_iter<T>(iter: T) -> Self
     where
