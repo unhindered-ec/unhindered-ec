@@ -12,7 +12,9 @@ pub struct Weighted<'sel, P> {
 
 impl<'sel, P> Clone for Weighted<'sel, P> {
     fn clone(&self) -> Self {
-        Self { selectors: self.selectors.clone() }
+        Self {
+            selectors: self.selectors.clone(),
+        }
     }
 }
 

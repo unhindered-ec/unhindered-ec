@@ -75,9 +75,8 @@ mod tests {
 
     #[test]
     fn test_population_new_hiff() {
-        let pop = new_bitstring_population(100, 128, |bits| {
-            fitness_vec_to_test_results(hiff(bits))
-        });
+        let pop =
+            new_bitstring_population(100, 128, |bits| fitness_vec_to_test_results(hiff(bits)));
         assert_eq!(pop.size(), 100);
         #[allow(clippy::unwrap_used)] // The population shouldn't be empty
         let first_individual = pop.into_iter().next().unwrap();

@@ -19,7 +19,7 @@ impl Tournament {
 impl<P> Selector<P> for Tournament
 where
     P: Population + AsRef<[P::Individual]>,
-    P::Individual: Ord
+    P::Individual: Ord,
 {
     fn select<'pop>(&self, rng: &mut ThreadRng, population: &'pop P) -> &'pop P::Individual {
         assert!(population.size() >= self.size && self.size > 0);

@@ -33,7 +33,7 @@ where
     //   do with `VecPop`.
     for<'pop> &'pop P: IntoIterator<Item = &'pop P::Individual>,
     P::Individual: Individual<TestResults = TestResults<R>>,
-    R: Ord
+    R: Ord,
 {
     fn select<'pop>(&self, rng: &mut ThreadRng, population: &'pop P) -> &'pop P::Individual {
         // Candidate set is initially the whole population.

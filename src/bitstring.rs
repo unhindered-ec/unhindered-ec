@@ -5,8 +5,8 @@ use num_traits::ToPrimitive;
 use rand::{rngs::ThreadRng, Rng};
 
 use crate::individual::ec::EcIndividual;
-use crate::individual::Individual;
 use crate::individual::Generate as _;
+use crate::individual::Individual;
 use crate::population::Generate as _;
 use crate::test_results::TestResults;
 

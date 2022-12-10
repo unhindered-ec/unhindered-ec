@@ -55,6 +55,9 @@ pub fn do_main(args: Args) {
         .with_selector(&lexicase, 5)
         .with_selector(&binary_tournament, args.population_size - 1);
 
+    // Using `Error` in `TestResults<Error>` will have the run favor smaller
+    // values, where using `Score` (e.g., `TestResults<Score>`) will have the run
+    // favor larger values.
     let population: Vec<EcIndividual<Bitstring, TestResults<Error>>> = new_bitstring_population(
         args.population_size,
         args.bit_length,
@@ -64,9 +67,6 @@ pub fn do_main(args: Args) {
     );
     assert!(population.is_empty().not());
 
-    // TODO: We probably want `scorer` to be generating the `TestResults` values
-    //   and have it be "in charge" of whether we're using `Score` or `Error`. Then
-    //   the child maker shouldn't need to care and we can just use `TestResults<R>` here.
     let child_maker = TwoPointXoMutateChildMaker::new(&scorer);
 
     let mut generation = Generation::new(
@@ -78,10 +78,6 @@ pub fn do_main(args: Args) {
     let mut rng = rand::thread_rng();
 
     assert!(generation.population().is_empty().not());
-    // let best = generation.best_individual();
-    // println!("{}", best);
-    // println!("Pop size = {}", generation.population.size());
-    // println!("Bit length = {}", best.genome.len());
 
     (0..args.num_generations).for_each(|generation_number| {
         generation = match args.run_model {
@@ -106,7 +102,8 @@ impl<'a> TwoPointXoMutateChildMaker<'a> {
     }
 }
 
-impl<'a, S, R> ChildMaker<Vec<EcIndividual<Bitstring, TestResults<R>>>, S> for TwoPointXoMutateChildMaker<'a>
+impl<'a, S, R> ChildMaker<Vec<EcIndividual<Bitstring, TestResults<R>>>, S>
+    for TwoPointXoMutateChildMaker<'a>
 where
     S: Selector<Vec<EcIndividual<Bitstring, TestResults<R>>>>,
     R: Sum + Copy + From<i64>,
