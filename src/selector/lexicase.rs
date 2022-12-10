@@ -21,6 +21,17 @@ impl Lexicase {
 impl<P, R> Selector<P> for Lexicase
 where
     P: Population,
+    // TODO: We don't really use the iterator here as we immediately
+    //   `.collect()` to get a `Vec`. Maybe the constraint should be
+    //   more specific to our needs, like a `Into<Vec>` constraint
+    //   that says that our population needs to be convertible into
+    //   a `Vec` of individuals.
+    //   The concern (from esitsu@Twitch) is that the current setup
+    //   will work with populations that are "bare" `Vec`s, where if
+    //   we add this alternative constraint we won't be able to use
+    //   bare `Vec`s and will be forced to wrap them like we currently
+    //   do with `VecPop`.
+    for<'pop> &'pop P: IntoIterator<Item = &'pop P::Individual>,
     P::Individual: Individual<TestResults = TestResults<R>>,
     R: Ord
 {
@@ -37,7 +48,7 @@ where
         let mut case_indices: Vec<usize> = (0..self.num_test_cases).collect();
         case_indices.shuffle(rng);
 
-        let mut candidates: Vec<_> = population.iter().collect();
+        let mut candidates: Vec<_> = population.into_iter().collect();
 
         let mut winners = Vec::with_capacity(candidates.len());
         for test_case_index in case_indices {
