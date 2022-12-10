@@ -5,8 +5,9 @@ use num_traits::ToPrimitive;
 use rand::{rngs::ThreadRng, Rng};
 
 use crate::individual::ec::EcIndividual;
-use crate::individual::{Generate, Individual};
-use crate::population::VecPop;
+use crate::individual::Individual;
+use crate::individual::Generate as _;
+use crate::population::Generate as _;
 use crate::test_results::TestResults;
 
 pub type Bitstring = Vec<bool>;
@@ -222,16 +223,15 @@ impl<R: Debug> Display for EcIndividual<Bitstring, R> {
     }
 }
 
-impl<R: Send> VecPop<EcIndividual<Bitstring, R>> {
-    pub fn new_bitstring_population<H>(
-        pop_size: usize,
-        bit_length: usize,
-        run_tests: impl Fn(&H) -> R + Send + Sync,
-    ) -> Self
-    where
-        Bitstring: Borrow<H>,
-        H: ?Sized,
-    {
-        Self::generate(pop_size, |rng| make_random(bit_length, rng), run_tests)
-    }
+pub fn new_bitstring_population<R, H>(
+    pop_size: usize,
+    bit_length: usize,
+    run_tests: impl Fn(&H) -> R + Send + Sync,
+) -> Vec<EcIndividual<Bitstring, R>>
+where
+    R: Send,
+    Bitstring: Borrow<H>,
+    H: ?Sized,
+{
+    Vec::generate(pop_size, |rng| make_random(bit_length, rng), run_tests)
 }

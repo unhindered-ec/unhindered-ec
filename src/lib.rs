@@ -14,12 +14,12 @@ use bitstring::{count_ones, hiff, Bitstring, LinearCrossover, LinearMutation};
 use child_maker::ChildMaker;
 use generation::Generation;
 use individual::ec::EcIndividual;
-use population::{Population, VecPop};
 use selector::lexicase::Lexicase;
 use selector::Selector;
 #[allow(unused_imports)]
 use test_results::{Error, Score, TestResults};
 
+use crate::bitstring::new_bitstring_population;
 use crate::selector::best::Best;
 use crate::selector::tournament::Tournament;
 use crate::selector::weighted::Weighted;
@@ -55,7 +55,7 @@ pub fn do_main(args: Args) {
         .with_selector(&lexicase, 5)
         .with_selector(&binary_tournament, args.population_size - 1);
 
-    let population = VecPop::new_bitstring_population(
+    let population = new_bitstring_population(
         args.population_size,
         args.bit_length,
         // TODO: I should really have a function somewhere that converts functions
