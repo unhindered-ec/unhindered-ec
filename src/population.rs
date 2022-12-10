@@ -1,6 +1,6 @@
 #![allow(clippy::missing_panics_doc)]
 
-use std::{borrow::Borrow, slice::Iter};
+use std::borrow::Borrow;
 
 use rand::rngs::ThreadRng;
 use rayon::prelude::{
@@ -17,9 +17,14 @@ pub trait Population {
     }
 
     fn size(&self) -> usize;
+}
 
-    #[deprecated]
-    fn iter(&self) -> Iter<Self::Individual>;
+impl<I> Population for Vec<I> {
+    type Individual = I;
+
+    fn size(&self) -> usize {
+        self.len()
+    }
 }
 
 pub struct VecPop<I> {
@@ -59,10 +64,6 @@ impl<I> Population for VecPop<I> {
     fn size(&self) -> usize {
         self.individuals.len()
     }
-
-    fn iter(&self) -> Iter<I> {
-        self.individuals.iter()
-    }
 }
 
 impl<I> VecPop<I> {
@@ -75,6 +76,21 @@ impl<I> VecPop<I> {
     #[must_use]
     #[deprecated = "We'd rather not expose the details of the implementation like this."]
     pub const fn individuals(&self) -> &Vec<I> {
+        &self.individuals
+    }
+}
+
+impl<'pop, I> IntoIterator for &'pop VecPop<I> {
+    type Item = &'pop I;
+    type IntoIter = std::slice::Iter<'pop, I>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.individuals.iter()
+    }
+}
+
+impl<I> AsRef<[I]> for VecPop<I> {
+    fn as_ref(&self) -> &[I] {
         &self.individuals
     }
 }
@@ -116,7 +132,7 @@ mod vec_pop_tests {
         assert!(vec_pop.is_empty().not());
         assert_eq!(10, vec_pop.size());
         #[allow(clippy::unwrap_used)] // The population shouldn't be empty
-        let ind = vec_pop.iter().next().unwrap();
+        let ind = vec_pop.into_iter().next().unwrap();
         assert!(*ind.genome() < 20);
         assert!(100 <= *ind.test_results() && *ind.test_results() < 120);
     }
@@ -130,7 +146,7 @@ mod vec_pop_tests {
         let vec_pop = VecPop::from_iter(inds.clone());
         assert!(vec_pop.is_empty().not());
         assert_eq!(3, vec_pop.size());
-        let pop_inds: Vec<EcIndividual<String, Vec<i32>>> = vec_pop.iter().cloned().collect();
+        let pop_inds: Vec<EcIndividual<String, Vec<i32>>> = vec_pop.into_iter().cloned().collect();
         assert_eq!(inds, pop_inds);
     }
 }

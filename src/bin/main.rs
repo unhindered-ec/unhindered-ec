@@ -60,7 +60,7 @@ mod tests {
         });
         assert_eq!(pop.size(), 100);
         #[allow(clippy::unwrap_used)] // The population shouldn't be empty
-        let first_individual = pop.iter().next().unwrap();
+        let first_individual = pop.into_iter().next().unwrap();
         assert_eq!(first_individual.genome().len(), 128);
         assert_eq!(
             first_individual.test_results().results,
@@ -79,7 +79,7 @@ mod tests {
         });
         assert_eq!(pop.size(), 100);
         #[allow(clippy::unwrap_used)] // The population shouldn't be empty
-        let first_individual = pop.iter().next().unwrap();
+        let first_individual = pop.into_iter().next().unwrap();
         assert_eq!(first_individual.genome().len(), 128);
         assert_eq!(
             first_individual.test_results().results,

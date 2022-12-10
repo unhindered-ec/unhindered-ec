@@ -1,6 +1,6 @@
 use std::ops::Not;
 
-use rand::prelude::IteratorRandom;
+use rand::prelude::SliceRandom;
 use rand::rngs::ThreadRng;
 
 use crate::population::Population;
@@ -9,7 +9,10 @@ use super::Selector;
 
 pub struct Random;
 
-impl<P: Population> Selector<P> for Random {
+impl<P> Selector<P> for Random 
+where
+    P: Population + AsRef<[P::Individual]>,
+{
     #[must_use]
     fn select<'pop>(&self, rng: &mut ThreadRng, population: &'pop P) -> &'pop P::Individual {
         // The population should never be empty here.
@@ -18,6 +21,6 @@ impl<P: Population> Selector<P> for Random {
             "The population should not be empty"
         );
         #[allow(clippy::unwrap_used)]
-        population.iter().choose(rng).unwrap()
+        population.as_ref().choose(rng).unwrap()
     }
 }
