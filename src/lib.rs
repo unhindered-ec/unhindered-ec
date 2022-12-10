@@ -69,11 +69,11 @@ pub fn do_main(args: Args) {
     //   the child maker shouldn't need to care and we can just use `TestResults<R>` here.
     let child_maker = TwoPointXoMutateChildMaker::new(&scorer);
 
-    // Using `Error` in `TestResults<Error>` will have the run favor smaller
-    // values, where using `Score` (e.g., `TestResults<Score>`) will have the run
-    // favor larger values.
-    let mut generation =
-        Generation::new(population, selector, child_maker);
+    let mut generation = Generation::new(
+        population,
+        &selector as &dyn Selector<_>,
+        &child_maker as &(dyn ChildMaker<_, _> + Sync + Send),
+    );
 
     let mut rng = rand::thread_rng();
 
