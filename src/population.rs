@@ -19,6 +19,14 @@ pub trait Population {
     fn size(&self) -> usize;
 }
 
+impl<I> Population for Vec<I> {
+    type Individual = I;
+
+    fn size(&self) -> usize {
+        self.len()
+    }
+}
+
 pub struct VecPop<I> {
     individuals: Vec<I>,
 }

@@ -25,3 +25,16 @@ where
         population.into_iter().max().unwrap()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn can_select_twice() {
+        let pop = vec![5, 8, 9, 6, 3, 2, 0];
+        let mut rng = rand::thread_rng();
+        assert_eq!(&9, Best.select(&mut rng, &pop));
+        assert_eq!(&9, Best.select(&mut rng, &pop));
+    }
+}
