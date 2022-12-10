@@ -1,6 +1,6 @@
 #![allow(clippy::missing_panics_doc)]
 
-use std::{borrow::Borrow, slice::Iter};
+use std::borrow::Borrow;
 
 use rand::rngs::ThreadRng;
 use rayon::prelude::{
@@ -17,9 +17,6 @@ pub trait Population {
     }
 
     fn size(&self) -> usize;
-
-    #[deprecated]
-    fn iter(&self) -> Iter<Self::Individual>;
 }
 
 pub struct VecPop<I> {
@@ -58,10 +55,6 @@ impl<I> Population for VecPop<I> {
     #[must_use]
     fn size(&self) -> usize {
         self.individuals.len()
-    }
-
-    fn iter(&self) -> Iter<I> {
-        self.individuals.iter()
     }
 }
 
@@ -131,7 +124,7 @@ mod vec_pop_tests {
         assert!(vec_pop.is_empty().not());
         assert_eq!(10, vec_pop.size());
         #[allow(clippy::unwrap_used)] // The population shouldn't be empty
-        let ind = vec_pop.iter().next().unwrap();
+        let ind = vec_pop.into_iter().next().unwrap();
         assert!(*ind.genome() < 20);
         assert!(100 <= *ind.test_results() && *ind.test_results() < 120);
     }
@@ -145,7 +138,7 @@ mod vec_pop_tests {
         let vec_pop = VecPop::from_iter(inds.clone());
         assert!(vec_pop.is_empty().not());
         assert_eq!(3, vec_pop.size());
-        let pop_inds: Vec<EcIndividual<String, Vec<i32>>> = vec_pop.iter().cloned().collect();
+        let pop_inds: Vec<EcIndividual<String, Vec<i32>>> = vec_pop.into_iter().cloned().collect();
         assert_eq!(inds, pop_inds);
     }
 }
