@@ -26,7 +26,7 @@ impl<'a, P: Population> Generation<'a, P> {
         self.selector
     }
 
-    pub fn population(&self) -> &P {
+    pub const fn population(&self) -> &P {
         &self.population
     }
 }
