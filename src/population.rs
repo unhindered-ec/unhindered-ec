@@ -88,6 +88,12 @@ impl<'pop, I> IntoIterator for &'pop VecPop<I> {
     }
 }
 
+impl<I> AsRef<[I]> for VecPop<I> {
+    fn as_ref(&self) -> &[I] {
+        &self.individuals
+    }
+}
+
 impl<I> FromIterator<I> for VecPop<I> {
     fn from_iter<T>(iter: T) -> Self
     where
