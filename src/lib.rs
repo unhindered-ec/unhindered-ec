@@ -72,7 +72,7 @@ pub fn do_main(args: Args) {
     // Using `Error` in `TestResults<Error>` will have the run favor smaller
     // values, where using `Score` (e.g., `TestResults<Score>`) will have the run
     // favor larger values.
-    let mut generation: Generation<VecPop<EcIndividual<Bitstring, TestResults<Error>>>> =
+    let mut generation: Generation<Vec<EcIndividual<Bitstring, TestResults<Error>>>> =
         Generation::new(population, &selector, &child_maker);
 
     let mut rng = rand::thread_rng();
@@ -105,15 +105,15 @@ impl<'a> TwoPointXoMutateChildMaker<'a> {
     }
 }
 
-impl<'a, R> ChildMaker<VecPop<EcIndividual<Bitstring, TestResults<R>>>> for TwoPointXoMutateChildMaker<'a>
+impl<'a, R> ChildMaker<Vec<EcIndividual<Bitstring, TestResults<R>>>> for TwoPointXoMutateChildMaker<'a>
 where
     R: Sum + Copy + From<i64>,
 {
     fn make_child(
         &self,
         rng: &mut ThreadRng,
-        population: &VecPop<EcIndividual<Bitstring, TestResults<R>>>,
-        selector: &dyn Selector<VecPop<EcIndividual<Bitstring, TestResults<R>>>>,
+        population: &Vec<EcIndividual<Bitstring, TestResults<R>>>,
+        selector: &dyn Selector<Vec<EcIndividual<Bitstring, TestResults<R>>>>,
     ) -> EcIndividual<Bitstring, TestResults<R>> {
         let first_parent = selector.select(rng, population);
         let second_parent = selector.select(rng, population);
