@@ -9,7 +9,7 @@ use super::Selector;
 
 pub struct Random;
 
-impl<P> Selector<P> for Random 
+impl<P> Selector<P> for Random
 where
     P: Population + AsRef<[P::Individual]>,
 {

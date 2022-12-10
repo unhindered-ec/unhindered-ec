@@ -20,3 +20,21 @@ pub mod weighted;
 pub trait Selector<P: Population>: Sync {
     fn select<'pop>(&self, rng: &mut ThreadRng, population: &'pop P) -> &'pop P::Individual;
 }
+
+impl<'a, P: Population> Selector<P> for &'a dyn Selector<P> {
+    fn select<'pop>(&self, rng: &mut ThreadRng, population: &'pop P) -> &'pop P::Individual {
+        (*self).select(rng, population)
+    }
+}
+
+impl<'a, P: Population> Selector<P> for &'a (dyn Selector<P> + Send) {
+    fn select<'pop>(&self, rng: &mut ThreadRng, population: &'pop P) -> &'pop P::Individual {
+        (*self).select(rng, population)
+    }
+}
+
+impl<'a, P: Population> Selector<P> for &'a (dyn Selector<P> + Send + Sync) {
+    fn select<'pop>(&self, rng: &mut ThreadRng, population: &'pop P) -> &'pop P::Individual {
+        (*self).select(rng, population)
+    }
+}

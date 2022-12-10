@@ -1,5 +1,8 @@
-use criterion::{criterion_group, criterion_main, Criterion, BenchmarkId};
-use rust_ga::{selector::{tournament::Tournament, Selector}, bitstring::{Bitstring, new_bitstring_population}};
+use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
+use rust_ga::{
+    bitstring::{new_bitstring_population, Bitstring},
+    selector::{tournament::Tournament, Selector},
+};
 
 fn tournaments(c: &mut Criterion) {
     let mut rng = rand::thread_rng();
@@ -8,8 +11,11 @@ fn tournaments(c: &mut Criterion) {
     let mut group = c.benchmark_group("Tournament selection");
     for tournament_size in [2, 10, 100] {
         let tournament_selector = Tournament::new(tournament_size);
-        group.bench_with_input(BenchmarkId::new("tournament size", tournament_size), &tournament_selector,
-            |b, t| b.iter(|| t.select(&mut rng, &population)));
+        group.bench_with_input(
+            BenchmarkId::new("tournament size", tournament_size),
+            &tournament_selector,
+            |b, t| b.iter(|| t.select(&mut rng, &population)),
+        );
     }
     group.finish();
 }

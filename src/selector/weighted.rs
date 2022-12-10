@@ -10,6 +10,14 @@ pub struct Weighted<'sel, P> {
     selectors: Vec<(&'sel dyn Selector<P>, usize)>,
 }
 
+impl<'sel, P> Clone for Weighted<'sel, P> {
+    fn clone(&self) -> Self {
+        Self {
+            selectors: self.selectors.clone(),
+        }
+    }
+}
+
 impl<'sel, P> Weighted<'sel, P> {
     // Since we should never have an empty collection of weighted selectors,
     // the `new` implementation takes an initial selector so `selectors` is

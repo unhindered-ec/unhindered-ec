@@ -3,11 +3,9 @@
 use std::borrow::Borrow;
 
 use rand::rngs::ThreadRng;
-use rayon::prelude::{
-    IntoParallelIterator, ParallelIterator,
-};
+use rayon::prelude::{IntoParallelIterator, ParallelIterator};
 
-use crate::individual::{Individual, self};
+use crate::individual::{self, Individual};
 
 pub trait Population {
     type Individual;
@@ -19,9 +17,9 @@ pub trait Population {
     fn size(&self) -> usize;
 }
 
-pub trait Generate: Population 
+pub trait Generate: Population
 where
-    Self::Individual: Individual
+    Self::Individual: Individual,
 {
     fn generate<H>(
         pop_size: usize,
@@ -49,7 +47,7 @@ impl<I: individual::Generate + Send> Generate for Vec<I> {
     ) -> Self
     where
         <Self::Individual as Individual>::Genome: Borrow<H>,
-        H: ?Sized
+        H: ?Sized,
     {
         (0..pop_size)
             .into_par_iter()
