@@ -1,6 +1,5 @@
 use rand::prelude::SliceRandom;
 use rand::rngs::ThreadRng;
-// use rand::seq::IteratorRandom;
 
 use crate::population::Population;
 
