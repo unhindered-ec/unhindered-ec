@@ -27,6 +27,7 @@ impl<I> Population for Vec<I> {
     }
 }
 
+#[deprecated = "Replace VecPop with bare vectors"]
 pub struct VecPop<I> {
     individuals: Vec<I>,
 }
