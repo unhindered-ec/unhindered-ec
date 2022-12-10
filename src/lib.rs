@@ -55,7 +55,7 @@ pub fn do_main(args: Args) {
         .with_selector(&lexicase, 5)
         .with_selector(&binary_tournament, args.population_size - 1);
 
-    let population = new_bitstring_population(
+    let population: Vec<EcIndividual<Bitstring, TestResults<Error>>> = new_bitstring_population(
         args.population_size,
         args.bit_length,
         // TODO: I should really have a function somewhere that converts functions
@@ -72,8 +72,8 @@ pub fn do_main(args: Args) {
     // Using `Error` in `TestResults<Error>` will have the run favor smaller
     // values, where using `Score` (e.g., `TestResults<Score>`) will have the run
     // favor larger values.
-    let mut generation: Generation<Vec<EcIndividual<Bitstring, TestResults<Error>>>> =
-        Generation::new(population, &selector, &child_maker);
+    let mut generation =
+        Generation::new(population, selector, child_maker);
 
     let mut rng = rand::thread_rng();
 
@@ -95,6 +95,7 @@ pub fn do_main(args: Args) {
     });
 }
 
+#[derive(Clone)]
 struct TwoPointXoMutateChildMaker<'a> {
     scorer: &'a (dyn Fn(&[bool]) -> Vec<i64> + Sync),
 }
@@ -105,15 +106,16 @@ impl<'a> TwoPointXoMutateChildMaker<'a> {
     }
 }
 
-impl<'a, R> ChildMaker<Vec<EcIndividual<Bitstring, TestResults<R>>>> for TwoPointXoMutateChildMaker<'a>
+impl<'a, S, R> ChildMaker<Vec<EcIndividual<Bitstring, TestResults<R>>>, S> for TwoPointXoMutateChildMaker<'a>
 where
+    S: Selector<Vec<EcIndividual<Bitstring, TestResults<R>>>>,
     R: Sum + Copy + From<i64>,
 {
     fn make_child(
         &self,
         rng: &mut ThreadRng,
         population: &Vec<EcIndividual<Bitstring, TestResults<R>>>,
-        selector: &dyn Selector<Vec<EcIndividual<Bitstring, TestResults<R>>>>,
+        selector: &S,
     ) -> EcIndividual<Bitstring, TestResults<R>> {
         let first_parent = selector.select(rng, population);
         let second_parent = selector.select(rng, population);

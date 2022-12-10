@@ -1,5 +1,3 @@
-use std::ops::Not;
-
 use rand::rngs::ThreadRng;
 use rayon::prelude::{IntoParallelIterator, ParallelIterator, FromParallelIterator};
 
@@ -14,16 +12,16 @@ use crate::{
 //  require changing all the lifetime references to be `Arc`s (so both
 //  `weighted_selectors` and `child_maker`). It would be good to benchmark
 //  both versions to see what the costs are.
-pub struct Generation<'a, P: Population> {
+pub struct Generation<P, S, C> {
     population: P,
-    selector: &'a dyn Selector<P>,
-    child_maker: &'a (dyn ChildMaker<P> + Sync + Send),
+    selector: S,
+    child_maker: C,
 }
 
-impl<'a, P: Population> Generation<'a, P> {
+impl<P, S, C> Generation<P, S, C> {
     #[must_use]
-    pub fn selector(&self) -> &'a dyn Selector<P> {
-        self.selector
+    pub const fn selector(&self) -> &S {
+        &self.selector
     }
 
     pub const fn population(&self) -> &P {
@@ -31,24 +29,21 @@ impl<'a, P: Population> Generation<'a, P> {
     }
 }
 
-impl<'a, P: Population> Generation<'a, P> {
-    /// # Panics
-    ///
-    /// This can panic if the population is empty or the weighted set of
-    /// selectors is empty.
-    pub fn new(
+impl<P, S, C> Generation<P, S, C> {
+    pub const fn new(
         population: P,
-        selector: &'a dyn Selector<P>,
-        child_maker: &'a (dyn ChildMaker<P> + Sync + Send),
+        selector: S,
+        child_maker: C,
     ) -> Self {
-        assert!(population.is_empty().not());
         Self {
             population,
             selector,
             child_maker,
         }
     }
+}
 
+impl <P: Population, S: Selector<P>, C> Generation<P, S, C> {
     /// # Panics
     ///
     /// This can panic if the set of selectors is empty.
@@ -60,10 +55,12 @@ impl<'a, P: Population> Generation<'a, P> {
     }
 }
 
-impl<'a, P> Generation<'a, P>
+impl<P, S, C> Generation<P, S, C>
 where
     P: Population + FromParallelIterator<P::Individual> + Sync,
-    P::Individual: Send
+    P::Individual: Send,
+    S: Selector<P> + Clone,
+    C: ChildMaker<P, S> + Clone + Sync + Send
 {
     /// Make the next generation using a Rayon parallel iterator.
     #[must_use]
@@ -77,20 +74,22 @@ where
             .map(|_| self)
             .map_init(rand::thread_rng, |rng, _| {
                 self.child_maker
-                    .make_child(rng, &self.population, self.selector)
+                    .make_child(rng, &self.population, &self.selector)
             })
             .collect();
         Self {
             population,
-            selector: self.selector,
-            child_maker: self.child_maker,
+            selector: self.selector.clone(),
+            child_maker: self.child_maker.clone(),
         }
     }
 }
 
-impl<'a, P> Generation<'a, P> 
+impl<P, S, C> Generation<P, S, C> 
 where
     P: Population + FromIterator<P::Individual>,
+    S: Selector<P> + Clone,
+    C: ChildMaker<P, S> + Clone
 {
     /// Make the next generation serially.
     #[must_use]
@@ -100,13 +99,13 @@ where
         let population = (0..pop_size)
             .map(|_| {
                 self.child_maker
-                    .make_child(&mut rng, &self.population, self.selector)
+                    .make_child(&mut rng, &self.population, &self.selector)
             })
             .collect();
         Self {
             population,
-            selector: self.selector,
-            child_maker: self.child_maker,
+            selector: self.selector.clone(),
+            child_maker: self.child_maker.clone(),
         }
     }
 }
