@@ -14,12 +14,12 @@ use bitstring::{count_ones, hiff, Bitstring, LinearCrossover, LinearMutation};
 use child_maker::ChildMaker;
 use generation::Generation;
 use individual::ec::EcIndividual;
-use population::{Population, VecPop};
 use selector::lexicase::Lexicase;
 use selector::Selector;
 #[allow(unused_imports)]
 use test_results::{Error, Score, TestResults};
 
+use crate::bitstring::new_bitstring_population;
 use crate::selector::best::Best;
 use crate::selector::tournament::Tournament;
 use crate::selector::weighted::Weighted;
@@ -55,7 +55,7 @@ pub fn do_main(args: Args) {
         .with_selector(&lexicase, 5)
         .with_selector(&binary_tournament, args.population_size - 1);
 
-    let population = VecPop::new_bitstring_population(
+    let population = new_bitstring_population(
         args.population_size,
         args.bit_length,
         // TODO: I should really have a function somewhere that converts functions
@@ -72,7 +72,7 @@ pub fn do_main(args: Args) {
     // Using `Error` in `TestResults<Error>` will have the run favor smaller
     // values, where using `Score` (e.g., `TestResults<Score>`) will have the run
     // favor larger values.
-    let mut generation: Generation<VecPop<EcIndividual<Bitstring, TestResults<Error>>>> =
+    let mut generation: Generation<Vec<EcIndividual<Bitstring, TestResults<Error>>>> =
         Generation::new(population, &selector, &child_maker);
 
     let mut rng = rand::thread_rng();
@@ -105,15 +105,15 @@ impl<'a> TwoPointXoMutateChildMaker<'a> {
     }
 }
 
-impl<'a, R> ChildMaker<VecPop<EcIndividual<Bitstring, TestResults<R>>>> for TwoPointXoMutateChildMaker<'a>
+impl<'a, R> ChildMaker<Vec<EcIndividual<Bitstring, TestResults<R>>>> for TwoPointXoMutateChildMaker<'a>
 where
     R: Sum + Copy + From<i64>,
 {
     fn make_child(
         &self,
         rng: &mut ThreadRng,
-        population: &VecPop<EcIndividual<Bitstring, TestResults<R>>>,
-        selector: &dyn Selector<VecPop<EcIndividual<Bitstring, TestResults<R>>>>,
+        population: &Vec<EcIndividual<Bitstring, TestResults<R>>>,
+        selector: &dyn Selector<Vec<EcIndividual<Bitstring, TestResults<R>>>>,
     ) -> EcIndividual<Bitstring, TestResults<R>> {
         let first_parent = selector.select(rng, population);
         let second_parent = selector.select(rng, population);

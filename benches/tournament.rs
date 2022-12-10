@@ -1,9 +1,9 @@
 use criterion::{criterion_group, criterion_main, Criterion, BenchmarkId};
-use rust_ga::{selector::{tournament::Tournament, Selector}, population::VecPop, bitstring::Bitstring};
+use rust_ga::{selector::{tournament::Tournament, Selector}, bitstring::{Bitstring, new_bitstring_population}};
 
 fn tournaments(c: &mut Criterion) {
     let mut rng = rand::thread_rng();
-    let population = VecPop::new_bitstring_population(1000, 128, |_: &Bitstring| 0);
+    let population = new_bitstring_population(1000, 128, |_: &Bitstring| 0);
 
     let mut group = c.benchmark_group("Tournament selection");
     for tournament_size in [2, 10, 100] {
