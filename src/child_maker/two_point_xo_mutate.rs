@@ -14,8 +14,8 @@ pub struct TwoPointXoMutate<'a> {
 }
 
 impl<'a> TwoPointXoMutate<'a> {
-    pub fn new(scorer: &(dyn Fn(&[bool]) -> Vec<i64> + Sync)) -> TwoPointXoMutate {
-        TwoPointXoMutate { scorer }
+    pub fn new(scorer: &'a (dyn Fn(&[bool]) -> Vec<i64> + Sync)) -> Self {
+        Self { scorer }
     }
 }
 
