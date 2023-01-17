@@ -1,6 +1,6 @@
 use super::ChildMaker;
 use crate::{
-    bitstring::{Bitstring, LinearCrossover, LinearMutation},
+    bitstring::{Bitstring, LinearMutation, Recombinator, UniformXO},
     individual::{ec::EcIndividual, Individual},
     selector::Selector,
     test_results::TestResults,
@@ -31,13 +31,14 @@ where
         selector: &S,
     ) -> EcIndividual<Bitstring, TestResults<R>> {
         let first_parent = selector.select(rng, population);
-        let second_parent = selector.select(rng, population);
 
-        let genome = first_parent
-            .genome()
-            .two_point_xo(second_parent.genome(), rng)
-            .mutate_one_over_length(rng);
-        let test_results = (self.scorer)(&genome).into_iter().map(From::from).sum();
-        EcIndividual::new(genome, test_results)
+        let initial_genome = first_parent.genome();
+        let xo_genome = UniformXO.recombine(initial_genome, population, selector, rng);
+        let mutated_genome = xo_genome.mutate_one_over_length(rng);
+        let test_results = (self.scorer)(&mutated_genome)
+            .into_iter()
+            .map(From::from)
+            .sum();
+        EcIndividual::new(mutated_genome, test_results)
     }
 }
