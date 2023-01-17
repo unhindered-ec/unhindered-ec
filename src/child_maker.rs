@@ -3,6 +3,7 @@ use rand::rngs::ThreadRng;
 use crate::{population::Population, selector::Selector};
 
 pub mod two_point_xo_mutate;
+pub mod pipeline;
 
 pub trait ChildMaker<P: Population, S: Selector<P>> {
     // TODO: Instead of passing 2/3 of  Generation` to this function, is there a trait
