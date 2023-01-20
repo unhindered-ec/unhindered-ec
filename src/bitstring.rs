@@ -7,8 +7,7 @@ use rand::{rngs::ThreadRng, Rng};
 use crate::individual::ec::EcIndividual;
 use crate::individual::Generate as _;
 use crate::individual::Individual;
-use crate::population::{Generate as _, Population};
-use crate::selector::Selector;
+use crate::population::{Generate as _};
 use crate::test_results::TestResults;
 
 pub type Bitstring = Vec<bool>;
@@ -73,54 +72,6 @@ pub fn fitness_vec_to_test_results(results: Vec<i64>) -> TestResults<i64> {
     TestResults {
         total_result,
         results,
-    }
-}
-
-pub trait Recombinator<P, S>
-where
-    P: Population,
-    P::Individual: Individual,
-    S: Selector<P>,
-{
-    fn recombine(
-        &self,
-        genome: &<P::Individual as Individual>::Genome,
-        population: &P,
-        selector: &S,
-        rng: &mut ThreadRng,
-    ) -> <P::Individual as Individual>::Genome;
-}
-
-pub struct UniformXO;
-
-impl<P, S, T> Recombinator<P, S> for UniformXO
-where
-    P: Population,
-    // TODO: Should `Vec<T>` be replaced with a trait?
-    P::Individual: Individual<Genome = Vec<T>>,
-    S: Selector<P>,
-    T: Clone,
-{
-    fn recombine(
-        &self,
-        genome: &Vec<T>,
-        population: &P,
-        selector: &S,
-        rng: &mut ThreadRng,
-    ) -> Vec<T> {
-        let second_parent = selector.select(rng, population);
-        let second_genome = second_parent.genome();
-        assert_eq!(genome.len(), second_genome.len());
-        let len = genome.len();
-        (0..len)
-            .map(|pos| {
-                if rng.gen_bool(0.5) {
-                    genome[pos].clone()
-                } else {
-                    second_genome[pos].clone()
-                }
-            })
-            .collect()
     }
 }
 

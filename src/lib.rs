@@ -24,6 +24,7 @@ use crate::selector::weighted::Weighted;
 
 pub mod args;
 pub mod bitstring;
+pub mod recombinator;
 pub mod child_maker;
 pub mod generation;
 pub mod individual;
