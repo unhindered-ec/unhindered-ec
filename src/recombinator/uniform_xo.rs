@@ -4,12 +4,11 @@ use crate::{population::Population, individual::Individual, selector::Selector};
 
 use super::Recombinator;
 
-pub struct UniformXO;
+pub struct UniformXo;
 
-impl<P, S, T> Recombinator<P, S> for UniformXO
+impl<P, S, T> Recombinator<P, S> for UniformXo
 where
     P: Population,
-    // TODO: Should `Vec<T>` be replaced with a trait?
     P::Individual: Individual<Genome = Vec<T>>,
     S: Selector<P>,
     T: Clone,
