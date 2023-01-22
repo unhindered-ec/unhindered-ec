@@ -3,7 +3,7 @@ use crate::{
     bitstring::{Bitstring, LinearMutation},
     individual::{ec::EcIndividual, Individual},
     selector::Selector,
-    test_results::TestResults, recombinator::{Recombinator, uniform_xo::UniformXO},
+    test_results::TestResults, recombinator::{Recombinator, uniform_xo::UniformXo, two_point_xo::TwoPointXo},
 };
 use rand::rngs::ThreadRng;
 use std::iter::Sum;
@@ -33,7 +33,7 @@ where
         let first_parent = selector.select(rng, population);
 
         let initial_genome = first_parent.genome();
-        let xo_genome = UniformXO.recombine(initial_genome, population, selector, rng);
+        let xo_genome = TwoPointXo.recombine(initial_genome, population, selector, rng);
         let mutated_genome = xo_genome.mutate_one_over_length(rng);
         let test_results = (self.scorer)(&mutated_genome)
             .into_iter()

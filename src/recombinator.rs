@@ -3,6 +3,7 @@ use rand::rngs::ThreadRng;
 use crate::{population::Population, individual::Individual, selector::Selector};
 
 pub mod uniform_xo;
+pub mod two_point_xo;
 
 pub trait Recombinator<P, S>
 where
