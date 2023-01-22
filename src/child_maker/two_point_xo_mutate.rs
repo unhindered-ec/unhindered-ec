@@ -31,9 +31,10 @@ where
         selector: &S,
     ) -> EcIndividual<Bitstring, TestResults<R>> {
         let first_parent = selector.select(rng, population);
+        let second_parent = selector.select(rng, population);
+        let parent_genomes = [first_parent.genome(), second_parent.genome()];
 
-        let initial_genome = first_parent.genome();
-        let xo_genome = TwoPointXo.recombine(initial_genome, population, selector, rng);
+        let xo_genome = TwoPointXo.recombine(parent_genomes, rng);
         let mutated_genome = xo_genome.mutate_one_over_length(rng);
         let test_results = (self.scorer)(&mutated_genome)
             .into_iter()

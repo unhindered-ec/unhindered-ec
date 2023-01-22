@@ -1,27 +1,20 @@
 use rand::{rngs::ThreadRng, Rng};
 
-use crate::{individual::Individual, population::Population, selector::Selector};
-
 use super::Recombinator;
 
 pub struct TwoPointXo;
 
-impl<P, S, T> Recombinator<P, S> for TwoPointXo
+impl<T> Recombinator<2, Vec<T>> for TwoPointXo
 where
-    P: Population,
-    P::Individual: Individual<Genome = Vec<T>>,
-    S: Selector<P>,
     T: Clone,
 {
     fn recombine(
         &self,
-        genome: &Vec<T>,
-        population: &P,
-        selector: &S,
+        genomes: [&Vec<T>; 2],
         rng: &mut ThreadRng,
     ) -> Vec<T> {
-        let second_parent = selector.select(rng, population);
-        let second_genome = second_parent.genome();
+        let genome = genomes[0];
+        let second_genome = genomes[1];
         assert_eq!(genome.len(), second_genome.len());
         let len = genome.len();
 
