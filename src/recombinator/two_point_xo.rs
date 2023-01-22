@@ -1,6 +1,6 @@
 use rand::{rngs::ThreadRng, Rng};
 
-use crate::{population::Population, individual::Individual, selector::Selector};
+use crate::{individual::Individual, population::Population, selector::Selector};
 
 use super::Recombinator;
 
@@ -28,7 +28,7 @@ where
         let mut first = rng.gen_range(0..len);
         let mut second = rng.gen_range(0..len);
         if second < first {
-            (first, second) = (second, first)
+            (first, second) = (second, first);
         }
         // We now know that first <= second
         let mut genome = genome.clone();

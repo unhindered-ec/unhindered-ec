@@ -75,39 +75,6 @@ pub fn fitness_vec_to_test_results(results: Vec<i64>) -> TestResults<i64> {
     }
 }
 
-pub trait LinearCrossover {
-    #[must_use]
-    fn uniform_xo(&self, other: &Self, rng: &mut ThreadRng) -> Self;
-    #[must_use]
-    fn two_point_xo(&self, other: &Self, rng: &mut ThreadRng) -> Self;
-}
-
-impl<T: Copy> LinearCrossover for Vec<T> {
-    fn uniform_xo(&self, other: &Self, rng: &mut ThreadRng) -> Self {
-        // The two parents should have the same length.
-        assert!(self.len() == other.len());
-        let len = self.len();
-        (0..len)
-            .map(|i| if rng.gen_bool(0.5) { self[i] } else { other[i] })
-            .collect()
-    }
-
-    fn two_point_xo(&self, other: &Self, rng: &mut ThreadRng) -> Self {
-        let len = self.len();
-        // The two parents should have the same length.
-        assert!(len == other.len());
-        let mut genome = self.clone();
-        let mut first = rng.gen_range(0..len);
-        let mut second = rng.gen_range(0..len);
-        if second < first {
-            (first, second) = (second, first);
-        }
-        // We now know that first <= second
-        genome[first..second].clone_from_slice(&other[first..second]);
-        genome
-    }
-}
-
 pub trait LinearMutation {
     #[must_use]
     fn mutate_with_rate(&self, mutation_rate: f32, rng: &mut ThreadRng) -> Self;

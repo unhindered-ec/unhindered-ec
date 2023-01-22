@@ -3,7 +3,7 @@ use crate::{
     bitstring::{Bitstring, LinearMutation},
     individual::{ec::EcIndividual, Individual},
     selector::Selector,
-    test_results::TestResults, recombinator::{Recombinator, uniform_xo::UniformXo, two_point_xo::TwoPointXo},
+    test_results::TestResults, recombinator::{Recombinator, two_point_xo::TwoPointXo},
 };
 use rand::rngs::ThreadRng;
 use std::iter::Sum;
