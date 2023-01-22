@@ -10,6 +10,12 @@ pub mod mutate_with_one_over_length;
 //  this trait for a recombinator that takes an arbitrary
 //  number of parent genomes. That might be a problem later,
 //  but we'll deal with that if/when it comes up.
+// TODO: In fact I think we *have* to convert `genomes` from
+//  a fixed size array to a `Vec<G>` because otherwise
+//  recombinators won't have the same type if they have a
+//  different number of parent genomes, and we won't be
+//  able to put a bunch of them in a `Vec` when we implement
+//  `Pipeline`.
 pub trait Recombinator<const NUM_PARENTS: usize, G>
 {
     fn recombine(

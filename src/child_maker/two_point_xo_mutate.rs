@@ -3,7 +3,7 @@ use crate::{
     bitstring::{Bitstring, LinearMutation},
     individual::{ec::EcIndividual, Individual},
     selector::Selector,
-    test_results::TestResults, recombinator::{Recombinator, two_point_xo::TwoPointXo},
+    test_results::TestResults, recombinator::{Recombinator, two_point_xo::TwoPointXo, mutate_with_rate::MutateWithRate},
 };
 use rand::rngs::ThreadRng;
 use std::iter::Sum;
@@ -30,12 +30,14 @@ where
         population: &Vec<EcIndividual<Bitstring, TestResults<R>>>,
         selector: &S,
     ) -> EcIndividual<Bitstring, TestResults<R>> {
+        let mutator = MutateWithRate { mutation_rate: 0.01 };
+
         let first_parent = selector.select(rng, population);
         let second_parent = selector.select(rng, population);
         let parent_genomes = [first_parent.genome(), second_parent.genome()];
 
         let xo_genome = TwoPointXo.recombine(parent_genomes, rng);
-        let mutated_genome = xo_genome.mutate_one_over_length(rng);
+        let mutated_genome = mutator.recombine([&xo_genome], rng);
         let test_results = (self.scorer)(&mutated_genome)
             .into_iter()
             .map(From::from)
