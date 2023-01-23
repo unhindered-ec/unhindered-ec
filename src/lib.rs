@@ -3,14 +3,11 @@
 #![warn(clippy::unwrap_used)]
 #![warn(clippy::expect_used)]
 
-use std::iter::Sum;
 use std::ops::Not;
 
 use args::{Args, RunModel, TargetProblem};
-use individual::Individual;
-use rand::rngs::ThreadRng;
 
-use bitstring::{count_ones, hiff, Bitstring, LinearCrossover, LinearMutation};
+use bitstring::{count_ones, hiff, Bitstring};
 use child_maker::ChildMaker;
 use generation::Generation;
 use individual::ec::EcIndividual;
@@ -20,6 +17,7 @@ use selector::Selector;
 use test_results::{Error, Score, TestResults};
 
 use crate::bitstring::new_bitstring_population;
+use crate::child_maker::two_point_xo_mutate::TwoPointXoMutate;
 use crate::selector::best::Best;
 use crate::selector::tournament::Tournament;
 use crate::selector::weighted::Weighted;
@@ -67,7 +65,7 @@ pub fn do_main(args: Args) {
     );
     assert!(population.is_empty().not());
 
-    let child_maker = TwoPointXoMutateChildMaker::new(&scorer);
+    let child_maker = TwoPointXoMutate::new(&scorer);
 
     let mut generation = Generation::new(
         population,
@@ -89,39 +87,4 @@ pub fn do_main(args: Args) {
         //  args.num_generations-1.
         println!("Generation {:2} best is {}", generation_number, best);
     });
-}
-
-#[derive(Clone)]
-struct TwoPointXoMutateChildMaker<'a> {
-    scorer: &'a (dyn Fn(&[bool]) -> Vec<i64> + Sync),
-}
-
-impl<'a> TwoPointXoMutateChildMaker<'a> {
-    fn new(scorer: &(dyn Fn(&[bool]) -> Vec<i64> + Sync)) -> TwoPointXoMutateChildMaker {
-        TwoPointXoMutateChildMaker { scorer }
-    }
-}
-
-impl<'a, S, R> ChildMaker<Vec<EcIndividual<Bitstring, TestResults<R>>>, S>
-    for TwoPointXoMutateChildMaker<'a>
-where
-    S: Selector<Vec<EcIndividual<Bitstring, TestResults<R>>>>,
-    R: Sum + Copy + From<i64>,
-{
-    fn make_child(
-        &self,
-        rng: &mut ThreadRng,
-        population: &Vec<EcIndividual<Bitstring, TestResults<R>>>,
-        selector: &S,
-    ) -> EcIndividual<Bitstring, TestResults<R>> {
-        let first_parent = selector.select(rng, population);
-        let second_parent = selector.select(rng, population);
-
-        let genome = first_parent
-            .genome()
-            .two_point_xo(second_parent.genome(), rng)
-            .mutate_one_over_length(rng);
-        let test_results = (self.scorer)(&genome).into_iter().map(From::from).sum();
-        EcIndividual::new(genome, test_results)
-    }
 }
