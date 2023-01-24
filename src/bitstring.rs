@@ -1,7 +1,6 @@
 use std::borrow::Borrow;
 use std::fmt::{Debug, Display};
 
-use num_traits::ToPrimitive;
 use rand::{rngs::ThreadRng, Rng};
 
 use crate::individual::ec::EcIndividual;

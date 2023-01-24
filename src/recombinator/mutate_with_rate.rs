@@ -9,8 +9,9 @@ pub struct MutateWithRate {
 }
 
 impl MutateWithRate {
-    pub fn new(mutation_rate: f32) -> Self {
-        MutateWithRate { mutation_rate }
+    #[must_use]
+    pub const fn new(mutation_rate: f32) -> Self {
+        Self { mutation_rate }
     }
 }
 

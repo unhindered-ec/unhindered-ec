@@ -1,7 +1,7 @@
 use std::ops::Not;
 
 use num_traits::ToPrimitive;
-use rand::{rngs::ThreadRng, Rng};
+use rand::rngs::ThreadRng;
 
 use super::{mutate_with_rate::MutateWithRate, Recombinator};
 
