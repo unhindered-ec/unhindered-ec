@@ -102,7 +102,10 @@ impl LinearMutation for Bitstring {
         // in an `f32`. This could behave weirdly if we have _really_ long
         // genomes, but those are likely to need special mutation operators
         // anyway.
-        let mutation_rate: f32 = self.len().to_f32().map_or(f32::MIN_POSITIVE, |l| 1.0 / l);
+        let mutation_rate: f32 = self
+            .len()
+            .to_f32()
+            .map_or(f32::MIN_POSITIVE, |l| 1.0 / l);
         self.mutate_with_rate(mutation_rate, rng)
     }
 }
