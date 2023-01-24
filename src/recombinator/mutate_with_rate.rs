@@ -5,7 +5,13 @@ use rand::{rngs::ThreadRng, Rng};
 use super::Recombinator;
 
 pub struct MutateWithRate {
-    pub mutation_rate: f32,
+    mutation_rate: f32,
+}
+
+impl MutateWithRate {
+    pub fn new(mutation_rate: f32) -> Self {
+        MutateWithRate { mutation_rate }
+    }
 }
 
 impl<T> Recombinator<1, Vec<T>> for MutateWithRate
