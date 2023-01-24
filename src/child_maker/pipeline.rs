@@ -1,8 +1,6 @@
-
 #[derive(Clone)]
 pub struct Pipeline<'a> {
     scorer: &'a (dyn Fn(&[bool]) -> Vec<i64> + Sync),
-
 }
 
 impl<'a> Pipeline<'a> {

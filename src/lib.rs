@@ -24,11 +24,11 @@ use crate::selector::weighted::Weighted;
 
 pub mod args;
 pub mod bitstring;
-pub mod recombinator;
 pub mod child_maker;
 pub mod generation;
 pub mod individual;
 pub mod population;
+pub mod recombinator;
 pub mod selector;
 pub mod test_results;
 

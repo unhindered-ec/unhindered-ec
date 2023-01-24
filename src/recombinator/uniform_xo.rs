@@ -8,11 +8,7 @@ impl<T> Recombinator<2, Vec<T>> for UniformXo
 where
     T: Clone,
 {
-    fn recombine(
-        &self,
-        genomes: [&Vec<T>; 2],
-        rng: &mut ThreadRng,
-    ) -> Vec<T> {
+    fn recombine(&self, genomes: [&Vec<T>; 2], rng: &mut ThreadRng) -> Vec<T> {
         let genome = genomes[0];
         let second_genome = genomes[1];
         assert_eq!(genome.len(), second_genome.len());

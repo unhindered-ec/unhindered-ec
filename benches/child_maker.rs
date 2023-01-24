@@ -1,4 +1,4 @@
-use criterion::{criterion_group, criterion_main, Criterion, black_box};
+use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use rust_ga::{
     bitstring::new_bitstring_population,
     child_maker::{two_point_xo_mutate::TwoPointXoMutate, ChildMaker},
@@ -31,8 +31,11 @@ fn child_maker(c: &mut Criterion) {
 
     c.bench_function("Two-point Xo + mutate", |b| {
         b.iter(|| {
-            let child 
-                = two_point_xo_mutate.make_child(black_box(&mut rng), black_box(&population), black_box(&Best));
+            let child = two_point_xo_mutate.make_child(
+                black_box(&mut rng),
+                black_box(&population),
+                black_box(&Best),
+            );
             assert_eq!(0, child.test_results().total_result);
         })
     });

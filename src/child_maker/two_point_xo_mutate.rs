@@ -1,9 +1,13 @@
 use super::ChildMaker;
 use crate::{
-    bitstring::{Bitstring, LinearMutation},
+    bitstring::Bitstring,
     individual::{ec::EcIndividual, Individual},
+    recombinator::{
+        mutate_with_one_over_length::MutateWithOneOverLength, two_point_xo::TwoPointXo,
+        Recombinator,
+    },
     selector::Selector,
-    test_results::TestResults, recombinator::{Recombinator, two_point_xo::TwoPointXo, mutate_with_rate::MutateWithRate, mutate_with_one_over_length::MutateWithOneOverLength},
+    test_results::TestResults,
 };
 use rand::rngs::ThreadRng;
 use std::iter::Sum;
