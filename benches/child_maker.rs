@@ -1,21 +1,44 @@
 use criterion::{criterion_group, criterion_main, Criterion};
-use rust_ga::{child_maker::{two_point_xo_mutate::{self, TwoPointXoMutate}, ChildMaker}, bitstring::{count_ones, new_bitstring_population}, selector::best::Best};
-
-
+use rust_ga::{
+    bitstring::{new_bitstring_population},
+    child_maker::{
+        two_point_xo_mutate::{TwoPointXoMutate},
+        ChildMaker,
+    },
+    selector::best::Best,
+    test_results::TestResults, individual::Individual,
+};
 
 fn child_maker(c: &mut Criterion) {
     let mut rng = rand::thread_rng();
 
-    let two_point_xo_mutate = TwoPointXoMutate { 
-        scorer: &count_ones
+    let trivial_scorer = |_: &[bool]| {
+        vec![0i64]
+    };
+
+    let trivial_tester = |_: &Vec<bool>| {
+        TestResults {
+            total_result: 0i64,
+            results: vec![0i64] 
+        }
+    };
+
+    let two_point_xo_mutate = TwoPointXoMutate {
+        scorer: &trivial_scorer,
     };
 
     c.bench_function("Two-point Xo + mutate", |b| {
         b.iter(|| {
-            let population = new_bitstring_population(1, 128, count_ones);
-            let child = two_point_xo_mutate.make_child(&mut rng, &population, &Best);
-            // let bits = [false; NUM_BITS].to_vec();
-            // assert_eq!(bits.len(), NUM_BITS);
+            let population = new_bitstring_population(
+                1,
+                128,
+                // TODO: I should really have a function somewhere that converts functions
+                //   that return vectors of scores to `TestResults` structs.
+                trivial_tester
+            );
+            let child 
+                = two_point_xo_mutate.make_child(&mut rng, &population, &Best);
+            assert_eq!(0, child.test_results().total_result);
         })
     });
 }
