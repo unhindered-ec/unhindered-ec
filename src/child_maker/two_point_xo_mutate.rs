@@ -10,7 +10,7 @@ use std::iter::Sum;
 
 #[derive(Clone)]
 pub struct TwoPointXoMutate<'a> {
-    scorer: &'a (dyn Fn(&[bool]) -> Vec<i64> + Sync),
+    pub scorer: &'a (dyn Fn(&[bool]) -> Vec<i64> + Sync),
 }
 
 impl<'a> TwoPointXoMutate<'a> {
