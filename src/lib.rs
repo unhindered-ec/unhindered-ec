@@ -23,6 +23,7 @@ use crate::selector::tournament::Tournament;
 use crate::selector::weighted::Weighted;
 
 pub mod args;
+pub mod operator;
 pub mod bitstring;
 pub mod child_maker;
 pub mod generation;
