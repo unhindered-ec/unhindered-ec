@@ -40,8 +40,8 @@ where
         let second_parent = selector.select(rng, population);
         let parent_genomes = [first_parent.genome(), second_parent.genome()];
 
-        let xo_genome = TwoPointXo.recombine(parent_genomes, rng);
-        let mutated_genome = mutator.recombine([&xo_genome], rng);
+        let xo_genome = TwoPointXo.recombine(&parent_genomes, rng);
+        let mutated_genome = mutator.recombine(&[&xo_genome], rng);
         let test_results = (self.scorer)(&mutated_genome)
             .into_iter()
             .map(From::from)

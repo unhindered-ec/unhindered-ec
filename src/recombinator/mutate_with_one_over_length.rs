@@ -7,11 +7,11 @@ use super::{mutate_with_rate::MutateWithRate, Recombinator};
 
 pub struct MutateWithOneOverLength;
 
-impl<T> Recombinator<1, Vec<T>> for MutateWithOneOverLength
+impl<T> Recombinator<Vec<T>> for MutateWithOneOverLength
 where
     T: Clone + Not<Output = T>,
 {
-    fn recombine(&self, genome: [&Vec<T>; 1], rng: &mut ThreadRng) -> Vec<T> {
+    fn recombine(&self, genome: &[&Vec<T>], rng: &mut ThreadRng) -> Vec<T> {
         let mutation_rate = genome[0]
             .len()
             .to_f32()
@@ -38,7 +38,7 @@ mod tests {
         let num_bits = 100;
         let parent_bits = make_random(num_bits, &mut rng);
 
-        let child_bits = MutateWithOneOverLength.recombine([&parent_bits], &mut rng);
+        let child_bits = MutateWithOneOverLength.recombine(&[&parent_bits], &mut rng);
 
         let num_differences = zip(parent_bits, child_bits)
             .filter(|(p, c)| *p != *c)

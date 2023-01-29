@@ -4,6 +4,7 @@ pub mod mutate_with_one_over_length;
 pub mod mutate_with_rate;
 pub mod two_point_xo;
 pub mod uniform_xo;
+pub mod pipeline;
 
 // TODO: This forces us to decide a fixed number of parent
 //  genomes at compile time, so we won't be able to impl
@@ -16,8 +17,8 @@ pub mod uniform_xo;
 //  different number of parent genomes, and we won't be
 //  able to put a bunch of them in a `Vec` when we implement
 //  `Pipeline`.
-pub trait Recombinator<const NUM_PARENTS: usize, G> {
-    fn recombine(&self, genomes: [&G; NUM_PARENTS], rng: &mut ThreadRng) -> G;
+pub trait Recombinator<G> {
+    fn recombine(&self, genomes: &[&G], rng: &mut ThreadRng) -> G;
 }
 
 // TODO: Should I create a macro that, for example, reduces

@@ -2,7 +2,6 @@ use rand::rngs::ThreadRng;
 
 use crate::{population::Population, selector::Selector};
 
-pub mod pipeline;
 pub mod two_point_xo_mutate;
 
 pub trait ChildMaker<P: Population, S: Selector<P>> {

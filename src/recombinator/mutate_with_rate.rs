@@ -15,11 +15,11 @@ impl MutateWithRate {
     }
 }
 
-impl<T> Recombinator<1, Vec<T>> for MutateWithRate
+impl<T> Recombinator<Vec<T>> for MutateWithRate
 where
     T: Clone + Not<Output = T>,
 {
-    fn recombine(&self, genome: [&Vec<T>; 1], rng: &mut ThreadRng) -> Vec<T> {
+    fn recombine(&self, genome: &[&Vec<T>], rng: &mut ThreadRng) -> Vec<T> {
         genome[0]
             .iter()
             .map(|bit| {
@@ -54,7 +54,7 @@ mod tests {
         let mut rng = rand::thread_rng();
         let num_bits = 100;
         let parent_bits = make_random(num_bits, &mut rng);
-        let child_bits = mutator.recombine([&parent_bits], &mut rng);
+        let child_bits = mutator.recombine(&[&parent_bits], &mut rng);
 
         let num_differences = zip(parent_bits, child_bits)
             .filter(|(p, c)| *p != *c)
