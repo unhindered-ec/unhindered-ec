@@ -1,9 +1,9 @@
 use super::Recombinator;
 
 /*
- * What you really need are separate Selector, Mutator, Recombinator and Operator traits. 
- * Then Select, Mutate and Recombinate structs that take a type of their respective trait 
- * and implements Operator. The Operator trait would have a single method that takes an input, 
+ * What you really need are separate Selector, Mutator, Recombinator and Operator traits.
+ * Then Select, Mutate and Recombinate structs that take a type of their respective trait
+ * and implements Operator. The Operator trait would have a single method that takes an input,
  * population and rng. Then a bunch of composition structs and methods implemented by default on Operator.
  */
 
@@ -34,7 +34,7 @@ use super::Recombinator;
 // let second = genomeSelector(Best).then_unary(Mutator(0.01))
 // let child = TwoPointXo(first, second).then_unary(OneOverLengthMutator)
 
-// let 
+// let
 
 // A simple example:
 // Two parents as inputs:
@@ -52,7 +52,7 @@ use super::Recombinator;
 // Can we have the type checker help us with check
 // the number of genomes each recombinator takes?
 pub struct Pipeline<G> {
-    recombinators: Vec<Box<dyn Recombinator<G>>>
+    recombinators: Vec<Box<dyn Recombinator<G>>>,
 }
 
 impl<G> Pipeline<G> {
@@ -66,9 +66,8 @@ impl<G> Recombinator<G> for Pipeline<G> {
         let mut recombinators = self.recombinators.iter();
         let first_recombinator = recombinators.next().unwrap();
         let first_genome = first_recombinator.recombine(genomes, rng);
-        recombinators
-            .fold(first_genome, |prev_genome, recombinator| {
-                recombinator.recombine(&[&prev_genome], rng)
-            })
+        recombinators.fold(first_genome, |prev_genome, recombinator| {
+            recombinator.recombine(&[&prev_genome], rng)
+        })
     }
 }

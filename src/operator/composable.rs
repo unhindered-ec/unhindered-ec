@@ -21,4 +21,3 @@ pub trait Composable: Sized {
     //     Then::new(self, Select::new(selector))
     // }
 }
-

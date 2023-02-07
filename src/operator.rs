@@ -7,7 +7,7 @@ mod composable;
 
 pub use composable::Composable;
 
-trait Operator<Input>: Composable {
+pub trait Operator<Input>: Composable {
     type Output;
 
     fn apply(&self, input: Input, rng: &mut ThreadRng) -> Self::Output;
@@ -18,8 +18,6 @@ trait Operator<Input>: Composable {
 
 //     fn apply(&self, input: Input, p: &P, rng: &mut ThreadRng) -> Self::Output;
 // }
-
-
 
 // pub struct Mutate<M> {
 //     mutator: M,
@@ -81,5 +79,3 @@ trait Operator<Input>: Composable {
 //         Self { selector }
 //     }
 // }
-
-
