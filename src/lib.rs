@@ -85,6 +85,6 @@ pub fn do_main(args: Args) {
         let best = Best.select(&mut rng, generation.population());
         // TODO: Change 2 to be the smallest number of digits needed for
         //  args.num_generations-1.
-        println!("Generation {:2} best is {}", generation_number, best);
+        // println!("Generation {:2} best is {}", generation_number, best);
     });
 }
