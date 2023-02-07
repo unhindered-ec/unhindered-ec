@@ -18,8 +18,6 @@ where
 }
 
 impl<T> Operator<[Vec<T>; 2]> for TwoPointXo
-where
-    T: Clone,
 {
     type Output = Vec<T>;
 
