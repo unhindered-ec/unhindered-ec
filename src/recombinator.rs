@@ -2,9 +2,9 @@ use rand::rngs::ThreadRng;
 
 pub mod mutate_with_one_over_length;
 pub mod mutate_with_rate;
+pub mod pipeline;
 pub mod two_point_xo;
 pub mod uniform_xo;
-pub mod pipeline;
 
 // TODO: This forces us to decide a fixed number of parent
 //  genomes at compile time, so we won't be able to impl
@@ -17,6 +17,7 @@ pub mod pipeline;
 //  different number of parent genomes, and we won't be
 //  able to put a bunch of them in a `Vec` when we implement
 //  `Pipeline`.
+#[deprecated(note="please switch to using `Operator` instead")]
 pub trait Recombinator<G> {
     fn recombine(&self, genomes: &[&G], rng: &mut ThreadRng) -> G;
 }

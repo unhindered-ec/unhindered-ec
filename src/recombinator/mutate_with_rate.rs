@@ -2,6 +2,8 @@ use std::ops::Not;
 
 use rand::{rngs::ThreadRng, Rng};
 
+use crate::operator::{Composable, Operator};
+
 use super::Recombinator;
 
 pub struct MutateWithRate {
@@ -20,19 +22,31 @@ where
     T: Clone + Not<Output = T>,
 {
     fn recombine(&self, genome: &[&Vec<T>], rng: &mut ThreadRng) -> Vec<T> {
-        genome[0]
-            .iter()
+        self.apply(genome[0].clone(), rng)
+    }
+}
+
+impl<T> Operator<Vec<T>> for MutateWithRate
+where
+    T: Not<Output = T>,
+{
+    type Output = Vec<T>;
+
+    fn apply(&self, genome: Vec<T>, rng: &mut ThreadRng) -> Self::Output {
+        genome
+            .into_iter()
             .map(|bit| {
                 let r: f32 = rng.gen();
                 if r < self.mutation_rate {
-                    !bit.clone()
+                    !bit
                 } else {
-                    bit.clone()
+                    bit
                 }
             })
             .collect()
     }
 }
+impl Composable for MutateWithRate {}
 
 #[cfg(test)]
 mod tests {

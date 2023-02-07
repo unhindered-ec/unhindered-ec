@@ -3,6 +3,8 @@ use std::ops::Not;
 use num_traits::ToPrimitive;
 use rand::rngs::ThreadRng;
 
+use crate::operator::{Composable, Operator};
+
 use super::{mutate_with_rate::MutateWithRate, Recombinator};
 
 pub struct MutateWithOneOverLength;
@@ -12,14 +14,23 @@ where
     T: Clone + Not<Output = T>,
 {
     fn recombine(&self, genome: &[&Vec<T>], rng: &mut ThreadRng) -> Vec<T> {
-        let mutation_rate = genome[0]
-            .len()
-            .to_f32()
-            .map_or(f32::MIN_POSITIVE, |l| 1.0 / l);
-        let mutator = MutateWithRate::new(mutation_rate);
-        mutator.recombine(genome, rng)
+        self.apply(genome[0].clone(), rng)
     }
 }
+
+impl<T> Operator<Vec<T>> for MutateWithOneOverLength
+where
+    T: Not<Output = T>,
+{
+    type Output = Vec<T>;
+
+    fn apply(&self, genome: Vec<T>, rng: &mut ThreadRng) -> Self::Output {
+        let mutation_rate = genome.len().to_f32().map_or(f32::MIN_POSITIVE, |l| 1.0 / l);
+        let mutator = MutateWithRate::new(mutation_rate);
+        mutator.apply(genome, rng)
+    }
+}
+impl Composable for MutateWithOneOverLength {}
 
 #[cfg(test)]
 mod tests {
