@@ -14,13 +14,13 @@ fn first(vals: &[i32]) -> i32 {
     vals[0]
 }
 
-fn first_plus_one_fn<'a>(vals: &'a [i32]) -> i32 {
+fn first_plus_one_fn(vals: &[i32]) -> i32 {
     compose(first, increment)(vals)
 }
 
 fn main() {
     let vals = vec![5, 8, 9];
-    let first_plus_one = compose(first, increment);
+    // let first_plus_one = compose(first, increment);
 
     let result = first_plus_one_fn(&vals);
     assert_eq!(6, result);
@@ -35,8 +35,8 @@ fn _main() {
     let result = increment_then_double(3);
     assert_eq!(8, result);
 
-    let first = |vals: &[i32]| vals[0];
-    let first_plus_one = compose(first, increment);
+    // let first = |vals: &[i32]| vals[0];
+    // let first_plus_one = compose(first, increment);
 
     // NOTE: If we put the declaration of `vals` before the declaration of
     // `combo3`, everything is good. We just don't want to be forced to define
