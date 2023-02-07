@@ -3,119 +3,83 @@
 
 use rand::rngs::ThreadRng;
 
-use crate::population::Population;
+mod composable;
 
-// G is the genome type
-trait Operator<Input, P> {
+pub use composable::Composable;
+
+trait Operator<Input>: Composable {
     type Output;
 
-    fn apply(&self, input: Input, p: &P, rng: &mut ThreadRng) -> Self::Output;
+    fn apply(&self, input: Input, rng: &mut ThreadRng) -> Self::Output;
 }
 
-// Essentially our function composition; takes two operators and
-// it's `apply` method performs the first and sends that output as
-// the input to the second.
-// @esitsu: So Then<A, B> is an Operator where A is Operator and B is Operator<A::Output>
-pub struct Then<A, B> {
-    first: A,
-    second: B,
-}
+// trait Operator<Input, P> {
+//     type Output;
 
-impl<A, B> Then<A, B> {
-    fn new(first: A, second: B) -> Self {
-        Then { first, second }
-    }
-}
+//     fn apply(&self, input: Input, p: &P, rng: &mut ThreadRng) -> Self::Output;
+// }
 
-impl<A, B, Input, P> Operator<Input, P> for Then<A, B>
-where
-    A: Operator<Input, P>,
-    B: Operator<A::Output, P>,
-{
-    type Output = B::Output;
 
-    fn apply(&self, input: Input, p: &P, rng: &mut ThreadRng) -> Self::Output {
-        self.second.apply(self.first.apply(input, p, rng), p, rng)
-    }
-}
 
-pub struct Mutate<M> {
-    mutator: M,
-}
+// pub struct Mutate<M> {
+//     mutator: M,
+// }
 
-impl<M> Mutate<M> {
-    fn new(mutator: M) -> Self {
-        Self { mutator }
-    }
-}
+// impl<M> Mutate<M> {
+//     fn new(mutator: M) -> Self {
+//         Self { mutator }
+//     }
+// }
 
-// -sel&clone-> a -mut-> b -mut-> c -mut-> d
+// // fn frogs() {
+// //     let child_genome = select(Best)
+// //         .and(select(Lexicase))
+// //         .then_recombine(UniformXo)
+// //         .then_mutate(OneOverLength);
+// // }
 
-pub trait Mutator<Genome> {
-    // This is "my" way, but may involve making more Genomes in long pipelines.
-    fn mutate(input: &Genome, rng: &mut ThreadRng) -> Genome;
+// // -sel&clone-> a -mut-> b -mut-> c -mut-> d
 
-    // The next two are from @esitsu and would involve less copying,
-    // but require that the initial select.apply() step clone the genome so that
-    // subsequent steps in the pipeline can mutate it safely.
-    //
-    // However…
-    // I just thought of a possible problem with passing &mut Genome everywhere. 
-    // Imagine I have a single "parent" genome g and I want to mutate it twice
-    // and then recombine the resulting genomes to get the output. Mutating g the
-    // first time will change g if we pass it as &mut, so the second mutation will
-    // be a mutation of the mutated version of g and overwrite the initial mutation
-    // of g. That's gonna be a problem, right?
-    fn mutate0(input: Genome, rng: &mut ThreadRng) -> Genome {
-        input
-    }
-    fn mutate1(input: &mut Genome, rng: &mut ThreadRng);
-}
+// pub trait Mutator<Genome> {
+//     // This is "my" way, but may involve making more Genomes in long pipelines.
+//     fn mutate(input: &Genome, rng: &mut ThreadRng) -> Genome;
 
-impl<Input, P, M> Operator<Input, P> for Mutate<M>
-where
-    M: Mutator,
-{
-    type Output = Input;
+//     // The next two are from @esitsu and would involve less copying,
+//     // but require that the initial select.apply() step clone the genome so that
+//     // subsequent steps in the pipeline can mutate it safely.
+//     //
+//     // However…
+//     // I just thought of a possible problem with passing &mut Genome everywhere.
+//     // Imagine I have a single "parent" genome g and I want to mutate it twice
+//     // and then recombine the resulting genomes to get the output. Mutating g the
+//     // first time will change g if we pass it as &mut, so the second mutation will
+//     // be a mutation of the mutated version of g and overwrite the initial mutation
+//     // of g. That's gonna be a problem, right?
+//     fn mutate0(input: Genome, rng: &mut ThreadRng) -> Genome {
+//         input
+//     }
+//     fn mutate1(input: &mut Genome, rng: &mut ThreadRng);
+// }
 
-    fn apply(&self, input: Input, _: &P, rng: &mut ThreadRng) -> Self::Output {
-        self.mutator.mutate(input, &mut rng)
-    }
-}
+// impl<Input, P, M> Operator<Input, P> for Mutate<M>
+// where
+//     M: Mutator,
+// {
+//     type Output = Input;
 
-pub struct Select<S> {
-    selector: S,
-}
+//     fn apply(&self, input: Input, _: &P, rng: &mut ThreadRng) -> Self::Output {
+//         self.mutator.mutate(input, &mut rng)
+//     }
+// }
 
-impl<S> Select<S> {
-    fn new(selector: S) -> Self {
-        Self { selector }
-    }
-}
+// pub struct Select<S> {
+//     selector: S,
+// }
 
-pub trait Compose: Sized {
-    fn then_mutate<M>(self, mutator: M) -> Then<Self, Mutate<M>> {
-        Then::new(self, Mutate::new(mutator))
-    }
+// impl<S> Select<S> {
+//     fn new(selector: S) -> Self {
+//         Self { selector }
+//     }
+// }
 
-    fn and_select<S>(self, selector: S) -> Then<Self, Select<S>> {
-        Then::new(self, Select::new(selector))
-    }
-}
 
-impl<T> Compose for T {}
-
-#[cfg(test)]
-pub mod compose_tests {
-    use rand::thread_rng;
-
-    use super::*;
-
-    #[test]
-    fn then_mutate_smoke_test() {
-        let selector = 0;
-        let mutator = 0;
-        let combo = Select::new(selector).then_mutate(mutator);
-        // combo.apply(0, 0, thread_rng());
-    }
-}
