@@ -2,7 +2,6 @@ use rand::rngs::ThreadRng;
 
 pub mod mutate_with_one_over_length;
 pub mod mutate_with_rate;
-pub mod pipeline;
 pub mod two_point_xo;
 pub mod uniform_xo;
 
