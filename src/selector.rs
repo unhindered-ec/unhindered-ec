@@ -17,6 +17,7 @@ pub mod weighted;
 //  esitsu@Twitch suggested, for example, having a selector with a thresh hold and then
 //  a composite that keeps trying selectors until it finds one that works.
 
+#[deprecated(note="please switch to using `Operator` instead")]
 pub trait Selector<P: Population>: Sync {
     fn select<'pop>(&self, rng: &mut ThreadRng, population: &'pop P) -> &'pop P::Individual;
 }
