@@ -18,6 +18,7 @@ use test_results::{Error, Score, TestResults};
 
 use crate::bitstring::new_bitstring_population;
 use crate::child_maker::two_point_xo_mutate::TwoPointXoMutate;
+use crate::operator::Operator;
 use crate::selector::best::Best;
 use crate::selector::tournament::Tournament;
 use crate::selector::weighted::Weighted;
@@ -84,7 +85,7 @@ pub fn do_main(args: Args) {
             RunModel::Serial => generation.next(),
             RunModel::Parallel => generation.par_next(),
         };
-        let best = Best.select(&mut rng, generation.population());
+        let best = Best.apply(generation.population(), &mut rng,);
         // TODO: Change 2 to be the smallest number of digits needed for
         //  args.num_generations-1.
         println!("Generation {:2} best is {}", generation_number, best);

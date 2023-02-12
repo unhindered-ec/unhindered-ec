@@ -2,7 +2,7 @@ use std::ops::Not;
 
 use rand::rngs::ThreadRng;
 
-use crate::population::Population;
+use crate::{population::Population, operator::{Operator, Composable}};
 
 use super::Selector;
 
@@ -15,7 +15,20 @@ where
     P::Individual: Ord,
 {
     #[must_use]
-    fn select<'pop>(&self, _: &mut ThreadRng, population: &'pop P) -> &'pop P::Individual {
+    fn select<'pop>(&self, rng: &mut ThreadRng, population: &'pop P) -> &'pop P::Individual {
+        self.apply(population, rng)
+    }
+}
+
+impl<'pop, P> Operator<&'pop P> for Best
+where
+    P: Population,
+    &'pop P: IntoIterator<Item = &'pop P::Individual>,
+    P::Individual: Ord,
+{
+    type Output = &'pop P::Individual;
+
+    fn apply(&self, population: &'pop P, rng: &mut ThreadRng) -> Self::Output {
         // The population should never be empty here.
         assert!(
             population.is_empty().not(),
@@ -24,7 +37,9 @@ where
         #[allow(clippy::unwrap_used)]
         population.into_iter().max().unwrap()
     }
+
 }
+impl Composable for Best {}
 
 #[cfg(test)]
 mod tests {

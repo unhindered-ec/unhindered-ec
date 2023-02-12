@@ -2,7 +2,10 @@ use std::ops::Not;
 
 use rand::{rngs::ThreadRng, seq::SliceRandom};
 
-use crate::population::Population;
+use crate::{
+    operator::{Composable, Operator},
+    population::Population,
+};
 
 use super::Selector;
 
@@ -38,6 +41,24 @@ impl<'sel, P> Weighted<'sel, P> {
 
 impl<'sel, P: Population> Selector<P> for Weighted<'sel, P> {
     fn select<'pop>(&self, rng: &mut ThreadRng, population: &'pop P) -> &'pop P::Individual {
+        self.apply(population, rng)
+        // assert!(
+        //     self.selectors.is_empty().not(),
+        //     "The collection of selectors should be non-empty"
+        // );
+        // #[allow(clippy::unwrap_used)]
+        // let (selector, _) = self.selectors.choose_weighted(rng, |(_, w)| *w).unwrap();
+        // selector.select(rng, population)
+    }
+}
+
+impl<'sel, 'pop, P> Operator<&'pop P> for Weighted<'sel, P>
+where
+    P: Population,
+{
+    type Output = &'pop P::Individual;
+
+    fn apply(&self, population: &'pop P, rng: &mut ThreadRng) -> Self::Output {
         assert!(
             self.selectors.is_empty().not(),
             "The collection of selectors should be non-empty"
@@ -47,3 +68,4 @@ impl<'sel, P: Population> Selector<P> for Weighted<'sel, P> {
         selector.select(rng, population)
     }
 }
+impl<'sel, P> Composable for Weighted<'sel, P> {}
