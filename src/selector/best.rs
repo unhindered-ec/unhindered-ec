@@ -28,7 +28,7 @@ where
 {
     type Output = &'pop P::Individual;
 
-    fn apply(&self, population: &'pop P, rng: &mut ThreadRng) -> Self::Output {
+    fn apply(&self, population: &'pop P, _: &mut ThreadRng) -> Self::Output {
         // The population should never be empty here.
         assert!(
             population.is_empty().not(),
