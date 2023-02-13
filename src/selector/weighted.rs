@@ -9,13 +9,14 @@ use crate::{
 
 use super::Selector;
 
-type SelectorOperator<'sel, P> =
-    &'sel (dyn for<'pop> Operator<&'pop P, Output = &'pop <P as Population>::Individual> + Sync);
+type PopIndividual<'pop, P> = &'pop <P as Population>::Individual;
+type SelectionOperator<'sel, P> =
+    &'sel (dyn for<'pop> Operator<&'pop P, Output = PopIndividual<'pop, P>> + Sync);
 
 // TODO: When we remove the `Selector`, we can simplify this a lot, removing
 //   the `'pop` lifetime and making it more generic.
 pub struct Weighted<'sel, P: Population> {
-    selectors: Vec<(SelectorOperator<'sel, P>, usize)>,
+    selectors: Vec<(SelectionOperator<'sel, P>, usize)>,
 }
 
 impl<'sel, P: Population> Clone for Weighted<'sel, P> {
@@ -31,14 +32,14 @@ impl<'sel, P: Population> Weighted<'sel, P> {
     // the `new` implementation takes an initial selector so `selectors` is
     // guaranteed to never be empty.
     #[must_use]
-    pub fn new(selector: SelectorOperator<'sel, P>, weight: usize) -> Self {
+    pub fn new(selector: SelectionOperator<'sel, P>, weight: usize) -> Self {
         Self {
             selectors: vec![(selector, weight)],
         }
     }
 
     #[must_use]
-    pub fn with_selector(mut self, selector: SelectorOperator<'sel, P>, weight: usize) -> Self {
+    pub fn with_selector(mut self, selector: SelectionOperator<'sel, P>, weight: usize) -> Self {
         self.selectors.push((selector, weight));
         self
     }

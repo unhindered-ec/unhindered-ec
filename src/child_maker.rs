@@ -4,6 +4,10 @@ use crate::{population::Population, selector::Selector};
 
 pub mod two_point_xo_mutate;
 
+// TODO: esitsu@Twitch: "In my world the ChildMaker becomes
+//   an operator that scores". So this could just be
+//   something that takes a `genome` and returns a
+//   scored `Individual`. That would be a lot cleaner.
 pub trait ChildMaker<P: Population, S: Selector<P>> {
     // TODO: Instead of passing 2/3 of  Generation` to this function, is there a trait
     //  we can have `Generation` implement, and pass in a reference to something implementing
