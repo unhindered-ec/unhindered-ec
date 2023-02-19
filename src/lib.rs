@@ -8,11 +8,9 @@ use std::ops::Not;
 use args::{Args, RunModel, TargetProblem};
 
 use bitstring::{count_ones, hiff, Bitstring};
-use child_maker::ChildMaker;
 use generation::Generation;
 use individual::ec::EcIndividual;
 use selector::lexicase::Lexicase;
-use selector::Selector;
 #[allow(unused_imports)]
 use test_results::{Error, Score, TestResults};
 
@@ -70,11 +68,7 @@ pub fn do_main(args: Args) {
 
     let child_maker = TwoPointXoMutate::new(&scorer);
 
-    let mut generation = Generation::new(
-        population,
-        selector,
-        child_maker,
-    );
+    let mut generation = Generation::new(population, selector, child_maker);
 
     let mut rng = rand::thread_rng();
 

@@ -10,8 +10,20 @@ use crate::{
 use super::Selector;
 
 type PopIndividual<'pop, P> = &'pop <P as Population>::Individual;
+// TODO: Is there some way to have this `SelectionOperator` type in one
+//   place and re-use it since parts of this come up quite a lot. You can't
+//   use a type alias where a `trait` goes, though, so it can't just be
+//   with `type` like I do it here. Should it be a sub-trait of `Operator`
+//   that just specifies the relevant components?
 type SelectionOperator<'sel, P> =
     &'sel (dyn for<'pop> Operator<&'pop P, Output = PopIndividual<'pop, P>> + Sync);
+
+trait SelectionOp<P>
+where
+    Self: for<'pop> Operator<&'pop P, Output = &'pop P::Individual>,
+    P: Population,
+{
+}
 
 // TODO: When we remove the `Selector`, we can simplify this a lot, removing
 //   the `'pop` lifetime and making it more generic.

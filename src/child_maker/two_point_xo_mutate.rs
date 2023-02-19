@@ -6,7 +6,6 @@ use crate::{
     recombinator::{
         mutate_with_one_over_length::MutateWithOneOverLength, two_point_xo::TwoPointXo,
     },
-    selector::Selector,
     test_results::TestResults,
 };
 use rand::rngs::ThreadRng;
@@ -31,9 +30,13 @@ fn make_child_genome(parent_genomes: [Bitstring; 2], rng: &mut ThreadRng) -> Bit
         .apply(parent_genomes, rng)
 }
 
-impl<'scorer, S, R> ChildMaker<Vec<EcIndividual<Bitstring, TestResults<R>>>, S> for TwoPointXoMutate<'scorer>
+impl<'scorer, S, R> ChildMaker<Vec<EcIndividual<Bitstring, TestResults<R>>>, S>
+    for TwoPointXoMutate<'scorer>
 where
-    S: for <'pop> Operator<&'pop Vec<EcIndividual<Bitstring, TestResults<R>>>, Output = &'pop EcIndividual<Bitstring, TestResults<R>>>,
+    S: for<'pop> Operator<
+        &'pop Vec<EcIndividual<Bitstring, TestResults<R>>>,
+        Output = &'pop EcIndividual<Bitstring, TestResults<R>>,
+    >,
     R: Sum + Copy + From<i64>,
 {
     fn make_child(
