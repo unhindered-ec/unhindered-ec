@@ -15,7 +15,7 @@ mod then;
 pub trait Composable {
     fn then<Op>(self, op: Op) -> Then<Self, Op>
     where
-        Self: Sized,
+        Self: Sized
     {
         Then::new(self, op)
     }

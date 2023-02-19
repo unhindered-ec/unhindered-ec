@@ -72,8 +72,8 @@ pub fn do_main(args: Args) {
 
     let mut generation = Generation::new(
         population,
-        &selector as &dyn Selector<_>,
-        &child_maker as &(dyn ChildMaker<_, _> + Sync + Send),
+        selector,
+        child_maker,
     );
 
     let mut rng = rand::thread_rng();

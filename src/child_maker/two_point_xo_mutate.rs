@@ -13,12 +13,12 @@ use rand::rngs::ThreadRng;
 use std::iter::Sum;
 
 #[derive(Clone)]
-pub struct TwoPointXoMutate<'a> {
-    pub scorer: &'a (dyn Fn(&[bool]) -> Vec<i64> + Sync),
+pub struct TwoPointXoMutate<'scorer> {
+    pub scorer: &'scorer (dyn Fn(&[bool]) -> Vec<i64> + Sync),
 }
 
-impl<'a> TwoPointXoMutate<'a> {
-    pub fn new(scorer: &'a (dyn Fn(&[bool]) -> Vec<i64> + Sync)) -> Self {
+impl<'scorer> TwoPointXoMutate<'scorer> {
+    pub fn new(scorer: &'scorer (dyn Fn(&[bool]) -> Vec<i64> + Sync)) -> Self {
         Self { scorer }
     }
 }
@@ -31,9 +31,9 @@ fn make_child_genome(parent_genomes: [Bitstring; 2], rng: &mut ThreadRng) -> Bit
         .apply(parent_genomes, rng)
 }
 
-impl<'a, S, R> ChildMaker<Vec<EcIndividual<Bitstring, TestResults<R>>>, S> for TwoPointXoMutate<'a>
+impl<'scorer, S, R> ChildMaker<Vec<EcIndividual<Bitstring, TestResults<R>>>, S> for TwoPointXoMutate<'scorer>
 where
-    S: Selector<Vec<EcIndividual<Bitstring, TestResults<R>>>>,
+    S: for <'pop> Operator<&'pop Vec<EcIndividual<Bitstring, TestResults<R>>>, Output = &'pop EcIndividual<Bitstring, TestResults<R>>>,
     R: Sum + Copy + From<i64>,
 {
     fn make_child(
@@ -42,8 +42,8 @@ where
         population: &Vec<EcIndividual<Bitstring, TestResults<R>>>,
         selector: &S,
     ) -> EcIndividual<Bitstring, TestResults<R>> {
-        let first_parent = selector.select(rng, population);
-        let second_parent = selector.select(rng, population);
+        let first_parent = selector.apply(population, rng);
+        let second_parent = selector.apply(population, rng);
 
         let parent_genomes = [
             first_parent.genome().clone(),

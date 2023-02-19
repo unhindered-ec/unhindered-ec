@@ -1,6 +1,6 @@
 use rand::rngs::ThreadRng;
 
-use crate::{population::Population, selector::Selector};
+use crate::{population::Population, selector::Selector, operator::Operator};
 
 pub mod two_point_xo_mutate;
 
@@ -8,7 +8,12 @@ pub mod two_point_xo_mutate;
 //   an operator that scores". So this could just be
 //   something that takes a `genome` and returns a
 //   scored `Individual`. That would be a lot cleaner.
-pub trait ChildMaker<P: Population, S: Selector<P>> {
+#[deprecated(note = "Turn this into a genome->Individual operator")]
+pub trait ChildMaker<P, S> 
+where
+    P: Population,
+    S: for <'pop> Operator<&'pop P, Output = &'pop P::Individual>,
+{
     // TODO: Instead of passing 2/3 of  Generation` to this function, is there a trait
     //  we can have `Generation` implement, and pass in a reference to something implementing
     //  that trait instead? The trait would presumably implement the `get_parent()` method
@@ -16,19 +21,34 @@ pub trait ChildMaker<P: Population, S: Selector<P>> {
     fn make_child(&self, rng: &mut ThreadRng, population: &P, selector: &S) -> P::Individual;
 }
 
-impl<P: Population, S: Selector<P>> ChildMaker<P, S> for &dyn ChildMaker<P, S> {
+// NOTE: These further impls aren't actually needed anymore because
+//   we (as of 19 Feb 2023) take ownership of the ChildMaker instead
+//   of storing a `& dyn ChildMaker` in `Generation`.
+impl<P, S> ChildMaker<P, S> for &dyn ChildMaker<P, S> 
+where
+    P: Population,
+    S: for <'pop> Operator<&'pop P, Output = &'pop P::Individual>,
+{
     fn make_child(&self, rng: &mut ThreadRng, population: &P, selector: &S) -> P::Individual {
         (*self).make_child(rng, population, selector)
     }
 }
 
-impl<P: Population, S: Selector<P>> ChildMaker<P, S> for &(dyn ChildMaker<P, S> + Send) {
+impl<P, S> ChildMaker<P, S> for &(dyn ChildMaker<P, S> + Send) 
+where
+    P: Population,
+    S: for <'pop> Operator<&'pop P, Output = &'pop P::Individual>,
+{
     fn make_child(&self, rng: &mut ThreadRng, population: &P, selector: &S) -> P::Individual {
         (*self).make_child(rng, population, selector)
     }
 }
 
-impl<P: Population, S: Selector<P>> ChildMaker<P, S> for &(dyn ChildMaker<P, S> + Send + Sync) {
+impl<P, S> ChildMaker<P, S> for &(dyn ChildMaker<P, S> + Send + Sync) 
+where
+    P: Population,
+    S: for <'pop> Operator<&'pop P, Output = &'pop P::Individual>,
+{
     fn make_child(&self, rng: &mut ThreadRng, population: &P, selector: &S) -> P::Individual {
         (*self).make_child(rng, population, selector)
     }
