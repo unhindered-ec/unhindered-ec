@@ -21,8 +21,7 @@ where
 //   the two vectors to have the same length, but the
 //   swapped regions need to "make sense" for both parent
 //   genomes.
-impl<T> Operator<[Vec<T>; 2]> for TwoPointXo
-{
+impl<T> Operator<[Vec<T>; 2]> for TwoPointXo {
     type Output = Vec<T>;
 
     fn apply(

@@ -2,7 +2,10 @@ use std::ops::Not;
 
 use rand::rngs::ThreadRng;
 
-use crate::{population::Population, operator::{Operator, Composable}};
+use crate::{
+    operator::{Composable, Operator},
+    population::Population,
+};
 
 use super::Selector;
 
@@ -37,7 +40,6 @@ where
         #[allow(clippy::unwrap_used)]
         population.into_iter().max().unwrap()
     }
-
 }
 impl Composable for Best {}
 

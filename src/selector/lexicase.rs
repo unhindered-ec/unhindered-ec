@@ -3,7 +3,12 @@ use std::{mem::swap, ops::Not};
 use rand::prelude::SliceRandom;
 use rand::rngs::ThreadRng;
 
-use crate::{individual::Individual, population::Population, test_results::TestResults, operator::{Operator, Composable}};
+use crate::{
+    individual::Individual,
+    operator::{Composable, Operator},
+    population::Population,
+    test_results::TestResults,
+};
 
 use super::Selector;
 
@@ -85,7 +90,7 @@ where
     }
 }
 
-impl<'pop, P, R> Operator<&'pop P> for Lexicase 
+impl<'pop, P, R> Operator<&'pop P> for Lexicase
 where
     P: Population,
     // TODO: We don't really use the iterator here as we immediately

@@ -16,7 +16,7 @@ pub mod uniform_xo;
 //  different number of parent genomes, and we won't be
 //  able to put a bunch of them in a `Vec` when we implement
 //  `Pipeline`.
-#[deprecated(note="please switch to using `Operator` instead")]
+#[deprecated(note = "please switch to using `Operator` instead")]
 pub trait Recombinator<G> {
     fn recombine(&self, genomes: &[&G], rng: &mut ThreadRng) -> G;
 }

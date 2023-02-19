@@ -1,7 +1,7 @@
 use rand::prelude::SliceRandom;
 use rand::rngs::ThreadRng;
 
-use crate::operator::{Operator, Composable};
+use crate::operator::{Composable, Operator};
 use crate::population::Population;
 
 use super::Selector;

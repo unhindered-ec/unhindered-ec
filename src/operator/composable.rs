@@ -13,9 +13,9 @@ mod then;
 //  some things in `Weighted`. This is related to the whole object
 //  safety thing that I don't understand terribly well.
 pub trait Composable {
-    fn then<Op>(self, op: Op) -> Then<Self, Op> 
+    fn then<Op>(self, op: Op) -> Then<Self, Op>
     where
-        Self: Sized
+        Self: Sized,
     {
         Then::new(self, op)
     }
