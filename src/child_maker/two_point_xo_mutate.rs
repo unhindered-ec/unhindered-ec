@@ -2,10 +2,10 @@ use super::ChildMaker;
 use crate::{
     bitstring::Bitstring,
     individual::{ec::EcIndividual, Individual},
-    operator::{Composable, Operator},
-    recombinator::{
+    operator::recombinator::{
         mutate_with_one_over_length::MutateWithOneOverLength, two_point_xo::TwoPointXo,
     },
+    operator::{Composable, Operator},
     test_results::TestResults,
 };
 use rand::rngs::ThreadRng;

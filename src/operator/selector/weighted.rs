@@ -16,13 +16,6 @@ type PopIndividual<'pop, P> = &'pop <P as Population>::Individual;
 type SelectionOperator<'sel, P> =
     &'sel (dyn for<'pop> Operator<&'pop P, Output = PopIndividual<'pop, P>> + Sync);
 
-trait SelectionOp<P>
-where
-    Self: for<'pop> Operator<&'pop P, Output = &'pop P::Individual>,
-    P: Population,
-{
-}
-
 // TODO: When we remove the `Selector`, we can simplify this a lot, removing
 //   the `'pop` lifetime and making it more generic.
 pub struct Weighted<'sel, P: Population> {

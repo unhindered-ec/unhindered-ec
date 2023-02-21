@@ -28,7 +28,6 @@ pub mod generation;
 pub mod individual;
 pub mod operator;
 pub mod population;
-pub mod recombinator;
 pub mod test_results;
 
 /// # Panics
@@ -81,6 +80,6 @@ pub fn do_main(args: Args) {
         let best = Best.apply(generation.population(), &mut rng);
         // TODO: Change 2 to be the smallest number of digits needed for
         //  args.num_generations-1.
-        println!("Generation {:2} best is {}", generation_number, best);
+        println!("Generation {generation_number:2} best is {best}");
     });
 }

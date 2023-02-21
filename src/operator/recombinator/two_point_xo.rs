@@ -1,21 +1,8 @@
 use rand::{rngs::ThreadRng, Rng};
 
-use super::Recombinator;
 use crate::operator::{Composable, Operator};
 
 pub struct TwoPointXo;
-
-impl<T> Recombinator<Vec<T>> for TwoPointXo
-where
-    T: Clone,
-{
-    fn recombine(&self, genomes: &[&Vec<T>], rng: &mut ThreadRng) -> Vec<T> {
-        let genome = genomes[0].clone();
-        let second_genome = genomes[1].clone();
-
-        self.apply([genome, second_genome], rng)
-    }
-}
 
 // TODO: Note that `TwoPointXo` doesn't strictly need
 //   the two vectors to have the same length, but the

@@ -2,6 +2,7 @@ use rand::rngs::ThreadRng;
 
 mod composable;
 pub mod selector;
+pub mod recombinator;
 
 pub use composable::Composable;
 
