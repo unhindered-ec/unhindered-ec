@@ -4,8 +4,6 @@ use rand::rngs::ThreadRng;
 use crate::operator::{Composable, Operator};
 use crate::population::Population;
 
-use super::Selector;
-
 pub struct Tournament {
     size: usize,
 }
@@ -14,16 +12,6 @@ impl Tournament {
     #[must_use]
     pub const fn new(size: usize) -> Self {
         Self { size }
-    }
-}
-
-impl<P> Selector<P> for Tournament
-where
-    P: Population + AsRef<[P::Individual]>,
-    P::Individual: Ord,
-{
-    fn select<'pop>(&self, rng: &mut ThreadRng, population: &'pop P) -> &'pop P::Individual {
-        self.apply(population, rng)
     }
 }
 

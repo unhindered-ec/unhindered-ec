@@ -6,19 +6,7 @@ use rand::rngs::ThreadRng;
 use crate::operator::{Composable, Operator};
 use crate::population::Population;
 
-use super::Selector;
-
 pub struct Random;
-
-impl<P> Selector<P> for Random
-where
-    P: Population + AsRef<[P::Individual]>,
-{
-    #[must_use]
-    fn select<'pop>(&self, rng: &mut ThreadRng, population: &'pop P) -> &'pop P::Individual {
-        self.apply(population, rng)
-    }
-}
 
 impl<'pop, P> Operator<&'pop P> for Random
 where

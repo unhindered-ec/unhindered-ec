@@ -1,6 +1,7 @@
 use rand::rngs::ThreadRng;
 
 mod composable;
+pub mod selector;
 
 pub use composable::Composable;
 

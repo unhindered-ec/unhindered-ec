@@ -7,8 +7,6 @@ use crate::{
     population::Population,
 };
 
-use super::Selector;
-
 type PopIndividual<'pop, P> = &'pop <P as Population>::Individual;
 // TODO: Is there some way to have this `SelectionOperator` type in one
 //   place and re-use it since parts of this come up quite a lot. You can't
@@ -54,12 +52,6 @@ impl<'sel, P: Population> Weighted<'sel, P> {
     pub fn with_selector(mut self, selector: SelectionOperator<'sel, P>, weight: usize) -> Self {
         self.selectors.push((selector, weight));
         self
-    }
-}
-
-impl<'sel, P: Population> Selector<P> for Weighted<'sel, P> {
-    fn select<'pop>(&self, rng: &mut ThreadRng, population: &'pop P) -> &'pop P::Individual {
-        self.apply(population, rng)
     }
 }
 

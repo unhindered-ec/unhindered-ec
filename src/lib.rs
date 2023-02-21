@@ -10,16 +10,16 @@ use args::{Args, RunModel, TargetProblem};
 use bitstring::{count_ones, hiff, Bitstring};
 use generation::Generation;
 use individual::ec::EcIndividual;
-use selector::lexicase::Lexicase;
+use operator::selector::lexicase::Lexicase;
 #[allow(unused_imports)]
 use test_results::{Error, Score, TestResults};
 
 use crate::bitstring::new_bitstring_population;
 use crate::child_maker::two_point_xo_mutate::TwoPointXoMutate;
 use crate::operator::Operator;
-use crate::selector::best::Best;
-use crate::selector::tournament::Tournament;
-use crate::selector::weighted::Weighted;
+use crate::operator::selector::best::Best;
+use crate::operator::selector::tournament::Tournament;
+use crate::operator::selector::weighted::Weighted;
 
 pub mod args;
 pub mod bitstring;
@@ -29,7 +29,6 @@ pub mod individual;
 pub mod operator;
 pub mod population;
 pub mod recombinator;
-pub mod selector;
 pub mod test_results;
 
 /// # Panics
