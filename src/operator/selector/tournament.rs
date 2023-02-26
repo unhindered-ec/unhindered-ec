@@ -1,8 +1,9 @@
 use rand::prelude::SliceRandom;
 use rand::rngs::ThreadRng;
 
-use crate::operator::{Composable, Operator};
 use crate::population::Population;
+
+use super::Selector;
 
 pub struct Tournament {
     size: usize,
@@ -15,14 +16,12 @@ impl Tournament {
     }
 }
 
-impl<'pop, P> Operator<&'pop P> for Tournament
+impl<P> Selector<P> for Tournament
 where
     P: Population + AsRef<[P::Individual]>,
     P::Individual: Ord,
 {
-    type Output = &'pop P::Individual;
-
-    fn apply(&self, population: &'pop P, rng: &mut ThreadRng) -> Self::Output {
+    fn select<'pop>(&self, population: &'pop P, rng: &mut ThreadRng) -> &'pop P::Individual {
         assert!(population.size() >= self.size && self.size > 0);
         // Since we know that the population and tournament aren't empty, we
         // can safely unwrap() the `.max()` call.
@@ -35,4 +34,3 @@ where
             .unwrap()
     }
 }
-impl Composable for Tournament {}

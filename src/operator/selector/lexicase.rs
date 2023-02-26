@@ -3,12 +3,9 @@ use std::{mem::swap, ops::Not};
 use rand::prelude::SliceRandom;
 use rand::rngs::ThreadRng;
 
-use crate::{
-    individual::Individual,
-    operator::{Composable, Operator},
-    population::Population,
-    test_results::TestResults,
-};
+use crate::{individual::Individual, population::Population, test_results::TestResults};
+
+use super::Selector;
 
 pub struct Lexicase {
     num_test_cases: usize,
@@ -21,7 +18,7 @@ impl Lexicase {
     }
 }
 
-impl<'pop, P, R> Operator<&'pop P> for Lexicase
+impl<P, R> Selector<P> for Lexicase
 where
     P: Population,
     // TODO: We don't really use the iterator here as we immediately
@@ -34,13 +31,11 @@ where
     //   we add this alternative constraint we won't be able to use
     //   bare `Vec`s and will be forced to wrap them like we currently
     //   do with `VecPop`.
-    &'pop P: IntoIterator<Item = &'pop P::Individual>,
+    for<'pop> &'pop P: IntoIterator<Item = &'pop P::Individual>,
     P::Individual: Individual<TestResults = TestResults<R>>,
     R: Ord,
 {
-    type Output = &'pop P::Individual;
-
-    fn apply(&self, population: &'pop P, rng: &mut ThreadRng) -> Self::Output {
+    fn select<'pop>(&self, population: &'pop P, rng: &mut ThreadRng) -> &'pop P::Individual {
         // Candidate set is initially the whole population.
         // Shuffle the (indices of the) test cases.
         // For each test in turn:
@@ -88,4 +83,3 @@ where
         candidates[0]
     }
 }
-impl Composable for Lexicase {}
