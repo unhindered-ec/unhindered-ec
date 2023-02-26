@@ -2,66 +2,68 @@ use std::ops::Not;
 
 use rand::{rngs::ThreadRng, seq::SliceRandom};
 
-use crate::{
-    operator::{Composable, Operator},
-    population::Population,
-};
+use crate::population::Population;
 
-type PopIndividual<'pop, P> = &'pop <P as Population>::Individual;
-// TODO: Is there some way to have this `SelectionOperator` type in one
-//   place and re-use it since parts of this come up quite a lot. You can't
-//   use a type alias where a `trait` goes, though, so it can't just be
-//   with `type` like I do it here. Should it be a sub-trait of `Operator`
-//   that just specifies the relevant components?
-type SelectionOperator<'sel, P> =
-    &'sel (dyn for<'pop> Operator<&'pop P, Output = PopIndividual<'pop, P>> + Sync);
+use super::Selector;
+
+// type PopIndividual<'pop, P> = &'pop <P as Population>::Individual;
+// // TODO: Is there some way to have this `SelectionOperator` type in one
+// //   place and re-use it since parts of this come up quite a lot. You can't
+// //   use a type alias where a `trait` goes, though, so it can't just be
+// //   with `type` like I do it here. Should it be a sub-trait of `Operator`
+// //   that just specifies the relevant components?
+// type SelectionOperator<'sel, P> =
+//     &'sel (dyn for<'pop> Operator<&'pop P, Output = PopIndividual<'pop, P>> + Sync);
 
 // TODO: When we remove the `Selector`, we can simplify this a lot, removing
 //   the `'pop` lifetime and making it more generic.
-pub struct Weighted<'sel, P: Population> {
-    selectors: Vec<(SelectionOperator<'sel, P>, usize)>,
+pub struct Weighted<P: Population> {
+    selectors: Vec<(Box<dyn Selector<P> + Send + Sync>, usize)>,
 }
 
-impl<'sel, P: Population> Clone for Weighted<'sel, P> {
-    fn clone(&self) -> Self {
-        Self {
-            selectors: self.selectors.clone(),
-        }
-    }
-}
+// impl<P: Population> Clone for Weighted<P> {
+//     fn clone(&self) -> Self {
+//         Self {
+//             selectors: self.selectors.clone(),
+//         }
+//     }
+// }
 
-impl<'sel, P: Population> Weighted<'sel, P> {
+impl<P: Population> Weighted<P> {
     // Since we should never have an empty collection of weighted selectors,
     // the `new` implementation takes an initial selector so `selectors` is
     // guaranteed to never be empty.
     #[must_use]
-    pub fn new(selector: SelectionOperator<'sel, P>, weight: usize) -> Self {
+    pub fn new<S>(selector: S, weight: usize) -> Self
+    where
+        S: Selector<P> + Send + Sync + 'static,
+    {
         Self {
-            selectors: vec![(selector, weight)],
+            selectors: vec![(Box::new(selector), weight)],
         }
     }
 
     #[must_use]
-    pub fn with_selector(mut self, selector: SelectionOperator<'sel, P>, weight: usize) -> Self {
-        self.selectors.push((selector, weight));
+    pub fn with_selector<S>(mut self, selector: S, weight: usize) -> Self
+    where
+        S: Selector<P> + Send + Sync + 'static,
+    {
+        self.selectors.push((Box::new(selector), weight));
         self
     }
 }
 
-impl<'sel, 'pop, P> Operator<&'pop P> for Weighted<'sel, P>
+impl<P> Selector<P> for Weighted<P>
 where
     P: Population,
 {
-    type Output = &'pop P::Individual;
-
-    fn apply(&self, population: &'pop P, rng: &mut ThreadRng) -> Self::Output {
+    fn select<'pop>(&self, population: &'pop P, rng: &mut ThreadRng) -> &'pop P::Individual {
         assert!(
             self.selectors.is_empty().not(),
             "The collection of selectors should be non-empty"
         );
         #[allow(clippy::unwrap_used)]
         let (selector, _) = self.selectors.choose_weighted(rng, |(_, w)| *w).unwrap();
-        selector.apply(population, rng)
+        selector.select(population, rng)
     }
 }
-impl<'sel, P: Population> Composable for Weighted<'sel, P> {}
