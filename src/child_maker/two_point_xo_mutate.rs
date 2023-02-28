@@ -47,6 +47,8 @@ where
         let selector = Select::new(selector);
         let (first_parent, second_parent) = selector.clone().and(selector).apply(population, rng);
 
+        // TODO: From esitsu: Think about what an operator to get the genome from EcIndividual looks like.
+        //   Then you can potentially chain select into mutate and crossover if you handle the inputs/outputs.
         let parent_genomes = [
             first_parent.genome().clone(),
             second_parent.genome().clone(),

@@ -1,6 +1,6 @@
 use rand::rngs::ThreadRng;
 
-use crate::{operator::{Operator, selector::Selector}, population::Population};
+use crate::{operator::selector::Selector, population::Population};
 
 pub mod two_point_xo_mutate;
 

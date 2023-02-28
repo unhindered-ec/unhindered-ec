@@ -20,7 +20,7 @@ use crate::child_maker::two_point_xo_mutate::TwoPointXoMutate;
 use crate::operator::selector::best::Best;
 use crate::operator::selector::tournament::Tournament;
 use crate::operator::selector::weighted::Weighted;
-use crate::operator::selector::{Select, Selector};
+use crate::operator::selector::Selector;
 
 pub mod args;
 pub mod bitstring;

@@ -1,6 +1,6 @@
 use rayon::prelude::{FromParallelIterator, IntoParallelIterator, ParallelIterator};
 
-use crate::{child_maker::ChildMaker, operator::{Operator, selector::Selector}, population::Population};
+use crate::{child_maker::ChildMaker, operator::selector::Selector, population::Population};
 
 // TODO: Should there actually be a `Run` type (or a `RunParams` type) that
 //   holds all this stuff and is used to make them available to types like
