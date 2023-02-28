@@ -3,7 +3,7 @@ use crate::{
     bitstring::Bitstring,
     individual::{ec::EcIndividual, Individual},
     operator::recombinator::{
-        mutate_with_one_over_length::MutateWithOneOverLength, two_point_xo::TwoPointXo,
+        mutate_with_one_over_length::MutateWithOneOverLength, two_point_xo::TwoPointXo, Mutate,
     },
     operator::{Composable, Operator},
     test_results::TestResults,
@@ -26,7 +26,7 @@ impl<'scorer> TwoPointXoMutate<'scorer> {
 //   capture problems.
 fn make_child_genome(parent_genomes: [Bitstring; 2], rng: &mut ThreadRng) -> Bitstring {
     TwoPointXo
-        .then(MutateWithOneOverLength)
+        .then(Mutate::new(MutateWithOneOverLength))
         .apply(parent_genomes, rng)
 }
 
