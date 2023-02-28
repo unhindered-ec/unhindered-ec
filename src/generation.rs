@@ -1,7 +1,6 @@
-use rand::rngs::ThreadRng;
 use rayon::prelude::{FromParallelIterator, IntoParallelIterator, ParallelIterator};
 
-use crate::{child_maker::ChildMaker, population::Population, selector::Selector};
+use crate::{child_maker::ChildMaker, operator::Operator, population::Population};
 
 // TODO: Should there actually be a `Run` type (or a `RunParams` type) that
 //   holds all this stuff and is used to make them available to types like
@@ -37,23 +36,11 @@ impl<P, S, C> Generation<P, S, C> {
     }
 }
 
-impl<P: Population, S: Selector<P>, C> Generation<P, S, C> {
-    /// # Panics
-    ///
-    /// This can panic if the set of selectors is empty.
-    pub fn get_parent(&self, rng: &mut ThreadRng) -> &P::Individual {
-        // The set of selectors should be non-empty, and if it is, then we
-        // should be able to safely unwrap the `choose()` call.
-        #[allow(clippy::unwrap_used)]
-        self.selector.select(rng, &self.population)
-    }
-}
-
 impl<P, S, C> Generation<P, S, C>
 where
     P: Population + FromParallelIterator<P::Individual> + Sync,
     P::Individual: Send,
-    S: Selector<P> + Clone,
+    S: for<'pop> Operator<&'pop P, Output = &'pop P::Individual> + Clone + Sync,
     C: ChildMaker<P, S> + Clone + Sync + Send,
 {
     /// Make the next generation using a Rayon parallel iterator.
@@ -82,7 +69,7 @@ where
 impl<P, S, C> Generation<P, S, C>
 where
     P: Population + FromIterator<P::Individual>,
-    S: Selector<P> + Clone,
+    S: for<'pop> Operator<&'pop P, Output = &'pop P::Individual> + Clone,
     C: ChildMaker<P, S> + Clone,
 {
     /// Make the next generation serially.

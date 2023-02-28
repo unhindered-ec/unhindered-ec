@@ -13,8 +13,7 @@ impl<P> Selector<P> for Random
 where
     P: Population + AsRef<[P::Individual]>,
 {
-    #[must_use]
-    fn select<'pop>(&self, rng: &mut ThreadRng, population: &'pop P) -> &'pop P::Individual {
+    fn select<'pop>(&self, population: &'pop P, rng: &mut ThreadRng) -> &'pop P::Individual {
         // The population should never be empty here.
         assert!(
             population.is_empty().not(),

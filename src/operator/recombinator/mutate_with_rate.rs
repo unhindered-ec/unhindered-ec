@@ -2,38 +2,48 @@ use std::ops::Not;
 
 use rand::{rngs::ThreadRng, Rng};
 
-use super::Recombinator;
+use crate::operator::{Composable, Operator};
 
 pub struct MutateWithRate {
-    pub mutation_rate: f32,
+    mutation_rate: f32,
 }
 
-impl<T> Recombinator<1, Vec<T>> for MutateWithRate
+impl MutateWithRate {
+    #[must_use]
+    pub const fn new(mutation_rate: f32) -> Self {
+        Self { mutation_rate }
+    }
+}
+
+impl<T> Operator<Vec<T>> for MutateWithRate
 where
-    T: Clone + Not<Output = T>,
+    T: Not<Output = T>,
 {
-    fn recombine(&self, genome: [&Vec<T>; 1], rng: &mut ThreadRng) -> Vec<T> {
-        genome[0]
-            .iter()
+    type Output = Vec<T>;
+
+    fn apply(&self, genome: Vec<T>, rng: &mut ThreadRng) -> Self::Output {
+        genome
+            .into_iter()
             .map(|bit| {
                 let r: f32 = rng.gen();
                 if r < self.mutation_rate {
-                    !bit.clone()
+                    !bit
                 } else {
-                    bit.clone()
+                    bit
                 }
             })
             .collect()
     }
 }
+impl Composable for MutateWithRate {}
 
 #[cfg(test)]
 mod tests {
     use std::iter::zip;
 
     use crate::{
-        bitstring::make_random,
-        recombinator::{mutate_with_rate::MutateWithRate, Recombinator},
+        bitstring::make_random, operator::recombinator::mutate_with_rate::MutateWithRate,
+        operator::Operator,
     };
 
     // This test is stochastic, so I'm going to ignore it most of the time.
@@ -47,7 +57,7 @@ mod tests {
         let mut rng = rand::thread_rng();
         let num_bits = 100;
         let parent_bits = make_random(num_bits, &mut rng);
-        let child_bits = mutator.recombine([&parent_bits], &mut rng);
+        let child_bits = mutator.apply(parent_bits.clone(), &mut rng);
 
         let num_differences = zip(parent_bits, child_bits)
             .filter(|(p, c)| *p != *c)

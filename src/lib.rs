@@ -8,28 +8,27 @@ use std::ops::Not;
 use args::{Args, RunModel, TargetProblem};
 
 use bitstring::{count_ones, hiff, Bitstring};
-use child_maker::ChildMaker;
 use generation::Generation;
 use individual::ec::EcIndividual;
-use selector::lexicase::Lexicase;
-use selector::Selector;
+use operator::selector::lexicase::Lexicase;
 #[allow(unused_imports)]
 use test_results::{Error, Score, TestResults};
 
 use crate::bitstring::new_bitstring_population;
 use crate::child_maker::two_point_xo_mutate::TwoPointXoMutate;
-use crate::selector::best::Best;
-use crate::selector::tournament::Tournament;
-use crate::selector::weighted::Weighted;
+
+use crate::operator::selector::best::Best;
+use crate::operator::selector::tournament::Tournament;
+use crate::operator::selector::weighted::Weighted;
+use crate::operator::selector::{Select, Selector};
 
 pub mod args;
 pub mod bitstring;
-pub mod recombinator;
 pub mod child_maker;
 pub mod generation;
 pub mod individual;
+pub mod operator;
 pub mod population;
-pub mod selector;
 pub mod test_results;
 
 /// # Panics
@@ -50,9 +49,9 @@ pub fn do_main(args: Args) {
     let lexicase = Lexicase::new(num_test_cases);
     let binary_tournament = Tournament::new(2);
 
-    let selector = Weighted::new(&Best, 1)
-        .with_selector(&lexicase, 5)
-        .with_selector(&binary_tournament, args.population_size - 1);
+    let selector = Weighted::new(Best, 1)
+        .with_selector(lexicase, 5)
+        .with_selector(binary_tournament, args.population_size - 1);
 
     // Using `Error` in `TestResults<Error>` will have the run favor smaller
     // values, where using `Score` (e.g., `TestResults<Score>`) will have the run
@@ -68,11 +67,8 @@ pub fn do_main(args: Args) {
 
     let child_maker = TwoPointXoMutate::new(&scorer);
 
-    let mut generation = Generation::new(
-        population,
-        &selector as &dyn Selector<_>,
-        &child_maker as &(dyn ChildMaker<_, _> + Sync + Send),
-    );
+    let selector = Select::new(selector);
+    let mut generation = Generation::new(population, &selector, child_maker);
 
     let mut rng = rand::thread_rng();
 
@@ -83,9 +79,9 @@ pub fn do_main(args: Args) {
             RunModel::Serial => generation.next(),
             RunModel::Parallel => generation.par_next(),
         };
-        let best = Best.select(&mut rng, generation.population());
+        let best = Best.select(generation.population(), &mut rng);
         // TODO: Change 2 to be the smallest number of digits needed for
         //  args.num_generations-1.
-        println!("Generation {:2} best is {}", generation_number, best);
+        println!("Generation {generation_number:2} best is {best}");
     });
 }
