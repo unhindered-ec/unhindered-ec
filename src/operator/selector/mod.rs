@@ -39,3 +39,13 @@ where
     }
 }
 impl<S> Composable for Select<S> {}
+
+impl<T, P> Selector<P> for &T
+where
+    P: Population,
+    T: Selector<P>,
+{
+    fn select<'pop>(&self, population: &'pop P, rng: &mut ThreadRng) -> &'pop P::Individual {
+        (*self).select(&population, rng)
+    }
+}
