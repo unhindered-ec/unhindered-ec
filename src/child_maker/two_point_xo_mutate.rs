@@ -2,9 +2,11 @@ use super::ChildMaker;
 use crate::{
     bitstring::Bitstring,
     individual::{ec::EcIndividual, Individual},
-    operator::{recombinator::{
-        two_point_xo::TwoPointXo, Recombine,
-    }, mutator::{with_one_over_length::WithOneOverLength, Mutate}, selector::Selector},
+    operator::{
+        mutator::{with_one_over_length::WithOneOverLength, Mutate},
+        recombinator::{two_point_xo::TwoPointXo, Recombine},
+        selector::{Select, Selector},
+    },
     operator::{Composable, Operator},
     test_results::TestResults,
 };
@@ -42,8 +44,8 @@ where
         population: &Vec<EcIndividual<Bitstring, TestResults<R>>>,
         selector: &S,
     ) -> EcIndividual<Bitstring, TestResults<R>> {
-        let first_parent = selector.select(population, rng);
-        let second_parent = selector.select(population, rng);
+        let selector = Select::new(selector);
+        let (first_parent, second_parent) = selector.clone().and(selector).apply(population, rng);
 
         let parent_genomes = [
             first_parent.genome().clone(),

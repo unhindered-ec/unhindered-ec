@@ -17,6 +17,7 @@ where
     fn select<'pop>(&self, population: &'pop P, rng: &mut ThreadRng) -> &'pop P::Individual;
 }
 
+#[derive(Clone)]
 pub struct Select<S> {
     selector: S,
 }
@@ -46,6 +47,6 @@ where
     T: Selector<P>,
 {
     fn select<'pop>(&self, population: &'pop P, rng: &mut ThreadRng) -> &'pop P::Individual {
-        (*self).select(&population, rng)
+        (*self).select(population, rng)
     }
 }
