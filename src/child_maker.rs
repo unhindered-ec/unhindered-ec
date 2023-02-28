@@ -1,6 +1,6 @@
 use rand::rngs::ThreadRng;
 
-use crate::{operator::Operator, population::Population};
+use crate::{operator::{Operator, selector::Selector}, population::Population};
 
 pub mod two_point_xo_mutate;
 
@@ -12,7 +12,7 @@ pub mod two_point_xo_mutate;
 pub trait ChildMaker<P, S>
 where
     P: Population,
-    S: for<'pop> Operator<&'pop P, Output = &'pop P::Individual>,
+    S: Selector<P>,
 {
     // TODO: Instead of passing 2/3 of  Generation` to this function, is there a trait
     //  we can have `Generation` implement, and pass in a reference to something implementing
@@ -27,7 +27,7 @@ where
 impl<P, S> ChildMaker<P, S> for &dyn ChildMaker<P, S>
 where
     P: Population,
-    S: for<'pop> Operator<&'pop P, Output = &'pop P::Individual>,
+    S: Selector<P>,
 {
     fn make_child(&self, rng: &mut ThreadRng, population: &P, selector: &S) -> P::Individual {
         (*self).make_child(rng, population, selector)
@@ -37,7 +37,7 @@ where
 impl<P, S> ChildMaker<P, S> for &(dyn ChildMaker<P, S> + Send)
 where
     P: Population,
-    S: for<'pop> Operator<&'pop P, Output = &'pop P::Individual>,
+    S: Selector<P>,
 {
     fn make_child(&self, rng: &mut ThreadRng, population: &P, selector: &S) -> P::Individual {
         (*self).make_child(rng, population, selector)
@@ -47,7 +47,7 @@ where
 impl<P, S> ChildMaker<P, S> for &(dyn ChildMaker<P, S> + Send + Sync)
 where
     P: Population,
-    S: for<'pop> Operator<&'pop P, Output = &'pop P::Individual>,
+    S: Selector<P>,
 {
     fn make_child(&self, rng: &mut ThreadRng, population: &P, selector: &S) -> P::Individual {
         (*self).make_child(rng, population, selector)

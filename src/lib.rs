@@ -67,7 +67,6 @@ pub fn do_main(args: Args) {
 
     let child_maker = TwoPointXoMutate::new(&scorer);
 
-    let selector = Select::new(selector);
     let mut generation = Generation::new(population, &selector, child_maker);
 
     let mut rng = rand::thread_rng();

@@ -4,7 +4,7 @@ use crate::{
     individual::{ec::EcIndividual, Individual},
     operator::{recombinator::{
         two_point_xo::TwoPointXo, Recombine,
-    }, mutator::{with_one_over_length::WithOneOverLength, Mutate}},
+    }, mutator::{with_one_over_length::WithOneOverLength, Mutate}, selector::Selector},
     operator::{Composable, Operator},
     test_results::TestResults,
 };
@@ -33,10 +33,7 @@ fn make_child_genome(parent_genomes: [Bitstring; 2], rng: &mut ThreadRng) -> Bit
 impl<'scorer, S, R> ChildMaker<Vec<EcIndividual<Bitstring, TestResults<R>>>, S>
     for TwoPointXoMutate<'scorer>
 where
-    S: for<'pop> Operator<
-        &'pop Vec<EcIndividual<Bitstring, TestResults<R>>>,
-        Output = &'pop EcIndividual<Bitstring, TestResults<R>>,
-    >,
+    S: Selector<Vec<EcIndividual<Bitstring, TestResults<R>>>>,
     R: Sum + Copy + From<i64>,
 {
     fn make_child(
@@ -45,8 +42,8 @@ where
         population: &Vec<EcIndividual<Bitstring, TestResults<R>>>,
         selector: &S,
     ) -> EcIndividual<Bitstring, TestResults<R>> {
-        let first_parent = selector.apply(population, rng);
-        let second_parent = selector.apply(population, rng);
+        let first_parent = selector.select(population, rng);
+        let second_parent = selector.select(population, rng);
 
         let parent_genomes = [
             first_parent.genome().clone(),
