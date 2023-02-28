@@ -2,8 +2,8 @@ use rand::rngs::ThreadRng;
 
 use super::{Operator, Composable};
 
-pub mod mutate_with_one_over_length;
-pub mod mutate_with_rate;
+pub mod with_one_over_length;
+pub mod with_rate;
 
 pub trait Mutator<G> {
     fn mutate(&self, genome: G, rng: &mut ThreadRng) -> G;
