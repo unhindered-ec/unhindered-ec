@@ -92,7 +92,7 @@ mod tests {
             .filter(|(pos, val)| *val == first_genome[*pos] || *val == second_genome[*pos])
             .count();
         assert!(
-            num_in_either_parent > 90 && num_in_either_parent < 100,
+            num_in_either_parent > 95 && num_in_either_parent <= 100,
             "{num_in_either_parent} wasn't in the expected range"
         );
     }
