@@ -2,26 +2,17 @@ use std::ops::Not;
 
 use rand::{rngs::ThreadRng, Rng};
 
-use crate::operator::{Composable, Operator};
+use super::Mutator;
 
 pub struct MutateWithRate {
     mutation_rate: f32,
 }
 
-impl MutateWithRate {
-    #[must_use]
-    pub const fn new(mutation_rate: f32) -> Self {
-        Self { mutation_rate }
-    }
-}
-
-impl<T> Operator<Vec<T>> for MutateWithRate
+impl<T> Mutator<Vec<T>> for MutateWithRate
 where
     T: Not<Output = T>,
 {
-    type Output = Vec<T>;
-
-    fn apply(&self, genome: Vec<T>, rng: &mut ThreadRng) -> Self::Output {
+    fn mutate(&self, genome: Vec<T>, rng: &mut ThreadRng) -> Vec<T> {
         genome
             .into_iter()
             .map(|bit| {
@@ -35,7 +26,13 @@ where
             .collect()
     }
 }
-impl Composable for MutateWithRate {}
+
+impl MutateWithRate {
+    #[must_use]
+    pub const fn new(mutation_rate: f32) -> Self {
+        Self { mutation_rate }
+    }
+}
 
 #[cfg(test)]
 mod tests {
@@ -43,7 +40,7 @@ mod tests {
 
     use crate::{
         bitstring::make_random, operator::recombinator::mutate_with_rate::MutateWithRate,
-        operator::Operator,
+        operator::recombinator::Mutator,
     };
 
     // This test is stochastic, so I'm going to ignore it most of the time.
@@ -57,7 +54,7 @@ mod tests {
         let mut rng = rand::thread_rng();
         let num_bits = 100;
         let parent_bits = make_random(num_bits, &mut rng);
-        let child_bits = mutator.apply(parent_bits.clone(), &mut rng);
+        let child_bits = mutator.mutate(parent_bits.clone(), &mut rng);
 
         let num_differences = zip(parent_bits, child_bits)
             .filter(|(p, c)| *p != *c)

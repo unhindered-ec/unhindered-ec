@@ -3,25 +3,20 @@ use std::ops::Not;
 use num_traits::ToPrimitive;
 use rand::rngs::ThreadRng;
 
-use crate::operator::{Composable, Operator};
-
-use super::mutate_with_rate::MutateWithRate;
+use super::{mutate_with_rate::MutateWithRate, Mutator};
 
 pub struct MutateWithOneOverLength;
 
-impl<T> Operator<Vec<T>> for MutateWithOneOverLength
+impl<T> Mutator<Vec<T>> for MutateWithOneOverLength
 where
     T: Not<Output = T>,
 {
-    type Output = Vec<T>;
-
-    fn apply(&self, genome: Vec<T>, rng: &mut ThreadRng) -> Self::Output {
+    fn mutate(&self, genome: Vec<T>, rng: &mut ThreadRng) -> Vec<T> {
         let mutation_rate = genome.len().to_f32().map_or(f32::MIN_POSITIVE, |l| 1.0 / l);
         let mutator = MutateWithRate::new(mutation_rate);
-        mutator.apply(genome, rng)
+        mutator.mutate(genome, rng)
     }
 }
-impl Composable for MutateWithOneOverLength {}
 
 #[cfg(test)]
 mod tests {
@@ -30,7 +25,7 @@ mod tests {
     use crate::{
         bitstring::make_random,
         operator::recombinator::mutate_with_one_over_length::MutateWithOneOverLength,
-        operator::Operator,
+        operator::{Operator, recombinator::Mutator},
     };
 
     // This test is stochastic, so I'm going to ignore it most of the time.
@@ -41,7 +36,7 @@ mod tests {
         let num_bits = 100;
         let parent_bits = make_random(num_bits, &mut rng);
 
-        let child_bits = MutateWithOneOverLength.apply(parent_bits.clone(), &mut rng);
+        let child_bits = MutateWithOneOverLength.mutate(parent_bits.clone(), &mut rng);
 
         let num_differences = zip(parent_bits, child_bits)
             .filter(|(p, c)| *p != *c)
