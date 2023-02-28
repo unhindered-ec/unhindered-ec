@@ -39,8 +39,8 @@ mod tests {
     use std::iter::zip;
 
     use crate::{
-        bitstring::make_random, operator::recombinator::mutate_with_rate::MutateWithRate,
-        operator::recombinator::Mutator,
+        bitstring::make_random, operator::mutator::mutate_with_rate::MutateWithRate,
+        operator::mutator::Mutator,
     };
 
     // This test is stochastic, so I'm going to ignore it most of the time.

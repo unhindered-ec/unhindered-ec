@@ -24,8 +24,8 @@ mod tests {
 
     use crate::{
         bitstring::make_random,
-        operator::recombinator::mutate_with_one_over_length::MutateWithOneOverLength,
-        operator::{Operator, recombinator::Mutator},
+        operator::mutator::mutate_with_one_over_length::MutateWithOneOverLength,
+        operator::mutator::Mutator,
     };
 
     // This test is stochastic, so I'm going to ignore it most of the time.

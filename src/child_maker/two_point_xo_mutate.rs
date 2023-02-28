@@ -2,9 +2,9 @@ use super::ChildMaker;
 use crate::{
     bitstring::Bitstring,
     individual::{ec::EcIndividual, Individual},
-    operator::recombinator::{
-        mutate_with_one_over_length::MutateWithOneOverLength, two_point_xo::TwoPointXo, Mutate, Recombine,
-    },
+    operator::{recombinator::{
+        two_point_xo::TwoPointXo, Recombine,
+    }, mutator::{mutate_with_one_over_length::MutateWithOneOverLength, Mutate}},
     operator::{Composable, Operator},
     test_results::TestResults,
 };
