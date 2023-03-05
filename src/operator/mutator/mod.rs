@@ -1,6 +1,6 @@
 use rand::rngs::ThreadRng;
 
-use super::{Operator, Composable};
+use super::{Composable, Operator};
 
 pub mod with_one_over_length;
 pub mod with_rate;
@@ -21,7 +21,7 @@ impl<M> Mutate<M> {
 
 impl<M, G> Operator<G> for Mutate<M>
 where
-    M: Mutator<G>
+    M: Mutator<G>,
 {
     type Output = G;
 

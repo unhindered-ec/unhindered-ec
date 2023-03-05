@@ -23,8 +23,7 @@ mod tests {
     use std::iter::zip;
 
     use crate::{
-        bitstring::make_random,
-        operator::mutator::with_one_over_length::WithOneOverLength,
+        bitstring::make_random, operator::mutator::with_one_over_length::WithOneOverLength,
         operator::mutator::Mutator,
     };
 

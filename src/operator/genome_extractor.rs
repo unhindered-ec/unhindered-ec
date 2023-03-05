@@ -1,11 +1,11 @@
 use crate::individual::Individual;
 
-use super::{Operator, Composable};
+use super::{Composable, Operator};
 
 pub struct GenomeExtractor {}
 
 /// Returns a _cloned_ copy of the given individual's genome.
-/// 
+///
 /// This copy of the genome is cloned so that subsequent stages of a pipeline
 /// (like mutation) can take ownership and mutate as appropriate without
 /// affecting the parent individual.

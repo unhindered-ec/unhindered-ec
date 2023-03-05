@@ -1,6 +1,6 @@
 use rand::rngs::ThreadRng;
 
-use super::{Operator, Composable};
+use super::{Composable, Operator};
 
 pub mod two_point_xo;
 pub mod uniform_xo;

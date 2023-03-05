@@ -1,10 +1,10 @@
 // TODO: I had to make this `pub use` to get the imports in `TwoPointXoMutate` to work
 //   and I'm really not sure why. I should do homework on this.
-pub use self::{then::Then, and::And, map::Map};
+pub use self::{and::And, map::Map, then::Then};
 
-mod then;
 mod and;
 pub mod map;
+mod then;
 
 // TODO: Rationalize the naming of module files. I think I want
 //   to go back to using `mod.rs` inside sub-folders. At a minimum
