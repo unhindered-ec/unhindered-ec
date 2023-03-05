@@ -26,17 +26,6 @@ impl<'scorer> TwoPointXoMutate<'scorer> {
     }
 }
 
-// TODO: Try this as a closure and see if we still get lifetime
-//   capture problems.
-fn make_child_genome(
-    (first_genome, second_genome): (Bitstring, Bitstring),
-    rng: &mut ThreadRng,
-) -> Bitstring {
-    Recombine::new(TwoPointXo)
-        .then(Mutate::new(WithOneOverLength))
-        .apply([first_genome, second_genome], rng)
-}
-
 impl<'scorer, S, R> ChildMaker<Vec<EcIndividual<Bitstring, TestResults<R>>>, S>
     for TwoPointXoMutate<'scorer>
 where
@@ -50,23 +39,14 @@ where
         selector: &S,
     ) -> EcIndividual<Bitstring, TestResults<R>> {
         let selector = Select::new(selector);
-        let parent_genomes = selector
+        let mutated_genome = selector
             .clone()
             .and(selector)
             // Can I get rid of the curly braces {}?
             .then(Map::new(GenomeExtractor {}))
+            .then(Recombine::new(TwoPointXo))
+            .then(Mutate::new(WithOneOverLength))
             .apply(population, rng);
-
-        // ([x, y], op) -> [op(x), op(y)]
-
-        // TODO: From esitsu: Think about what an operator to get the genome from EcIndividual looks like.
-        //   Then you can potentially chain select into mutate and crossover if you handle the inputs/outputs.
-        // let parent_genomes = [
-        //     first_parent.genome().clone(),
-        //     second_parent.genome().clone(),
-        // ];
-
-        let mutated_genome = make_child_genome(parent_genomes, rng);
 
         let test_results = (self.scorer)(&mutated_genome)
             .into_iter()
@@ -91,10 +71,11 @@ mod tests {
         let first_parent = EcIndividual::new_bitstring(100, count_ones, &mut rng);
         let second_parent = EcIndividual::new_bitstring(100, count_ones, &mut rng);
 
-        let first_genome = first_parent.genome().clone();
-        let second_genome = second_parent.genome().clone();
-
-        let child_genome = make_child_genome((first_genome, second_genome), &mut rng);
+        let child_genome = 
+            Map::new(GenomeExtractor {})
+                .then(Recombine::new(TwoPointXo))
+                .then(Mutate::new(WithOneOverLength))
+                .apply((&first_parent, &second_parent), &mut rng);
 
         let first_genome = first_parent.genome();
         let second_genome = second_parent.genome();

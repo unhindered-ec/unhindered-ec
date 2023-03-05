@@ -8,7 +8,7 @@ pub mod two_point_xo_mutate;
 //   an operator that scores". So this could just be
 //   something that takes a `genome` and returns a
 //   scored `Individual`. That would be a lot cleaner.
-#[deprecated(note = "Turn this into a genome->Individual operator")]
+// #[deprecated(note = "Turn this into a genome->Individual operator")]
 pub trait ChildMaker<P, S>
 where
     P: Population,
