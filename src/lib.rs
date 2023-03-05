@@ -20,7 +20,7 @@ use crate::child_maker::two_point_xo_mutate::TwoPointXoMutate;
 use crate::operator::selector::best::Best;
 use crate::operator::selector::tournament::Tournament;
 use crate::operator::selector::weighted::Weighted;
-use crate::operator::selector::{Select, Selector};
+use crate::operator::selector::Selector;
 
 pub mod args;
 pub mod bitstring;
@@ -67,7 +67,6 @@ pub fn do_main(args: Args) {
 
     let child_maker = TwoPointXoMutate::new(&scorer);
 
-    let selector = Select::new(selector);
     let mut generation = Generation::new(population, &selector, child_maker);
 
     let mut rng = rand::thread_rng();

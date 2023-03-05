@@ -2,8 +2,10 @@ use super::ChildMaker;
 use crate::{
     bitstring::Bitstring,
     individual::{ec::EcIndividual, Individual},
-    operator::recombinator::{
-        mutate_with_one_over_length::MutateWithOneOverLength, two_point_xo::TwoPointXo, Mutate,
+    operator::{
+        mutator::{with_one_over_length::WithOneOverLength, Mutate},
+        recombinator::{two_point_xo::TwoPointXo, Recombine},
+        selector::{Select, Selector},
     },
     operator::{Composable, Operator},
     test_results::TestResults,
@@ -25,18 +27,15 @@ impl<'scorer> TwoPointXoMutate<'scorer> {
 // TODO: Try this as a closure and see if we still get lifetime
 //   capture problems.
 fn make_child_genome(parent_genomes: [Bitstring; 2], rng: &mut ThreadRng) -> Bitstring {
-    TwoPointXo
-        .then(Mutate::new(MutateWithOneOverLength))
+    Recombine::new(TwoPointXo)
+        .then(Mutate::new(WithOneOverLength))
         .apply(parent_genomes, rng)
 }
 
 impl<'scorer, S, R> ChildMaker<Vec<EcIndividual<Bitstring, TestResults<R>>>, S>
     for TwoPointXoMutate<'scorer>
 where
-    S: for<'pop> Operator<
-        &'pop Vec<EcIndividual<Bitstring, TestResults<R>>>,
-        Output = &'pop EcIndividual<Bitstring, TestResults<R>>,
-    >,
+    S: Selector<Vec<EcIndividual<Bitstring, TestResults<R>>>>,
     R: Sum + Copy + From<i64>,
 {
     fn make_child(
@@ -45,9 +44,11 @@ where
         population: &Vec<EcIndividual<Bitstring, TestResults<R>>>,
         selector: &S,
     ) -> EcIndividual<Bitstring, TestResults<R>> {
-        let first_parent = selector.apply(population, rng);
-        let second_parent = selector.apply(population, rng);
+        let selector = Select::new(selector);
+        let (first_parent, second_parent) = selector.clone().and(selector).apply(population, rng);
 
+        // TODO: From esitsu: Think about what an operator to get the genome from EcIndividual looks like.
+        //   Then you can potentially chain select into mutate and crossover if you handle the inputs/outputs.
         let parent_genomes = [
             first_parent.genome().clone(),
             second_parent.genome().clone(),

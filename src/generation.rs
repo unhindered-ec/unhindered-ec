@@ -1,6 +1,6 @@
 use rayon::prelude::{FromParallelIterator, IntoParallelIterator, ParallelIterator};
 
-use crate::{child_maker::ChildMaker, operator::Operator, population::Population};
+use crate::{child_maker::ChildMaker, operator::selector::Selector, population::Population};
 
 // TODO: Should there actually be a `Run` type (or a `RunParams` type) that
 //   holds all this stuff and is used to make them available to types like
@@ -40,7 +40,7 @@ impl<P, S, C> Generation<P, S, C>
 where
     P: Population + FromParallelIterator<P::Individual> + Sync,
     P::Individual: Send,
-    S: for<'pop> Operator<&'pop P, Output = &'pop P::Individual> + Clone + Sync,
+    S: Selector<P> + Clone + Sync,
     C: ChildMaker<P, S> + Clone + Sync + Send,
 {
     /// Make the next generation using a Rayon parallel iterator.
@@ -69,7 +69,7 @@ where
 impl<P, S, C> Generation<P, S, C>
 where
     P: Population + FromIterator<P::Individual>,
-    S: for<'pop> Operator<&'pop P, Output = &'pop P::Individual> + Clone,
+    S: Selector<P> + Clone,
     C: ChildMaker<P, S> + Clone,
 {
     /// Make the next generation serially.

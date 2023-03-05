@@ -4,11 +4,11 @@ use rand::{rngs::ThreadRng, Rng};
 
 use super::Mutator;
 
-pub struct MutateWithRate {
+pub struct WithRate {
     mutation_rate: f32,
 }
 
-impl<T> Mutator<Vec<T>> for MutateWithRate
+impl<T> Mutator<Vec<T>> for WithRate
 where
     T: Not<Output = T>,
 {
@@ -27,7 +27,7 @@ where
     }
 }
 
-impl MutateWithRate {
+impl WithRate {
     #[must_use]
     pub const fn new(mutation_rate: f32) -> Self {
         Self { mutation_rate }
@@ -39,15 +39,15 @@ mod tests {
     use std::iter::zip;
 
     use crate::{
-        bitstring::make_random, operator::recombinator::mutate_with_rate::MutateWithRate,
-        operator::recombinator::Mutator,
+        bitstring::make_random, operator::mutator::with_rate::WithRate,
+        operator::mutator::Mutator,
     };
 
     // This test is stochastic, so I'm going to ignore it most of the time.
     #[test]
     #[ignore]
     fn mutate_with_rate_does_not_change_much() {
-        let mutator = MutateWithRate {
+        let mutator = WithRate {
             mutation_rate: 0.05,
         };
 
