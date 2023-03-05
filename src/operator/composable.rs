@@ -3,7 +3,7 @@
 use self::{and::And, map::Map, then::Then};
 
 mod and;
-pub(crate) mod map;
+mod map;
 mod then;
 
 // TODO: Rationalize the naming of module files. I think I want
@@ -33,7 +33,7 @@ pub trait Composable {
 
     fn apply_twice(self) -> And<Self, Self>
     where
-        Self: Sized + Clone
+        Self: Sized + Clone,
     {
         And::new(self.clone(), self)
     }
