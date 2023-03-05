@@ -3,7 +3,7 @@ use crate::{
     bitstring::Bitstring,
     individual::ec::EcIndividual,
     operator::{
-        composable::Map,
+        composable::map::Map,
         genome_extractor::GenomeExtractor,
         mutator::{with_one_over_length::WithOneOverLength, Mutate},
         recombinator::{two_point_xo::TwoPointXo, Recombine},

@@ -12,6 +12,7 @@ impl<F> Map<F> {
     }
 }
 
+// I think I can parameterize over the 2 here to make this more general?
 impl<F, Input> Operator<[Input; 2]> for Map<F>
 where
     F: Operator<Input>,

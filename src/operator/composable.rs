@@ -1,6 +1,6 @@
 // TODO: I had to make this `pub use` to get the imports in `TwoPointXoMutate` to work
 //   and I'm really not sure why. I should do homework on this.
-pub use self::{and::And, map::Map, then::Then};
+use self::{and::And, map::Map, then::Then};
 
 mod and;
 pub mod map;
