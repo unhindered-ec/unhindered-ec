@@ -1,8 +1,10 @@
 use super::ChildMaker;
 use crate::{
     bitstring::Bitstring,
-    individual::{ec::EcIndividual, Individual},
+    individual::ec::EcIndividual,
     operator::{
+        composable::Map,
+        genome_extractor::GenomeExtractor,
         mutator::{with_one_over_length::WithOneOverLength, Mutate},
         recombinator::{two_point_xo::TwoPointXo, Recombine},
         selector::{Select, Selector},
@@ -26,10 +28,13 @@ impl<'scorer> TwoPointXoMutate<'scorer> {
 
 // TODO: Try this as a closure and see if we still get lifetime
 //   capture problems.
-fn make_child_genome(parent_genomes: [Bitstring; 2], rng: &mut ThreadRng) -> Bitstring {
+fn make_child_genome(
+    (first_genome, second_genome): (Bitstring, Bitstring),
+    rng: &mut ThreadRng,
+) -> Bitstring {
     Recombine::new(TwoPointXo)
         .then(Mutate::new(WithOneOverLength))
-        .apply(parent_genomes, rng)
+        .apply([first_genome, second_genome], rng)
 }
 
 impl<'scorer, S, R> ChildMaker<Vec<EcIndividual<Bitstring, TestResults<R>>>, S>
@@ -45,14 +50,21 @@ where
         selector: &S,
     ) -> EcIndividual<Bitstring, TestResults<R>> {
         let selector = Select::new(selector);
-        let (first_parent, second_parent) = selector.clone().and(selector).apply(population, rng);
+        let parent_genomes = selector
+            .clone()
+            .and(selector)
+            // Can I get rid of the curly braces {}?
+            .then(Map::new(GenomeExtractor {}))
+            .apply(population, rng);
+
+        // ([x, y], op) -> [op(x), op(y)]
 
         // TODO: From esitsu: Think about what an operator to get the genome from EcIndividual looks like.
         //   Then you can potentially chain select into mutate and crossover if you handle the inputs/outputs.
-        let parent_genomes = [
-            first_parent.genome().clone(),
-            second_parent.genome().clone(),
-        ];
+        // let parent_genomes = [
+        //     first_parent.genome().clone(),
+        //     second_parent.genome().clone(),
+        // ];
 
         let mutated_genome = make_child_genome(parent_genomes, rng);
 
@@ -68,7 +80,7 @@ where
 mod tests {
     use rand::thread_rng;
 
-    use crate::bitstring::count_ones;
+    use crate::{bitstring::count_ones, individual::Individual};
 
     use super::*;
 
@@ -82,7 +94,7 @@ mod tests {
         let first_genome = first_parent.genome().clone();
         let second_genome = second_parent.genome().clone();
 
-        let child_genome = make_child_genome([first_genome, second_genome], &mut rng);
+        let child_genome = make_child_genome((first_genome, second_genome), &mut rng);
 
         let first_genome = first_parent.genome();
         let second_genome = second_parent.genome();

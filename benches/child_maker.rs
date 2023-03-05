@@ -3,7 +3,7 @@ use rust_ga::{
     bitstring::new_bitstring_population,
     child_maker::{two_point_xo_mutate::TwoPointXoMutate, ChildMaker},
     individual::Individual,
-    operator::selector::{best::Best, Select},
+    operator::selector::best::Best,
     test_results::TestResults,
 };
 
