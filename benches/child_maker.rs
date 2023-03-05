@@ -28,7 +28,7 @@ fn child_maker(c: &mut Criterion) {
                 //   that return vectors of scores to `TestResults` structs.
                 trivial_tester,
             );
-            let child = two_point_xo_mutate.make_child(&mut rng, &population, &Select::new(Best));
+            let child = two_point_xo_mutate.make_child(&mut rng, &population, &Best);
             assert_eq!(0, child.test_results().total_result);
         })
     });
