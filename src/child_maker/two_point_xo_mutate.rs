@@ -42,8 +42,7 @@ where
         let mutated_genome = selector
             .clone()
             .and(selector)
-            // Can I get rid of the curly braces {}?
-            .then(Map::new(GenomeExtractor {}))
+            .then(Map::new(GenomeExtractor))
             .then(Recombine::new(TwoPointXo))
             .then(Mutate::new(WithOneOverLength))
             .apply(population, rng);
@@ -71,11 +70,10 @@ mod tests {
         let first_parent = EcIndividual::new_bitstring(100, count_ones, &mut rng);
         let second_parent = EcIndividual::new_bitstring(100, count_ones, &mut rng);
 
-        let child_genome = 
-            Map::new(GenomeExtractor {})
-                .then(Recombine::new(TwoPointXo))
-                .then(Mutate::new(WithOneOverLength))
-                .apply((&first_parent, &second_parent), &mut rng);
+        let child_genome = Map::new(GenomeExtractor {})
+            .then(Recombine::new(TwoPointXo))
+            .then(Mutate::new(WithOneOverLength))
+            .apply((&first_parent, &second_parent), &mut rng);
 
         let first_genome = first_parent.genome();
         let second_genome = second_parent.genome();

@@ -2,7 +2,7 @@ use crate::individual::Individual;
 
 use super::{Composable, Operator};
 
-pub struct GenomeExtractor {}
+pub struct GenomeExtractor;
 
 /// Returns a _cloned_ copy of the given individual's genome.
 ///
