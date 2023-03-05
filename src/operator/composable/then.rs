@@ -3,6 +3,7 @@ use rand::rngs::ThreadRng;
 use super::super::Operator;
 
 use super::Composable;
+use super::map::Map;
 
 pub struct Then<F, G> {
     f: F,
@@ -12,6 +13,12 @@ pub struct Then<F, G> {
 impl<F, G> Then<F, G> {
     pub const fn new(f: F, g: G) -> Self {
         Self { f, g }
+    }
+}
+
+impl<F, G> Then<F, Map<G>> {
+    pub const fn new_with_map(f: F, g: G) -> Self {
+        Self { f, g: Map::new(g) }
     }
 }
 

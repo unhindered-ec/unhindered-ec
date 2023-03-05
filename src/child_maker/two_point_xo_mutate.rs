@@ -3,7 +3,6 @@ use crate::{
     bitstring::Bitstring,
     individual::ec::EcIndividual,
     operator::{
-        composable::map::Map,
         genome_extractor::GenomeExtractor,
         mutator::{with_one_over_length::WithOneOverLength, Mutate},
         recombinator::{two_point_xo::TwoPointXo, Recombine},
@@ -42,7 +41,7 @@ where
         let mutated_genome = selector
             .clone()
             .and(selector)
-            .then(Map::new(GenomeExtractor))
+            .then_map(GenomeExtractor)
             .then(Recombine::new(TwoPointXo))
             .then(Mutate::new(WithOneOverLength))
             .apply(population, rng);
@@ -59,7 +58,7 @@ where
 mod tests {
     use rand::thread_rng;
 
-    use crate::{bitstring::count_ones, individual::Individual};
+    use crate::{bitstring::count_ones, individual::Individual, operator::composable::map::Map};
 
     use super::*;
 

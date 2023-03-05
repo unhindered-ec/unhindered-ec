@@ -3,7 +3,7 @@
 use self::{and::And, map::Map, then::Then};
 
 mod and;
-pub mod map;
+pub(crate) mod map;
 mod then;
 
 // TODO: Rationalize the naming of module files. I think I want
@@ -15,6 +15,13 @@ pub trait Composable {
         Self: Sized,
     {
         Then::new(self, op)
+    }
+
+    fn then_map<Op>(self, op: Op) -> Then<Self, Map<Op>>
+    where
+        Self: Sized,
+    {
+        Then::new_with_map(self, op)
     }
 
     fn and<Op>(self, op: Op) -> And<Self, Op>
