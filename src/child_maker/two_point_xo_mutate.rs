@@ -38,9 +38,9 @@ where
         selector: &S,
     ) -> EcIndividual<Bitstring, TestResults<R>> {
         let selector = Select::new(selector);
-        let mutated_genome = selector
-            .clone()
-            .and(selector)
+        let mutated_genome 
+            = selector
+            .apply_twice()
             .then_map(GenomeExtractor)
             .then(Recombine::new(TwoPointXo))
             .then(Mutate::new(WithOneOverLength))

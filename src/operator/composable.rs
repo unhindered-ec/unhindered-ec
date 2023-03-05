@@ -31,7 +31,7 @@ pub trait Composable {
         And::new(self, op)
     }
 
-    fn apply_twice<Op>(self) -> And<Self, Self>
+    fn apply_twice(self) -> And<Self, Self>
     where
         Self: Sized + Clone
     {

@@ -3,7 +3,6 @@ use rand::rngs::ThreadRng;
 use super::super::Operator;
 
 use super::Composable;
-use super::map::Map;
 
 pub struct Then<F, G> {
     f: F,
