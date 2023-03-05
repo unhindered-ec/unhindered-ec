@@ -1,9 +1,10 @@
 use rand::rngs::ThreadRng;
 
-mod composable;
+pub mod composable;
 pub mod mutator;
 pub mod recombinator;
 pub mod selector;
+pub mod genome_extractor;
 
 pub use composable::Composable;
 
