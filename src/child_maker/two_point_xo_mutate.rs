@@ -57,7 +57,7 @@ where
 mod tests {
     use rand::thread_rng;
 
-    use crate::{bitstring::count_ones, individual::Individual, operator::composable::map::Map};
+    use crate::{bitstring::count_ones, individual::Individual, operator::identity::Identity};
 
     use super::*;
 
@@ -68,10 +68,11 @@ mod tests {
         let first_parent = EcIndividual::new_bitstring(100, count_ones, &mut rng);
         let second_parent = EcIndividual::new_bitstring(100, count_ones, &mut rng);
 
-        let child_genome = Map::new(GenomeExtractor {})
+        let child_genome = Identity::new((&first_parent, &second_parent))
+            .then_map(GenomeExtractor)
             .then(Recombine::new(TwoPointXo))
             .then(Mutate::new(WithOneOverLength))
-            .apply((&first_parent, &second_parent), &mut rng);
+            .apply((), &mut rng);
 
         let first_genome = first_parent.genome();
         let second_genome = second_parent.genome();
