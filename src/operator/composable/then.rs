@@ -16,12 +16,6 @@ impl<F, G> Then<F, G> {
     }
 }
 
-impl<F, G> Then<F, Map<G>> {
-    pub const fn new_with_map(f: F, g: G) -> Self {
-        Self { f, g: Map::new(g) }
-    }
-}
-
 impl<A, F, G> Operator<A> for Then<F, G>
 where
     F: Operator<A>,

@@ -21,7 +21,7 @@ pub trait Composable {
     where
         Self: Sized,
     {
-        Then::new_with_map(self, op)
+        Then::new(self, Map::new(op))
     }
 
     fn and<Op>(self, op: Op) -> And<Self, Op>
@@ -29,6 +29,13 @@ pub trait Composable {
         Self: Sized,
     {
         And::new(self, op)
+    }
+
+    fn apply_twice<Op>(self) -> And<Self, Self>
+    where
+        Self: Sized + Clone
+    {
+        And::new(self.clone(), self)
     }
 
     fn map<Op>(self, op: Op) -> Map<Op>
