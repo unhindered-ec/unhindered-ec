@@ -46,4 +46,6 @@ where
     }
 }
 
+// TODO: Impl `Map` over iterators.
+
 impl<F> Composable for Map<F> {}
