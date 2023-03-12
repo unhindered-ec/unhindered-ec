@@ -2,6 +2,7 @@ use rand::rngs::ThreadRng;
 
 pub mod composable;
 pub mod genome_extractor;
+pub mod genome_scorer;
 pub mod identity;
 pub mod mutator;
 pub mod recombinator;

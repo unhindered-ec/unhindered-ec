@@ -4,6 +4,7 @@ use crate::{
     individual::ec::EcIndividual,
     operator::{
         genome_extractor::GenomeExtractor,
+        genome_scorer::GenomeScorer,
         mutator::{with_one_over_length::WithOneOverLength, Mutate},
         recombinator::{two_point_xo::TwoPointXo, Recombine},
         selector::{Select, Selector},
@@ -15,21 +16,33 @@ use rand::rngs::ThreadRng;
 use std::iter::Sum;
 
 #[derive(Clone)]
-pub struct TwoPointXoMutate<'scorer> {
-    pub scorer: &'scorer (dyn Fn(&[bool]) -> Vec<i64> + Sync),
+pub struct TwoPointXoMutate<Sc> {
+    pub scorer: Sc,
 }
 
-impl<'scorer> TwoPointXoMutate<'scorer> {
-    pub fn new(scorer: &'scorer (dyn Fn(&[bool]) -> Vec<i64> + Sync)) -> Self {
+impl<Sc> TwoPointXoMutate<Sc> {
+    pub fn new(scorer: Sc) -> Self {
         Self { scorer }
     }
 }
 
-impl<'scorer, S, R> ChildMaker<Vec<EcIndividual<Bitstring, TestResults<R>>>, S>
-    for TwoPointXoMutate<'scorer>
+fn make_tr_scorer<R>(scorer: impl Fn(&Bitstring) -> Vec<R>) -> impl Fn(&Bitstring) -> TestResults<R>
+where
+    R: Sum + Copy,
+{
+    move |genome| {
+        scorer(genome)
+            .into_iter()
+            .map(From::from)
+            .sum::<TestResults<R>>()
+    }
+}
+
+impl<S, R, Sc> ChildMaker<Vec<EcIndividual<Bitstring, TestResults<R>>>, S> for TwoPointXoMutate<Sc>
 where
     S: Selector<Vec<EcIndividual<Bitstring, TestResults<R>>>>,
     R: Sum + Copy + From<i64>,
+    Sc: Fn(&Bitstring) -> Vec<R> + Clone,
 {
     fn make_child(
         &self,
@@ -38,18 +51,31 @@ where
         selector: &S,
     ) -> EcIndividual<Bitstring, TestResults<R>> {
         let selector = Select::new(selector);
-        let mutated_genome = selector
+        // Population -> child genome
+        let make_mutated_genome = selector
             .apply_twice()
             .then_map(GenomeExtractor)
             .then(Recombine::new(TwoPointXo))
-            .then(Mutate::new(WithOneOverLength))
-            .apply(population, rng);
+            .then(Mutate::new(WithOneOverLength));
 
-        let test_results = (self.scorer)(&mutated_genome)
-            .into_iter()
-            .map(From::from)
-            .sum();
-        EcIndividual::new(mutated_genome, test_results)
+        let tr_scorer = make_tr_scorer(self.scorer.clone());
+        // let make_test_results = |genome: &Bitstring| {
+        //     (self.scorer)(genome)
+        //         .into_iter()
+        //         .map(From::from)
+        //         .sum::<TestResults<R>>()
+        //     // todo!()
+        // };
+        GenomeScorer::new(make_mutated_genome, tr_scorer).apply(population, rng)
+
+        // Create the individual
+        // Score the individual, creating a scored individual
+
+        // let test_results = (self.scorer)(&mutated_genome)
+        //     .into_iter()
+        //     .map(From::from)
+        //     .sum();
+        // EcIndividual::new(mutated_genome, test_results)
     }
 }
 
