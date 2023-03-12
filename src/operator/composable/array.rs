@@ -12,7 +12,7 @@ impl<F, const N: usize> Array<F, N> {
     }
 }
 
-impl<F, Input, const N: usize> Operator<Input> for Array<F, N> 
+impl<F, Input, const N: usize> Operator<Input> for Array<F, N>
 where
     Input: Clone,
     F: Operator<Input>,

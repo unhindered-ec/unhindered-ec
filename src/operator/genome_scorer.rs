@@ -1,4 +1,4 @@
-use crate::{individual::{Individual, ec::EcIndividual}, population::Population, test_results::TestResults};
+use crate::{individual::ec::EcIndividual, population::Population, test_results::TestResults};
 
 use super::{Composable, Operator};
 
@@ -7,10 +7,12 @@ pub struct GenomeScorer<GM, S> {
     scorer: S,
 }
 
-
 impl<G, S> GenomeScorer<G, S> {
-    pub fn new(genome_maker: G, scorer: S) -> Self {
-        Self { genome_maker, scorer }
+    pub const fn new(genome_maker: G, scorer: S) -> Self {
+        Self {
+            genome_maker,
+            scorer,
+        }
     }
 }
 

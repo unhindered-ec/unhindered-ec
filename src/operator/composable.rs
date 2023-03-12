@@ -41,7 +41,7 @@ pub trait Composable {
 
     fn apply_n_times<const N: usize>(self) -> Array<Self, N>
     where
-        Self: Sized
+        Self: Sized,
     {
         Array::new(self)
     }
