@@ -65,7 +65,7 @@ pub fn do_main(args: Args) {
     );
     assert!(population.is_empty().not());
 
-    let child_maker = TwoPointXoMutate::new(&scorer);
+    let child_maker = TwoPointXoMutate::new(scorer);
 
     let mut generation = Generation::new(population, &selector, child_maker);
 

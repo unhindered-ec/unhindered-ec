@@ -21,20 +21,8 @@ pub struct TwoPointXoMutate<Sc> {
 }
 
 impl<Sc> TwoPointXoMutate<Sc> {
-    pub fn new(scorer: Sc) -> Self {
+    pub const fn new(scorer: Sc) -> Self {
         Self { scorer }
-    }
-}
-
-fn make_tr_scorer<R>(scorer: impl Fn(&Bitstring) -> Vec<R>) -> impl Fn(&Bitstring) -> TestResults<R>
-where
-    R: Sum + Copy,
-{
-    move |genome| {
-        scorer(genome)
-            .into_iter()
-            .map(From::from)
-            .sum::<TestResults<R>>()
     }
 }
 
@@ -42,7 +30,7 @@ impl<S, R, Sc> ChildMaker<Vec<EcIndividual<Bitstring, TestResults<R>>>, S> for T
 where
     S: Selector<Vec<EcIndividual<Bitstring, TestResults<R>>>>,
     R: Sum + Copy + From<i64>,
-    Sc: Fn(&Bitstring) -> Vec<R> + Clone,
+    Sc: Fn(&[bool]) -> Vec<i64>,
 {
     fn make_child(
         &self,
@@ -58,24 +46,11 @@ where
             .then(Recombine::new(TwoPointXo))
             .then(Mutate::new(WithOneOverLength));
 
-        let tr_scorer = make_tr_scorer(self.scorer.clone());
-        // let make_test_results = |genome: &Bitstring| {
-        //     (self.scorer)(genome)
-        //         .into_iter()
-        //         .map(From::from)
-        //         .sum::<TestResults<R>>()
-        //     // todo!()
-        // };
-        GenomeScorer::new(make_mutated_genome, tr_scorer).apply(population, rng)
+        let make_test_results =
+            |genome: &Vec<bool>| (self.scorer)(genome).into_iter().map(From::from).sum();
 
-        // Create the individual
-        // Score the individual, creating a scored individual
-
-        // let test_results = (self.scorer)(&mutated_genome)
-        //     .into_iter()
-        //     .map(From::from)
-        //     .sum();
-        // EcIndividual::new(mutated_genome, test_results)
+        let genome_scorer = GenomeScorer::new(make_mutated_genome, make_test_results);
+        genome_scorer.apply(population, rng)
     }
 }
 
