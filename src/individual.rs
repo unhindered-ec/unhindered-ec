@@ -4,6 +4,14 @@ use rand::rngs::ThreadRng;
 
 pub mod ec;
 
+// TODO: I need to add a `new()` (or similar) method
+//   that takes a genome and returns a (scored) individual
+//   containing that genome. It's not clear to me at the
+//   whether that should be:
+//     * An entirely new trait (like `Generate`)
+//     * A method in `Generate`
+//     * A method in `Individual`
+
 pub trait Generate: Individual {
     fn generate<H>(
         make_genome: impl Fn(&mut ThreadRng) -> Self::Genome,

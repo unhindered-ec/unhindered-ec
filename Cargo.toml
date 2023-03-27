@@ -34,6 +34,10 @@ harness = false
 name = "tournament"
 harness = false
 
+[[bench]]
+name = "child_maker"
+harness = false
+
 # [[bench]]
 # name = "lexicase_benchmarks"
 # harness = false

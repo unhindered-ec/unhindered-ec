@@ -21,7 +21,7 @@ where
     P: Population + AsRef<[P::Individual]>,
     P::Individual: Ord,
 {
-    fn select<'pop>(&self, rng: &mut ThreadRng, population: &'pop P) -> &'pop P::Individual {
+    fn select<'pop>(&self, population: &'pop P, rng: &mut ThreadRng) -> &'pop P::Individual {
         assert!(population.size() >= self.size && self.size > 0);
         // Since we know that the population and tournament aren't empty, we
         // can safely unwrap() the `.max()` call.

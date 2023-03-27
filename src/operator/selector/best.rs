@@ -14,8 +14,7 @@ where
     for<'pop> &'pop P: IntoIterator<Item = &'pop P::Individual>,
     P::Individual: Ord,
 {
-    #[must_use]
-    fn select<'pop>(&self, _: &mut ThreadRng, population: &'pop P) -> &'pop P::Individual {
+    fn select<'pop>(&self, population: &'pop P, _: &mut ThreadRng) -> &'pop P::Individual {
         // The population should never be empty here.
         assert!(
             population.is_empty().not(),
@@ -34,7 +33,7 @@ mod tests {
     fn can_select_twice() {
         let pop = vec![5, 8, 9, 6, 3, 2, 0];
         let mut rng = rand::thread_rng();
-        assert_eq!(&9, Best.select(&mut rng, &pop));
-        assert_eq!(&9, Best.select(&mut rng, &pop));
+        assert_eq!(&9, Best.select(&pop, &mut rng));
+        assert_eq!(&9, Best.select(&pop, &mut rng));
     }
 }

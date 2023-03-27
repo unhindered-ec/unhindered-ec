@@ -1,7 +1,7 @@
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
 use rust_ga::{
     bitstring::{new_bitstring_population, Bitstring},
-    selector::{tournament::Tournament, Selector},
+    operator::selector::{tournament::Tournament, Selector},
 };
 
 fn tournaments(c: &mut Criterion) {
@@ -14,7 +14,7 @@ fn tournaments(c: &mut Criterion) {
         group.bench_with_input(
             BenchmarkId::new("tournament size", tournament_size),
             &tournament_selector,
-            |b, t| b.iter(|| t.select(&mut rng, &population)),
+            |b, t| b.iter(|| t.select(&population, &mut rng)),
         );
     }
     group.finish();
