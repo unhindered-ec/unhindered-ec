@@ -1,3 +1,4 @@
+use anyhow::{Context, Result};
 use rand::rngs::ThreadRng;
 
 use super::super::Operator;
@@ -26,8 +27,10 @@ where
 {
     type Output = (F::Output, G::Output);
 
-    fn apply(&self, x: A, rng: &mut ThreadRng) -> Self::Output {
-        (self.f.apply(x.clone(), rng), self.g.apply(x, rng))
+    fn apply(&self, x: A, rng: &mut ThreadRng) -> Result<Self::Output> {
+        let f_value = self.f.apply(x.clone(), rng).context("f in `And` failed")?;
+        let g_value = self.g.apply(x, rng).context("g in `And` failed")?;
+        Ok((f_value, g_value))
     }
 }
 impl<F, G> Composable for And<F, G> {}
