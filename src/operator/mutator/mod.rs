@@ -1,3 +1,4 @@
+use anyhow::Result;
 use rand::rngs::ThreadRng;
 
 use super::{Composable, Operator};
@@ -6,7 +7,10 @@ pub mod with_one_over_length;
 pub mod with_rate;
 
 pub trait Mutator<G> {
-    fn mutate(&self, genome: G, rng: &mut ThreadRng) -> G;
+    /// # Errors
+    /// This can return an error if there is an error mutating the given
+    /// genome.
+    fn mutate(&self, genome: G, rng: &mut ThreadRng) -> Result<G>;
 }
 
 pub struct Mutate<M> {
@@ -25,7 +29,7 @@ where
 {
     type Output = G;
 
-    fn apply(&self, genome: G, rng: &mut ThreadRng) -> Self::Output {
+    fn apply(&self, genome: G, rng: &mut ThreadRng) -> Result<Self::Output> {
         self.mutator.mutate(genome, rng)
     }
 }

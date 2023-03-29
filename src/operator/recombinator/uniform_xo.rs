@@ -1,3 +1,4 @@
+use anyhow::{ensure, Result};
 use rand::{rngs::ThreadRng, Rng};
 
 use super::Recombinator;
@@ -11,10 +12,15 @@ impl<T: Clone> Recombinator<[Vec<T>; 2]> for UniformXo {
         &self,
         [first_genome, second_genome]: [Vec<T>; 2],
         rng: &mut ThreadRng,
-    ) -> Self::Output {
-        assert_eq!(first_genome.len(), second_genome.len());
+    ) -> Result<Self::Output> {
+        ensure!(
+            first_genome.len() == second_genome.len(),
+            "Attempted to perform UniformXo on genomes of different length: {} and {}",
+            first_genome.len(),
+            second_genome.len()
+        );
         let len = first_genome.len();
-        (0..len)
+        Ok((0..len)
             .map(|pos| {
                 if rng.gen_bool(0.5) {
                     first_genome[pos].clone()
@@ -22,7 +28,7 @@ impl<T: Clone> Recombinator<[Vec<T>; 2]> for UniformXo {
                     second_genome[pos].clone()
                 }
             })
-            .collect()
+            .collect())
     }
 }
 
@@ -33,7 +39,7 @@ impl<T: Clone> Recombinator<(Vec<T>, Vec<T>)> for UniformXo {
         &self,
         (first_genome, second_genome): (Vec<T>, Vec<T>),
         rng: &mut ThreadRng,
-    ) -> Self::Output {
+    ) -> Result<Self::Output> {
         self.recombine([first_genome, second_genome], rng)
     }
 }

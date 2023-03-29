@@ -1,3 +1,4 @@
+use anyhow::Result;
 use rand::rngs::ThreadRng;
 
 use super::{Composable, Operator};
@@ -8,7 +9,9 @@ pub mod uniform_xo;
 pub trait Recombinator<G> {
     type Output;
 
-    fn recombine(&self, genomes: G, rng: &mut ThreadRng) -> Self::Output;
+    /// # Errors
+    /// This will return an error if there's some problem with the recombination.
+    fn recombine(&self, genomes: G, rng: &mut ThreadRng) -> Result<Self::Output>;
 }
 
 pub struct Recombine<R> {
@@ -27,7 +30,7 @@ where
 {
     type Output = R::Output;
 
-    fn apply(&self, genomes: G, rng: &mut ThreadRng) -> Self::Output {
+    fn apply(&self, genomes: G, rng: &mut ThreadRng) -> Result<Self::Output> {
         self.recombinator.recombine(genomes, rng)
     }
 }
