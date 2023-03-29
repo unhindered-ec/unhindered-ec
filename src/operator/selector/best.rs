@@ -1,4 +1,4 @@
-use std::ops::Not;
+use anyhow::{Context, Result};
 
 use rand::rngs::ThreadRng;
 
@@ -14,14 +14,11 @@ where
     for<'pop> &'pop P: IntoIterator<Item = &'pop P::Individual>,
     P::Individual: Ord,
 {
-    fn select<'pop>(&self, population: &'pop P, _: &mut ThreadRng) -> &'pop P::Individual {
-        // The population should never be empty here.
-        assert!(
-            population.is_empty().not(),
-            "The population should not be empty"
-        );
-        #[allow(clippy::unwrap_used)]
-        population.into_iter().max().unwrap()
+    fn select<'pop>(&self, population: &'pop P, _: &mut ThreadRng) -> Result<&'pop P::Individual> {
+        population
+            .into_iter()
+            .max()
+            .context("The population was empty")
     }
 }
 
@@ -30,10 +27,11 @@ mod tests {
     use super::*;
 
     #[test]
+    #[allow(clippy::unwrap_used)]
     fn can_select_twice() {
         let pop = vec![5, 8, 9, 6, 3, 2, 0];
         let mut rng = rand::thread_rng();
-        assert_eq!(&9, Best.select(&pop, &mut rng));
-        assert_eq!(&9, Best.select(&pop, &mut rng));
+        assert_eq!(&9, Best.select(&pop, &mut rng).unwrap());
+        assert_eq!(&9, Best.select(&pop, &mut rng).unwrap());
     }
 }

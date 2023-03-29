@@ -1,3 +1,4 @@
+use anyhow::{Context, Result};
 use std::{mem::swap, ops::Not};
 
 use rand::prelude::SliceRandom;
@@ -35,7 +36,11 @@ where
     P::Individual: Individual<TestResults = TestResults<R>>,
     R: Ord,
 {
-    fn select<'pop>(&self, population: &'pop P, rng: &mut ThreadRng) -> &'pop P::Individual {
+    fn select<'pop>(
+        &self,
+        population: &'pop P,
+        rng: &mut ThreadRng,
+    ) -> Result<&'pop P::Individual> {
         // Candidate set is initially the whole population.
         // Shuffle the (indices of the) test cases.
         // For each test in turn:
@@ -80,6 +85,9 @@ where
         }
 
         candidates.shuffle(rng);
-        candidates[0]
+        candidates
+            .get(0)
+            .copied()
+            .context("The pool of candidates was empty")
     }
 }

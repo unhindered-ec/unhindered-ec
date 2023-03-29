@@ -1,3 +1,4 @@
+use anyhow::{ensure, Context, Result};
 use rand::prelude::SliceRandom;
 use rand::rngs::ThreadRng;
 
@@ -21,16 +22,21 @@ where
     P: Population + AsRef<[P::Individual]>,
     P::Individual: Ord,
 {
-    fn select<'pop>(&self, population: &'pop P, rng: &mut ThreadRng) -> &'pop P::Individual {
-        assert!(population.size() >= self.size && self.size > 0);
-        // Since we know that the population and tournament aren't empty, we
-        // can safely unwrap() the `.max()` call.
-
-        #[allow(clippy::unwrap_used)]
+    fn select<'pop>(
+        &self,
+        population: &'pop P,
+        rng: &mut ThreadRng,
+    ) -> Result<&'pop P::Individual> {
+        ensure!(
+            population.size() >= self.size,
+            "The population had size {} and we wanted a tournament of size {}",
+            population.size(),
+            self.size
+        );
         population
             .as_ref()
             .choose_multiple(rng, self.size)
             .max()
-            .unwrap()
+            .with_context(|| "The tournament was empty; should have been {size}")
     }
 }

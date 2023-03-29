@@ -1,3 +1,4 @@
+use anyhow::Result;
 use rand::rngs::ThreadRng;
 
 use crate::population::Population;
@@ -14,7 +15,11 @@ pub trait Selector<P>
 where
     P: Population,
 {
-    fn select<'pop>(&self, population: &'pop P, rng: &mut ThreadRng) -> &'pop P::Individual;
+    /// # Errors
+    /// This will return an error if there's some problem selecting. That will usually
+    /// be because the population is empty or not large enough for the desired selector.
+    fn select<'pop>(&self, population: &'pop P, rng: &mut ThreadRng)
+        -> Result<&'pop P::Individual>;
 }
 
 #[derive(Clone)]
@@ -35,7 +40,7 @@ where
 {
     type Output = &'pop P::Individual;
 
-    fn apply(&self, population: &'pop P, rng: &mut ThreadRng) -> Self::Output {
+    fn apply(&self, population: &'pop P, rng: &mut ThreadRng) -> Result<Self::Output> {
         self.selector.select(population, rng)
     }
 }
@@ -46,7 +51,11 @@ where
     P: Population,
     T: Selector<P>,
 {
-    fn select<'pop>(&self, population: &'pop P, rng: &mut ThreadRng) -> &'pop P::Individual {
+    fn select<'pop>(
+        &self,
+        population: &'pop P,
+        rng: &mut ThreadRng,
+    ) -> Result<&'pop P::Individual> {
         (*self).select(population, rng)
     }
 }
