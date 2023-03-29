@@ -1,3 +1,4 @@
+use anyhow::Result;
 use rand::rngs::ThreadRng;
 
 use super::{Composable, Operator};
@@ -18,8 +19,8 @@ where
 {
     type Output = T;
 
-    fn apply(&self, _: (), _: &mut ThreadRng) -> Self::Output {
-        self.value.clone()
+    fn apply(&self, _: (), _: &mut ThreadRng) -> Result<Self::Output> {
+        Ok(self.value.clone())
     }
 }
 impl<T> Composable for Identity<T> {}
