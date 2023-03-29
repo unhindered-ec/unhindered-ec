@@ -3,6 +3,8 @@
 #![warn(clippy::unwrap_used)]
 #![warn(clippy::expect_used)]
 
+use anyhow::{ensure, Result};
+
 use std::ops::Not;
 
 use args::{Args, RunModel, TargetProblem};
@@ -31,11 +33,11 @@ pub mod operator;
 pub mod population;
 pub mod test_results;
 
-/// # Panics
+/// # Errors
 ///
-/// This can panic for a whole host of reasons, mostly because the
+/// This can return an error for a whole host of reasons, mostly because the
 /// population or the collection of selectors is empty.
-pub fn do_main(args: Args) {
+pub fn do_main(args: Args) -> Result<()> {
     let scorer = match args.target_problem {
         TargetProblem::CountOnes => count_ones,
         TargetProblem::Hiff => hiff,
@@ -63,7 +65,7 @@ pub fn do_main(args: Args) {
         //   that return vectors of scores to `TestResults` structs.
         |bitstring| scorer(bitstring).into_iter().map(From::from).sum(),
     );
-    assert!(population.is_empty().not());
+    ensure!(population.is_empty().not());
 
     let child_maker = TwoPointXoMutate::new(scorer);
 
@@ -71,16 +73,18 @@ pub fn do_main(args: Args) {
 
     let mut rng = rand::thread_rng();
 
-    assert!(generation.population().is_empty().not());
+    ensure!(generation.population().is_empty().not());
 
-    (0..args.num_generations).for_each(|generation_number| {
+    (0..args.num_generations).try_for_each(|generation_number| {
         generation = match args.run_model {
-            RunModel::Serial => generation.next(),
-            RunModel::Parallel => generation.par_next(),
+            RunModel::Serial => generation.next()?,
+            RunModel::Parallel => generation.par_next()?,
         };
-        let best = Best.select(generation.population(), &mut rng);
+        let best = Best.select(generation.population(), &mut rng)?;
         // TODO: Change 2 to be the smallest number of digits needed for
         //  args.num_generations-1.
         println!("Generation {generation_number:2} best is {best}");
-    });
+
+        Ok(())
+    })
 }

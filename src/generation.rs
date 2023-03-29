@@ -1,3 +1,5 @@
+use anyhow::Result;
+use itertools::Itertools;
 use rayon::prelude::{FromParallelIterator, IntoParallelIterator, ParallelIterator};
 
 use crate::{child_maker::ChildMaker, operator::selector::Selector, population::Population};
@@ -44,8 +46,11 @@ where
     C: ChildMaker<P, S> + Clone + Sync + Send,
 {
     /// Make the next generation using a Rayon parallel iterator.
-    #[must_use]
-    pub fn par_next(&self) -> Self {
+    /// # Errors
+    ///
+    /// This can return errors if any aspect of creating the next generation fail. That can include constructing
+    /// or scoring the genomes.
+    pub fn par_next(&self) -> Result<Self> {
         let pop_size = self.population.size();
         let population = (0..pop_size)
             .into_par_iter()
@@ -57,12 +62,12 @@ where
                 self.child_maker
                     .make_child(rng, &self.population, &self.selector)
             })
-            .collect();
-        Self {
+            .collect::<Result<_>>()?;
+        Ok(Self {
             population,
             selector: self.selector.clone(),
             child_maker: self.child_maker.clone(),
-        }
+        })
     }
 }
 
@@ -73,8 +78,11 @@ where
     C: ChildMaker<P, S> + Clone,
 {
     /// Make the next generation serially.
-    #[must_use]
-    pub fn next(&self) -> Self {
+    /// # Errors
+    ///
+    /// This can return errors if any aspect of creating the next generation fail. That can include constructing
+    /// or scoring the genomes.
+    pub fn next(&self) -> Result<Self> {
         let pop_size = self.population.size();
         let mut rng = rand::thread_rng();
         let population = (0..pop_size)
@@ -82,11 +90,11 @@ where
                 self.child_maker
                     .make_child(&mut rng, &self.population, &self.selector)
             })
-            .collect();
-        Self {
+            .try_collect()?;
+        Ok(Self {
             population,
             selector: self.selector.clone(),
             child_maker: self.child_maker.clone(),
-        }
+        })
     }
 }
