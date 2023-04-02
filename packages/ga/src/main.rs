@@ -1,15 +1,19 @@
 pub mod args;
 
 use crate::args::{Args, TargetProblem};
+use anyhow::{ensure, Result};
 use clap::Parser;
 use ec_lib::{
-    bitstring::{count_ones, hiff, Bitstring},
+    bitstring::{count_ones, hiff, new_bitstring_population, Bitstring},
+    individual::ec::EcIndividual,
     operator::selector::{
         best::Best, lexicase::Lexicase, tournament::Tournament, weighted::Weighted,
-    }, individual::ec::EcIndividual, test_results::TestResults,
+    },
+    test_results::{self, TestResults},
 };
+use std::ops::Not;
 
-fn main() {
+fn main() -> Result<()> {
     let args = Args::parse();
 
     let scorer = match args.target_problem {
@@ -25,11 +29,27 @@ fn main() {
     let lexicase = Lexicase::new(num_test_cases);
     let binary_tournament = Tournament::new(2);
 
-    type Pop = Vec<EcIndividual<Bitstring, TestResults<ec_lib::test_results::Error>>>;
+    // Using `Error` in `TestResults<Error>` will have the run favor smaller
+    // values, where using `Score` (e.g., `TestResults<Score>`) will have the run
+    // favor larger values.
+    type Pop = Vec<EcIndividual<Bitstring, TestResults<test_results::Error>>>;
 
     let selector: Weighted<Pop> = Weighted::new(Best, 1)
         .with_selector(lexicase, 5)
         .with_selector(binary_tournament, args.population_size - 1);
+
+    // Change the code below to initially just generate a set of genomes (which I think
+    // the `Generate` trait does for us, but may that should be an `Operator`?) and then
+    // score them in a separate step.
+
+    let population: Pop = new_bitstring_population(
+        args.population_size,
+        args.bit_length,
+        // TODO: I should really have a function somewhere that converts functions
+        //   that return vectors of scores to `TestResults` structs.
+        |bitstring| scorer(bitstring).into_iter().map(From::from).sum(),
+    );
+    ensure!(population.is_empty().not());
 
     todo!()
 }
@@ -39,18 +59,6 @@ fn main() {
 // /// This can return an error for a whole host of reasons, mostly because the
 // /// population or the collection of selectors is empty.
 // pub fn do_main(args: Args) -> Result<()> {
-
-//     // Using `Error` in `TestResults<Error>` will have the run favor smaller
-//     // values, where using `Score` (e.g., `TestResults<Score>`) will have the run
-//     // favor larger values.
-//     let population: Vec<EcIndividual<Bitstring, TestResults<Error>>> = new_bitstring_population(
-//         args.population_size,
-//         args.bit_length,
-//         // TODO: I should really have a function somewhere that converts functions
-//         //   that return vectors of scores to `TestResults` structs.
-//         |bitstring| scorer(bitstring).into_iter().map(From::from).sum(),
-//     );
-//     ensure!(population.is_empty().not());
 
 //     let child_maker = TwoPointXoMutate::new(scorer);
 
