@@ -5,8 +5,8 @@
 
 use anyhow::Result;
 use clap::Parser;
-use rust_ga::args::Args;
-use rust_ga::do_main;
+use ga::args::Args;
+use ga::do_main;
 
 fn main() -> Result<()> {
     let args = Args::parse();

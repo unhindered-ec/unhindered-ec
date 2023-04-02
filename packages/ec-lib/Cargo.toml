@@ -1,0 +1,17 @@
+[package]
+name = "ec-lib"
+version = { workspace = true }
+authors = { workspace = true }
+description = { workspace = true }
+documentation = { workspace = true }
+edition = { workspace = true }
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+anyhow = "1.0.70"
+# clap = { version = "4.1.13", features = ["derive"] }
+itertools = "0.10.5"
+num-traits = "0.2.15"
+rand = { version = "0.8.5", features = ["alloc"] }
+rayon = "1.7.0"
