@@ -12,6 +12,7 @@ use crate::{
     operator::{Composable, Operator},
     test_results::TestResults,
 };
+use anyhow::Result;
 use rand::rngs::ThreadRng;
 use std::iter::Sum;
 
@@ -37,7 +38,7 @@ where
         rng: &mut ThreadRng,
         population: &Vec<EcIndividual<Bitstring, TestResults<R>>>,
         selector: &S,
-    ) -> EcIndividual<Bitstring, TestResults<R>> {
+    ) -> Result<EcIndividual<Bitstring, TestResults<R>>> {
         let selector = Select::new(selector);
         // Population -> child genome
         let make_mutated_genome = selector
@@ -65,27 +66,34 @@ mod tests {
     #[test]
     fn smoke_test() {
         let mut rng = thread_rng();
+        let bit_length = 100;
 
-        let first_parent = EcIndividual::new_bitstring(100, count_ones, &mut rng);
-        let second_parent = EcIndividual::new_bitstring(100, count_ones, &mut rng);
+        let first_parent = EcIndividual::new_bitstring(bit_length, count_ones, &mut rng);
+        let second_parent = EcIndividual::new_bitstring(bit_length, count_ones, &mut rng);
 
+        #[allow(clippy::unwrap_used)]
         let child_genome = Identity::new((&first_parent, &second_parent))
             .then_map(GenomeExtractor)
             .then(Recombine::new(TwoPointXo))
             .then(Mutate::new(WithOneOverLength))
-            .apply((), &mut rng);
+            .apply((), &mut rng)
+            .unwrap();
 
         let first_genome = first_parent.genome();
+        assert_eq!(bit_length, first_genome.len());
         let second_genome = second_parent.genome();
+        assert_eq!(bit_length, second_genome.len());
 
         let num_in_either_parent = child_genome
+            .clone()
             .into_iter()
             .enumerate()
             .filter(|(pos, val)| *val == first_genome[*pos] || *val == second_genome[*pos])
             .count();
+        let target_range = (bit_length - 5)..=bit_length;
         assert!(
-            num_in_either_parent > 95 && num_in_either_parent <= 100,
-            "{num_in_either_parent} wasn't in the expected range"
+            target_range.contains(&num_in_either_parent),
+            "{num_in_either_parent} wasn't in the expected range {target_range:?}, \n{first_genome:?}, \n{second_genome:?}, \n{child_genome:?}"
         );
     }
 }

@@ -1,4 +1,5 @@
 use crate::operator::Operator;
+use anyhow::{Context, Result};
 
 use super::Composable;
 
@@ -19,8 +20,16 @@ where
 {
     type Output = [F::Output; 2];
 
-    fn apply(&self, input: [Input; 2], rng: &mut rand::rngs::ThreadRng) -> Self::Output {
-        input.map(|x| self.f.apply(x, rng))
+    fn apply(&self, [x, y]: [Input; 2], rng: &mut rand::rngs::ThreadRng) -> Result<Self::Output> {
+        let first_result = self
+            .f
+            .apply(x, rng)
+            .with_context(|| "Calling f with {x} in `Map` failed")?;
+        let second_result = self
+            .f
+            .apply(y, rng)
+            .with_context(|| "Calling f with {y} in `Map` failed")?;
+        Ok([first_result, second_result])
     }
 }
 
@@ -30,8 +39,20 @@ where
 {
     type Output = (F::Output, F::Output);
 
-    fn apply(&self, (x, y): (Input, Input), rng: &mut rand::rngs::ThreadRng) -> Self::Output {
-        (self.f.apply(x, rng), self.f.apply(y, rng))
+    fn apply(
+        &self,
+        (x, y): (Input, Input),
+        rng: &mut rand::rngs::ThreadRng,
+    ) -> Result<Self::Output> {
+        let first_result = self
+            .f
+            .apply(x, rng)
+            .with_context(|| "Calling f with {x} in `Map` failed")?;
+        let second_result = self
+            .f
+            .apply(y, rng)
+            .with_context(|| "Calling f with {y} in `Map` failed")?;
+        Ok((first_result, second_result))
     }
 }
 
@@ -41,8 +62,15 @@ where
 {
     type Output = Vec<F::Output>;
 
-    fn apply(&self, input: Vec<Input>, rng: &mut rand::rngs::ThreadRng) -> Self::Output {
-        input.into_iter().map(|x| self.f.apply(x, rng)).collect()
+    fn apply(&self, input: Vec<Input>, rng: &mut rand::rngs::ThreadRng) -> Result<Self::Output> {
+        input
+            .into_iter()
+            .map(|x| {
+                self.f
+                    .apply(x, rng)
+                    .with_context(|| "Applying f to {x} in `Map` failed")
+            })
+            .collect()
     }
 }
 

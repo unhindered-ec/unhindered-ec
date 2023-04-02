@@ -1,3 +1,5 @@
+use anyhow::Result;
+
 use crate::{individual::ec::EcIndividual, population::Population, test_results::TestResults};
 
 use super::{Composable, Operator};
@@ -25,10 +27,10 @@ where
 {
     type Output = EcIndividual<GM::Output, TestResults<R>>;
 
-    fn apply(&self, population: &'pop P, rng: &mut rand::rngs::ThreadRng) -> Self::Output {
-        let genome = self.genome_maker.apply(population, rng);
+    fn apply(&self, population: &'pop P, rng: &mut rand::rngs::ThreadRng) -> Result<Self::Output> {
+        let genome = self.genome_maker.apply(population, rng)?;
         let score = (self.scorer)(&genome);
-        EcIndividual::new(genome, score)
+        Ok(EcIndividual::new(genome, score))
     }
 }
 impl<GM, S> Composable for GenomeScorer<GM, S> {}

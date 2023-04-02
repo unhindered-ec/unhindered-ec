@@ -28,7 +28,10 @@ fn child_maker(c: &mut Criterion) {
                 //   that return vectors of scores to `TestResults` structs.
                 trivial_tester,
             );
-            let child = two_point_xo_mutate.make_child(&mut rng, &population, &Best);
+            #[allow(clippy::unwrap_used)]
+            let child = two_point_xo_mutate
+                .make_child(&mut rng, &population, &Best)
+                .unwrap();
             assert_eq!(0, child.test_results().total_result);
         })
     });

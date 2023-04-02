@@ -1,3 +1,4 @@
+use anyhow::Result;
 use rand::rngs::ThreadRng;
 
 use crate::{operator::selector::Selector, population::Population};
@@ -18,7 +19,17 @@ where
     //  we can have `Generation` implement, and pass in a reference to something implementing
     //  that trait instead? The trait would presumably implement the `get_parent()` method
     //  or similar.
-    fn make_child(&self, rng: &mut ThreadRng, population: &P, selector: &S) -> P::Individual;
+    //
+    /// # Errors
+    ///
+    /// This can return errors if any aspect of creating this child fail. That can include constructing
+    /// or scoring the genome.
+    fn make_child(
+        &self,
+        rng: &mut ThreadRng,
+        population: &P,
+        selector: &S,
+    ) -> Result<P::Individual>;
 }
 
 // NOTE: These further impls aren't actually needed anymore because
@@ -29,7 +40,12 @@ where
     P: Population,
     S: Selector<P>,
 {
-    fn make_child(&self, rng: &mut ThreadRng, population: &P, selector: &S) -> P::Individual {
+    fn make_child(
+        &self,
+        rng: &mut ThreadRng,
+        population: &P,
+        selector: &S,
+    ) -> Result<P::Individual> {
         (*self).make_child(rng, population, selector)
     }
 }
@@ -39,7 +55,12 @@ where
     P: Population,
     S: Selector<P>,
 {
-    fn make_child(&self, rng: &mut ThreadRng, population: &P, selector: &S) -> P::Individual {
+    fn make_child(
+        &self,
+        rng: &mut ThreadRng,
+        population: &P,
+        selector: &S,
+    ) -> Result<P::Individual> {
         (*self).make_child(rng, population, selector)
     }
 }
@@ -49,7 +70,12 @@ where
     P: Population,
     S: Selector<P>,
 {
-    fn make_child(&self, rng: &mut ThreadRng, population: &P, selector: &S) -> P::Individual {
+    fn make_child(
+        &self,
+        rng: &mut ThreadRng,
+        population: &P,
+        selector: &S,
+    ) -> Result<P::Individual> {
         (*self).make_child(rng, population, selector)
     }
 }

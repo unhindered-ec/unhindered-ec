@@ -1,4 +1,5 @@
 use crate::individual::Individual;
+use anyhow::Result;
 
 use super::{Composable, Operator};
 
@@ -16,8 +17,8 @@ where
 {
     type Output = I::Genome;
 
-    fn apply(&self, individual: &I, _: &mut rand::rngs::ThreadRng) -> Self::Output {
-        individual.genome().clone()
+    fn apply(&self, individual: &I, _: &mut rand::rngs::ThreadRng) -> Result<Self::Output> {
+        Ok(individual.genome().clone())
     }
 }
 impl Composable for GenomeExtractor {}
