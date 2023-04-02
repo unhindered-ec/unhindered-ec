@@ -16,6 +16,9 @@ clap = { version = "4.1.13", features = ["derive"] }
 rand = { version = "0.8.5", features = ["alloc"] }
 # rayon = "1.7.0"
 
+# We could pub this in the workspace and use ` = { workspace = true }` here.
+ec-lib = { path = "../ec-lib" }
+
 # [[bin]]
 # name = "ga"
 
