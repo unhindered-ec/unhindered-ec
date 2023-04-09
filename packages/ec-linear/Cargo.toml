@@ -1,0 +1,19 @@
+[package]
+name = "ec-linear"
+version = { workspace = true }
+authors = { workspace = true }
+description = { workspace = true }
+documentation = { workspace = true }
+edition = { workspace = true }
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+anyhow = "1.0.70"
+# itertools = "0.10.5"
+num-traits = "0.2.15"
+rand = { version = "0.8.5", features = ["alloc"] }
+# rayon = "1.7.0"
+
+# We could put this in the workspace and use ` = { workspace = true }` here.
+ec-core = { path = "../ec-core" }

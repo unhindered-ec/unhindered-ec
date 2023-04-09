@@ -1,10 +1,11 @@
 use anyhow::{Context, Result};
+use ec_core::operator::mutator::Mutator;
 use std::ops::Not;
 
 use num_traits::ToPrimitive;
 use rand::rngs::ThreadRng;
 
-use super::{with_rate::WithRate, Mutator};
+use super::with_rate::WithRate;
 
 pub struct WithOneOverLength;
 
@@ -29,10 +30,9 @@ where
 mod tests {
     use std::iter::zip;
 
-    use crate::{
-        bitstring::make_random, operator::mutator::with_one_over_length::WithOneOverLength,
-        operator::mutator::Mutator,
-    };
+    use ec_core::operator::mutator::Mutator;
+
+    use crate::{bitstring::make_random, mutator::with_one_over_length::WithOneOverLength};
 
     // This test is stochastic, so I'm going to ignore it most of the time.
     #[test]

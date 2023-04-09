@@ -1,20 +1,24 @@
-use super::ChildMaker;
-use crate::{
-    bitstring::Bitstring,
+use anyhow::Result;
+use ec_core::{
+    child_maker::ChildMaker,
     individual::ec::EcIndividual,
     operator::{
         genome_extractor::GenomeExtractor,
         genome_scorer::GenomeScorer,
-        mutator::{with_one_over_length::WithOneOverLength, Mutate},
-        recombinator::{two_point_xo::TwoPointXo, Recombine},
+        mutator::Mutate,
+        recombinator::Recombine,
         selector::{Select, Selector},
+        Composable, Operator,
     },
-    operator::{Composable, Operator},
     test_results::TestResults,
 };
-use anyhow::Result;
 use rand::rngs::ThreadRng;
 use std::iter::Sum;
+
+use crate::{
+    bitstring::Bitstring, mutator::with_one_over_length::WithOneOverLength,
+    recombinator::two_point_xo::TwoPointXo,
+};
 
 #[derive(Clone)]
 pub struct TwoPointXoMutate<Sc> {
@@ -57,9 +61,10 @@ where
 
 #[cfg(test)]
 mod tests {
+    use ec_core::{individual::Individual, operator::identity::Identity};
     use rand::thread_rng;
 
-    use crate::{bitstring::count_ones, individual::Individual, operator::identity::Identity};
+    use crate::bitstring::{count_ones, new_scored_bitstring};
 
     use super::*;
 
@@ -68,8 +73,8 @@ mod tests {
         let mut rng = thread_rng();
         let bit_length = 100;
 
-        let first_parent = EcIndividual::new_bitstring(bit_length, count_ones, &mut rng);
-        let second_parent = EcIndividual::new_bitstring(bit_length, count_ones, &mut rng);
+        let first_parent = new_scored_bitstring(bit_length, count_ones, &mut rng);
+        let second_parent = new_scored_bitstring(bit_length, count_ones, &mut rng);
 
         #[allow(clippy::unwrap_used)]
         let child_genome = Identity::new((&first_parent, &second_parent))

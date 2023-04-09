@@ -3,8 +3,6 @@ use rand::rngs::ThreadRng;
 
 use crate::{operator::selector::Selector, population::Population};
 
-pub mod two_point_xo_mutate;
-
 // TODO: esitsu@Twitch: "In my world the ChildMaker becomes
 //   an operator that scores". So this could just be
 //   something that takes a `genome` and returns a

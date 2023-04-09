@@ -3,9 +3,6 @@ use rand::rngs::ThreadRng;
 
 use super::{Composable, Operator};
 
-pub mod with_one_over_length;
-pub mod with_rate;
-
 pub trait Mutator<G> {
     /// # Errors
     /// This can return an error if there is an error mutating the given

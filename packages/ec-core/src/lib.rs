@@ -3,7 +3,6 @@
 #![warn(clippy::unwrap_used)]
 #![warn(clippy::expect_used)]
 
-pub mod bitstring;
 pub mod child_maker;
 pub mod generation;
 pub mod individual;

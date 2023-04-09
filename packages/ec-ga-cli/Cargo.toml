@@ -1,5 +1,5 @@
 [package]
-name = "ga"
+name = "ec-ga-cli"
 version = { workspace = true }
 authors = { workspace = true }
 description = { workspace = true }
@@ -14,4 +14,9 @@ clap = { version = "4.1.13", features = ["derive"] }
 rand = { version = "0.8.5", features = ["alloc"] }
 
 # We could put this in the workspace and use ` = { workspace = true }` here.
-ec-lib = { path = "../ec-lib" }
+ec-core = { path = "../ec-core" }
+ec-linear = { path = "../ec-linear" }
+
+[[bin]]
+name = "ga"
+path = "src/main.rs"

@@ -3,9 +3,6 @@ use rand::rngs::ThreadRng;
 
 use super::{Composable, Operator};
 
-pub mod two_point_xo;
-pub mod uniform_xo;
-
 pub trait Recombinator<G> {
     type Output;
 
