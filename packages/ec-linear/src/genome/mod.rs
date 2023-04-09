@@ -1,8 +1,7 @@
-pub mod bitstring;
+use ec_core::gene::Genome;
 
-pub trait Genome {
-    type Gene;
-}
+pub mod bitstring;
+pub mod bitstring_vec;
 
 pub trait LinearGenome: Genome
 {

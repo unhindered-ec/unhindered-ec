@@ -1,56 +1,21 @@
 use std::borrow::Borrow;
-use std::fmt::Display;
-use std::iter;
 
-use ec_core::gene::Genome;
-use ec_core::individual::ec::EcIndividual;
-use ec_core::population::Generate;
-use ec_core::test_results::TestResults;
 use rand::{rngs::ThreadRng, Rng};
 
-use super::LinearGenome;
+use ec_core::{
+    individual::{ec::EcIndividual, Generate as _},
+    population::Generate as _,
+    test_results::TestResults,
+};
 
-#[derive(Clone)]
-pub struct Bitstring {
-    pub bits: Vec<bool>,
+// TODO:
+//   We need an `impl Display for Bitstring` when we
+//   have that in a `struct`.
+pub type BitstringVecType = Vec<bool>;
+
+pub fn make_random(len: usize, rng: &mut ThreadRng) -> BitstringVecType {
+    (0..len).map(|_| rng.gen_bool(0.5)).collect()
 }
-
-impl Bitstring {
-    pub fn random(len: usize, rng: &mut ThreadRng) -> Self {
-        let bits = iter::repeat_with(|| rng.gen_bool(0.5)).take(len).collect();
-        Bitstring { bits }
-    }
-
-    pub fn random_list(num_genomes: usize, len: usize, rng: &mut ThreadRng) -> Vec<Self> {
-        iter::repeat_with(|| Self::random(len, rng)).take(num_genomes).collect()
-    }
-}
-
-impl Display for Bitstring {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        for bit in &self.bits {
-            write!(f, "{}", u8::from(*bit))?;
-        }
-        Ok(())
-    }
-}
-
-impl Genome for Bitstring {
-    type Gene = bool;
-}
-
-impl LinearGenome for Bitstring {    
-    fn size(&self) -> usize {
-        self.bits.len()
-    }
-
-    fn gene_mut(&mut self, index: usize) -> Option<&mut Self::Gene> {
-        self.bits.get_mut(index)
-    }
-}
-
-// TODO: We need to move `count_ones` and `hiff` (and their tests)
-//   out into their own module, and possibly their own package?
 
 #[must_use]
 pub fn count_ones(bits: &[bool]) -> Vec<i64> {
@@ -111,6 +76,20 @@ pub fn fitness_vec_to_test_results(results: Vec<i64>) -> TestResults<i64> {
     }
 }
 
+// TODO: This should move into an `impl` block for the
+//   `Bitstring` type when it becomes a `struct`.
+pub fn new_scored_bitstring<R, H>(
+    bit_length: usize,
+    run_tests: impl Fn(&H) -> R,
+    rng: &mut ThreadRng,
+) -> EcIndividual<BitstringVecType, R>
+where
+    BitstringVecType: Borrow<H>,
+    H: ?Sized,
+{
+    EcIndividual::generate(|rng| make_random(bit_length, rng), run_tests, rng)
+}
+
 // impl<R> EcIndividual<Bitstring, R> {
 //     pub fn new_bitstring<H>(
 //         bit_length: usize,
@@ -121,7 +100,7 @@ pub fn fitness_vec_to_test_results(results: Vec<i64>) -> TestResults<i64> {
 //         Bitstring: Borrow<H>,
 //         H: ?Sized,
 //     {
-//         Self::generate(|rng| Bitstring::random(bit_length, rng), run_tests, rng)
+//         Self::generate(|rng| make_random(bit_length, rng), run_tests, rng)
 //     }
 // }
 
@@ -129,11 +108,11 @@ pub fn new_bitstring_population<R, H>(
     pop_size: usize,
     bit_length: usize,
     run_tests: impl Fn(&H) -> R + Send + Sync,
-) -> Vec<EcIndividual<Bitstring, R>>
+) -> Vec<EcIndividual<BitstringVecType, R>>
 where
     R: Send,
-    Bitstring: Borrow<H>,
+    BitstringVecType: Borrow<H>,
     H: ?Sized,
 {
-    Vec::generate(pop_size, |rng| Bitstring::random(bit_length, rng), run_tests)
+    Vec::generate(pop_size, |rng| make_random(bit_length, rng), run_tests)
 }

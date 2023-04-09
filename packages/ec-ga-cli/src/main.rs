@@ -12,7 +12,7 @@ use ec_core::{
     test_results::{self, TestResults},
 };
 use ec_linear::{
-    genome::bitstring::{count_ones, hiff, new_bitstring_population, Bitstring},
+    genome::bitstring_vec::{count_ones, hiff, new_bitstring_population, BitstringVecType},
     child_maker::two_point_xo_mutate::TwoPointXoMutate,
 };
 use std::ops::Not;
@@ -81,7 +81,7 @@ pub fn main() -> Result<()> {
     // Using `Error` in `TestResults<Error>` will have the run favor smaller
     // values, where using `Score` (e.g., `TestResults<Score>`) will have the run
     // favor larger values.
-    type Pop = Vec<EcIndividual<Bitstring, TestResults<test_results::Error>>>;
+    type Pop = Vec<EcIndividual<BitstringVecType, TestResults<test_results::Error>>>;
 
     let selector: Weighted<Pop> = Weighted::new(Best, 1)
         .with_selector(lexicase, 5)

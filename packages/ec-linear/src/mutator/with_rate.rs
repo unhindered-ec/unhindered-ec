@@ -40,7 +40,7 @@ mod tests {
 
     use ec_core::operator::mutator::Mutator;
 
-    use crate::{genome::bitstring::make_random, mutator::with_rate::WithRate};
+    use crate::{genome::bitstring_vec::make_random, mutator::with_rate::WithRate};
 
     // This test is stochastic, so I'm going to ignore it most of the time.
     #[test]

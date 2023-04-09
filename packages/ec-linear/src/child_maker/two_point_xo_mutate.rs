@@ -16,7 +16,7 @@ use rand::rngs::ThreadRng;
 use std::iter::Sum;
 
 use crate::{
-    genome::bitstring::Bitstring, mutator::with_one_over_length::WithOneOverLength,
+    genome::bitstring_vec::BitstringVecType, mutator::with_one_over_length::WithOneOverLength,
     recombinator::two_point_xo::TwoPointXo,
 };
 
@@ -31,18 +31,18 @@ impl<Sc> TwoPointXoMutate<Sc> {
     }
 }
 
-impl<S, R, Sc> ChildMaker<Vec<EcIndividual<Bitstring, TestResults<R>>>, S> for TwoPointXoMutate<Sc>
+impl<S, R, Sc> ChildMaker<Vec<EcIndividual<BitstringVecType, TestResults<R>>>, S> for TwoPointXoMutate<Sc>
 where
-    S: Selector<Vec<EcIndividual<Bitstring, TestResults<R>>>>,
+    S: Selector<Vec<EcIndividual<BitstringVecType, TestResults<R>>>>,
     R: Sum + Copy + From<i64>,
     Sc: Fn(&[bool]) -> Vec<i64>,
 {
     fn make_child(
         &self,
         rng: &mut ThreadRng,
-        population: &Vec<EcIndividual<Bitstring, TestResults<R>>>,
+        population: &Vec<EcIndividual<BitstringVecType, TestResults<R>>>,
         selector: &S,
-    ) -> Result<EcIndividual<Bitstring, TestResults<R>>> {
+    ) -> Result<EcIndividual<BitstringVecType, TestResults<R>>> {
         let selector = Select::new(selector);
         // Population -> child genome
         let make_mutated_genome = selector
@@ -64,7 +64,7 @@ mod tests {
     use ec_core::{individual::Individual, operator::identity::Identity};
     use rand::thread_rng;
 
-    use crate::genome::bitstring::{count_ones, new_scored_bitstring};
+    use crate::genome::bitstring_vec::{count_ones, new_scored_bitstring};
 
     use super::*;
 
