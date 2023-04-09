@@ -16,7 +16,7 @@ use rand::rngs::ThreadRng;
 use std::iter::Sum;
 
 use crate::{
-    bitstring::Bitstring, mutator::with_one_over_length::WithOneOverLength,
+    genome::bitstring::Bitstring, mutator::with_one_over_length::WithOneOverLength,
     recombinator::two_point_xo::TwoPointXo,
 };
 
@@ -64,7 +64,7 @@ mod tests {
     use ec_core::{individual::Individual, operator::identity::Identity};
     use rand::thread_rng;
 
-    use crate::bitstring::{count_ones, new_scored_bitstring};
+    use crate::genome::bitstring::{count_ones, new_scored_bitstring};
 
     use super::*;
 
