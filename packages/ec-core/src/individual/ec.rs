@@ -1,4 +1,8 @@
-use std::{borrow::Borrow, cmp::Ordering};
+use std::{
+    borrow::Borrow,
+    cmp::Ordering,
+    fmt::{Debug, Display},
+};
 
 use rand::rngs::ThreadRng;
 
@@ -93,5 +97,13 @@ impl<G: Eq, R: Ord> Ord for EcIndividual<G, R> {
 impl<G: PartialEq, R: PartialOrd> PartialOrd for EcIndividual<G, R> {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         self.test_results.partial_cmp(&other.test_results)
+    }
+}
+
+// TODO: Maybe change R to implement `Display` and have `TestResults` have a
+//   nice-ish display function.
+impl<G: Display, R: Debug> Display for EcIndividual<G, R> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "[{}]\n{:?}", self.genome(), self.test_results())
     }
 }

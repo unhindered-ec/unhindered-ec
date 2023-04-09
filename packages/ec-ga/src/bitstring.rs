@@ -1,14 +1,16 @@
 use std::borrow::Borrow;
-use std::fmt::{Debug, Display};
 
 use rand::{rngs::ThreadRng, Rng};
 
-use crate::individual::ec::EcIndividual;
-use crate::individual::Generate as _;
-use crate::individual::Individual;
-use crate::population::Generate as _;
-use crate::test_results::TestResults;
+use ec_core::{
+    individual::{ec::EcIndividual, Generate as _},
+    population::Generate as _,
+    test_results::TestResults,
+};
 
+// TODO:
+//   We need an `impl Display for Bitstring` when we
+//   have that in a `struct`.
 pub type Bitstring = Vec<bool>;
 
 pub fn make_random(len: usize, rng: &mut ThreadRng) -> Bitstring {
@@ -74,35 +76,33 @@ pub fn fitness_vec_to_test_results(results: Vec<i64>) -> TestResults<i64> {
     }
 }
 
-impl<R> EcIndividual<Bitstring, R> {
-    pub fn new_bitstring<H>(
-        bit_length: usize,
-        run_tests: impl Fn(&H) -> R,
-        rng: &mut ThreadRng,
-    ) -> Self
-    where
-        Bitstring: Borrow<H>,
-        H: ?Sized,
-    {
-        Self::generate(|rng| make_random(bit_length, rng), run_tests, rng)
-    }
+// TODO: This should move into an `impl` block for the
+//   `Bitstring` type when it becomes a `struct`.
+pub fn new_scored_bitstring<R, H>(
+    bit_length: usize,
+    run_tests: impl Fn(&H) -> R,
+    rng: &mut ThreadRng,
+) -> EcIndividual<Bitstring, R>
+where
+    Bitstring: Borrow<H>,
+    H: ?Sized,
+{
+    EcIndividual::generate(|rng| make_random(bit_length, rng), run_tests, rng)
 }
 
-// TODO: Maybe change R to implement `Display` and have `TestResults` have a
-//   nice-ish display function.
-impl<R: Debug> Display for EcIndividual<Bitstring, R> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let mut result = String::new();
-        for bit in self.genome() {
-            if *bit {
-                result.push('1');
-            } else {
-                result.push('0');
-            }
-        }
-        write!(f, "[{}]\n{:?}", result, self.test_results())
-    }
-}
+// impl<R> EcIndividual<Bitstring, R> {
+//     pub fn new_bitstring<H>(
+//         bit_length: usize,
+//         run_tests: impl Fn(&H) -> R,
+//         rng: &mut ThreadRng,
+//     ) -> Self
+//     where
+//         Bitstring: Borrow<H>,
+//         H: ?Sized,
+//     {
+//         Self::generate(|rng| make_random(bit_length, rng), run_tests, rng)
+//     }
+// }
 
 pub fn new_bitstring_population<R, H>(
     pop_size: usize,

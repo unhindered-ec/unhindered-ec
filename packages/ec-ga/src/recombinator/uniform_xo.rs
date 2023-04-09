@@ -1,7 +1,7 @@
 use anyhow::{ensure, Result};
 use rand::{rngs::ThreadRng, Rng};
 
-use super::Recombinator;
+use ec_core::operator::recombinator::Recombinator;
 
 pub struct UniformXo;
 

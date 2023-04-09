@@ -1,15 +1,19 @@
 pub mod args;
 
-use crate::args::{Args, TargetProblem, RunModel};
+use crate::args::{Args, RunModel, TargetProblem};
 use anyhow::{ensure, Result};
 use clap::Parser;
 use ec_core::{
-    bitstring::{count_ones, hiff, new_bitstring_population, Bitstring},
+    generation::Generation,
     individual::ec::EcIndividual,
     operator::selector::{
         best::Best, lexicase::Lexicase, tournament::Tournament, weighted::Weighted, Selector,
     },
-    test_results::{self, TestResults}, child_maker::two_point_xo_mutate::TwoPointXoMutate, generation::Generation,
+    test_results::{self, TestResults},
+};
+use ec_ga::{
+    bitstring::{count_ones, hiff, new_bitstring_population, Bitstring},
+    child_maker::two_point_xo_mutate::TwoPointXoMutate,
 };
 use std::ops::Not;
 
@@ -59,7 +63,6 @@ use std::ops::Not;
 /// This can return an error for a whole host of reasons, mostly because the
 /// population or the collection of selectors is empty.
 pub fn main() -> Result<()> {
-
     let args = Args::parse();
 
     let scorer = match args.target_problem {
@@ -113,7 +116,7 @@ pub fn main() -> Result<()> {
         let best = Best.select(generation.population(), &mut rng)?;
         // TODO: Change 2 to be the smallest number of digits needed for
         //  args.num_generations-1.
-        println!("Generation {generation_number:2} best is {best}");
+        println!("Generation {generation_number:2} best is {best:?}");
 
         Ok(())
     })

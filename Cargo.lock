@@ -184,12 +184,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "ec-ga"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "ec-core",
+ "num-traits",
+ "rand",
+]
+
+[[package]]
 name = "ec-ga-cli"
 version = "0.1.0"
 dependencies = [
  "anyhow",
  "clap",
  "ec-core",
+ "ec-ga",
  "rand",
 ]
 

@@ -1,9 +1,8 @@
 use anyhow::Result;
+use ec_core::operator::mutator::Mutator;
 use std::ops::Not;
 
 use rand::{rngs::ThreadRng, Rng};
-
-use super::Mutator;
 
 pub struct WithRate {
     mutation_rate: f32,
@@ -39,9 +38,9 @@ impl WithRate {
 mod tests {
     use std::iter::zip;
 
-    use crate::{
-        bitstring::make_random, operator::mutator::with_rate::WithRate, operator::mutator::Mutator,
-    };
+    use ec_core::operator::mutator::Mutator;
+
+    use crate::{bitstring::make_random, mutator::with_rate::WithRate};
 
     // This test is stochastic, so I'm going to ignore it most of the time.
     #[test]
