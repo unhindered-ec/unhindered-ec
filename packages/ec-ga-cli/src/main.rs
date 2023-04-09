@@ -11,7 +11,7 @@ use ec_core::{
     },
     test_results::{self, TestResults},
 };
-use ec_ga::{
+use ec_linear::{
     bitstring::{count_ones, hiff, new_bitstring_population, Bitstring},
     child_maker::two_point_xo_mutate::TwoPointXoMutate,
 };
