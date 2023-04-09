@@ -173,7 +173,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "ec-lib"
+name = "ec-core"
 version = "0.1.0"
 dependencies = [
  "anyhow",
@@ -181,6 +181,16 @@ dependencies = [
  "num-traits",
  "rand",
  "rayon",
+]
+
+[[package]]
+name = "ec-ga-cli"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "clap",
+ "ec-core",
+ "rand",
 ]
 
 [[package]]
@@ -208,16 +218,6 @@ checksum = "aa68f1b12764fab894d2755d2518754e71b4fd80ecfb822714a1206c2aab39bf"
 dependencies = [
  "cc",
  "libc",
-]
-
-[[package]]
-name = "ga"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "clap",
- "ec-lib",
- "rand",
 ]
 
 [[package]]

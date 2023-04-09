@@ -3,7 +3,7 @@ pub mod args;
 use crate::args::{Args, TargetProblem, RunModel};
 use anyhow::{ensure, Result};
 use clap::Parser;
-use ec_lib::{
+use ec_core::{
     bitstring::{count_ones, hiff, new_bitstring_population, Bitstring},
     individual::ec::EcIndividual,
     operator::selector::{
