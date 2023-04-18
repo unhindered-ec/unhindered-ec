@@ -1,14 +1,20 @@
-use std::borrow::Borrow;
 use std::fmt::Display;
 use std::iter;
+use std::{borrow::Borrow, slice::Iter};
 
+use anyhow::bail;
 use ec_core::gene::Genome;
 use ec_core::individual::ec::EcIndividual;
 use ec_core::population::Generate;
 use ec_core::test_results::TestResults;
 use rand::{rngs::ThreadRng, Rng};
 
+use crate::recombinator::crossover::Crossover;
+
 use super::LinearGenome;
+
+// TODO: Ought to have `LinearGenome<T>` so that `Bitstring` is just
+//   `LinearGenome<bool>`.
 
 #[derive(Clone)]
 pub struct Bitstring {
@@ -22,7 +28,9 @@ impl Bitstring {
     }
 
     pub fn random_list(num_genomes: usize, len: usize, rng: &mut ThreadRng) -> Vec<Self> {
-        iter::repeat_with(|| Self::random(len, rng)).take(num_genomes).collect()
+        iter::repeat_with(|| Self::random(len, rng))
+            .take(num_genomes)
+            .collect()
     }
 }
 
@@ -35,11 +43,54 @@ impl Display for Bitstring {
     }
 }
 
+// Should we use copy-on-write when we clone genomes after selection?
+
+// Are there other traits that we should implement for flexibility? I feel
+// like esitsu has a "standard" list that they recommended several months ago.
+
+impl<B> FromIterator<B> for Bitstring
+where
+    bool: From<B>,
+{
+    fn from_iter<T: IntoIterator<Item = B>>(iter: T) -> Self {
+        Self {
+            bits: iter.into_iter().map(From::from).collect(),
+        }
+    }
+}
+
+impl IntoIterator for Bitstring {
+    type Item = bool;
+    type IntoIter = std::vec::IntoIter<Self::Item>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.bits.into_iter()
+    }
+}
+
+impl<'a> IntoIterator for &'a Bitstring {
+    type Item = &'a bool; // <std::slice::Iter<'a, bool> as Iterator>::Item;
+    type IntoIter = std::slice::Iter<'a, bool>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.bits.iter()
+    }
+}
+
+impl<'a> IntoIterator for &'a mut Bitstring {
+    type Item = &'a mut bool; // <std::slice::Iter<'a, bool> as Iterator>::Item;
+    type IntoIter = std::slice::IterMut<'a, bool>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.bits.iter_mut()
+    }
+}
+
 impl Genome for Bitstring {
     type Gene = bool;
 }
 
-impl LinearGenome for Bitstring {    
+impl LinearGenome for Bitstring {
     fn size(&self) -> usize {
         self.bits.len()
     }
@@ -135,5 +186,9 @@ where
     Bitstring: Borrow<H>,
     H: ?Sized,
 {
-    Vec::generate(pop_size, |rng| Bitstring::random(bit_length, rng), run_tests)
+    Vec::generate(
+        pop_size,
+        |rng| Bitstring::random(bit_length, rng),
+        run_tests,
+    )
 }
