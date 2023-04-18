@@ -1,11 +1,14 @@
 #![allow(clippy::missing_panics_doc)]
 
-use std::borrow::Borrow;
+use std::{borrow::Borrow, iter::repeat_with};
 
 use rand::rngs::ThreadRng;
 use rayon::prelude::{IntoParallelIterator, ParallelIterator};
 
-use crate::individual::{self, Individual};
+use crate::{
+    genome::Generator,
+    individual::{self, Individual},
+};
 
 pub trait Population {
     type Individual;
@@ -54,6 +57,30 @@ impl<I: individual::Generate + Send> Generate for Vec<I> {
             .map_init(rand::thread_rng, |rng, _| {
                 I::generate(&make_genome, &run_tests, rng)
             })
+            .collect()
+    }
+}
+
+pub struct GeneratorContext<IC> {
+    population_size: usize,
+    individual_context: IC,
+}
+
+impl<I, IC> Generator<Vec<I>, GeneratorContext<IC>> for ThreadRng
+where
+    Self: Generator<I, IC>,
+    Vec<I>: Population,
+    I: Send,
+{
+    // We could implement this using Rayon's `par_bridge`, but we
+    // have to replace `self.generate` with `thread_rng().generate`
+    // since we can't pass `self` (a `ThreadRng`) around between
+    // threads. Since we only generate populations rarely (typically
+    // just once at the beginning) there's not a huge value in
+    // parallelizing this action.
+    fn generate(&mut self, context: &GeneratorContext<IC>) -> Vec<I> {
+        repeat_with(|| self.generate(&context.individual_context))
+            .take(context.population_size)
             .collect()
     }
 }
