@@ -1,13 +1,13 @@
+use std::borrow::Borrow;
 use std::fmt::Display;
-use std::iter;
-use std::{borrow::Borrow, slice::Iter};
+use std::iter::repeat_with;
 
 use anyhow::bail;
-use ec_core::gene::Genome;
+use ec_core::genome::{Generator, Genome};
 use ec_core::individual::ec::EcIndividual;
 use ec_core::population::Generate;
 use ec_core::test_results::TestResults;
-use rand::{rngs::ThreadRng, Rng};
+use rand::rngs::ThreadRng;
 
 use crate::recombinator::crossover::Crossover;
 
@@ -16,22 +16,46 @@ use super::LinearGenome;
 // TODO: Ought to have `LinearGenome<T>` so that `Bitstring` is just
 //   `LinearGenome<bool>`.
 
-#[derive(Clone)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Bitstring {
     pub bits: Vec<bool>,
 }
 
-impl Bitstring {
-    pub fn random(len: usize, rng: &mut ThreadRng) -> Self {
-        let bits = iter::repeat_with(|| rng.gen_bool(0.5)).take(len).collect();
+pub struct BitstringGeneratorContext {
+    num_bits: usize,
+    probability: f64,
+}
+
+impl Generator<Bitstring, BitstringGeneratorContext> for ThreadRng {
+    fn generate(&mut self, context: &BitstringGeneratorContext) -> Bitstring {
+        let bits = repeat_with(|| self.generate(&context.probability))
+            .take(context.num_bits)
+            .collect();
         Bitstring { bits }
     }
+}
 
-    pub fn random_list(num_genomes: usize, len: usize, rng: &mut ThreadRng) -> Vec<Self> {
-        iter::repeat_with(|| Self::random(len, rng))
-            .take(num_genomes)
-            .collect()
+impl Bitstring {
+    pub fn random(num_bits: usize, rng: &mut ThreadRng) -> Self {
+        rng.generate(&BitstringGeneratorContext {
+            num_bits,
+            probability: 0.5,
+        })
     }
+
+    pub fn random_with_probability(num_bits: usize, probability: f64, rng: &mut ThreadRng) -> Self {
+        rng.generate(&BitstringGeneratorContext {
+            num_bits,
+            probability,
+        })
+    }
+
+    // TODO: Remove this or move the logic to someplace like `Population`.
+    // pub fn random_list(num_genomes: usize, len: usize, rng: &mut ThreadRng) -> Vec<Self> {
+    //     iter::repeat_with(|| Self::random(len, rng))
+    //         .take(num_genomes)
+    //         .collect()
+    // }
 }
 
 impl Display for Bitstring {
@@ -110,7 +134,11 @@ impl Crossover for Bitstring {
         }
     }
 
-    fn crossover_segment(&mut self, other: &mut Self, range: std::ops::Range<usize>) -> anyhow::Result<()> {
+    fn crossover_segment(
+        &mut self,
+        other: &mut Self,
+        range: std::ops::Range<usize>,
+    ) -> anyhow::Result<()> {
         let lhs = &mut self.bits[range.clone()];
         let rhs = &mut other.bits[range.clone()];
         if lhs.len() == rhs.len() {
