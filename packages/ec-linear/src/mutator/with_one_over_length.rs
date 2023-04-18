@@ -5,6 +5,8 @@ use std::ops::Not;
 use num_traits::ToPrimitive;
 use rand::rngs::ThreadRng;
 
+use crate::genome::LinearGenome;
+
 use super::with_rate::WithRate;
 
 pub struct WithOneOverLength;
@@ -18,6 +20,24 @@ where
             format!(
                 "The genome length {} couldn't be converted to an f32 value",
                 genome.len()
+            )
+        })?;
+        let mutation_rate = 1.0 / genome_length;
+        let mutator = WithRate::new(mutation_rate);
+        mutator.mutate(genome, rng)
+    }
+}
+
+impl<T> Mutator<T> for WithOneOverLength
+where
+    T: LinearGenome + FromIterator<T::Gene> + IntoIterator<Item = T::Gene>,
+    T::Gene: Not<Output = T::Gene>,
+{
+    fn mutate(&self, genome: T, rng: &mut ThreadRng) -> Result<T> {
+        let genome_length = genome.size().to_f32().with_context(|| {
+            format!(
+                "The genome length {} couldn't be converted to an f32 value",
+                genome.size()
             )
         })?;
         let mutation_rate = 1.0 / genome_length;
