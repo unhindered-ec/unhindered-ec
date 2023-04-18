@@ -13,11 +13,11 @@ use ec_core::{
     test_results::TestResults,
 };
 use rand::rngs::ThreadRng;
-use std::iter::Sum;
+use std::{iter::Sum, ops::Not};
 
 use crate::{
-    genome::bitstring_vec::BitstringVecType, mutator::with_one_over_length::WithOneOverLength,
-    recombinator::two_point_xo::TwoPointXo,
+    genome::{bitstring_vec::BitstringVecType, bitstring::Bitstring}, mutator::with_one_over_length::WithOneOverLength,
+    recombinator::{two_point_xo::TwoPointXo, crossover::Crossover},
 };
 
 #[derive(Clone)]
@@ -55,6 +55,39 @@ where
             |genome: &Vec<bool>| (self.scorer)(genome).into_iter().map(From::from).sum();
 
         let genome_scorer = GenomeScorer::new(make_mutated_genome, make_test_results);
+        genome_scorer.apply(population, rng)
+    }
+}
+
+impl<G, S, R, Sc> ChildMaker<Vec<EcIndividual<G, TestResults<R>>>, S> for TwoPointXoMutate<Sc>
+where
+    G: Crossover + FromIterator<G::Gene> + IntoIterator<Item = G::Gene> + Clone,
+    G::Gene: Not<Output = G::Gene>,
+    S: Selector<Vec<EcIndividual<G, TestResults<R>>>>,
+    R: Sum + Copy + From<i64>,
+    Sc: Fn(&G) -> Vec<i64>,
+{
+    fn make_child(
+        &self,
+        rng: &mut ThreadRng,
+        population: &Vec<EcIndividual<G, TestResults<R>>>,
+        selector: &S,
+    ) -> Result<EcIndividual<G, TestResults<R>>> {
+        let selector = Select::new(selector);
+        // Population -> child genome
+        let make_mutated_genome = selector
+            .apply_twice()
+            .then_map(GenomeExtractor)
+            .then(Recombine::new(TwoPointXo))
+            .then(Mutate::new(WithOneOverLength));
+
+        let make_test_results =
+            |genome: &G| -> TestResults<R> {
+                (self.scorer)(genome).into_iter().map(From::from).sum()
+            };
+
+        let genome_scorer = GenomeScorer::new(make_mutated_genome, make_test_results);
+        // Operator::<_>::apply(&genome_scorer, population, rng)
         genome_scorer.apply(population, rng)
     }
 }
