@@ -4,8 +4,8 @@
 #![warn(clippy::expect_used)]
 
 pub mod child_maker;
-pub mod gene;
 pub mod generation;
+pub mod genome;
 pub mod individual;
 pub mod operator;
 pub mod population;
