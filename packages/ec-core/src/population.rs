@@ -6,7 +6,7 @@ use rand::rngs::ThreadRng;
 use rayon::prelude::{IntoParallelIterator, ParallelIterator};
 
 use crate::{
-    genome::Generator,
+    generator::Generator,
     individual::{self, Individual},
 };
 

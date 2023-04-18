@@ -3,10 +3,10 @@ use std::fmt::Display;
 use std::iter::repeat_with;
 
 use anyhow::bail;
-use ec_core::genome::{Generator, Genome};
-use ec_core::individual::ec::EcIndividual;
-use ec_core::population::Generate;
-use ec_core::test_results::TestResults;
+use ec_core::{
+    generator::Generator, genome::Genome, individual::ec::EcIndividual, population::Generate,
+    test_results::TestResults,
+};
 use rand::rngs::ThreadRng;
 
 use crate::recombinator::crossover::Crossover;
