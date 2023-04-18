@@ -69,7 +69,7 @@ impl IntoIterator for Bitstring {
 }
 
 impl<'a> IntoIterator for &'a Bitstring {
-    type Item = &'a bool; // <std::slice::Iter<'a, bool> as Iterator>::Item;
+    type Item = &'a bool;
     type IntoIter = std::slice::Iter<'a, bool>;
 
     fn into_iter(self) -> Self::IntoIter {
@@ -78,7 +78,7 @@ impl<'a> IntoIterator for &'a Bitstring {
 }
 
 impl<'a> IntoIterator for &'a mut Bitstring {
-    type Item = &'a mut bool; // <std::slice::Iter<'a, bool> as Iterator>::Item;
+    type Item = &'a mut bool;
     type IntoIter = std::slice::IterMut<'a, bool>;
 
     fn into_iter(self) -> Self::IntoIter {

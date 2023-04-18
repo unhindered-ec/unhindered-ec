@@ -8,6 +8,17 @@ use ec_core::{
     test_results::TestResults,
 };
 
+// Should we keep (something like) this and have it
+// implement `LinearGenome` and `Crossover` for `Vec<T>`?
+// That might prove useful in some cases? If nothing else
+// we can then pass through operations like mutation and
+// crossover in `Bitstring` to the underlying vectors of
+// values.
+//
+// Or, as the comment in `LinearGenome` suggests, we just
+// make that generic in `T`, and then `Bitstring` becomes
+// `LinearGenome<bool>`
+
 // TODO:
 //   We need an `impl Display for Bitstring` when we
 //   have that in a `struct`.
