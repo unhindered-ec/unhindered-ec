@@ -9,8 +9,7 @@ pub trait Crossover: LinearGenome {
     fn crossover_gene(&mut self, other: &mut Self, index: usize) -> anyhow::Result<()>;
 
     /// Swaps a segment.
-    fn crossover_segment(&mut self, other: &mut Self, range: Range<usize>) -> anyhow::Result<()>
-    {
+    fn crossover_segment(&mut self, other: &mut Self, range: Range<usize>) -> anyhow::Result<()> {
         for index in range {
             self.crossover_gene(other, index)?;
         }

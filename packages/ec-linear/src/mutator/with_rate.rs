@@ -64,7 +64,10 @@ mod tests {
 
     use ec_core::operator::mutator::Mutator;
 
-    use crate::{genome::{bitstring_vec::make_random, bitstring::Bitstring}, mutator::with_rate::WithRate};
+    use crate::{
+        genome::{bitstring::Bitstring, bitstring_vec::make_random},
+        mutator::with_rate::WithRate,
+    };
 
     // This test is stochastic, so I'm going to ignore it most of the time.
     #[test]
@@ -94,31 +97,31 @@ mod tests {
         );
     }
 
-        // This test is stochastic, so I'm going to ignore it most of the time.
-        #[test]
-        #[ignore]
-        #[allow(clippy::unwrap_used)]
-        fn mutate_linear_genome_with_rate_does_not_change_much() {
-            let mutator = WithRate {
-                mutation_rate: 0.05,
-            };
-    
-            let mut rng = rand::thread_rng();
-            let num_bits = 100;
-            let parent_bits = Bitstring::random(num_bits, &mut rng); //  make_random(num_bits, &mut rng);
-            let child_bits = mutator.mutate(parent_bits.clone(), &mut rng).unwrap();
-    
-            let num_differences = zip(parent_bits, child_bits)
-                .filter(|(p, c)| *p != *c)
-                .count();
-            println!("Num differences = {num_differences}");
-            assert!(
-                0 < num_differences,
-                "We're expecting at least one difference"
-            );
-            assert!(
-                num_differences < num_bits / 10,
-                "We're not expecting lots of differences, and got {num_differences}."
-            );
-        }
+    // This test is stochastic, so I'm going to ignore it most of the time.
+    #[test]
+    #[ignore]
+    #[allow(clippy::unwrap_used)]
+    fn mutate_linear_genome_with_rate_does_not_change_much() {
+        let mutator = WithRate {
+            mutation_rate: 0.05,
+        };
+
+        let mut rng = rand::thread_rng();
+        let num_bits = 100;
+        let parent_bits = Bitstring::random(num_bits, &mut rng); //  make_random(num_bits, &mut rng);
+        let child_bits = mutator.mutate(parent_bits.clone(), &mut rng).unwrap();
+
+        let num_differences = zip(parent_bits, child_bits)
+            .filter(|(p, c)| *p != *c)
+            .count();
+        println!("Num differences = {num_differences}");
+        assert!(
+            0 < num_differences,
+            "We're expecting at least one difference"
+        );
+        assert!(
+            num_differences < num_bits / 10,
+            "We're not expecting lots of differences, and got {num_differences}."
+        );
+    }
 }

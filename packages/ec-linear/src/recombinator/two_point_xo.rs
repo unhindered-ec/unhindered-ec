@@ -62,11 +62,15 @@ impl<T> Recombinator<(Vec<T>, Vec<T>)> for TwoPointXo {
 //   operator than this one, though.
 impl<G> Recombinator<[G; 2]> for TwoPointXo
 where
-    G: Crossover
+    G: Crossover,
 {
     type Output = G;
 
-    fn recombine(&self, [mut first_genome, mut second_genome]: [G; 2], rng: &mut ThreadRng) -> Result<Self::Output> {
+    fn recombine(
+        &self,
+        [mut first_genome, mut second_genome]: [G; 2],
+        rng: &mut ThreadRng,
+    ) -> Result<Self::Output> {
         ensure!(
             first_genome.size() == second_genome.size(),
             "Attempted to perform TwoPointXo on genomes of different lengths {} and {}",
@@ -87,7 +91,7 @@ where
 
 impl<G> Recombinator<(G, G)> for TwoPointXo
 where
-    G: Crossover
+    G: Crossover,
 {
     type Output = G;
 

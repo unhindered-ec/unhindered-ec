@@ -16,8 +16,9 @@ use rand::rngs::ThreadRng;
 use std::{iter::Sum, ops::Not};
 
 use crate::{
-    genome::{bitstring_vec::BitstringVecType, bitstring::Bitstring}, mutator::with_one_over_length::WithOneOverLength,
-    recombinator::{two_point_xo::TwoPointXo, crossover::Crossover},
+    genome::bitstring_vec::BitstringVecType,
+    mutator::with_one_over_length::WithOneOverLength,
+    recombinator::{crossover::Crossover, two_point_xo::TwoPointXo},
 };
 
 #[derive(Clone)]
@@ -31,7 +32,8 @@ impl<Sc> TwoPointXoMutate<Sc> {
     }
 }
 
-impl<S, R, Sc> ChildMaker<Vec<EcIndividual<BitstringVecType, TestResults<R>>>, S> for TwoPointXoMutate<Sc>
+impl<S, R, Sc> ChildMaker<Vec<EcIndividual<BitstringVecType, TestResults<R>>>, S>
+    for TwoPointXoMutate<Sc>
 where
     S: Selector<Vec<EcIndividual<BitstringVecType, TestResults<R>>>>,
     R: Sum + Copy + From<i64>,
@@ -81,10 +83,9 @@ where
             .then(Recombine::new(TwoPointXo))
             .then(Mutate::new(WithOneOverLength));
 
-        let make_test_results =
-            |genome: &G| -> TestResults<R> {
-                (self.scorer)(genome).into_iter().map(From::from).sum()
-            };
+        let make_test_results = |genome: &G| -> TestResults<R> {
+            (self.scorer)(genome).into_iter().map(From::from).sum()
+        };
 
         let genome_scorer = GenomeScorer::new(make_mutated_genome, make_test_results);
         // Operator::<_>::apply(&genome_scorer, population, rng)

@@ -3,13 +3,11 @@ use rand::{rngs::ThreadRng, Rng};
 
 use ec_core::operator::recombinator::Recombinator;
 
-use crate::genome::LinearGenome;
-
 use super::crossover::Crossover;
 
 pub struct UniformXo;
 
-// TODO: We should get rid of the `Vec<T>` versions when 
+// TODO: We should get rid of the `Vec<T>` versions when
 //   we've completed the migration to a struct-based `Bitstring`.
 impl<T: Clone> Recombinator<[Vec<T>; 2]> for UniformXo {
     type Output = Vec<T>;
@@ -78,9 +76,9 @@ where
     }
 }
 
-impl<G> Recombinator<(G, G)> for UniformXo 
+impl<G> Recombinator<(G, G)> for UniformXo
 where
-    G: Crossover
+    G: Crossover,
 {
     type Output = G;
 
@@ -92,4 +90,3 @@ where
         self.recombine([first_genome, second_genome], rng)
     }
 }
-
