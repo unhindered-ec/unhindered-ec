@@ -100,6 +100,28 @@ impl LinearGenome for Bitstring {
     }
 }
 
+impl Crossover for Bitstring {
+    fn crossover_gene(&mut self, other: &mut Self, index: usize) -> anyhow::Result<()> {
+        if let (Some(lhs), Some(rhs)) = (self.gene_mut(index), other.gene_mut(index)) {
+            std::mem::swap(lhs, rhs);
+            Ok(())
+        } else {
+            bail!("Crossing {self} and {other} at position {index} failed")
+        }
+    }
+
+    fn crossover_segment(&mut self, other: &mut Self, range: std::ops::Range<usize>) -> anyhow::Result<()> {
+        let lhs = &mut self.bits[range.clone()];
+        let rhs = &mut other.bits[range.clone()];
+        if lhs.len() == rhs.len() {
+            lhs.swap_with_slice(rhs);
+            Ok(())
+        } else {
+            bail!("Crossing {self} and {other} with range {range:?} failed")
+        }
+    }
+}
+
 // TODO: We need to move `count_ones` and `hiff` (and their tests)
 //   out into their own module, and possibly their own package?
 
