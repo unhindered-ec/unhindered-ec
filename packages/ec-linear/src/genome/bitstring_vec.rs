@@ -22,6 +22,7 @@ use ec_core::{
 // TODO:
 //   We need an `impl Display for Bitstring` when we
 //   have that in a `struct`.
+#[deprecated(note = "Use `Bitstring` struct instead")]
 pub type BitstringVecType = Vec<bool>;
 
 pub fn make_random(len: usize, rng: &mut ThreadRng) -> BitstringVecType {
@@ -29,8 +30,8 @@ pub fn make_random(len: usize, rng: &mut ThreadRng) -> BitstringVecType {
 }
 
 #[must_use]
-pub fn count_ones(bits: &[bool]) -> Vec<i64> {
-    bits.iter().map(|bit| i64::from(*bit)).collect()
+pub fn count_ones(bits: &[bool]) -> TestResults<i64> {
+    bits.iter().map(|bit| i64::from(*bit)).sum()
 }
 
 #[cfg(test)]
@@ -40,23 +41,23 @@ mod test_count_ones {
     #[test]
     fn empty() {
         let empty_vec: Vec<i64> = Vec::new();
-        assert_eq!(empty_vec, count_ones(&[]));
+        assert_eq!(empty_vec, count_ones(&[]).results);
     }
 
     #[test]
     fn non_empty() {
         let input = [false, true, true, true, false, true];
         let output = vec![0, 1, 1, 1, 0, 1];
-        assert_eq!(output, count_ones(&input));
+        assert_eq!(output, count_ones(&input).results);
     }
 }
 
 #[must_use]
-pub fn hiff(bits: &[bool]) -> Vec<i64> {
+pub fn hiff(bits: &[bool]) -> TestResults<i64> {
     let num_scores = 2 * bits.len() - 1;
     let mut scores = Vec::with_capacity(num_scores);
     do_hiff(bits, &mut scores);
-    scores
+    scores.into()
 }
 
 pub fn do_hiff(bits: &[bool], scores: &mut Vec<i64>) -> bool {
