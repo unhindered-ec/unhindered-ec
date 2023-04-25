@@ -70,7 +70,6 @@ impl<I, IC> Generator<Vec<I>, GeneratorContext<IC>> for ThreadRng
 where
     Self: Generator<I, IC>,
     Vec<I>: Population,
-    I: Send,
 {
     // We could implement this using Rayon's `par_bridge`, but we
     // have to replace `self.generate` with `thread_rng().generate`
