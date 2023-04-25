@@ -63,8 +63,8 @@ impl<I: individual::Generate + Send> Generate for Vec<I> {
 }
 
 pub struct GeneratorContext<IC> {
-    population_size: usize,
-    individual_context: IC,
+    pub population_size: usize,
+    pub individual_context: IC,
 }
 
 impl<I, IC> Generator<Vec<I>, GeneratorContext<IC>> for ThreadRng

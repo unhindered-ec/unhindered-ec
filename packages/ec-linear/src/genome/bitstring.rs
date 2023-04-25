@@ -22,8 +22,8 @@ pub struct Bitstring {
 }
 
 pub struct GeneratorContext {
-    num_bits: usize,
-    probability: f64,
+    pub num_bits: usize,
+    pub probability: f64,
 }
 
 impl Generator<Bitstring, GeneratorContext> for ThreadRng {

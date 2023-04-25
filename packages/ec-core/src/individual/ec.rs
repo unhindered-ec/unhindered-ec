@@ -11,8 +11,8 @@ use super::{Generate, Individual};
 #[derive(Debug, Eq, PartialEq, Clone)]
 #[allow(clippy::module_name_repetitions)]
 pub struct EcIndividual<G, R> {
-    genome: G,
-    test_results: R,
+    pub genome: G,
+    pub test_results: R,
 }
 
 impl<G, R> Individual for EcIndividual<G, R> {
