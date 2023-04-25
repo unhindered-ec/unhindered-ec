@@ -20,7 +20,7 @@ use ec_linear::{
     child_maker::two_point_xo_mutate::TwoPointXoMutate,
     genome::{
         bitstring::{self, Bitstring},
-        bitstring_vec::{count_ones, hiff, new_bitstring_population, BitstringVecType},
+        bitstring_vec::{count_ones, hiff, BitstringVecType},
     },
 };
 use rand::thread_rng;

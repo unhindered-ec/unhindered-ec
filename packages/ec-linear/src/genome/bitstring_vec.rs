@@ -1,12 +1,4 @@
-use std::borrow::Borrow;
-
-use rand::{rngs::ThreadRng, Rng};
-
-use ec_core::{
-    individual::{ec::EcIndividual, Generate as _},
-    population::Generate as _,
-    test_results::TestResults,
-};
+use ec_core::test_results::TestResults;
 
 // Should we keep (something like) this and have it
 // implement `LinearGenome` and `Crossover` for `Vec<T>`?
@@ -24,10 +16,6 @@ use ec_core::{
 //   have that in a `struct`.
 #[deprecated(note = "Use `Bitstring` struct instead")]
 pub type BitstringVecType = Vec<bool>;
-
-pub fn make_random(len: usize, rng: &mut ThreadRng) -> BitstringVecType {
-    (0..len).map(|_| rng.gen_bool(0.5)).collect()
-}
 
 #[must_use]
 pub fn count_ones(bits: &[bool]) -> TestResults<i64> {
@@ -86,45 +74,4 @@ pub fn fitness_vec_to_test_results(results: Vec<i64>) -> TestResults<i64> {
         total_result,
         results,
     }
-}
-
-// TODO: This should move into an `impl` block for the
-//   `Bitstring` type when it becomes a `struct`.
-pub fn new_scored_bitstring<R, H>(
-    bit_length: usize,
-    run_tests: impl Fn(&H) -> R,
-    rng: &mut ThreadRng,
-) -> EcIndividual<BitstringVecType, R>
-where
-    BitstringVecType: Borrow<H>,
-    H: ?Sized,
-{
-    EcIndividual::generate(|rng| make_random(bit_length, rng), run_tests, rng)
-}
-
-// impl<R> EcIndividual<Bitstring, R> {
-//     pub fn new_bitstring<H>(
-//         bit_length: usize,
-//         run_tests: impl Fn(&H) -> R,
-//         rng: &mut ThreadRng,
-//     ) -> Self
-//     where
-//         Bitstring: Borrow<H>,
-//         H: ?Sized,
-//     {
-//         Self::generate(|rng| make_random(bit_length, rng), run_tests, rng)
-//     }
-// }
-
-pub fn new_bitstring_population<R, H>(
-    pop_size: usize,
-    bit_length: usize,
-    run_tests: impl Fn(&H) -> R + Send + Sync,
-) -> Vec<EcIndividual<BitstringVecType, R>>
-where
-    R: Send,
-    BitstringVecType: Borrow<H>,
-    H: ?Sized,
-{
-    Vec::generate(pop_size, |rng| make_random(bit_length, rng), run_tests)
 }

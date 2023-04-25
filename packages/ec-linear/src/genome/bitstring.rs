@@ -1,12 +1,8 @@
-use std::borrow::Borrow;
 use std::fmt::Display;
 use std::iter::repeat_with;
 
 use anyhow::bail;
-use ec_core::{
-    generator::Generator, genome::Genome, individual::ec::EcIndividual, population::Generate,
-    test_results::TestResults,
-};
+use ec_core::{generator::Generator, genome::Genome, test_results::TestResults};
 use rand::rngs::ThreadRng;
 
 use crate::recombinator::crossover::Crossover;
@@ -49,13 +45,6 @@ impl Bitstring {
             probability,
         })
     }
-
-    // TODO: Remove this or move the logic to someplace like `Population`.
-    // pub fn random_list(num_genomes: usize, len: usize, rng: &mut ThreadRng) -> Vec<Self> {
-    //     iter::repeat_with(|| Self::random(len, rng))
-    //         .take(num_genomes)
-    //         .collect()
-    // }
 }
 
 impl Display for Bitstring {
@@ -67,10 +56,7 @@ impl Display for Bitstring {
     }
 }
 
-// Should we use copy-on-write when we clone genomes after selection?
-
-// Are there other traits that we should implement for flexibility? I feel
-// like esitsu has a "standard" list that they recommended several months ago.
+// TODO: Should we use copy-on-write when we clone genomes after selection?
 
 impl<B> FromIterator<B> for Bitstring
 where
@@ -210,35 +196,4 @@ pub fn fitness_vec_to_test_results(results: Vec<i64>) -> TestResults<i64> {
         total_result,
         results,
     }
-}
-
-// impl<R> EcIndividual<Bitstring, R> {
-//     pub fn new_bitstring<H>(
-//         bit_length: usize,
-//         run_tests: impl Fn(&H) -> R,
-//         rng: &mut ThreadRng,
-//     ) -> Self
-//     where
-//         Bitstring: Borrow<H>,
-//         H: ?Sized,
-//     {
-//         Self::generate(|rng| Bitstring::random(bit_length, rng), run_tests, rng)
-//     }
-// }
-
-pub fn new_bitstring_population<R, H>(
-    pop_size: usize,
-    bit_length: usize,
-    run_tests: impl Fn(&H) -> R + Send + Sync,
-) -> Vec<EcIndividual<Bitstring, R>>
-where
-    R: Send,
-    Bitstring: Borrow<H>,
-    H: ?Sized,
-{
-    Vec::generate(
-        pop_size,
-        |rng| Bitstring::random(bit_length, rng),
-        run_tests,
-    )
 }
