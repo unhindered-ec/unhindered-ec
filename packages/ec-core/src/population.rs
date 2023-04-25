@@ -20,6 +20,7 @@ pub trait Population {
     fn size(&self) -> usize;
 }
 
+#[deprecated(note = "Use the `Generator` trait instead")]
 pub trait Generate: Population
 where
     Self::Individual: Individual,
@@ -84,8 +85,10 @@ where
     }
 }
 
+// TODO: The goal is to remove the `Generate` trait, which will
+//   mean we'll remove this module.
 #[cfg(test)]
-mod tests {
+mod generate_trait_tests {
     use std::ops::Not;
 
     use rand::RngCore;
@@ -104,5 +107,39 @@ mod tests {
         let ind = vec_pop.into_iter().next().unwrap();
         assert!(*ind.genome() < 20);
         assert!(100 <= *ind.test_results() && *ind.test_results() < 120);
+    }
+}
+
+#[cfg(test)]
+mod generator_trait_tests {
+    use rand::{thread_rng, Rng};
+
+    use super::*;
+
+    struct RandFloat {
+        float: f32,
+    }
+
+    struct FloatContext;
+
+    impl Generator<RandFloat, FloatContext> for ThreadRng {
+        fn generate(&mut self, context: &FloatContext) -> RandFloat {
+            RandFloat {
+                float: self.gen()
+            }
+        }
+    }
+
+    #[test]
+    fn generator_works() {
+        let mut rng = thread_rng();
+        let individual_context = FloatContext;
+        let population_size = 10;
+        let pop_context = GeneratorContext {
+            population_size,
+            individual_context,
+        };
+        let vec_pop = rng.generate(&pop_context);
+        assert_eq!(population_size, vec_pop.size());
     }
 }
