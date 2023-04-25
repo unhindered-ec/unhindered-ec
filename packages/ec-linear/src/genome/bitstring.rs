@@ -21,13 +21,13 @@ pub struct Bitstring {
     pub bits: Vec<bool>,
 }
 
-pub struct BitstringGeneratorContext {
+pub struct GeneratorContext {
     num_bits: usize,
     probability: f64,
 }
 
-impl Generator<Bitstring, BitstringGeneratorContext> for ThreadRng {
-    fn generate(&mut self, context: &BitstringGeneratorContext) -> Bitstring {
+impl Generator<Bitstring, GeneratorContext> for ThreadRng {
+    fn generate(&mut self, context: &GeneratorContext) -> Bitstring {
         let bits = repeat_with(|| self.generate(&context.probability))
             .take(context.num_bits)
             .collect();
@@ -37,14 +37,14 @@ impl Generator<Bitstring, BitstringGeneratorContext> for ThreadRng {
 
 impl Bitstring {
     pub fn random(num_bits: usize, rng: &mut ThreadRng) -> Self {
-        rng.generate(&BitstringGeneratorContext {
+        rng.generate(&GeneratorContext {
             num_bits,
             probability: 0.5,
         })
     }
 
     pub fn random_with_probability(num_bits: usize, probability: f64, rng: &mut ThreadRng) -> Self {
-        rng.generate(&BitstringGeneratorContext {
+        rng.generate(&GeneratorContext {
             num_bits,
             probability,
         })
