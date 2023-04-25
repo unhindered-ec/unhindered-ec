@@ -1,5 +1,3 @@
-use crate::test_results::TestResults;
-
 pub trait Scorer<G, R> {
     /// Take a reference to a genome and return some score type `R`.
     fn score(&self, genome: &G) -> R;
