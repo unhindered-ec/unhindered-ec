@@ -112,20 +112,20 @@ mod generate_trait_tests {
 
 #[cfg(test)]
 mod generator_trait_tests {
+    use core::ops::Range;
+
     use rand::{thread_rng, Rng};
 
     use super::*;
 
-    struct RandFloat {
-        float: f32,
+    struct RandValue {
+        val: i32,
     }
 
-    struct FloatContext;
-
-    impl Generator<RandFloat, FloatContext> for ThreadRng {
-        fn generate(&mut self, context: &FloatContext) -> RandFloat {
-            RandFloat {
-                float: self.gen()
+    impl Generator<RandValue, Range<i32>> for ThreadRng {
+        fn generate(&mut self, range: &Range<i32>) -> RandValue {
+            RandValue {
+                val: self.gen_range(range.clone()),
             }
         }
     }
@@ -133,13 +133,16 @@ mod generator_trait_tests {
     #[test]
     fn generator_works() {
         let mut rng = thread_rng();
-        let individual_context = FloatContext;
         let population_size = 10;
+        let range = -10..25;
         let pop_context = GeneratorContext {
             population_size,
-            individual_context,
+            individual_context: range.clone(),
         };
         let vec_pop = rng.generate(&pop_context);
         assert_eq!(population_size, vec_pop.size());
+        for i in vec_pop {
+            assert!(range.contains(&i.val));
+        }
     }
 }
