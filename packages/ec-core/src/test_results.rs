@@ -209,3 +209,12 @@ impl<R: Sum + Copy> Sum<R> for TestResults<R> {
         }
     }
 }
+
+impl<V, R> From<Vec<V>> for TestResults<R>
+where
+    R: Copy + Sum + From<V>,
+{
+    fn from(values: Vec<V>) -> Self {
+        values.into_iter().map(From::from).sum()
+    }
+}

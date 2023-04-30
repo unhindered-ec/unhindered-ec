@@ -5,6 +5,8 @@ use std::ops::Not;
 use num_traits::ToPrimitive;
 use rand::rngs::ThreadRng;
 
+use crate::genome::LinearGenome;
+
 use super::with_rate::WithRate;
 
 pub struct WithOneOverLength;
@@ -26,13 +28,31 @@ where
     }
 }
 
+impl<T> Mutator<T> for WithOneOverLength
+where
+    T: LinearGenome + FromIterator<T::Gene> + IntoIterator<Item = T::Gene>,
+    T::Gene: Not<Output = T::Gene>,
+{
+    fn mutate(&self, genome: T, rng: &mut ThreadRng) -> Result<T> {
+        let genome_length = genome.size().to_f32().with_context(|| {
+            format!(
+                "The genome length {} couldn't be converted to an f32 value",
+                genome.size()
+            )
+        })?;
+        let mutation_rate = 1.0 / genome_length;
+        let mutator = WithRate::new(mutation_rate);
+        mutator.mutate(genome, rng)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use std::iter::zip;
 
-    use ec_core::operator::mutator::Mutator;
+    use ec_core::{generator::Generator, operator::mutator::Mutator};
 
-    use crate::{bitstring::make_random, mutator::with_one_over_length::WithOneOverLength};
+    use crate::{genome::bitstring, mutator::with_one_over_length::WithOneOverLength};
 
     // This test is stochastic, so I'm going to ignore it most of the time.
     #[test]
@@ -41,7 +61,11 @@ mod tests {
     fn mutate_one_over_does_not_change_much() {
         let mut rng = rand::thread_rng();
         let num_bits = 100;
-        let parent_bits = make_random(num_bits, &mut rng);
+        let bitstring_context = bitstring::GeneratorContext {
+            num_bits,
+            probability: 0.5,
+        };
+        let parent_bits = rng.generate(&bitstring_context);
 
         let child_bits = WithOneOverLength
             .mutate(parent_bits.clone(), &mut rng)

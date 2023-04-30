@@ -3,6 +3,7 @@ use std::borrow::Borrow;
 use rand::rngs::ThreadRng;
 
 pub mod ec;
+pub mod scorer;
 
 // TODO: I need to add a `new()` (or similar) method
 //   that takes a genome and returns a (scored) individual
@@ -11,6 +12,7 @@ pub mod ec;
 //     * An entirely new trait (like `Generate`)
 //     * A method in `Generate`
 //     * A method in `Individual`
+#[deprecated(note = "Use `Generator` trait instead")]
 
 pub trait Generate: Individual {
     fn generate<H>(
