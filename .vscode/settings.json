@@ -10,6 +10,8 @@
         "recombinators",
         "rngs",
         "Scorable",
-        "scottmcm's"
-    ]
+        "scottmcm's",
+        "Wrappable"
+    ],
+    "todo-tree.tree.showCountsInTree": true
 }

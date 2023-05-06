@@ -3,6 +3,13 @@ use std::{cmp::Ordering, fmt::Debug, iter::Sum};
 // TODO: We can probably use things in the `num` family of traits
 //   (https://github.com/rust-num/num) to genericize `Score` and
 //   `Error` so they're not tied to `i64`s anymore.
+// TODO: I think that we want `Score` and `Error` to implement
+//   some common trait so that we can mixed vectors of `Score`s
+//   and `Error`s. Or maybe we already have that? Do (Partial)Ord,
+//   (Partial)Eq, Ord, and Sum get us where we need to be? That's
+//   lot to keep track of, so it might be useful to have a named
+//   trait that has all those as super-traits so we have one name
+//   that pulls them all together.
 
 /// Score implicitly follows a "bigger is better" model.
 #[derive(Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]

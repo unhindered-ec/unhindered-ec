@@ -50,7 +50,21 @@ pub trait Composable {
         Map::new(op)
     }
 
+    fn wrap<T>(self, context: T::Context) -> T
+    where
+        T: Wrappable<Self>,
+        Self: Sized,
+    {
+        T::construct(self, context)
+    }
+
     // fn and_select<S>(self, selector: S) -> Then<Self, Select<S>> {
     //     Then::new(self, Select::new(selector))
     // }
+}
+
+pub trait Wrappable<T> {
+    type Context;
+
+    fn construct(wrapped: T, context: Self::Context) -> Self;
 }
