@@ -31,6 +31,9 @@ where
     }
 }
 
+// TODO: We should change this so that it mutates `genome` "in place".
+//   We own `genome`, so there's no need to make a new one every time.
+//   See the `Crossover` trait for the key idea.
 impl<T> Mutator<T> for WithRate
 where
     T: LinearGenome + FromIterator<T::Gene> + IntoIterator<Item = T::Gene>,
