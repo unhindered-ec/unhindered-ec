@@ -1,10 +1,8 @@
-use std::ops::Not;
-
 use crate::instruction::Instruction;
 
 use super::State;
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct PushState {
     exec: Vec<PushInstruction>,
     int: Vec<i128>,
@@ -12,6 +10,18 @@ pub struct PushState {
 }
 
 impl PushState {
+    pub fn new<P>(program: P) -> PushState
+    where
+        P: IntoIterator<Item = PushInstruction>,
+        P::IntoIter: DoubleEndedIterator,
+    {
+        PushState {
+            exec: program.into_iter().rev().collect(),
+            int: Vec::new(),
+            bool: Vec::new(),
+        }
+    }
+
     pub fn exec(&self) -> &Vec<PushInstruction> {
         &self.exec
     }
