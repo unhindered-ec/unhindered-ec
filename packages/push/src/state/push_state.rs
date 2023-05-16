@@ -37,6 +37,14 @@ impl PushState {
 
 impl State for PushState {
     type Instruction = PushInstruction;
+
+    // TODO: Need to have some kind of execution limit to prevent infinite loops.
+    // `run` probably isn't a great name here?
+    fn run_to_completion(&mut self) {
+        while let Some(instruction) = self.exec.pop() {
+            self.perform(&instruction);
+        }
+    }
 }
 
 pub enum PushInstruction {
