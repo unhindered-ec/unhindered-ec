@@ -49,6 +49,8 @@ impl Sum for Score {
     }
 }
 
+// TODO: This (and score) should probably be generic so we can
+//   use `i64` or `i28` or unsigned values, etc.
 /// Error implicitly follows a "smaller is better" model
 #[derive(Clone, Copy, Eq, PartialEq)]
 pub struct Error {

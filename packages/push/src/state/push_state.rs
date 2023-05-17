@@ -5,7 +5,7 @@ use super::State;
 #[derive(Default, Debug)]
 pub struct PushState {
     exec: Vec<PushInstruction>,
-    int: Vec<i128>,
+    int: Vec<i64>,
     bool: Vec<bool>,
 }
 
@@ -26,7 +26,15 @@ impl PushState {
         &self.exec
     }
 
-    pub fn int(&self) -> &Vec<i128> {
+    fn push_input(&mut self, name: &str) {
+        // TODO: This `.unwrap()` is icky, and we really should deal with it better.
+        //   I wonder if the fact that this name might not be there should be telling
+        //   us something...
+        let instruction = self.inputs.get(name).unwrap().clone();
+        instruction.perform(self);
+    }
+
+    pub fn int(&self) -> &Vec<i64> {
         &self.int
     }
 
@@ -62,7 +70,7 @@ pub enum BoolInstruction {
 
 #[derive(Debug)]
 pub enum IntInstruction {
-    Push(i128),
+    Push(i64),
     Add,
     IsEven,
 }
@@ -83,7 +91,7 @@ impl PushInstruction {
         BoolInstruction::Push(b).into()
     }
 
-    pub fn push_int(i: i128) -> Self {
+    pub fn push_int(i: i64) -> Self {
         IntInstruction::Push(i).into()
     }
 }
@@ -184,7 +192,7 @@ mod simple_check {
             PushInstruction::push_bool(b)
         }
 
-        fn push_int(i: i128) -> PushInstruction {
+        fn push_int(i: i64) -> PushInstruction {
             PushInstruction::push_int(i)
         }
 
