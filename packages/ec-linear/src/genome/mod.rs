@@ -1,7 +1,7 @@
 use ec_core::genome::Genome;
 
 pub mod bitstring;
-pub mod bitstring_vec;
+pub mod demo_scorers;
 
 pub trait LinearGenome: Genome {
     fn size(&self) -> usize;

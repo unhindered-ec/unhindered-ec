@@ -29,7 +29,7 @@ use ec_core::{
 use ec_linear::{
     genome::{
         bitstring::{self, Bitstring},
-        bitstring_vec::{count_ones, hiff},
+        demo_scorers::{count_ones, hiff},
     },
     mutator::with_one_over_length::WithOneOverLength,
     recombinator::two_point_xo::TwoPointXo,

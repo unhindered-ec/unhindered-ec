@@ -27,10 +27,7 @@ use ec_core::{
     test_results::{self, TestResults},
 };
 use ec_linear::{
-    genome::{
-        bitstring::{self, Bitstring},
-        bitstring_vec::{count_ones, hiff},
-    },
+    genome::bitstring::{self, Bitstring},
     mutator::with_one_over_length::WithOneOverLength,
     recombinator::two_point_xo::TwoPointXo,
 };
@@ -58,8 +55,7 @@ fn main() -> Result<()> {
     let scorer = |program: &Vec<PushInstruction>| -> TestResults<test_results::Error> {
         let errors: TestResults<test_results::Error> = (0..10)
             .map(|input| {
-                let mut state = PushState::new(program.clone())
-                    .with_input("x", input);
+                let mut state = PushState::new(program.clone()).with_input("x", input);
                 state.run_to_completion();
                 let expected = input * input * input - 2 * input * input - input;
                 if let Some(answer) = state.int().last() {
