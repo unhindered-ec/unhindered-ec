@@ -169,6 +169,34 @@ impl Instruction<PushState> for IntInstruction {
                     state.int.push(x + y);
                 }
             }
+            IntInstruction::Subtract => {
+                // TODO: We should probably check that this addition succeeds and do something
+                //   sensible if it doesn't. That requires having these return a `Result` or
+                //   `Option`, however, which we don't yet do.
+                if let Some((x, y)) = pop2(&mut state.int) {
+                    state.int.push(x - y);
+                }
+            }
+            IntInstruction::Multiply => {
+                // TODO: We should probably check that this addition succeeds and do something
+                //   sensible if it doesn't. That requires having these return a `Result` or
+                //   `Option`, however, which we don't yet do.
+                if let Some((x, y)) = pop2(&mut state.int) {
+                    state.int.push(x * y);
+                }
+            }
+            IntInstruction::ProtectedDivide => {
+                // TODO: We should probably check that this addition succeeds and do something
+                //   sensible if it doesn't. That requires having these return a `Result` or
+                //   `Option`, however, which we don't yet do.
+                if let Some((x, y)) = pop2(&mut state.int) {
+                    if y == 0 {
+                        state.int.push(1);
+                    } else {
+                        state.int.push(x / y);
+                    }
+                }
+            }
             IntInstruction::IsEven => {
                 if let Some(i) = state.int.pop() {
                     state.bool.push(i % 2 == 0);
