@@ -12,3 +12,5 @@ edition = { workspace = true }
 anyhow = "1.0.70"
 num-traits = "0.2.15"
 rand = { version = "0.8.5", features = ["alloc"] }
+
+ec-core = { path = "../ec-core" }
