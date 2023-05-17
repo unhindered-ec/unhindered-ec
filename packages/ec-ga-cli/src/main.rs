@@ -1,3 +1,8 @@
+#![warn(clippy::pedantic)]
+#![warn(clippy::nursery)]
+#![warn(clippy::unwrap_used)]
+#![warn(clippy::expect_used)]
+
 pub mod args;
 
 use crate::args::{Args, RunModel, TargetProblem};
