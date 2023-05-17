@@ -55,23 +55,27 @@ impl State for PushState {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum PushInstruction {
+    InputVar(String),
     BoolInstruction(BoolInstruction),
     IntInstruction(IntInstruction),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum BoolInstruction {
     Push(bool),
     BoolOr,
     BoolAnd,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum IntInstruction {
     Push(i64),
     Add,
+    Subtract,
+    Multiply,
+    ProtectedDivide,
     IsEven,
 }
 
