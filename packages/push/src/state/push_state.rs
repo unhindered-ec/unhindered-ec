@@ -16,12 +16,12 @@ pub struct PushState {
 }
 
 impl PushState {
-    pub fn new<P>(program: P) -> PushState
+    pub fn new<P>(program: P) -> Self
     where
         P: IntoIterator<Item = PushInstruction>,
         P::IntoIter: DoubleEndedIterator,
     {
-        PushState {
+        Self {
             exec: program.into_iter().rev().collect(),
             int: Vec::new(),
             bool: Vec::new(),
@@ -29,7 +29,7 @@ impl PushState {
         }
     }
 
-    pub fn with_input(mut self, input_name: &str, input_value: i64) -> Self {
+    #[must_use] pub fn with_input(mut self, input_name: &str, input_value: i64) -> Self {
         self.inputs.insert(
             input_name.to_string(),
             PushInstruction::push_int(input_value),
@@ -37,12 +37,12 @@ impl PushState {
         self
     }
 
-    pub fn with_int_stack(mut self, int_stack: Vec<i64>) -> Self {
+    #[must_use] pub fn with_int_stack(mut self, int_stack: Vec<i64>) -> Self {
         self.int = int_stack;
         self
     }
 
-    pub fn exec(&self) -> &Vec<PushInstruction> {
+    #[must_use] pub fn exec(&self) -> &Vec<PushInstruction> {
         &self.exec
     }
 
@@ -54,11 +54,11 @@ impl PushState {
         instruction.perform(self);
     }
 
-    pub fn int(&self) -> &Vec<i64> {
+    #[must_use] pub fn int(&self) -> &Vec<i64> {
         &self.int
     }
 
-    pub fn bool(&self) -> &Vec<bool> {
+    #[must_use] pub fn bool(&self) -> &Vec<bool> {
         &self.bool
     }
 }
@@ -111,11 +111,11 @@ fn pop2<T>(stack: &mut Vec<T>) -> Option<(T, T)> {
 }
 
 impl PushInstruction {
-    pub fn push_bool(b: bool) -> Self {
+    #[must_use] pub fn push_bool(b: bool) -> Self {
         BoolInstruction::Push(b).into()
     }
 
-    pub fn push_int(i: i64) -> Self {
+    #[must_use] pub fn push_int(i: i64) -> Self {
         IntInstruction::Push(i).into()
     }
 }
@@ -123,9 +123,9 @@ impl PushInstruction {
 impl Instruction<PushState> for PushInstruction {
     fn perform(&self, state: &mut PushState) {
         match self {
-            PushInstruction::InputVar(name) => state.push_input(name),
-            PushInstruction::BoolInstruction(i) => i.perform(state),
-            PushInstruction::IntInstruction(i) => i.perform(state),
+            Self::InputVar(name) => state.push_input(name),
+            Self::BoolInstruction(i) => i.perform(state),
+            Self::IntInstruction(i) => i.perform(state),
         }
     }
 }
@@ -133,13 +133,13 @@ impl Instruction<PushState> for PushInstruction {
 impl Instruction<PushState> for BoolInstruction {
     fn perform(&self, state: &mut PushState) {
         match self {
-            BoolInstruction::Push(b) => state.bool.push(*b),
-            BoolInstruction::BoolAnd => {
+            Self::Push(b) => state.bool.push(*b),
+            Self::BoolAnd => {
                 if let Some((x, y)) = pop2(&mut state.bool) {
                     state.bool.push(x && y);
                 }
             }
-            BoolInstruction::BoolOr => {
+            Self::BoolOr => {
                 if let Some((x, y)) = pop2(&mut state.bool) {
                     state.bool.push(x || y);
                 }
@@ -181,8 +181,8 @@ impl Generator<Vec<PushInstruction>, GeneratorContext> for ThreadRng {
 impl Instruction<PushState> for IntInstruction {
     fn perform(&self, state: &mut PushState) {
         match self {
-            IntInstruction::Push(i) => state.int.push(*i),
-            IntInstruction::Add => {
+            Self::Push(i) => state.int.push(*i),
+            Self::Add => {
                 // TODO: We should probably check that this addition succeeds and do something
                 //   sensible if it doesn't. That requires having these return a `Result` or
                 //   `Option`, however, which we don't yet do.
@@ -190,7 +190,7 @@ impl Instruction<PushState> for IntInstruction {
                     state.int.push(x + y);
                 }
             }
-            IntInstruction::Subtract => {
+            Self::Subtract => {
                 // TODO: We should probably check that this addition succeeds and do something
                 //   sensible if it doesn't. That requires having these return a `Result` or
                 //   `Option`, however, which we don't yet do.
@@ -198,7 +198,7 @@ impl Instruction<PushState> for IntInstruction {
                     state.int.push(x - y);
                 }
             }
-            IntInstruction::Multiply => {
+            Self::Multiply => {
                 // TODO: We should probably check that this addition succeeds and do something
                 //   sensible if it doesn't. That requires having these return a `Result` or
                 //   `Option`, however, which we don't yet do.
@@ -206,7 +206,7 @@ impl Instruction<PushState> for IntInstruction {
                     state.int.push(x * y);
                 }
             }
-            IntInstruction::ProtectedDivide => {
+            Self::ProtectedDivide => {
                 // TODO: We should probably check that this addition succeeds and do something
                 //   sensible if it doesn't. That requires having these return a `Result` or
                 //   `Option`, however, which we don't yet do.
@@ -218,7 +218,7 @@ impl Instruction<PushState> for IntInstruction {
                     }
                 }
             }
-            IntInstruction::IsEven => {
+            Self::IsEven => {
                 if let Some(i) = state.int.pop() {
                     state.bool.push(i % 2 == 0);
                 }
@@ -237,7 +237,7 @@ impl From<IntInstruction> for PushInstruction {
 mod simple_check {
     use crate::state::push_state::{PushInstruction, PushState};
 
-    use super::*;
+    use super::{BoolInstruction, IntInstruction, State};
 
     #[test]
     fn run_simple_program() {

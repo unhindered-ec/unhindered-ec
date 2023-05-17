@@ -5,20 +5,15 @@
 
 pub mod args;
 
-use crate::args::{Args, RunModel, TargetProblem};
+use crate::args::{Args};
 use anyhow::{ensure, Result};
 use clap::Parser;
 use ec_core::{
-    generation::Generation,
     generator::Generator,
     individual::ec::{self, EcIndividual},
     operator::{
-        genome_extractor::GenomeExtractor,
-        genome_scorer::GenomeScorer,
-        mutator::Mutate,
-        recombinator::Recombine,
         selector::{
-            best::Best, lexicase::Lexicase, tournament::Tournament, weighted::Weighted, Select,
+            best::Best, lexicase::Lexicase, tournament::Tournament, weighted::Weighted,
             Selector,
         },
         Composable,
@@ -27,9 +22,7 @@ use ec_core::{
     test_results::{self, TestResults},
 };
 use ec_linear::{
-    genome::bitstring::{self, Bitstring},
-    mutator::with_one_over_length::WithOneOverLength,
-    recombinator::two_point_xo::TwoPointXo,
+    genome::bitstring::{Bitstring},
 };
 use push::state::{
     push_state::{self, IntInstruction, PushInstruction, PushState},
@@ -83,7 +76,7 @@ fn main() -> Result<()> {
     // favor larger values.
     type Pop = Vec<EcIndividual<Bitstring, TestResults<test_results::Score>>>;
 
-    let selector: Weighted<Pop> = Weighted::new(Best, 1)
+    let _selector: Weighted<Pop> = Weighted::new(Best, 1)
         .with_selector(lexicase, 5)
         .with_selector(binary_tournament, args.population_size - 1);
 
