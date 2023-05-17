@@ -1,0 +1,23 @@
+[package]
+name = "ec-push-cli"
+version = { workspace = true }
+authors = { workspace = true }
+description = { workspace = true }
+documentation = { workspace = true }
+edition = { workspace = true }
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+anyhow = "1.0.70"
+clap = { version = "4.1.13", features = ["derive"] }
+rand = { version = "0.8.5", features = ["alloc"] }
+
+# We could put this in the workspace and use ` = { workspace = true }` here.
+ec-core = { path = "../ec-core" }
+ec-linear = { path = "../ec-linear" }
+push = { path = "../push" }
+
+[[bin]]
+name = "pushgp"
+path = "src/main.rs"

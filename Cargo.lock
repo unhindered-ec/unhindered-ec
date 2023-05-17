@@ -205,6 +205,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "ec-push-cli"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "clap",
+ "ec-core",
+ "ec-linear",
+ "push",
+ "rand",
+]
+
+[[package]]
 name = "either"
 version = "1.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -361,6 +373,7 @@ name = "push"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "ec-core",
  "num-traits",
  "rand",
 ]
