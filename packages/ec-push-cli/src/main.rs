@@ -5,7 +5,7 @@
 
 pub mod args;
 
-use crate::args::{Args};
+use crate::args::Args;
 use anyhow::{ensure, Result};
 use clap::Parser;
 use ec_core::{
@@ -13,17 +13,14 @@ use ec_core::{
     individual::ec::{self, EcIndividual},
     operator::{
         selector::{
-            best::Best, lexicase::Lexicase, tournament::Tournament, weighted::Weighted,
-            Selector,
+            best::Best, lexicase::Lexicase, tournament::Tournament, weighted::Weighted, Selector,
         },
         Composable,
     },
     population::{self},
     test_results::{self, TestResults},
 };
-use ec_linear::{
-    genome::bitstring::{Bitstring},
-};
+use ec_linear::genome::bitstring::Bitstring;
 use push::state::{
     push_state::{self, IntInstruction, PushInstruction, PushState},
     State,

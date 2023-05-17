@@ -1,4 +1,4 @@
-use ec_core::test_results::{TestResults, self};
+use ec_core::test_results::{self, TestResults};
 
 #[must_use]
 pub fn count_ones(bits: &[bool]) -> TestResults<test_results::Score> {

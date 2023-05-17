@@ -29,7 +29,8 @@ impl PushState {
         }
     }
 
-    #[must_use] pub fn with_input(mut self, input_name: &str, input_value: i64) -> Self {
+    #[must_use]
+    pub fn with_input(mut self, input_name: &str, input_value: i64) -> Self {
         self.inputs.insert(
             input_name.to_string(),
             PushInstruction::push_int(input_value),
@@ -37,12 +38,14 @@ impl PushState {
         self
     }
 
-    #[must_use] pub fn with_int_stack(mut self, int_stack: Vec<i64>) -> Self {
+    #[must_use]
+    pub fn with_int_stack(mut self, int_stack: Vec<i64>) -> Self {
         self.int = int_stack;
         self
     }
 
-    #[must_use] pub fn exec(&self) -> &Vec<PushInstruction> {
+    #[must_use]
+    pub fn exec(&self) -> &Vec<PushInstruction> {
         &self.exec
     }
 
@@ -54,11 +57,13 @@ impl PushState {
         instruction.perform(self);
     }
 
-    #[must_use] pub fn int(&self) -> &Vec<i64> {
+    #[must_use]
+    pub fn int(&self) -> &Vec<i64> {
         &self.int
     }
 
-    #[must_use] pub fn bool(&self) -> &Vec<bool> {
+    #[must_use]
+    pub fn bool(&self) -> &Vec<bool> {
         &self.bool
     }
 }
@@ -111,11 +116,13 @@ fn pop2<T>(stack: &mut Vec<T>) -> Option<(T, T)> {
 }
 
 impl PushInstruction {
-    #[must_use] pub fn push_bool(b: bool) -> Self {
+    #[must_use]
+    pub fn push_bool(b: bool) -> Self {
         BoolInstruction::Push(b).into()
     }
 
-    #[must_use] pub fn push_int(i: i64) -> Self {
+    #[must_use]
+    pub fn push_int(i: i64) -> Self {
         IntInstruction::Push(i).into()
     }
 }

@@ -16,7 +16,7 @@ pub trait State: Sized {
  * exec: 5 8 9 int_plus 6 int_is_even bool_or
  * int: <empty>
  * bool: <empty>
- * 
+ *
  * 5 : Push 5 on the integer stack
  * 8
  * 9
@@ -24,7 +24,7 @@ pub trait State: Sized {
  * 6
  * int_is_even: Pop 6 and push true on the boolean stack
  * bool_or: Be ignored because there's only one value on the boolean stack
- * 
+ *
  * exec: <empty> (after performing all the instructions)
  * int: 5 17
  * bool: true

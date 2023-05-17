@@ -1,9 +1,7 @@
-
-
 /*
  * exec_if requires a boolean and two (additional) values on the exec stack.
  * If the bool is true, we remove the second of the two exec stack values,
- * and if it's false, we remove the first. 
+ * and if it's false, we remove the first.
  */
 
 /*
@@ -14,7 +12,7 @@
 
 /*
  * Instructions that are generic over stacks:
- * 
+ *
  * - push
  * - pop
  * - dup (int_dup, exec_dup, bool_dup, ...)
@@ -31,6 +29,6 @@ impl<S> Instruction<S> for Box<dyn Instruction<S>> {
 }
 
 // impl<F> Instruction for F
-// where 
-//     F: Fn(dyn State) -> dyn State 
+// where
+//     F: Fn(dyn State) -> dyn State
 // {}
