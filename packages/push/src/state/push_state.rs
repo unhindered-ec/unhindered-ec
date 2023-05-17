@@ -1,3 +1,8 @@
+use std::{collections::HashMap, iter::repeat_with};
+
+use ec_core::generator::Generator;
+use rand::{rngs::ThreadRng, seq::SliceRandom, Rng};
+
 use crate::instruction::Instruction;
 
 use super::State;
@@ -7,6 +12,7 @@ pub struct PushState {
     exec: Vec<PushInstruction>,
     int: Vec<i64>,
     bool: Vec<bool>,
+    inputs: HashMap<String, PushInstruction>,
 }
 
 impl PushState {
@@ -19,7 +25,21 @@ impl PushState {
             exec: program.into_iter().rev().collect(),
             int: Vec::new(),
             bool: Vec::new(),
+            inputs: HashMap::new(),
         }
+    }
+
+    pub fn with_input(mut self, input_name: &str, input_value: i64) -> Self {
+        self.inputs.insert(
+            input_name.to_string(),
+            PushInstruction::push_int(input_value),
+        );
+        self
+    }
+
+    pub fn with_int_stack(mut self, int_stack: Vec<i64>) -> Self {
+        self.int = int_stack;
+        self
     }
 
     pub fn exec(&self) -> &Vec<PushInstruction> {
@@ -103,6 +123,7 @@ impl PushInstruction {
 impl Instruction<PushState> for PushInstruction {
     fn perform(&self, state: &mut PushState) {
         match self {
+            PushInstruction::InputVar(name) => state.push_input(name),
             PushInstruction::BoolInstruction(i) => i.perform(state),
             PushInstruction::IntInstruction(i) => i.perform(state),
         }
@@ -122,7 +143,7 @@ impl Instruction<PushState> for BoolInstruction {
                 if let Some((x, y)) = pop2(&mut state.bool) {
                     state.bool.push(x || y);
                 }
-            },
+            }
         }
     }
 }
@@ -230,7 +251,7 @@ mod simple_check {
 
         // TODO: Can I make this a Vec<dyn Into<PushInstruction>> and
         //   then just `map.(Into::into)` across them all so I don't
-        //   have to repeat the `.into()` over and over?        
+        //   have to repeat the `.into()` over and over?
         let program = vec![
             push_int(5),
             push_int(8),
