@@ -26,7 +26,7 @@ pub trait Instruction<S> {
 
 impl<S> Instruction<S> for Box<dyn Instruction<S>> {
     fn perform(&self, state: &mut S) {
-        todo!()
+        self.as_ref().perform(state);
     }
 }
 
