@@ -12,7 +12,8 @@ pub struct PushState {
     exec: Vec<PushInstruction>,
     int: Vec<i64>,
     bool: Vec<bool>,
-    inputs: HashMap<String, PushInstruction>,
+    // inputs: HashMap<String, PushInstruction>,
+    inputs: Vec<(String, PushInstruction)>,
 }
 
 impl PushState {
@@ -25,16 +26,18 @@ impl PushState {
             exec: program.into_iter().rev().collect(),
             int: Vec::new(),
             bool: Vec::new(),
-            inputs: HashMap::new(),
+            // inputs: HashMap::new(),
+            inputs: Vec::new(),
         }
     }
 
     #[must_use]
     pub fn with_input(mut self, input_name: &str, input_value: i64) -> Self {
-        self.inputs.insert(
-            input_name.to_string(),
-            PushInstruction::push_int(input_value),
-        );
+        // self.inputs.insert(
+        //     input_name.to_string(),
+        //     PushInstruction::push_int(input_value),
+        // );
+        self.inputs.push((input_name.to_string(), PushInstruction::push_int(input_value)));
         self
     }
 
@@ -53,7 +56,8 @@ impl PushState {
         // TODO: This `.unwrap()` is icky, and we really should deal with it better.
         //   I wonder if the fact that this name might not be there should be telling
         //   us something...
-        let instruction = self.inputs.get(name).unwrap().clone();
+        // let instruction = self.inputs.get(name).unwrap().clone();
+        let instruction = self.inputs.iter().find(|(n, v)| n == name).unwrap().1.clone();
         instruction.perform(self);
     }
 
