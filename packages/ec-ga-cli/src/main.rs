@@ -38,6 +38,11 @@ use rand::thread_rng;
 use std::ops::Not;
 
 fn main() -> Result<()> {
+    // Using `Error` in `TestResults<Error>` will have the run favor smaller
+    // values, where using `Score` (e.g., `TestResults<Score>`) will have the run
+    // favor larger values.
+    type Pop = Vec<EcIndividual<Bitstring, TestResults<test_results::Score>>>;
+
     let args = Args::parse();
 
     let base_scorer = match args.target_problem {
@@ -53,11 +58,6 @@ fn main() -> Result<()> {
 
     let lexicase = Lexicase::new(num_test_cases);
     let binary_tournament = Tournament::new(2);
-
-    // Using `Error` in `TestResults<Error>` will have the run favor smaller
-    // values, where using `Score` (e.g., `TestResults<Score>`) will have the run
-    // favor larger values.
-    type Pop = Vec<EcIndividual<Bitstring, TestResults<test_results::Score>>>;
 
     let selector: Weighted<Pop> = Weighted::new(Best, 1)
         .with_selector(lexicase, 5)
