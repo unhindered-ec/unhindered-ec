@@ -286,25 +286,23 @@ mod test_results_from_vec {
     #[test]
     fn create_test_results_from_errors() {
         let errors = vec![5, 8, 0, 9];
-        let results: Vec<Error> = errors.iter().copied().map(Into::<Error>::into).collect();
-        let test_results: TestResults<Error> = results.clone().into();
-        assert_eq!(test_results.results, results);
+        let test_results: TestResults<Error> = errors.clone().into();
+        assert_eq!(test_results.results.iter().map(|r| r.error).collect::<Vec<_>>(), errors);
         assert_eq!(test_results.total_result, errors.into_iter().sum());
     }
 
     #[test]
     fn create_test_results_from_scores() {
         let scores = vec![5, 8, 0, 9];
-        let results_iter = scores.iter().copied().map(Into::<Score>::into);
-        let test_results: TestResults<Score> = results_iter.clone().into();
-        assert_eq!(test_results.results, results_iter.collect::<Vec<_>>());
+        let test_results: TestResults<Score> = scores.clone().into();
+        assert_eq!(test_results.results.iter().map(|r| r.score).collect::<Vec<_>>(), scores);
         assert_eq!(test_results.total_result, scores.into_iter().sum());
     }
 
     #[test]
     fn create_test_results_from_iter_errors() {
         let errors = vec![5, 8, 0, 9];
-        let results = errors.iter().copied().map(Into::<Error>::into);
+        let results = errors.iter().map(Into::<Error>::into);
         let test_results: TestResults<Error> = results.clone().collect();
         assert_eq!(test_results.results, results.collect::<Vec<_>>());
         assert_eq!(test_results.total_result, errors.into_iter().sum());
@@ -313,7 +311,7 @@ mod test_results_from_vec {
     #[test]
     fn create_test_results_from_iter_scores() {
         let scores = vec![5, 8, 0, 9];
-        let results = scores.iter().copied().map(Into::<Score>::into);
+        let results = scores.iter().map(Into::<Score>::into);
         let test_results: TestResults<Score> = results.clone().collect();
         assert_eq!(test_results.results, results.collect::<Vec<_>>());
         assert_eq!(test_results.total_result, scores.into_iter().sum());

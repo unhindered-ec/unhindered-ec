@@ -43,21 +43,20 @@ fn main() -> Result<()> {
      *
      * The target polynomial is x^3 - 2x^2 - x
      */
+    const PENALTY_VALUE: i64 = 1_000;
     let scorer = |program: &Vec<PushInstruction>| -> TestResults<test_results::Error> {
         let errors: TestResults<test_results::Error> = (0..10)
             .map(|input| {
                 let mut state = PushState::new(program.clone()).with_input("x", input);
-                state.run_to_completion();
                 // This is the degree 3 problem in https://github.com/lspector/Clojush/blob/master/src/clojush/problems/demos/simple_regression.clj
                 let expected = input * input * input - 2 * input * input - input;
                 state
+                    .run_to_completion()
                     .int()
                     .last()
-                    .map_or(test_results::Error { error: 1_000 }, |answer| {
-                        test_results::Error {
-                            error: (answer - expected).abs(),
-                        }
-                    })
+                    // If `last()` returns `None`, then there was nothing on top of the integer stack
+                    // so we want to use the `PENALTY_VALUE` for the error on this test case.
+                    .map_or(PENALTY_VALUE, |answer| (answer - expected).abs())
             })
             .collect();
         errors

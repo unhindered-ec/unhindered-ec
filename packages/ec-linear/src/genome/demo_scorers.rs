@@ -2,7 +2,7 @@ use ec_core::test_results::{self, TestResults};
 
 #[must_use]
 pub fn count_ones(bits: &[bool]) -> TestResults<test_results::Score> {
-    bits.iter().map(|bit| i64::from(*bit)).into()
+    bits.iter().map(|bit| i64::from(*bit)).collect()
 }
 
 #[must_use]
