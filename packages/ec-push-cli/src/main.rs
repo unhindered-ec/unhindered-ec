@@ -59,7 +59,7 @@ fn main() -> Result<()> {
                         }
                     })
             })
-            .sum();
+            .collect();
         errors
     };
 
