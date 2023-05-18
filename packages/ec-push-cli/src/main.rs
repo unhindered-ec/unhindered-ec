@@ -11,16 +11,12 @@ use clap::Parser;
 use ec_core::{
     generator::Generator,
     individual::ec::{self, EcIndividual},
-    operator::{
-        selector::{
-            best::Best, lexicase::Lexicase, tournament::Tournament, weighted::Weighted, Selector,
-        },
-        Composable,
+    operator::selector::{
+        best::Best, lexicase::Lexicase, tournament::Tournament, weighted::Weighted, Selector,
     },
     population::{self},
     test_results::{self, TestResults},
 };
-use ec_linear::genome::bitstring::Bitstring;
 use push::state::{
     push_state::{self, IntInstruction, PushInstruction, PushState},
     State,
@@ -52,19 +48,20 @@ fn main() -> Result<()> {
             .map(|input| {
                 let mut state = PushState::new(program.clone()).with_input("x", input);
                 state.run_to_completion();
+                // This is the degree 3 problem in https://github.com/lspector/Clojush/blob/master/src/clojush/problems/demos/simple_regression.clj
                 let expected = input * input * input - 2 * input * input - input;
-                if let Some(answer) = state.int().last() {
-                    test_results::Error {
-                        error: (answer - expected).abs(),
-                    }
-                } else {
-                    test_results::Error { error: 1_000 }
-                }
+                state
+                    .int()
+                    .last()
+                    .map_or(test_results::Error { error: 1_000 }, |answer| {
+                        test_results::Error {
+                            error: (answer - expected).abs(),
+                        }
+                    })
             })
             .sum();
         errors
     };
-    // let scorer = |bitstring: &Bitstring| base_scorer(&bitstring.bits);
 
     // The degree 3 problem in https://github.com/lspector/Clojush/blob/master/src/clojush/problems/demos/simple_regression.clj
     // just uses 10 test cases, 0 to 9 (inclusive).
@@ -103,7 +100,7 @@ fn main() -> Result<()> {
 
     ensure!(population.is_empty().not());
 
-    println!("{population:?}");
+    // println!("{population:?}");
 
     let best = Best.select(&population, &mut rng)?;
     // TODO: Change 2 to be the smallest number of digits needed for
