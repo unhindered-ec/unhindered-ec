@@ -35,6 +35,12 @@ impl From<i64> for Score {
     }
 }
 
+impl From<&i64> for Score {
+    fn from(score: &i64) -> Self {
+        (*score).into()
+    }
+}
+
 impl Sum<i64> for Score {
     fn sum<I>(iter: I) -> Self
     where
@@ -90,6 +96,12 @@ impl PartialOrd for Error {
 impl From<i64> for Error {
     fn from(error: i64) -> Self {
         Self { error }
+    }
+}
+
+impl From<&i64> for Error {
+    fn from(error: &i64) -> Self {
+        (*error).into()
     }
 }
 
