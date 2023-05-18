@@ -19,7 +19,7 @@ pub type BitstringVecType = Vec<bool>;
 
 #[must_use]
 pub fn count_ones(bits: &[bool]) -> TestResults<test_results::Score> {
-    bits.iter().map(|bit| i64::from(*bit)).map(Into::into).sum()
+    bits.iter().map(|bit| i64::from(*bit)).collect()
 }
 
 #[cfg(test)]
@@ -67,14 +67,5 @@ pub fn do_hiff(bits: &[bool], scores: &mut Vec<i64>) -> bool {
             scores.push(0);
             false
         }
-    }
-}
-
-#[must_use]
-pub fn fitness_vec_to_test_results(results: Vec<i64>) -> TestResults<i64> {
-    let total_result = results.iter().sum();
-    TestResults {
-        total_result,
-        results,
     }
 }
