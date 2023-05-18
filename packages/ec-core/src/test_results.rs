@@ -11,6 +11,10 @@ use std::{cmp::Ordering, fmt::Debug, iter::Sum};
 //   trait that has all those as super-traits so we have one name
 //   that pulls them all together.
 
+// TODO: Should there just be one struct (e.g., `Result<T>` with a `result: T` field)
+//   and then `Error` and `Score` should be traits that these structs can
+//   implement? I feel like that might avoid some duplication here.
+
 /// Score implicitly follows a "bigger is better" model.
 #[derive(Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
 pub struct Score {
@@ -45,6 +49,12 @@ impl Sum for Score {
     where
         I: Iterator<Item = Self>,
     {
+        iter.map(|s| s.score).sum()
+    }
+}
+
+impl<'a> Sum<&'a Self> for Score {
+    fn sum<I: Iterator<Item = &'a Self>>(iter: I) -> Self {
         iter.map(|s| s.score).sum()
     }
 }
@@ -97,6 +107,12 @@ impl Sum for Error {
     where
         I: Iterator<Item = Self>,
     {
+        iter.map(|s| s.error).sum()
+    }
+}
+
+impl<'a> Sum<&'a Self> for Error {
+    fn sum<I: Iterator<Item = &'a Self>>(iter: I) -> Self {
         iter.map(|s| s.error).sum()
     }
 }
@@ -186,8 +202,8 @@ mod test_result_tests {
 
 #[derive(Debug, Eq, PartialEq)]
 pub struct TestResults<R> {
-    pub total_result: R,
     pub results: Vec<R>,
+    pub total_result: R,
 }
 
 impl<R: Ord> Ord for TestResults<R> {
@@ -202,28 +218,92 @@ impl<R: PartialOrd> PartialOrd for TestResults<R> {
     }
 }
 
-// TODO: Write tests for the `Sum` trait implementations.
+/*
+ * I can't implement `From` for both a `Vec` and an `Iterator` because there are
+ * potentially conflicting implementations then. (The reasons are a bit complex,
+ * but essentially [I think] someone could implement `Iterator` for `Vec` upstream,
+ * and then we wouldn't know which implementation to use here.) I _think_ it makes
+ * more sense to keep the `Iterator` one since it's cheap to go from `Vec` to `Iterator`,
+ * but "expensive" (we have to do an allocation) to go the other way around. Also, we'll
+ * often build our list of values with an iterator, and then we just have to add
+ * `.into()` at the end instead of converting into a `Vec` first.
+ */
 
-// TODO: Consider going from the `Sum` trait to the
-//   `FromIterator` trait and `.collect()`. TestResults
-//   aren't really the _sum_ of a a collection of `R`,
-//   but more built out of one.
-impl<R: Sum + Copy> Sum<R> for TestResults<R> {
-    fn sum<I: Iterator<Item = R>>(iter: I) -> Self {
-        let results: Vec<R> = iter.collect();
-        let total_result: R = results.iter().copied().sum();
+// impl<V, R> From<Vec<V>> for TestResults<R>
+// where
+//     R: From<V> + Copy + Sum,
+// {
+//     fn from(values: Vec<V>) -> Self {
+//         let results: Vec<R> = values.into_iter().map(Into::into).collect();
+//         let total_result: R = results.iter().copied().sum();
+//         Self {
+//             results,
+//             total_result
+//         }
+//     }
+// }
+
+impl<I, V, R> From<I> for TestResults<R>
+where
+    for<'a> R: From<V> + Sum<&'a R> + 'a,
+    I: IntoIterator<Item = V>,
+{
+    fn from(values: I) -> Self {
+        let results: Vec<R> = values.into_iter().map(Into::into).collect();
+        let total_result = results.iter().sum();
         Self {
-            total_result,
             results,
+            total_result,
         }
     }
 }
 
-impl<V, R> From<Vec<V>> for TestResults<R>
+impl<V, R> FromIterator<V> for TestResults<R>
 where
-    R: Copy + Sum + From<V>,
+    for<'a> R: From<V> + Copy + Sum<&'a R> + 'a,
 {
-    fn from(values: Vec<V>) -> Self {
-        values.into_iter().map(From::from).sum()
+    fn from_iter<T: IntoIterator<Item = V>>(values: T) -> Self {
+        values.into()
+    }
+}
+
+#[cfg(test)]
+mod test_results_from_vec {
+    use super::*;
+
+    #[test]
+    fn create_test_results_from_errors() {
+        let errors = vec![5, 8, 0, 9];
+        let results: Vec<Error> = errors.iter().copied().map(Into::<Error>::into).collect();
+        let test_results: TestResults<Error> = results.clone().into();
+        assert_eq!(test_results.results, results);
+        assert_eq!(test_results.total_result, errors.into_iter().sum());
+    }
+
+    #[test]
+    fn create_test_results_from_scores() {
+        let scores = vec![5, 8, 0, 9];
+        let results_iter = scores.iter().copied().map(Into::<Score>::into);
+        let test_results: TestResults<Score> = results_iter.clone().into();
+        assert_eq!(test_results.results, results_iter.collect::<Vec<_>>());
+        assert_eq!(test_results.total_result, scores.into_iter().sum());
+    }
+
+    #[test]
+    fn create_test_results_from_iter_errors() {
+        let errors = vec![5, 8, 0, 9];
+        let results = errors.iter().copied().map(Into::<Error>::into);
+        let test_results: TestResults<Error> = results.clone().collect();
+        assert_eq!(test_results.results, results.collect::<Vec<_>>());
+        assert_eq!(test_results.total_result, errors.into_iter().sum());
+    }
+
+    #[test]
+    fn create_test_results_from_iter_scores() {
+        let scores = vec![5, 8, 0, 9];
+        let results = scores.iter().copied().map(Into::<Score>::into);
+        let test_results: TestResults<Score> = results.clone().collect();
+        assert_eq!(test_results.results, results.collect::<Vec<_>>());
+        assert_eq!(test_results.total_result, scores.into_iter().sum());
     }
 }
