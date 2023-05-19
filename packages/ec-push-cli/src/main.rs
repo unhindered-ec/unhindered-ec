@@ -29,6 +29,9 @@ fn main() -> Result<()> {
     // values, where using `Score` (e.g., `TestResults<Score>`) will have the run
     // favor larger values.
     type Pop = Vec<EcIndividual<Vec<PushInstruction>, TestResults<test_results::Score>>>;
+    // The penalty value to use when an evolved program doesn't have an expected
+    // "return" value on the appropriate stack at the end of its execution.
+    const PENALTY_VALUE: i64 = 1_000;
 
     let args = Args::parse();
 
@@ -43,7 +46,6 @@ fn main() -> Result<()> {
      *
      * The target polynomial is x^3 - 2x^2 - x
      */
-    const PENALTY_VALUE: i64 = 1_000;
     let scorer = |program: &Vec<PushInstruction>| -> TestResults<test_results::Error> {
         let errors: TestResults<test_results::Error> = (0..10)
             .map(|input| {
