@@ -1,4 +1,4 @@
-use std::{collections::HashMap, iter::repeat_with};
+use std::iter::repeat_with;
 
 use ec_core::generator::Generator;
 use rand::{rngs::ThreadRng, seq::SliceRandom, Rng};
@@ -12,7 +12,10 @@ pub struct PushState {
     exec: Vec<PushInstruction>,
     int: Vec<i64>,
     bool: Vec<bool>,
-    // inputs: HashMap<String, PushInstruction>,
+    // Using a `Vec` of pairs & linear search is faster than setting
+    // up and tearing down very small `HashMap`s. Since there are
+    // rarely going to be more than single digits of inputs, using
+    // a `Vec` will generally be faster.
     inputs: Vec<(String, PushInstruction)>,
 }
 
@@ -37,7 +40,10 @@ impl PushState {
         //     input_name.to_string(),
         //     PushInstruction::push_int(input_value),
         // );
-        self.inputs.push((input_name.to_string(), PushInstruction::push_int(input_value)));
+        self.inputs.push((
+            input_name.to_string(),
+            PushInstruction::push_int(input_value),
+        ));
         self
     }
 
@@ -56,8 +62,12 @@ impl PushState {
         // TODO: This `.unwrap()` is icky, and we really should deal with it better.
         //   I wonder if the fact that this name might not be there should be telling
         //   us something...
-        // let instruction = self.inputs.get(name).unwrap().clone();
-        let instruction = self.inputs.iter().find(|(n, v)| n == name).unwrap().1.clone();
+        let instruction = self
+            .inputs
+            .iter()
+            .find_map(|(n, v)| (n == name).then_some(v))
+            .unwrap()
+            .clone();
         instruction.perform(self);
     }
 
