@@ -15,6 +15,10 @@ use std::{cmp::Ordering, fmt::Debug, iter::Sum};
 //   and then `Error` and `Score` should be traits that these structs can
 //   implement? I feel like that might avoid some duplication here.
 
+// TODO: I'm not convinced that `Score` & `Error` need `Clone` and `Copy`
+//   anymore. At a minimum we should try to push those requirements
+//   closer to where they're actually needed.
+
 /// Score implicitly follows a "bigger is better" model.
 #[derive(Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
 pub struct Score {
