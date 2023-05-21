@@ -39,6 +39,8 @@ fn main() -> Result<()> {
     //     TargetProblem::DegreeThree => todo!(),
     // };
 
+    let inputs = push_state::Inputs::default().with_name("x");
+
     /*
      * The `scorer` will need to take an evolved program (sequence of instructions) and run it
      * 10 times on each of the 10 test inputs (0 through 9), collecting together the 10 errors,
@@ -49,7 +51,9 @@ fn main() -> Result<()> {
     let scorer = |program: &Vec<PushInstruction>| -> TestResults<test_results::Error> {
         let errors: TestResults<test_results::Error> = (0..10)
             .map(|input| {
-                let mut state = PushState::new(program.clone()).with_input("x", input);
+                let mut state = PushState::builder(program.clone(), &inputs)
+                    .with_int_input("x", input)
+                    .build();
                 // This is the degree 3 problem in https://github.com/lspector/Clojush/blob/master/src/clojush/problems/demos/simple_regression.clj
                 let expected = input * input * input - 2 * input * input - input;
                 state
@@ -77,15 +81,17 @@ fn main() -> Result<()> {
 
     let mut rng = thread_rng();
 
+    let mut instruction_set = vec![
+        PushInstruction::IntInstruction(IntInstruction::Add),
+        PushInstruction::IntInstruction(IntInstruction::Subtract),
+        PushInstruction::IntInstruction(IntInstruction::Multiply),
+        PushInstruction::IntInstruction(IntInstruction::ProtectedDivide),
+    ];
+    instruction_set.extend(inputs.to_instructions());
+
     let push_program_context = push_state::GeneratorContext {
         max_initial_instructions: args.max_initial_instructions,
-        instruction_set: vec![
-            PushInstruction::InputVar("x".to_string()),
-            PushInstruction::IntInstruction(IntInstruction::Add),
-            PushInstruction::IntInstruction(IntInstruction::Subtract),
-            PushInstruction::IntInstruction(IntInstruction::Multiply),
-            PushInstruction::IntInstruction(IntInstruction::ProtectedDivide),
-        ],
+        instruction_set,
     };
 
     let individual_context = ec::GeneratorContext {

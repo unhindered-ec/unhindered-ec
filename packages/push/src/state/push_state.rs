@@ -7,44 +7,101 @@ use crate::instruction::Instruction;
 
 use super::State;
 
+#[derive(Default)]
+pub struct Inputs {
+    input_names: Vec<String>,
+}
+
+impl Inputs {
+    #[must_use]
+    pub fn with_name(mut self, name: &str) -> Self {
+        self.input_names.push(name.to_string());
+        self
+    }
+
+    #[must_use]
+    pub fn get_index(&self, name: &str) -> usize {
+        self.input_names
+            .iter()
+            .position(|n| n == name)
+            .unwrap_or_else(|| panic!("Tried to access variable '{name}' that had not been added to the `Inputs` list: {:?}.", self.input_names))
+    }
+
+    #[must_use]
+    pub fn to_instructions(&self) -> Vec<PushInstruction> {
+        self.input_names
+            .iter()
+            .enumerate()
+            .map(|(index, _)| PushInstruction::InputVar(index))
+            .collect()
+    }
+}
+
 #[derive(Default, Debug)]
 pub struct PushState {
     exec: Vec<PushInstruction>,
     int: Vec<i64>,
     bool: Vec<bool>,
-    // Using a `Vec` of pairs & linear search is faster than setting
-    // up and tearing down very small `HashMap`s. Since there are
-    // rarely going to be more than single digits of inputs, using
-    // a `Vec` will generally be faster.
-    inputs: Vec<(String, PushInstruction)>,
+    input_instructions: Vec<PushInstruction>,
 }
 
-impl PushState {
-    pub fn new<P>(program: P) -> Self
-    where
-        P: IntoIterator<Item = PushInstruction>,
-        P::IntoIter: DoubleEndedIterator,
-    {
+pub struct Builder<'i> {
+    inputs: &'i Inputs,
+    input_instructions: Vec<Option<PushInstruction>>,
+    partial_state: PushState,
+}
+
+impl<'i> Builder<'i> {
+    #[must_use]
+    pub fn new(inputs: &'i Inputs, partial_state: PushState) -> Self {
         Self {
-            exec: program.into_iter().rev().collect(),
-            int: Vec::new(),
-            bool: Vec::new(),
-            // inputs: HashMap::new(),
-            inputs: Vec::new(),
+            inputs,
+            input_instructions: vec![None; inputs.input_names.len()],
+            partial_state,
         }
     }
 
     #[must_use]
-    pub fn with_input(mut self, input_name: &str, input_value: i64) -> Self {
-        // self.inputs.insert(
-        //     input_name.to_string(),
-        //     PushInstruction::push_int(input_value),
-        // );
-        self.inputs.push((
-            input_name.to_string(),
-            PushInstruction::push_int(input_value),
-        ));
+    pub fn with_int_input(mut self, input_name: &str, input_value: i64) -> Self {
+        let index = self.inputs.get_index(input_name);
+        let Some(entry) = self.input_instructions.get_mut(index) else {
+            panic!("Tried to access input name {input_name} with index {index} in set of inputs: {:?}", self.inputs.input_names);
+        };
+        *entry = Some(PushInstruction::push_int(input_value));
         self
+    }
+
+    #[must_use]
+    pub fn build(self) -> PushState {
+        let input_instructions = self
+            .input_instructions
+            .into_iter()
+            .zip(self.inputs.input_names.iter())
+            .map(|(instruction, name)| instruction.ok_or(name))
+            .collect::<Result<Vec<_>, &String>>()
+            .unwrap_or_else(|name| {
+                panic!("The variable {name} wasn't given a value in `PushState::Builder`.")
+            });
+        PushState {
+            input_instructions,
+            ..self.partial_state
+        }
+    }
+}
+
+impl PushState {
+    pub fn builder<P>(program: P, inputs: &Inputs) -> Builder
+    where
+        P: IntoIterator<Item = PushInstruction>,
+        P::IntoIter: DoubleEndedIterator,
+    {
+        let partial_state = Self {
+            exec: program.into_iter().rev().collect(),
+            int: Vec::new(),
+            bool: Vec::new(),
+            input_instructions: Vec::new(),
+        };
+        Builder::new(inputs, partial_state)
     }
 
     #[must_use]
@@ -58,15 +115,15 @@ impl PushState {
         &self.exec
     }
 
-    fn push_input(&mut self, name: &str) {
-        // TODO: This `.unwrap()` is icky, and we really should deal with it better.
+    fn push_input(&mut self, var_index: usize) {
+        // TODO: This `.expect()` is icky, and we really should deal with it better.
         //   I wonder if the fact that this name might not be there should be telling
         //   us something...
         let instruction = self
-            .inputs
-            .iter()
-            .find_map(|(n, v)| (n == name).then_some(v))
-            .unwrap()
+            .input_instructions.get(var_index)
+            .expect(&format!(
+                "We tried to get an instruction for the input variable with index '{var_index}' that hadn't been added"
+            ))
             .clone();
         instruction.perform(self);
     }
@@ -97,7 +154,7 @@ impl State for PushState {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum PushInstruction {
-    InputVar(String),
+    InputVar(usize),
     BoolInstruction(BoolInstruction),
     IntInstruction(IntInstruction),
 }
@@ -152,7 +209,7 @@ impl PushInstruction {
 impl Instruction<PushState> for PushInstruction {
     fn perform(&self, state: &mut PushState) {
         match self {
-            Self::InputVar(name) => state.push_input(name),
+            Self::InputVar(var_index) => state.push_input(*var_index),
             Self::BoolInstruction(i) => i.perform(state),
             Self::IntInstruction(i) => i.perform(state),
         }
@@ -264,7 +321,7 @@ impl From<IntInstruction> for PushInstruction {
 
 #[cfg(test)]
 mod simple_check {
-    use crate::state::push_state::{PushInstruction, PushState};
+    use crate::state::push_state::{Inputs, PushInstruction, PushState};
 
     use super::{BoolInstruction, IntInstruction, State};
 
@@ -277,6 +334,8 @@ mod simple_check {
         fn push_int(i: i64) -> PushInstruction {
             PushInstruction::push_int(i)
         }
+
+        let inputs = Inputs::default();
 
         // TODO: Can I make this a Vec<dyn Into<PushInstruction>> and
         //   then just `map.(Into::into)` across them all so I don't
@@ -292,7 +351,7 @@ mod simple_check {
             IntInstruction::IsEven.into(),
             BoolInstruction::BoolAnd.into(),
         ];
-        let mut state = PushState::new(program);
+        let mut state = PushState::builder(program, &inputs).build();
         println!("{state:?}");
         state.run_to_completion();
         println!("{state:?}");
