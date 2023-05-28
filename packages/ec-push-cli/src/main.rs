@@ -14,13 +14,16 @@ use ec_core::{
     operator::selector::{
         best::Best, lexicase::Lexicase, tournament::Tournament, weighted::Weighted, Selector,
     },
-    population::{self},
+    population,
     test_results::{self, TestResults},
 };
 use ec_linear::genome::LinearContext;
-use push::state::{
-    push_state::{self, IntInstruction, PushInstruction, PushState},
-    State,
+use push::{
+    genome::plushy::Plushy,
+    state::{
+        push_state::{self, IntInstruction, PushInstruction, PushState},
+        State,
+    },
 };
 use rand::thread_rng;
 use std::ops::Not;
@@ -29,7 +32,8 @@ fn main() -> Result<()> {
     // Using `Error` in `TestResults<Error>` will have the run favor smaller
     // values, where using `Score` (e.g., `TestResults<Score>`) will have the run
     // favor larger values.
-    type Pop = Vec<EcIndividual<Vec<PushInstruction>, TestResults<test_results::Score>>>;
+    type Pop = Vec<EcIndividual<Plushy, TestResults<test_results::Error>>>;
+
     // The penalty value to use when an evolved program doesn't have an expected
     // "return" value on the appropriate stack at the end of its execution.
     const PENALTY_VALUE: i64 = 1_000;
@@ -49,10 +53,10 @@ fn main() -> Result<()> {
      *
      * The target polynomial is x^3 - 2x^2 - x
      */
-    let scorer = |program: &Vec<PushInstruction>| -> TestResults<test_results::Error> {
+    let scorer = |program: &Plushy| -> TestResults<test_results::Error> {
         let errors: TestResults<test_results::Error> = (0..10)
             .map(|input| {
-                let mut state = PushState::builder(program.clone(), &inputs)
+                let mut state = PushState::builder(program.get_instructions(), &inputs)
                     .with_int_input("x", input)
                     .build();
                 // This is the degree 3 problem in https://github.com/lspector/Clojush/blob/master/src/clojush/problems/demos/simple_regression.clj
@@ -113,6 +117,7 @@ fn main() -> Result<()> {
         population_size: args.population_size,
         individual_context,
     };
+
     let population = rng.generate(&population_context);
 
     ensure!(population.is_empty().not());

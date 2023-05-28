@@ -240,30 +240,6 @@ impl From<BoolInstruction> for PushInstruction {
     }
 }
 
-// TODO: We probably want something like an `InstructionSet` type
-//  and a `.generate()` on that that generates a random instruction.
-
-pub struct GeneratorContext {
-    pub max_initial_instructions: usize,
-    pub instruction_set: Vec<PushInstruction>,
-}
-
-impl Generator<Vec<PushInstruction>, GeneratorContext> for ThreadRng {
-    fn generate(&mut self, context: &GeneratorContext) -> Vec<PushInstruction> {
-        let length = self.gen_range(0..context.max_initial_instructions);
-        repeat_with(|| {
-            context
-                .instruction_set
-                .choose(self)
-                // TODO: Can we do better here? Should this return an `anyhow::Error`?
-                .expect("The instruction set was empty")
-                .clone()
-        })
-        .take(length)
-        .collect()
-    }
-}
-
 impl Instruction<PushState> for IntInstruction {
     fn perform(&self, state: &mut PushState) {
         match self {

@@ -374,6 +374,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "ec-core",
+ "ec-linear",
  "num-traits",
  "rand",
 ]
