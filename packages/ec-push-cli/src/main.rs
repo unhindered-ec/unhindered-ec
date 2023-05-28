@@ -9,7 +9,7 @@ use crate::args::Args;
 use anyhow::{ensure, Result};
 use clap::Parser;
 use ec_core::{
-    generator::Generator,
+    generator::{CollectionContext, Generator},
     individual::ec::{self, EcIndividual},
     operator::selector::{
         best::Best, lexicase::Lexicase, tournament::Tournament, weighted::Weighted, Selector,
@@ -17,6 +17,7 @@ use ec_core::{
     population::{self},
     test_results::{self, TestResults},
 };
+use ec_linear::genome::LinearContext;
 use push::state::{
     push_state::{self, IntInstruction, PushInstruction, PushState},
     State,
@@ -89,13 +90,22 @@ fn main() -> Result<()> {
     ];
     instruction_set.extend(inputs.to_instructions());
 
-    let push_program_context = push_state::GeneratorContext {
-        max_initial_instructions: args.max_initial_instructions,
-        instruction_set,
+    // let push_program_context = push_state::GeneratorContext {
+    //     max_initial_instructions: args.max_initial_instructions,
+    //     instruction_set,
+    // };
+
+    #[allow(clippy::expect_used)]
+    let instruction_context =
+        CollectionContext::new(instruction_set).expect("The set of instructions can't be empty");
+
+    let plushy_context = LinearContext {
+        length: args.max_initial_instructions,
+        element_context: instruction_context,
     };
 
     let individual_context = ec::GeneratorContext {
-        genome_context: push_program_context,
+        genome_context: plushy_context,
         scorer,
     };
 
@@ -110,8 +120,6 @@ fn main() -> Result<()> {
     // println!("{population:?}");
 
     let best = Best.select(&population, &mut rng)?;
-    // TODO: Change 2 to be the smallest number of digits needed for
-    //  args.num_generations-1.
     println!("Best initial individual is {best:?}");
 
     // // Let's assume the process will be generational, i.e., we replace the entire
