@@ -68,7 +68,7 @@ mod tests {
     use ec_core::{generator::Generator, operator::mutator::Mutator};
 
     use crate::{
-        genome::bitstring::{self, Bitstring},
+        genome::{bitstring::{self, Bitstring, BitContext}, LinearContext},
         mutator::with_rate::WithRate,
     };
 
@@ -83,12 +83,11 @@ mod tests {
 
         let mut rng = rand::thread_rng();
         let num_bits = 100;
-        let bitstring_context = bitstring::GeneratorContext {
-            num_bits,
-            probability: 0.5,
+        let bitstring_context = LinearContext {
+            length: num_bits,
+            element_context: BitContext { probability: 0.5 },
         };
-        let parent_bits = rng.generate(&bitstring_context);
-        let child_bits = mutator.mutate(parent_bits.clone(), &mut rng).unwrap();
+        let parent_bits: Bitstring = rng.generate(&bitstring_context);        let child_bits = mutator.mutate(parent_bits.clone(), &mut rng).unwrap();
 
         let num_differences = zip(parent_bits, child_bits)
             .filter(|(p, c)| *p != *c)

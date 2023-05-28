@@ -7,7 +7,7 @@ use rand::rngs::ThreadRng;
 
 use crate::recombinator::crossover::Crossover;
 
-use super::LinearGenome;
+use super::{LinearGenome, LinearContext};
 
 // TODO: Ought to have `LinearGenome<T>` so that `Bitstring` is just
 //   `LinearGenome<bool>`.
@@ -17,32 +17,32 @@ pub struct Bitstring {
     pub bits: Vec<bool>,
 }
 
-pub struct GeneratorContext {
-    pub num_bits: usize,
+pub struct BitContext {
     pub probability: f64,
 }
 
-impl Generator<Bitstring, GeneratorContext> for ThreadRng {
-    fn generate(&mut self, context: &GeneratorContext) -> Bitstring {
-        let bits = repeat_with(|| self.generate(&context.probability))
-            .take(context.num_bits)
-            .collect();
+impl Generator<bool, BitContext> for ThreadRng {
+    fn generate(&mut self, context: &BitContext) -> bool {
+        self.generate(&context.probability)
+    }
+}
+
+impl Generator<Bitstring, LinearContext<BitContext>> for ThreadRng {
+    fn generate(&mut self, context: &LinearContext<BitContext>) -> Bitstring {
+        let bits = self.generate(context);
         Bitstring { bits }
     }
 }
 
 impl Bitstring {
     pub fn random(num_bits: usize, rng: &mut ThreadRng) -> Self {
-        rng.generate(&GeneratorContext {
-            num_bits,
-            probability: 0.5,
-        })
+        Bitstring::random_with_probability(num_bits, 0.5, rng)
     }
 
     pub fn random_with_probability(num_bits: usize, probability: f64, rng: &mut ThreadRng) -> Self {
-        rng.generate(&GeneratorContext {
-            num_bits,
-            probability,
+        rng.generate(&LinearContext {
+            length: num_bits,
+            element_context: BitContext { probability },
         })
     }
 }

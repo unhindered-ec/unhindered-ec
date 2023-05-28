@@ -52,7 +52,7 @@ mod tests {
 
     use ec_core::{generator::Generator, operator::mutator::Mutator};
 
-    use crate::{genome::bitstring, mutator::with_one_over_length::WithOneOverLength};
+    use crate::{genome::{bitstring::{self, BitContext, Bitstring}, LinearContext}, mutator::with_one_over_length::WithOneOverLength};
 
     // This test is stochastic, so I'm going to ignore it most of the time.
     #[test]
@@ -61,11 +61,11 @@ mod tests {
     fn mutate_one_over_does_not_change_much() {
         let mut rng = rand::thread_rng();
         let num_bits = 100;
-        let bitstring_context = bitstring::GeneratorContext {
-            num_bits,
-            probability: 0.5,
+        let bitstring_context = LinearContext {
+            length: num_bits,
+            element_context: BitContext { probability: 0.5 },
         };
-        let parent_bits = rng.generate(&bitstring_context);
+        let parent_bits: Bitstring = rng.generate(&bitstring_context);
 
         let child_bits = WithOneOverLength
             .mutate(parent_bits.clone(), &mut rng)

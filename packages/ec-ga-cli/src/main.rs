@@ -28,8 +28,8 @@ use ec_core::{
 };
 use ec_linear::{
     genome::{
-        bitstring::{self, Bitstring},
-        demo_scorers::{count_ones, hiff},
+        bitstring::{self, Bitstring, BitContext},
+        demo_scorers::{count_ones, hiff}, LinearContext,
     },
     mutator::with_one_over_length::WithOneOverLength,
     recombinator::two_point_xo::TwoPointXo,
@@ -65,9 +65,9 @@ fn main() -> Result<()> {
 
     let mut rng = thread_rng();
 
-    let bitstring_context = bitstring::GeneratorContext {
-        num_bits: args.bit_length,
-        probability: 0.5,
+    let bitstring_context = LinearContext {
+        length: args.bit_length,
+        element_context: BitContext { probability: 0.5 },
     };
 
     let individual_context = ec::GeneratorContext {
