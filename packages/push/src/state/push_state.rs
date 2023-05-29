@@ -71,6 +71,44 @@ impl<'i> Builder<'i> {
         self
     }
 
+    /// Adds an boolean input instruction to the current current state's set
+    /// of instructions. The name for the input must have been included
+    /// in the `Inputs` provided when the `Builder` was initially constructed.
+    /// Here you provide the name and the boolean value for that
+    /// input variable. That will create a new `PushInstruction::push_bool()`
+    /// instruction that will push the specified value onto the boolean stack
+    /// when performed.
+    ///
+    /// # Panics
+    /// This panics if the `input_name` provided isn't included in the set of
+    /// names in the `Inputs` object used in the construction of the `Builder`.
+    #[must_use]
+    pub fn with_bool_input(mut self, input_name: &str, input_value: bool) -> Self {
+        let index = self.inputs.get_index(input_name);
+        let Some(entry) = self.input_instructions.get_mut(index) else {
+            panic!("Tried to access input name {input_name} with index {index} in set of inputs: {:?}", self.inputs.input_names);
+        };
+        *entry = Some(PushInstruction::push_bool(input_value));
+        self
+    }
+
+    /// Finalize the build process, returning the fully constructed `PushState`
+    /// value. For this to successfully build, all the input variables has to
+    /// have been given values. Thus every input variable provided
+    /// in the `Inputs` used when constructing the `Builder` must have had a
+    /// corresponding `with_X_input()` call that specified the value for that
+    /// variable.
+    ///
+    /// # Panics
+    /// Panics if one or more of the variables provided in the `Inputs` wasn't
+    /// then given a value during the build process.
+    /*
+     * Note that the `with_x_input()` functions ensure that the instruction for
+     * that input variable will be in the same position in `self.input_instructions`
+     * as the name is in `self.inputs.input_names`. This allows us to zip together
+     * those two lists and know that we'll be pairing up instructions with the appropriate
+     * names.
+     */
     #[must_use]
     pub fn build(self) -> PushState {
         let input_instructions = self
@@ -311,28 +349,43 @@ mod simple_check {
             PushInstruction::push_int(i)
         }
 
-        let inputs = Inputs::default();
+        let inputs = Inputs::default()
+            .with_name("x")
+            .with_name("y")
+            .with_name("a")
+            .with_name("b");
 
         // TODO: Can I make this a Vec<dyn Into<PushInstruction>> and
         //   then just `map.(Into::into)` across them all so I don't
         //   have to repeat the `.into()` over and over?
         let program = vec![
-            push_int(5),
-            push_int(8),
+            // push_int(5),
+            // push_int(8),
+            PushInstruction::InputVar(0),
+            PushInstruction::InputVar(1),
             push_bool(true),
+            PushInstruction::InputVar(2),
             push_int(9),
             BoolInstruction::BoolOr.into(),
             IntInstruction::Add.into(),
             push_int(6),
             IntInstruction::IsEven.into(),
             BoolInstruction::BoolAnd.into(),
+            PushInstruction::InputVar(3),
         ];
-        let mut state = PushState::builder(program, &inputs).build();
+        let mut state = PushState::builder(program, &inputs)
+            .with_bool_input("a", true)
+            .with_bool_input("b", false)
+            // I'm reversing the order of the variables on purpose here to make sure
+            // that order doesn't matter.
+            .with_int_input("y", 8)
+            .with_int_input("x", 5)
+            .build();
         println!("{state:?}");
         state.run_to_completion();
         println!("{state:?}");
         assert!(state.exec().is_empty());
         assert_eq!(state.int(), &vec![5, 17]);
-        assert_eq!(state.bool(), &vec![true]);
+        assert_eq!(state.bool(), &vec![true, false]);
     }
 }
