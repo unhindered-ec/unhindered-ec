@@ -28,8 +28,9 @@ use ec_core::{
 };
 use ec_linear::{
     genome::{
-        bitstring::{self, Bitstring, BitContext},
-        demo_scorers::{count_ones, hiff}, LinearContext,
+        bitstring::{BitContext, Bitstring},
+        demo_scorers::{count_ones, hiff},
+        LinearContext,
     },
     mutator::with_one_over_length::WithOneOverLength,
     recombinator::two_point_xo::TwoPointXo,

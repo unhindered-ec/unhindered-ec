@@ -1,5 +1,4 @@
 use std::fmt::Display;
-use std::iter::repeat_with;
 
 use anyhow::bail;
 use ec_core::{generator::Generator, genome::Genome};
@@ -7,7 +6,7 @@ use rand::rngs::ThreadRng;
 
 use crate::recombinator::crossover::Crossover;
 
-use super::{LinearGenome, LinearContext};
+use super::{LinearContext, LinearGenome};
 
 // TODO: Ought to have `LinearGenome<T>` so that `Bitstring` is just
 //   `LinearGenome<bool>`.
@@ -36,7 +35,7 @@ impl Generator<Bitstring, LinearContext<BitContext>> for ThreadRng {
 
 impl Bitstring {
     pub fn random(num_bits: usize, rng: &mut ThreadRng) -> Self {
-        Bitstring::random_with_probability(num_bits, 0.5, rng)
+        Self::random_with_probability(num_bits, 0.5, rng)
     }
 
     pub fn random_with_probability(num_bits: usize, probability: f64, rng: &mut ThreadRng) -> Self {

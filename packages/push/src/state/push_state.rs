@@ -1,11 +1,5 @@
-use std::iter::repeat_with;
-
-use ec_core::generator::Generator;
-use rand::{rngs::ThreadRng, seq::SliceRandom, Rng};
-
-use crate::instruction::Instruction;
-
 use super::State;
+use crate::instruction::Instruction;
 
 #[derive(Default)]
 pub struct Inputs {
@@ -19,6 +13,11 @@ impl Inputs {
         self
     }
 
+    /// Get the index for the given input variable name.
+    ///
+    /// # Panics
+    /// This will panic if the given name hasn't been added to
+    /// the `Inputs` using, e.g., `with_name()`.
     #[must_use]
     pub fn get_index(&self, name: &str) -> usize {
         self.input_names
@@ -61,6 +60,17 @@ impl<'i> Builder<'i> {
         }
     }
 
+    /// Adds an integer input instruction to the current current state's set
+    /// of instructions. The name for the input must have been included
+    /// in the `Inputs` provided when the `Builder` was initially constructed.
+    /// Here you provide the name and the (int, i.e., `i64`) value for that
+    /// input variable. That will create a new `PushInstruction::push_int()`
+    /// instruction that will push the specified value onto the integer stack
+    /// when performed.
+    ///
+    /// # Panics
+    /// This panics if the `input_name` provided isn't included in the set of
+    /// names in the `Inputs` object used in the construction of the `Builder`.
     #[must_use]
     pub fn with_int_input(mut self, input_name: &str, input_value: i64) -> Self {
         let index = self.inputs.get_index(input_name);
@@ -159,9 +169,7 @@ impl PushState {
         //   us something...
         let instruction = self
             .input_instructions.get(var_index)
-            .expect(&format!(
-                "We tried to get an instruction for the input variable with index '{var_index}' that hadn't been added"
-            ))
+            .unwrap_or_else(|| panic!("We tried to get an instruction for the input variable with index '{var_index}' that hadn't been added"))
             .clone();
         instruction.perform(self);
     }
@@ -224,8 +232,8 @@ pub enum IntInstruction {
 // #[inline(always)]
 fn pop2<T>(stack: &mut Vec<T>) -> Option<(T, T)> {
     if stack.len() >= 2 {
-        let x = stack.pop().unwrap();
-        let y = stack.pop().unwrap();
+        let x = stack.pop()?;
+        let y = stack.pop()?;
         Some((x, y))
     } else {
         None

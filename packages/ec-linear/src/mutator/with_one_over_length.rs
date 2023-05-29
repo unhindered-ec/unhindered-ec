@@ -52,7 +52,13 @@ mod tests {
 
     use ec_core::{generator::Generator, operator::mutator::Mutator};
 
-    use crate::{genome::{bitstring::{self, BitContext, Bitstring}, LinearContext}, mutator::with_one_over_length::WithOneOverLength};
+    use crate::{
+        genome::{
+            bitstring::{BitContext, Bitstring},
+            LinearContext,
+        },
+        mutator::with_one_over_length::WithOneOverLength,
+    };
 
     // This test is stochastic, so I'm going to ignore it most of the time.
     #[test]

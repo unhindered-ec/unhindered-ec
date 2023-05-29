@@ -63,6 +63,10 @@ pub struct GeneratorContext<GC, S> {
     pub scorer: S,
 }
 
+// G is Genome
+// GC is GenomeContext
+// S is Scorer
+// R is the TestResult type
 impl<G, GC, S, R> Generator<EcIndividual<G, R>, GeneratorContext<GC, S>> for ThreadRng
 where
     Self: Generator<G, GC>,
