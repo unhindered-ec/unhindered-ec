@@ -5,19 +5,28 @@
 
 pub mod args;
 
-use crate::args::Args;
+use crate::args::{Args, RunModel};
 use anyhow::{ensure, Result};
 use clap::Parser;
 use ec_core::{
+    child_maker::ChildMaker,
+    generation::{self, Generation},
     generator::{CollectionContext, Generator},
     individual::ec::{self, EcIndividual},
-    operator::selector::{
-        best::Best, lexicase::Lexicase, tournament::Tournament, weighted::Weighted, Selector,
+    operator::{
+        genome_extractor::GenomeExtractor,
+        genome_scorer::GenomeScorer,
+        mutator::Mutate,
+        selector::{
+            best::Best, lexicase::Lexicase, tournament::Tournament, weighted::Weighted, Select,
+            Selector,
+        },
+        Composable,
     },
     population,
     test_results::{self, TestResults},
 };
-use ec_linear::genome::LinearContext;
+use ec_linear::{genome::LinearContext, mutator::umad::Umad};
 use push::{
     genome::plushy::Plushy,
     state::{
@@ -80,7 +89,7 @@ fn main() -> Result<()> {
     let lexicase = Lexicase::new(num_test_cases);
     let binary_tournament = Tournament::new(2);
 
-    let _selector: Weighted<Pop> = Weighted::new(Best, 1)
+    let selector: Weighted<Pop> = Weighted::new(Best, 1)
         .with_selector(lexicase, 5)
         .with_selector(binary_tournament, args.population_size - 1);
 
@@ -127,41 +136,45 @@ fn main() -> Result<()> {
     let best = Best.select(&population, &mut rng)?;
     println!("Best initial individual is {best:?}");
 
-    // // Let's assume the process will be generational, i.e., we replace the entire
-    // // population with newly created/selected individuals every generation.
-    // // `generation` will be a mutable operator (containing the data structures for
-    // // the population(s) and recombinators, scorers, etc.) that acts on a population
-    // // returning a new population. We'll have different generation operators for
-    // // serial vs. parallel generation of new individuals.
+    let umad = Umad::new(0.1, 0.1, instruction_context);
 
-    // let make_new_individual = Select::new(selector)
-    //     .apply_twice()
-    //     .then_map(GenomeExtractor)
-    //     .then(Recombine::new(TwoPointXo))
-    //     .then(Mutate::new(WithOneOverLength))
-    //     .wrap::<GenomeScorer<_, _>>(scorer);
+    let make_new_individual = Select::new(selector)
+        .then_map(GenomeExtractor)
+        .then(Mutate::new(umad))
+        .wrap::<GenomeScorer<_, _>>(scorer);
 
-    // // generation::new() will take
-    // //   * a pipeline that gets us from population -> new individual
-    // //   * an initial population.
-    // let mut generation = Generation::new(make_new_individual, population);
+    // generation::new() will take
+    //   * a pipeline that gets us from population -> new individual
+    //   * an initial population.
+
+    let mut generation = Generation::new(make_new_individual, population);
+
+    // let g = <generation as Generation<
+    //     Vec<EcIndividual<Plushy, TestResults<test_results::Error>>>,
+    //     ChildMaker,
+    // >>::serial_next(generation);
+
+    let x = Generation::<
+        Vec<EcIndividual<Plushy, TestResults<test_results::Error>>>,
+        ChildMaker<_, _>,
+    >::serial_next(&mut generation);
 
     // // TODO: It might be useful to insert some kind of logging system so we can
     // //   make this less imperative in nature.
 
-    // (0..args.num_generations).try_for_each(|generation_number| {
-    //     match args.run_model {
-    //         RunModel::Serial => generation.serial_next()?,
-    //         RunModel::Parallel => generation.par_next()?,
-    //     }
+    (0..args.num_generations).try_for_each(|generation_number| {
+        match args.run_model {
+            RunModel::Serial => generation.serial_next()?,
+            RunModel::Parallel => generation.par_next()?,
+        }
 
-    //     let best = Best.select(generation.population(), &mut rng)?;
-    //     // TODO: Change 2 to be the smallest number of digits needed for
-    //     //  args.num_generations-1.
-    //     println!("Generation {generation_number:2} best is {best:?}");
+        let best = Best.select(generation.population(), &mut rng)?;
+        // TODO: Change 2 to be the smallest number of digits needed for
+        //  args.num_generations-1.
+        println!("Generation {generation_number:2} best is {best:?}");
 
-    //     Ok::<(), anyhow::Error>(())
-    // })?;
+        Ok::<(), anyhow::Error>(())
+    })?;
 
     Ok(())
 }
