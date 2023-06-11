@@ -11,6 +11,7 @@ impl Generator<bool, f64> for ThreadRng {
     }
 }
 
+#[derive(Clone)]
 pub struct CollectionContext<T> {
     collection: Vec<T>,
 }

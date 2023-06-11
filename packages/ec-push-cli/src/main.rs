@@ -105,7 +105,7 @@ fn main() -> Result<()> {
 
     let plushy_context = LinearContext {
         length: args.max_initial_instructions,
-        element_context: instruction_context,
+        element_context: instruction_context.clone(),
     };
 
     let individual_context = ec::GeneratorContext {
