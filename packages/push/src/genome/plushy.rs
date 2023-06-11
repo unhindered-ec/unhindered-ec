@@ -1,10 +1,13 @@
-use ec_core::generator::{CollectionContext, Generator};
-use ec_linear::genome::LinearContext;
+use ec_core::{
+    generator::{CollectionContext, Generator},
+    genome::Genome,
+};
+use ec_linear::genome::{LinearContext, LinearGenome};
 use rand::rngs::ThreadRng;
 
 use crate::state::push_state::PushInstruction;
 
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Plushy {
     instructions: Vec<PushInstruction>,
 }
@@ -19,10 +22,42 @@ impl Plushy {
     }
 }
 
+impl Genome for Plushy {
+    type Gene = PushInstruction;
+}
+
+impl LinearGenome for Plushy {
+    fn size(&self) -> usize {
+        self.instructions.len()
+    }
+
+    fn gene_mut(&mut self, index: usize) -> Option<&mut Self::Gene> {
+        self.instructions.get_mut(index)
+    }
+}
+
 impl Generator<Plushy, LinearContext<CollectionContext<PushInstruction>>> for ThreadRng {
     fn generate(&mut self, context: &LinearContext<CollectionContext<PushInstruction>>) -> Plushy {
         let instructions: Vec<PushInstruction> = self.generate(context);
         Plushy { instructions }
+    }
+}
+
+impl IntoIterator for Plushy {
+    type Item = PushInstruction;
+
+    type IntoIter = std::vec::IntoIter<PushInstruction>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.instructions.into_iter()
+    }
+}
+
+impl FromIterator<PushInstruction> for Plushy {
+    fn from_iter<T: IntoIterator<Item = PushInstruction>>(iterable: T) -> Self {
+        Self {
+            instructions: iterable.into_iter().collect(),
+        }
     }
 }
 
@@ -51,4 +86,6 @@ mod test {
         });
         assert_eq!(10, plushy.instructions.len());
     }
+
+    // TODO: Test that `Umad` works here on Plushy genomes.
 }
