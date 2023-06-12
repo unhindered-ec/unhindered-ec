@@ -5,6 +5,7 @@ use rand::rngs::ThreadRng;
 
 pub mod bitstring;
 pub mod demo_scorers;
+pub mod vector;
 
 pub trait LinearGenome: Genome {
     fn size(&self) -> usize;
