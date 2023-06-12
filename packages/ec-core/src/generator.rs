@@ -11,6 +11,19 @@ impl Generator<bool, f64> for ThreadRng {
     }
 }
 
+impl<const N: usize, T> Generator<T, [T; N]> for ThreadRng
+where
+    T: Clone,
+{
+    fn generate(&mut self, options: &[T; N]) -> T {
+        #[allow(clippy::expect_used)]
+        options
+            .choose(self)
+            .expect("You must have a non-empty array for a `Generator` context")
+            .clone()
+    }
+}
+
 #[derive(Clone)]
 pub struct CollectionContext<T> {
     collection: Vec<T>,
