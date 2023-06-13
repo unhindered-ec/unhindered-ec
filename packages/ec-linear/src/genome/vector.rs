@@ -1,6 +1,6 @@
 use ec_core::genome::Genome;
 
-use super::LinearGenome;
+use super::Linear;
 
 #[derive(Debug, Clone)]
 pub struct Vector<T> {
@@ -11,7 +11,7 @@ impl<T> Genome for Vector<T> {
     type Gene = T;
 }
 
-impl<T> LinearGenome for Vector<T> {
+impl<T> Linear for Vector<T> {
     fn size(&self) -> usize {
         self.genes.len()
     }

@@ -2,7 +2,7 @@ use ec_core::{
     generator::{CollectionContext, Generator},
     genome::Genome,
 };
-use ec_linear::genome::{LinearContext, LinearGenome};
+use ec_linear::genome::{Linear, LinearContext};
 use rand::rngs::ThreadRng;
 
 use crate::state::push_state::PushInstruction;
@@ -26,7 +26,7 @@ impl Genome for Plushy {
     type Gene = PushInstruction;
 }
 
-impl LinearGenome for Plushy {
+impl Linear for Plushy {
     fn size(&self) -> usize {
         self.instructions.len()
     }

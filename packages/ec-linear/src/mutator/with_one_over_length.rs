@@ -5,7 +5,7 @@ use std::ops::Not;
 use num_traits::ToPrimitive;
 use rand::rngs::ThreadRng;
 
-use crate::genome::LinearGenome;
+use crate::genome::Linear;
 
 use super::with_rate::WithRate;
 
@@ -30,7 +30,7 @@ where
 
 impl<T> Mutator<T> for WithOneOverLength
 where
-    T: LinearGenome + FromIterator<T::Gene> + IntoIterator<Item = T::Gene>,
+    T: Linear + FromIterator<T::Gene> + IntoIterator<Item = T::Gene>,
     T::Gene: Not<Output = T::Gene>,
 {
     fn mutate(&self, genome: T, rng: &mut ThreadRng) -> Result<T> {

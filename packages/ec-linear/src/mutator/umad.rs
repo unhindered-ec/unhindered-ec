@@ -1,7 +1,7 @@
 use ec_core::{generator::Generator, genome::Genome, operator::mutator::Mutator};
 use rand::{rngs::ThreadRng, Rng};
 
-use crate::genome::LinearGenome;
+use crate::genome::Linear;
 
 /// UMAD = Uniform Mutation through random Addition and Deletion
 pub struct Umad<GeneContext> {
@@ -32,7 +32,7 @@ impl<GeneContext> Umad<GeneContext> {
 
 impl<G, GeneContext> Mutator<G> for Umad<GeneContext>
 where
-    G: LinearGenome + IntoIterator<Item = G::Gene> + FromIterator<G::Gene>,
+    G: Linear + IntoIterator<Item = G::Gene> + FromIterator<G::Gene>,
     ThreadRng: Generator<G::Gene, GeneContext>,
 {
     fn mutate(&self, genome: G, rng: &mut ThreadRng) -> anyhow::Result<G> {

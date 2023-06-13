@@ -4,7 +4,7 @@ use std::ops::Not;
 
 use rand::{rngs::ThreadRng, Rng};
 
-use crate::genome::LinearGenome;
+use crate::genome::Linear;
 
 pub struct WithRate {
     mutation_rate: f32,
@@ -36,7 +36,7 @@ where
 //   See the `Crossover` trait for the key idea.
 impl<T> Mutator<T> for WithRate
 where
-    T: LinearGenome + FromIterator<T::Gene> + IntoIterator<Item = T::Gene>,
+    T: Linear + FromIterator<T::Gene> + IntoIterator<Item = T::Gene>,
     T::Gene: Not<Output = T::Gene>,
 {
     fn mutate(&self, genome: T, rng: &mut ThreadRng) -> Result<T> {

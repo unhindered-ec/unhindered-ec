@@ -6,7 +6,7 @@ use rand::rngs::ThreadRng;
 
 use crate::recombinator::crossover::Crossover;
 
-use super::{LinearContext, LinearGenome};
+use super::{Linear, LinearContext};
 
 // TODO: Ought to have `LinearGenome<T>` so that `Bitstring` is just
 //   `LinearGenome<bool>`.
@@ -99,7 +99,7 @@ impl Genome for Bitstring {
     type Gene = bool;
 }
 
-impl LinearGenome for Bitstring {
+impl Linear for Bitstring {
     fn size(&self) -> usize {
         self.bits.len()
     }

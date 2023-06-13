@@ -1,10 +1,10 @@
 use std::ops::Range;
 
-use crate::genome::LinearGenome;
+use crate::genome::Linear;
 
 // TODO: Does `Crossover` need to be visible outside
 //   this module? If not, should `pub` be replaced/removed?
-pub trait Crossover: LinearGenome {
+pub trait Crossover: Linear {
     /// Swaps a gene at a randomly selected position, destructively
     /// modifying both this genome and `other`.
     ///
