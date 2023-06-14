@@ -79,7 +79,7 @@ mod tests {
     #[test]
     #[ignore]
     #[allow(clippy::unwrap_used)]
-    fn mutate_with_rate_does_not_change_much() {
+    fn mutate_using_context_with_rate_does_not_change_much() {
         let mutator = WithRate {
             mutation_rate: 0.05,
         };
@@ -111,7 +111,7 @@ mod tests {
     #[test]
     #[ignore]
     #[allow(clippy::unwrap_used)]
-    fn mutate_linear_genome_with_rate_does_not_change_much() {
+    fn mutate_bitstring_with_rate_does_not_change_much() {
         let mutator = WithRate {
             mutation_rate: 0.05,
         };
