@@ -17,3 +17,5 @@ rand = { version = "0.8.5", features = ["alloc"] }
 
 # We could put this in the workspace and use ` = { workspace = true }` here.
 ec-core = { path = "../ec-core" }
+quickcheck = "1.0.3"
+quickcheck_macros = "1.0.0"
