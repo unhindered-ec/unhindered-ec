@@ -29,9 +29,9 @@ pub struct GeneratorContext<IC> {
     pub individual_context: IC,
 }
 
-impl<I, IC> Generator<Vec<I>, GeneratorContext<IC>> for ThreadRng
+impl<I, IC> Generator<Vec<I>> for GeneratorContext<IC>
 where
-    Self: Generator<I, IC>,
+    IC: Generator<I>,
     Vec<I>: Population,
 {
     // We could implement this using Rayon's `par_bridge`, but we
@@ -40,9 +40,9 @@ where
     // threads. Since we only generate populations rarely (typically
     // just once at the beginning) there's not a huge value in
     // parallelizing this action.
-    fn generate(&mut self, context: &GeneratorContext<IC>) -> Vec<I> {
-        repeat_with(|| self.generate(&context.individual_context))
-            .take(context.population_size)
+    fn generate(&self, rng: &mut ThreadRng) -> anyhow::Result<Vec<I>> {
+        repeat_with(|| self.individual_context.generate(rng))
+            .take(self.population_size)
             .collect()
     }
 }
@@ -59,15 +59,16 @@ mod generator_trait_tests {
         val: i32,
     }
 
-    impl Generator<RandValue, Range<i32>> for ThreadRng {
-        fn generate(&mut self, range: &Range<i32>) -> RandValue {
-            RandValue {
-                val: self.gen_range(range.clone()),
-            }
+    impl Generator<RandValue> for Range<i32> {
+        fn generate(&self, rng: &mut ThreadRng) -> anyhow::Result<RandValue> {
+            Ok(RandValue {
+                val: rng.gen_range(self.clone()),
+            })
         }
     }
 
     #[test]
+    #[allow(clippy::unwrap_used)]
     fn generator_works() {
         let mut rng = thread_rng();
         let population_size = 10;
@@ -76,7 +77,7 @@ mod generator_trait_tests {
             population_size,
             individual_context: range.clone(),
         };
-        let vec_pop = rng.generate(&pop_context);
+        let vec_pop = pop_context.generate(&mut rng).unwrap();
         assert_eq!(population_size, vec_pop.size());
         for i in vec_pop {
             assert!(range.contains(&i.val));

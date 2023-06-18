@@ -343,7 +343,7 @@ impl From<IntInstruction> for PushInstruction {
 
 #[cfg(test)]
 mod simple_check {
-    use crate::state::push_state::{Inputs, PushInstruction, PushState};
+    use crate::push_vm::push_state::{Inputs, PushInstruction, PushState};
 
     use super::{BoolInstruction, IntInstruction, State};
 

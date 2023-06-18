@@ -71,7 +71,7 @@ mod tests {
             length: num_bits,
             element_context: BitContext { probability: 0.5 },
         };
-        let parent_bits: Bitstring = rng.generate(&bitstring_context);
+        let parent_bits: Bitstring = bitstring_context.generate(&mut rng).unwrap();
 
         let child_bits = WithOneOverLength
             .mutate(parent_bits.clone(), &mut rng)

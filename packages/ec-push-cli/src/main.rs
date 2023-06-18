@@ -9,8 +9,7 @@ use crate::args::{Args, RunModel};
 use anyhow::{ensure, Result};
 use clap::Parser;
 use ec_core::{
-    child_maker::ChildMaker,
-    generation::{self, Generation},
+    generation::Generation,
     generator::{CollectionContext, Generator},
     individual::ec::{self, EcIndividual},
     operator::{
@@ -29,7 +28,7 @@ use ec_core::{
 use ec_linear::{genome::LinearContext, mutator::umad::Umad};
 use push::{
     genome::plushy::Plushy,
-    state::{
+    push_vm::{
         push_state::{self, IntInstruction, PushInstruction, PushState},
         State,
     },
@@ -122,7 +121,7 @@ fn main() -> Result<()> {
         individual_context,
     };
 
-    let population = rng.generate(&population_context);
+    let population = population_context.generate(&mut rng)?;
 
     ensure!(population.is_empty().not());
 

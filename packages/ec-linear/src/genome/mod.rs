@@ -18,13 +18,13 @@ pub struct LinearContext<C> {
     pub element_context: C,
 }
 
-impl<T, C> Generator<Vec<T>, LinearContext<C>> for ThreadRng
+impl<T, C> Generator<Vec<T>> for LinearContext<C>
 where
-    Self: Generator<T, C>,
+    C: Generator<T>,
 {
-    fn generate(&mut self, context: &LinearContext<C>) -> Vec<T> {
-        repeat_with(|| self.generate(&context.element_context))
-            .take(context.length)
+    fn generate(&self, rng: &mut ThreadRng) -> anyhow::Result<Vec<T>> {
+        repeat_with(|| self.element_context.generate(rng))
+            .take(self.length)
             .collect()
     }
 }

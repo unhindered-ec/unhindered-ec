@@ -20,29 +20,48 @@ pub struct BitContext {
     pub probability: f64,
 }
 
-impl Generator<bool, BitContext> for ThreadRng {
-    fn generate(&mut self, context: &BitContext) -> bool {
-        self.generate(&context.probability)
+impl Generator<bool> for BitContext {
+    fn generate(&self, rng: &mut ThreadRng) -> anyhow::Result<bool> {
+        self.probability.generate(rng)
     }
 }
 
-impl Generator<Bitstring, LinearContext<BitContext>> for ThreadRng {
-    fn generate(&mut self, context: &LinearContext<BitContext>) -> Bitstring {
-        let bits = self.generate(context);
-        Bitstring { bits }
+impl Generator<Bitstring> for LinearContext<BitContext> {
+    fn generate(&self, rng: &mut ThreadRng) -> anyhow::Result<Bitstring> {
+        let bits = self.generate(rng)?;
+        Ok(Bitstring { bits })
     }
 }
 
 impl Bitstring {
-    pub fn random(num_bits: usize, rng: &mut ThreadRng) -> Self {
+    /// # Errors
+    ///
+    /// This returns an `anyhow::Result<>` as required by the `Generate` trait. I shouldn't actually
+    ///   ever return an error in this setting, as we should always be able to generate a vector of
+    ///   booleans.
+    /// TODO: I think that the `!` type could be used here to indicate that this can't fail, but that's
+    ///   still experimental.
+    pub fn random(num_bits: usize, rng: &mut ThreadRng) -> anyhow::Result<Self> {
         Self::random_with_probability(num_bits, 0.5, rng)
     }
 
-    pub fn random_with_probability(num_bits: usize, probability: f64, rng: &mut ThreadRng) -> Self {
-        rng.generate(&LinearContext {
+    /// # Errors
+    ///
+    /// This returns an `anyhow::Result<>` as required by the `Generate` trait. I shouldn't actually
+    ///   ever return an error in this setting, as we should always be able to generate a vector of
+    ///   booleans.
+    /// TODO: I think that the `!` type could be used here to indicate that this can't fail, but that's
+    ///   still experimental.
+    pub fn random_with_probability(
+        num_bits: usize,
+        probability: f64,
+        rng: &mut ThreadRng,
+    ) -> anyhow::Result<Self> {
+        LinearContext {
             length: num_bits,
             element_context: BitContext { probability },
-        })
+        }
+        .generate(rng)
     }
 }
 
