@@ -4,7 +4,7 @@ use std::ops::Not;
 
 use rand::{rngs::ThreadRng, Rng};
 
-use crate::genome::LinearGenome;
+use crate::genome::Linear;
 
 pub struct WithRate {
     mutation_rate: f32,
@@ -36,7 +36,7 @@ where
 //   See the `Crossover` trait for the key idea.
 impl<T> Mutator<T> for WithRate
 where
-    T: LinearGenome + FromIterator<T::Gene> + IntoIterator<Item = T::Gene>,
+    T: Linear + FromIterator<T::Gene> + IntoIterator<Item = T::Gene>,
     T::Gene: Not<Output = T::Gene>,
 {
     fn mutate(&self, genome: T, rng: &mut ThreadRng) -> Result<T> {
@@ -68,7 +68,10 @@ mod tests {
     use ec_core::{generator::Generator, operator::mutator::Mutator};
 
     use crate::{
-        genome::bitstring::{self, Bitstring},
+        genome::{
+            bitstring::{BitContext, Bitstring},
+            LinearContext,
+        },
         mutator::with_rate::WithRate,
     };
 
@@ -76,18 +79,18 @@ mod tests {
     #[test]
     #[ignore]
     #[allow(clippy::unwrap_used)]
-    fn mutate_with_rate_does_not_change_much() {
+    fn mutate_using_context_with_rate_does_not_change_much() {
         let mutator = WithRate {
             mutation_rate: 0.05,
         };
 
         let mut rng = rand::thread_rng();
         let num_bits = 100;
-        let bitstring_context = bitstring::GeneratorContext {
-            num_bits,
-            probability: 0.5,
+        let bitstring_context = LinearContext {
+            length: num_bits,
+            element_context: BitContext { probability: 0.5 },
         };
-        let parent_bits = rng.generate(&bitstring_context);
+        let parent_bits: Bitstring = rng.generate(&bitstring_context);
         let child_bits = mutator.mutate(parent_bits.clone(), &mut rng).unwrap();
 
         let num_differences = zip(parent_bits, child_bits)
@@ -108,7 +111,7 @@ mod tests {
     #[test]
     #[ignore]
     #[allow(clippy::unwrap_used)]
-    fn mutate_linear_genome_with_rate_does_not_change_much() {
+    fn mutate_bitstring_with_rate_does_not_change_much() {
         let mutator = WithRate {
             mutation_rate: 0.05,
         };

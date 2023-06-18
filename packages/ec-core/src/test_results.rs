@@ -15,8 +15,12 @@ use std::{cmp::Ordering, fmt::Debug, iter::Sum};
 //   and then `Error` and `Score` should be traits that these structs can
 //   implement? I feel like that might avoid some duplication here.
 
+// TODO: I'm not convinced that `Score` & `Error` need `Clone` and `Copy`
+//   anymore. At a minimum we should try to push those requirements
+//   closer to where they're actually needed.
+
 /// Score implicitly follows a "bigger is better" model.
-#[derive(Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
+#[derive(Eq, PartialEq, Ord, PartialOrd)]
 pub struct Score {
     pub score: i64,
 }
@@ -32,6 +36,12 @@ impl Debug for Score {
 impl From<i64> for Score {
     fn from(score: i64) -> Self {
         Self { score }
+    }
+}
+
+impl From<&i64> for Score {
+    fn from(score: &i64) -> Self {
+        (*score).into()
     }
 }
 
@@ -59,8 +69,12 @@ impl<'a> Sum<&'a Self> for Score {
     }
 }
 
+// TODO: Rewrite `Error` using the std::cmp::Reverse type
+//   to convert `Score` to `Error`.
+// TODO: This (and score) should probably be generic so we can
+//   use `i64` or `i28` or unsigned values, etc.
 /// Error implicitly follows a "smaller is better" model
-#[derive(Clone, Copy, Eq, PartialEq)]
+#[derive(Eq, PartialEq)]
 pub struct Error {
     pub error: i64,
 }
@@ -88,6 +102,12 @@ impl PartialOrd for Error {
 impl From<i64> for Error {
     fn from(error: i64) -> Self {
         Self { error }
+    }
+}
+
+impl From<&i64> for Error {
+    fn from(error: &i64) -> Self {
+        (*error).into()
     }
 }
 
@@ -139,8 +159,6 @@ mod score_error_tests {
         assert!((first < second).not());
     }
 }
-
-// type I64Error = Error<i64>;
 
 #[derive(Eq, PartialEq)]
 pub enum TestResult {
@@ -258,7 +276,7 @@ where
 
 impl<V, R> FromIterator<V> for TestResults<R>
 where
-    for<'a> R: From<V> + Copy + Sum<&'a R> + 'a,
+    for<'a> R: From<V> + Sum<&'a R> + 'a,
 {
     fn from_iter<T: IntoIterator<Item = V>>(values: T) -> Self {
         values.into()
@@ -272,25 +290,37 @@ mod test_results_from_vec {
     #[test]
     fn create_test_results_from_errors() {
         let errors = vec![5, 8, 0, 9];
-        let results: Vec<Error> = errors.iter().copied().map(Into::<Error>::into).collect();
-        let test_results: TestResults<Error> = results.clone().into();
-        assert_eq!(test_results.results, results);
+        let test_results: TestResults<Error> = errors.clone().into();
+        assert_eq!(
+            test_results
+                .results
+                .iter()
+                .map(|r| r.error)
+                .collect::<Vec<_>>(),
+            errors
+        );
         assert_eq!(test_results.total_result, errors.into_iter().sum());
     }
 
     #[test]
     fn create_test_results_from_scores() {
         let scores = vec![5, 8, 0, 9];
-        let results_iter = scores.iter().copied().map(Into::<Score>::into);
-        let test_results: TestResults<Score> = results_iter.clone().into();
-        assert_eq!(test_results.results, results_iter.collect::<Vec<_>>());
+        let test_results: TestResults<Score> = scores.clone().into();
+        assert_eq!(
+            test_results
+                .results
+                .iter()
+                .map(|r| r.score)
+                .collect::<Vec<_>>(),
+            scores
+        );
         assert_eq!(test_results.total_result, scores.into_iter().sum());
     }
 
     #[test]
     fn create_test_results_from_iter_errors() {
         let errors = vec![5, 8, 0, 9];
-        let results = errors.iter().copied().map(Into::<Error>::into);
+        let results = errors.iter().map(Into::<Error>::into);
         let test_results: TestResults<Error> = results.clone().collect();
         assert_eq!(test_results.results, results.collect::<Vec<_>>());
         assert_eq!(test_results.total_result, errors.into_iter().sum());
@@ -299,7 +329,7 @@ mod test_results_from_vec {
     #[test]
     fn create_test_results_from_iter_scores() {
         let scores = vec![5, 8, 0, 9];
-        let results = scores.iter().copied().map(Into::<Score>::into);
+        let results = scores.iter().map(Into::<Score>::into);
         let test_results: TestResults<Score> = results.clone().collect();
         assert_eq!(test_results.results, results.collect::<Vec<_>>());
         assert_eq!(test_results.total_result, scores.into_iter().sum());

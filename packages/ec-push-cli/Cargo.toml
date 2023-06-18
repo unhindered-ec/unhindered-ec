@@ -1,5 +1,5 @@
 [package]
-name = "ec-linear"
+name = "ec-push-cli"
 version = { workspace = true }
 authors = { workspace = true }
 description = { workspace = true }
@@ -10,12 +10,14 @@ edition = { workspace = true }
 
 [dependencies]
 anyhow = "1.0.70"
-# itertools = "0.10.5"
-num-traits = "0.2.15"
+clap = { version = "4.1.13", features = ["derive"] }
 rand = { version = "0.8.5", features = ["alloc"] }
-# rayon = "1.7.0"
 
 # We could put this in the workspace and use ` = { workspace = true }` here.
 ec-core = { path = "../ec-core" }
-quickcheck = "1.0.3"
-quickcheck_macros = "1.0.0"
+ec-linear = { path = "../ec-linear" }
+push = { path = "../push" }
+
+[[bin]]
+name = "pushgp"
+path = "src/main.rs"

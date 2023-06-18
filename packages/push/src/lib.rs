@@ -4,5 +4,5 @@
 #![warn(clippy::expect_used)]
 
 pub mod genome;
-pub mod mutator;
-pub mod recombinator;
+pub mod instruction;
+pub mod state;

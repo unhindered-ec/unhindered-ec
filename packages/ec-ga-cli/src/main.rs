@@ -1,3 +1,8 @@
+#![warn(clippy::pedantic)]
+#![warn(clippy::nursery)]
+#![warn(clippy::unwrap_used)]
+#![warn(clippy::expect_used)]
+
 pub mod args;
 
 use crate::args::{Args, RunModel, TargetProblem};
@@ -23,8 +28,9 @@ use ec_core::{
 };
 use ec_linear::{
     genome::{
-        bitstring::{self, Bitstring},
-        bitstring_vec::{count_ones, hiff},
+        bitstring::{BitContext, Bitstring},
+        demo_scorers::{count_ones, hiff},
+        LinearContext,
     },
     mutator::with_one_over_length::WithOneOverLength,
     recombinator::two_point_xo::TwoPointXo,
@@ -33,6 +39,11 @@ use rand::thread_rng;
 use std::ops::Not;
 
 fn main() -> Result<()> {
+    // Using `Error` in `TestResults<Error>` will have the run favor smaller
+    // values, where using `Score` (e.g., `TestResults<Score>`) will have the run
+    // favor larger values.
+    type Pop = Vec<EcIndividual<Bitstring, TestResults<test_results::Score>>>;
+
     let args = Args::parse();
 
     let base_scorer = match args.target_problem {
@@ -49,20 +60,15 @@ fn main() -> Result<()> {
     let lexicase = Lexicase::new(num_test_cases);
     let binary_tournament = Tournament::new(2);
 
-    // Using `Error` in `TestResults<Error>` will have the run favor smaller
-    // values, where using `Score` (e.g., `TestResults<Score>`) will have the run
-    // favor larger values.
-    type Pop = Vec<EcIndividual<Bitstring, TestResults<test_results::Score>>>;
-
     let selector: Weighted<Pop> = Weighted::new(Best, 1)
         .with_selector(lexicase, 5)
         .with_selector(binary_tournament, args.population_size - 1);
 
     let mut rng = thread_rng();
 
-    let bitstring_context = bitstring::GeneratorContext {
-        num_bits: args.bit_length,
-        probability: 0.5,
+    let bitstring_context = LinearContext {
+        length: args.bit_length,
+        element_context: BitContext { probability: 0.5 },
     };
 
     let individual_context = ec::GeneratorContext {
