@@ -90,7 +90,7 @@ mod tests {
             length: num_bits,
             element_context: BitContext { probability: 0.5 },
         };
-        let parent_bits: Bitstring = rng.generate(&bitstring_context);
+        let parent_bits: Bitstring = bitstring_context.generate(&mut rng).unwrap();
         let child_bits = mutator.mutate(parent_bits.clone(), &mut rng).unwrap();
 
         let num_differences = zip(parent_bits, child_bits)
@@ -118,7 +118,7 @@ mod tests {
 
         let mut rng = rand::thread_rng();
         let num_bits = 100;
-        let parent_bits = Bitstring::random(num_bits, &mut rng); //  make_random(num_bits, &mut rng);
+        let parent_bits = Bitstring::random(num_bits, &mut rng).unwrap(); //  make_random(num_bits, &mut rng);
         let child_bits = mutator.mutate(parent_bits.clone(), &mut rng).unwrap();
 
         let num_differences = zip(parent_bits, child_bits)

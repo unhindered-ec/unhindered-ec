@@ -1,26 +1,30 @@
-use anyhow::bail;
+use anyhow::{bail, Context};
 use rand::{rngs::ThreadRng, seq::SliceRandom, Rng};
 
-pub trait Generator<T, Context> {
-    fn generate(&mut self, context: &Context) -> T;
+pub trait Generator<T> {
+    /// # Errors
+    ///
+    /// This returns an `anyhow::Error` if the implementation of `generate`
+    /// returns some sort of error. An example would be choosing a random
+    /// item from a collection; this fails if the collection is empty.  
+    fn generate(&self, rng: &mut ThreadRng) -> anyhow::Result<T>;
 }
 
-impl Generator<bool, f64> for ThreadRng {
-    fn generate(&mut self, probability: &f64) -> bool {
-        self.gen_bool(*probability)
+impl Generator<bool> for f64 {
+    fn generate(&self, rng: &mut ThreadRng) -> anyhow::Result<bool> {
+        Ok(rng.gen_bool(*self))
     }
 }
 
-impl<const N: usize, T> Generator<T, [T; N]> for ThreadRng
+impl<const N: usize, T> Generator<T> for [T; N]
 where
     T: Clone,
 {
-    fn generate(&mut self, options: &[T; N]) -> T {
-        #[allow(clippy::expect_used)]
-        options
-            .choose(self)
-            .expect("You must have a non-empty array for a `Generator` context")
-            .clone()
+    fn generate(&self, rng: &mut ThreadRng) -> anyhow::Result<T> {
+        Ok(self
+            .choose(rng)
+            .context("`generate` called with an empty array of options to choose from")?
+            .clone())
     }
 }
 
@@ -41,12 +45,15 @@ impl<T> CollectionContext<T> {
     }
 }
 
-impl<T> Generator<T, CollectionContext<T>> for ThreadRng
+impl<T> Generator<T> for CollectionContext<T>
 where
     T: Clone,
 {
-    fn generate(&mut self, context: &CollectionContext<T>) -> T {
-        #[allow(clippy::unwrap_used)]
-        context.collection.choose(self).unwrap().clone()
+    fn generate(&self, rng: &mut ThreadRng) -> anyhow::Result<T> {
+        Ok(self
+            .collection
+            .choose(rng)
+            .context("`generate` called with an empty collection of options to choose from")?
+            .clone())
     }
 }

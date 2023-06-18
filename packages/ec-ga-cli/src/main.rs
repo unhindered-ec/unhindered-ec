@@ -80,7 +80,7 @@ fn main() -> Result<()> {
         population_size: args.population_size,
         individual_context,
     };
-    let population = rng.generate(&population_context);
+    let population = population_context.generate(&mut rng)?;
 
     ensure!(population.is_empty().not());
 

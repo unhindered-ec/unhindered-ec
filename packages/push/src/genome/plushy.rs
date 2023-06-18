@@ -5,7 +5,7 @@ use ec_core::{
 use ec_linear::genome::{Linear, LinearContext};
 use rand::rngs::ThreadRng;
 
-use crate::state::push_state::PushInstruction;
+use crate::push_vm::push_state::PushInstruction;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Plushy {
@@ -36,10 +36,10 @@ impl Linear for Plushy {
     }
 }
 
-impl Generator<Plushy, LinearContext<CollectionContext<PushInstruction>>> for ThreadRng {
-    fn generate(&mut self, context: &LinearContext<CollectionContext<PushInstruction>>) -> Plushy {
-        let instructions: Vec<PushInstruction> = self.generate(context);
-        Plushy { instructions }
+impl Generator<Plushy> for LinearContext<CollectionContext<PushInstruction>> {
+    fn generate(&self, rng: &mut ThreadRng) -> anyhow::Result<Plushy> {
+        let instructions: Vec<PushInstruction> = self.generate(rng)?;
+        Ok(Plushy { instructions })
     }
 }
 
@@ -67,7 +67,7 @@ mod test {
     use ec_linear::mutator::umad::Umad;
     use rand::thread_rng;
 
-    use crate::state::push_state::{BoolInstruction, IntInstruction};
+    use crate::push_vm::push_state::{BoolInstruction, IntInstruction};
 
     use super::*;
 
@@ -82,10 +82,12 @@ mod test {
         ];
         let collect_context = CollectionContext::new(instructions).unwrap();
         let mut rng = thread_rng();
-        let plushy: Plushy = rng.generate(&LinearContext {
+        let plushy: Plushy = LinearContext {
             length: 10,
             element_context: collect_context,
-        });
+        }
+        .generate(&mut rng)
+        .unwrap();
         assert_eq!(10, plushy.instructions.len());
     }
 
