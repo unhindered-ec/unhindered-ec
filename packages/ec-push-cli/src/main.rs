@@ -103,11 +103,6 @@ fn main() -> Result<()> {
     ];
     instruction_set.extend(inputs.to_instructions());
 
-    // let push_program_context = push_state::GeneratorContext {
-    //     max_initial_instructions: args.max_initial_instructions,
-    //     instruction_set,
-    // };
-
     #[allow(clippy::expect_used)]
     let instruction_context =
         CollectionContext::new(instruction_set).expect("The set of instructions can't be empty");
@@ -131,38 +126,22 @@ fn main() -> Result<()> {
 
     ensure!(population.is_empty().not());
 
-    // println!("{population:?}");
-
     let best = Best.select(&population, &mut rng)?;
     println!("Best initial individual is {best:?}");
 
     let umad = Umad::new(0.1, 0.1, instruction_context);
 
     let make_new_individual = Select::new(selector)
-        .then_map(GenomeExtractor)
+        .then(GenomeExtractor)
         .then(Mutate::new(umad))
         .wrap::<GenomeScorer<_, _>>(scorer);
 
-    // generation::new() will take
-    //   * a pipeline that gets us from population -> new individual
-    //   * an initial population.
-
     let mut generation = Generation::new(make_new_individual, population);
-
-    // let g = <generation as Generation<
-    //     Vec<EcIndividual<Plushy, TestResults<test_results::Error>>>,
-    //     ChildMaker,
-    // >>::serial_next(generation);
-
-    let x = Generation::<
-        Vec<EcIndividual<Plushy, TestResults<test_results::Error>>>,
-        ChildMaker<_, _>,
-    >::serial_next(&mut generation);
 
     // // TODO: It might be useful to insert some kind of logging system so we can
     // //   make this less imperative in nature.
 
-    (0..args.num_generations).try_for_each(|generation_number| {
+    for generation_number in 0..args.num_generations {
         match args.run_model {
             RunModel::Serial => generation.serial_next()?,
             RunModel::Parallel => generation.par_next()?,
@@ -173,8 +152,10 @@ fn main() -> Result<()> {
         //  args.num_generations-1.
         println!("Generation {generation_number:2} best is {best:?}");
 
-        Ok::<(), anyhow::Error>(())
-    })?;
+        if best.test_results.total_result.error == 0 {
+            break;
+        }
+    }
 
     Ok(())
 }
