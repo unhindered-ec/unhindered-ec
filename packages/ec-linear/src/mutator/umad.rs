@@ -113,7 +113,7 @@ mod test {
     #[test]
     #[allow(clippy::unwrap_used)]
     // This is stochastic, and will fail sometimes.
-    fn smoke_test() {
+    fn umad_test() {
         let mut rng = thread_rng();
 
         let char_options: [char; 1] = ['x'];
