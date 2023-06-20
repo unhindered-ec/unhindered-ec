@@ -76,18 +76,18 @@ mod tests {
     #[test]
     #[ignore]
     #[allow(clippy::unwrap_used)]
-    fn mutate_using_context_with_rate_does_not_change_much() {
+    fn mutate_using_generator_with_rate_does_not_change_much() {
         let mutator = WithRate {
             mutation_rate: 0.05,
         };
 
         let mut rng = rand::thread_rng();
         let num_bits = 100;
-        let bitstring_context = CollectionGenerator {
+        let bitstring_generator = CollectionGenerator {
             size: num_bits,
             element_generator: 0.5,
         };
-        let parent_bits: Bitstring = bitstring_context.generate(&mut rng).unwrap();
+        let parent_bits: Bitstring = bitstring_generator.generate(&mut rng).unwrap();
         let child_bits = mutator.mutate(parent_bits.clone(), &mut rng).unwrap();
 
         let num_differences = zip(parent_bits, child_bits)

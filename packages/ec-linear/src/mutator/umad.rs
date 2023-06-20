@@ -4,36 +4,40 @@ use rand::{rngs::ThreadRng, Rng};
 use crate::genome::Linear;
 
 /// UMAD = Uniform Mutation through random Addition and Deletion
-pub struct Umad<GeneContext> {
+pub struct Umad<GeneGenerator> {
     addition_rate: f64,
     deletion_rate: f64,
-    // Provides the context needed to generate a new, random gene
+    // Provides the generator needed to generate a new, random gene
     // during the addition phase.
-    gene_context: GeneContext,
+    gene_generator: GeneGenerator,
 }
 
-impl<GeneContext> Umad<GeneContext> {
-    pub const fn new(addition_rate: f64, deletion_rate: f64, gene_context: GeneContext) -> Self {
+impl<GeneGenerator> Umad<GeneGenerator> {
+    pub const fn new(
+        addition_rate: f64,
+        deletion_rate: f64,
+        gene_generator: GeneGenerator,
+    ) -> Self {
         Self {
             addition_rate,
             deletion_rate,
-            gene_context,
+            gene_generator,
         }
     }
 
     fn new_gene<G>(&self, rng: &mut ThreadRng) -> anyhow::Result<G::Gene>
     where
         G: Genome,
-        GeneContext: Generator<G::Gene>,
+        GeneGenerator: Generator<G::Gene>,
     {
-        self.gene_context.generate(rng)
+        self.gene_generator.generate(rng)
     }
 }
 
-impl<G, GeneContext> Mutator<G> for Umad<GeneContext>
+impl<G, GeneGenerator> Mutator<G> for Umad<GeneGenerator>
 where
     G: Linear + IntoIterator<Item = G::Gene> + FromIterator<G::Gene>,
-    GeneContext: Generator<G::Gene>,
+    GeneGenerator: Generator<G::Gene>,
 {
     fn mutate(&self, genome: G, rng: &mut ThreadRng) -> anyhow::Result<G> {
         // Addition pass

@@ -102,22 +102,22 @@ fn main() -> Result<()> {
     ];
     instruction_set.extend(inputs.to_instructions());
 
-    let plushy_context = CollectionGenerator {
+    let plushy_generator = CollectionGenerator {
         size: args.max_initial_instructions,
         element_generator: instruction_set.clone(),
     };
 
-    let individual_context = ec::IndividualGenerator {
-        genome_generator: plushy_context,
+    let individual_generator = ec::IndividualGenerator {
+        genome_generator: plushy_generator,
         scorer,
     };
 
-    let population_context = CollectionGenerator {
+    let population_generator = CollectionGenerator {
         size: args.population_size,
-        element_generator: individual_context,
+        element_generator: individual_generator,
     };
 
-    let population = population_context.generate(&mut rng)?;
+    let population = population_generator.generate(&mut rng)?;
 
     ensure!(population.is_empty().not());
 
