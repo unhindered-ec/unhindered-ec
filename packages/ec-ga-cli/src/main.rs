@@ -10,7 +10,7 @@ use anyhow::{ensure, Result};
 use clap::Parser;
 use ec_core::{
     generation::Generation,
-    generator::Generator,
+    generator::{collection::CollectionGenerator, Generator},
     individual::ec::{self, EcIndividual},
     operator::{
         genome_extractor::GenomeExtractor,
@@ -30,7 +30,6 @@ use ec_linear::{
     genome::{
         bitstring::{BitContext, Bitstring},
         demo_scorers::{count_ones, hiff},
-        LinearContext,
     },
     mutator::with_one_over_length::WithOneOverLength,
     recombinator::two_point_xo::TwoPointXo,
@@ -66,9 +65,9 @@ fn main() -> Result<()> {
 
     let mut rng = thread_rng();
 
-    let bitstring_context = LinearContext {
-        length: args.bit_length,
-        element_context: BitContext { probability: 0.5 },
+    let bitstring_context = CollectionGenerator {
+        size: args.bit_length,
+        element_generator: BitContext { probability: 0.5 },
     };
 
     let individual_context = ec::GeneratorContext {

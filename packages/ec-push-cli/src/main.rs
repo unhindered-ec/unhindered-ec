@@ -12,7 +12,7 @@ use anyhow::{ensure, Result};
 use clap::Parser;
 use ec_core::{
     generation::Generation,
-    generator::Generator,
+    generator::{collection::CollectionGenerator, Generator},
     individual::ec::{self, EcIndividual},
     operator::{
         genome_extractor::GenomeExtractor,
@@ -27,7 +27,7 @@ use ec_core::{
     population,
     test_results::{self, TestResults},
 };
-use ec_linear::{genome::LinearContext, mutator::umad::Umad};
+use ec_linear::mutator::umad::Umad;
 use push::{
     genome::plushy::Plushy,
     push_vm::{
@@ -103,9 +103,9 @@ fn main() -> Result<()> {
     ];
     instruction_set.extend(inputs.to_instructions());
 
-    let plushy_context = LinearContext {
-        length: args.max_initial_instructions,
-        element_context: instruction_set.clone(),
+    let plushy_context = CollectionGenerator {
+        size: args.max_initial_instructions,
+        element_generator: instruction_set.clone(),
     };
 
     let individual_context = ec::GeneratorContext {

@@ -65,13 +65,13 @@ impl WithRate {
 mod tests {
     use std::iter::zip;
 
-    use ec_core::{generator::Generator, operator::mutator::Mutator};
+    use ec_core::{
+        generator::{collection::CollectionGenerator, Generator},
+        operator::mutator::Mutator,
+    };
 
     use crate::{
-        genome::{
-            bitstring::{BitContext, Bitstring},
-            LinearContext,
-        },
+        genome::bitstring::{BitContext, Bitstring},
         mutator::with_rate::WithRate,
     };
 
@@ -86,9 +86,9 @@ mod tests {
 
         let mut rng = rand::thread_rng();
         let num_bits = 100;
-        let bitstring_context = LinearContext {
-            length: num_bits,
-            element_context: BitContext { probability: 0.5 },
+        let bitstring_context = CollectionGenerator {
+            size: num_bits,
+            element_generator: BitContext { probability: 0.5 },
         };
         let parent_bits: Bitstring = bitstring_context.generate(&mut rng).unwrap();
         let child_bits = mutator.mutate(parent_bits.clone(), &mut rng).unwrap();

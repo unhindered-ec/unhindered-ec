@@ -1,6 +1,7 @@
 use anyhow::Context;
 use rand::{rngs::ThreadRng, seq::SliceRandom, Rng};
 
+pub mod collection;
 /// Trait to represent types that can generate (possibly random) instances
 /// of the generic type `T`. The implementing type provides whatever context
 /// is necessary to generate instances of `T`, such as probabilities or
