@@ -1,8 +1,8 @@
 use ec_core::{
-    generator::{CollectionContext, Generator},
+    generator::{collection::CollectionGenerator, Generator},
     genome::Genome,
 };
-use ec_linear::genome::{Linear, LinearContext};
+use ec_linear::genome::Linear;
 use rand::rngs::ThreadRng;
 
 use crate::push_vm::push_state::PushInstruction;
@@ -36,7 +36,7 @@ impl Linear for Plushy {
     }
 }
 
-impl Generator<Plushy> for LinearContext<CollectionContext<PushInstruction>> {
+impl Generator<Plushy> for CollectionGenerator<Vec<PushInstruction>> {
     fn generate(&self, rng: &mut ThreadRng) -> anyhow::Result<Plushy> {
         let instructions: Vec<PushInstruction> = self.generate(rng)?;
         Ok(Plushy { instructions })
@@ -80,11 +80,10 @@ mod test {
             PushInstruction::IntInstruction(IntInstruction::Multiply),
             PushInstruction::IntInstruction(IntInstruction::ProtectedDivide),
         ];
-        let collect_context = CollectionContext::new(instructions).unwrap();
         let mut rng = thread_rng();
-        let plushy: Plushy = LinearContext {
-            length: 10,
-            element_context: collect_context,
+        let plushy: Plushy = CollectionGenerator {
+            size: 10,
+            element_generator: instructions,
         }
         .generate(&mut rng)
         .unwrap();
@@ -99,6 +98,22 @@ mod test {
         let umad = Umad::new(0.3, 0.3, instruction_options);
 
         let parent_instructions = vec![
+            PushInstruction::IntInstruction(IntInstruction::Add),
+            PushInstruction::BoolInstruction(BoolInstruction::BoolAnd),
+            PushInstruction::BoolInstruction(BoolInstruction::BoolOr),
+            PushInstruction::IntInstruction(IntInstruction::Multiply),
+            PushInstruction::IntInstruction(IntInstruction::Add),
+            PushInstruction::BoolInstruction(BoolInstruction::BoolAnd),
+            PushInstruction::BoolInstruction(BoolInstruction::BoolOr),
+            PushInstruction::IntInstruction(IntInstruction::Multiply),
+            PushInstruction::IntInstruction(IntInstruction::Add),
+            PushInstruction::BoolInstruction(BoolInstruction::BoolAnd),
+            PushInstruction::BoolInstruction(BoolInstruction::BoolOr),
+            PushInstruction::IntInstruction(IntInstruction::Multiply),
+            PushInstruction::IntInstruction(IntInstruction::Add),
+            PushInstruction::BoolInstruction(BoolInstruction::BoolAnd),
+            PushInstruction::BoolInstruction(BoolInstruction::BoolOr),
+            PushInstruction::IntInstruction(IntInstruction::Multiply),
             PushInstruction::IntInstruction(IntInstruction::Add),
             PushInstruction::BoolInstruction(BoolInstruction::BoolAnd),
             PushInstruction::BoolInstruction(BoolInstruction::BoolOr),

@@ -5,12 +5,14 @@
 
 pub mod args;
 
+use std::ops::Not;
+
 use crate::args::{Args, RunModel};
 use anyhow::{ensure, Result};
 use clap::Parser;
 use ec_core::{
     generation::Generation,
-    generator::{CollectionContext, Generator},
+    generator::{collection::CollectionGenerator, Generator},
     individual::ec::{self, EcIndividual},
     operator::{
         genome_extractor::GenomeExtractor,
@@ -22,10 +24,9 @@ use ec_core::{
         },
         Composable,
     },
-    population,
     test_results::{self, TestResults},
 };
-use ec_linear::{genome::LinearContext, mutator::umad::Umad};
+use ec_linear::mutator::umad::Umad;
 use push::{
     genome::plushy::Plushy,
     push_vm::{
@@ -34,7 +35,6 @@ use push::{
     },
 };
 use rand::thread_rng;
-use std::ops::Not;
 
 fn main() -> Result<()> {
     // Using `Error` in `TestResults<Error>` will have the run favor smaller
@@ -102,33 +102,29 @@ fn main() -> Result<()> {
     ];
     instruction_set.extend(inputs.to_instructions());
 
-    #[allow(clippy::expect_used)]
-    let instruction_context =
-        CollectionContext::new(instruction_set).expect("The set of instructions can't be empty");
-
-    let plushy_context = LinearContext {
-        length: args.max_initial_instructions,
-        element_context: instruction_context.clone(),
+    let plushy_generator = CollectionGenerator {
+        size: args.max_initial_instructions,
+        element_generator: instruction_set.clone(),
     };
 
-    let individual_context = ec::GeneratorContext {
-        genome_context: plushy_context,
+    let individual_generator = ec::IndividualGenerator {
+        genome_generator: plushy_generator,
         scorer,
     };
 
-    let population_context = population::GeneratorContext {
-        population_size: args.population_size,
-        individual_context,
+    let population_generator = CollectionGenerator {
+        size: args.population_size,
+        element_generator: individual_generator,
     };
 
-    let population = population_context.generate(&mut rng)?;
+    let population = population_generator.generate(&mut rng)?;
 
     ensure!(population.is_empty().not());
 
     let best = Best.select(&population, &mut rng)?;
     println!("Best initial individual is {best:?}");
 
-    let umad = Umad::new(0.1, 0.1, instruction_context);
+    let umad = Umad::new(0.1, 0.1, instruction_set);
 
     let make_new_individual = Select::new(selector)
         .then(GenomeExtractor)

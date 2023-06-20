@@ -1,12 +1,15 @@
 use std::fmt::Display;
 
 use anyhow::bail;
-use ec_core::{generator::Generator, genome::Genome};
+use ec_core::{
+    generator::{collection::CollectionGenerator, Generator},
+    genome::Genome,
+};
 use rand::rngs::ThreadRng;
 
 use crate::recombinator::crossover::Crossover;
 
-use super::{Linear, LinearContext};
+use super::Linear;
 
 // TODO: Ought to have `LinearGenome<T>` so that `Bitstring` is just
 //   `LinearGenome<bool>`.
@@ -16,17 +19,7 @@ pub struct Bitstring {
     pub bits: Vec<bool>,
 }
 
-pub struct BitContext {
-    pub probability: f64,
-}
-
-impl Generator<bool> for BitContext {
-    fn generate(&self, rng: &mut ThreadRng) -> anyhow::Result<bool> {
-        self.probability.generate(rng)
-    }
-}
-
-impl Generator<Bitstring> for LinearContext<BitContext> {
+impl Generator<Bitstring> for CollectionGenerator<f64> {
     fn generate(&self, rng: &mut ThreadRng) -> anyhow::Result<Bitstring> {
         let bits = self.generate(rng)?;
         Ok(Bitstring { bits })
@@ -57,9 +50,9 @@ impl Bitstring {
         probability: f64,
         rng: &mut ThreadRng,
     ) -> anyhow::Result<Self> {
-        LinearContext {
-            length: num_bits,
-            element_context: BitContext { probability },
+        CollectionGenerator {
+            size: num_bits,
+            element_generator: probability,
         }
         .generate(rng)
     }
