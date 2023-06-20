@@ -23,7 +23,6 @@ use ec_core::{
         },
         Composable,
     },
-    population::{self},
     test_results::{self, TestResults},
 };
 use ec_linear::{
@@ -75,9 +74,9 @@ fn main() -> Result<()> {
         scorer,
     };
 
-    let population_context = population::GeneratorContext {
-        population_size: args.population_size,
-        individual_context,
+    let population_context = CollectionGenerator {
+        size: args.population_size,
+        element_generator: individual_context,
     };
     let population = population_context.generate(&mut rng)?;
 
