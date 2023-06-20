@@ -19,17 +19,7 @@ pub struct Bitstring {
     pub bits: Vec<bool>,
 }
 
-pub struct BitContext {
-    pub probability: f64,
-}
-
-impl Generator<bool> for BitContext {
-    fn generate(&self, rng: &mut ThreadRng) -> anyhow::Result<bool> {
-        self.probability.generate(rng)
-    }
-}
-
-impl Generator<Bitstring> for CollectionGenerator<BitContext> {
+impl Generator<Bitstring> for CollectionGenerator<f64> {
     fn generate(&self, rng: &mut ThreadRng) -> anyhow::Result<Bitstring> {
         let bits = self.generate(rng)?;
         Ok(Bitstring { bits })
@@ -62,7 +52,7 @@ impl Bitstring {
     ) -> anyhow::Result<Self> {
         CollectionGenerator {
             size: num_bits,
-            element_generator: BitContext { probability },
+            element_generator: probability,
         }
         .generate(rng)
     }

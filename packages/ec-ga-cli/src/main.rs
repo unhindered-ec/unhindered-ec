@@ -27,7 +27,7 @@ use ec_core::{
 };
 use ec_linear::{
     genome::{
-        bitstring::{BitContext, Bitstring},
+        bitstring::Bitstring,
         demo_scorers::{count_ones, hiff},
     },
     mutator::with_one_over_length::WithOneOverLength,
@@ -64,21 +64,21 @@ fn main() -> Result<()> {
 
     let mut rng = thread_rng();
 
-    let bitstring_context = CollectionGenerator {
+    let bitstring_generator = CollectionGenerator {
         size: args.bit_length,
-        element_generator: BitContext { probability: 0.5 },
+        element_generator: 0.5,
     };
 
-    let individual_context = ec::IndividualGenerator {
-        genome_generator: bitstring_context,
+    let individual_generator = ec::IndividualGenerator {
+        genome_generator: bitstring_generator,
         scorer,
     };
 
-    let population_context = CollectionGenerator {
+    let population_generator = CollectionGenerator {
         size: args.population_size,
-        element_generator: individual_context,
+        element_generator: individual_generator,
     };
-    let population = population_context.generate(&mut rng)?;
+    let population = population_generator.generate(&mut rng)?;
 
     ensure!(population.is_empty().not());
 

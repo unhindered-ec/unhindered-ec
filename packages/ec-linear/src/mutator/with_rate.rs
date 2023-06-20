@@ -70,10 +70,7 @@ mod tests {
         operator::mutator::Mutator,
     };
 
-    use crate::{
-        genome::bitstring::{BitContext, Bitstring},
-        mutator::with_rate::WithRate,
-    };
+    use crate::{genome::bitstring::Bitstring, mutator::with_rate::WithRate};
 
     // This test is stochastic, so I'm going to ignore it most of the time.
     #[test]
@@ -88,7 +85,7 @@ mod tests {
         let num_bits = 100;
         let bitstring_context = CollectionGenerator {
             size: num_bits,
-            element_generator: BitContext { probability: 0.5 },
+            element_generator: 0.5,
         };
         let parent_bits: Bitstring = bitstring_context.generate(&mut rng).unwrap();
         let child_bits = mutator.mutate(parent_bits.clone(), &mut rng).unwrap();
