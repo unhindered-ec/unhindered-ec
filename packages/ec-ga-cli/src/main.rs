@@ -69,8 +69,8 @@ fn main() -> Result<()> {
         element_generator: BitContext { probability: 0.5 },
     };
 
-    let individual_context = ec::GeneratorContext {
-        genome_context: bitstring_context,
+    let individual_context = ec::IndividualGenerator {
+        genome_generator: bitstring_context,
         scorer,
     };
 

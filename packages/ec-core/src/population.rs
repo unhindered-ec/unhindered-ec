@@ -46,11 +46,11 @@ mod generator_trait_tests {
         let mut rng = thread_rng();
         let population_size = 10;
         let range = -10..25;
-        let pop_context = CollectionGenerator {
+        let pop_generator = CollectionGenerator {
             size: population_size,
             element_generator: range.clone(),
         };
-        let vec_pop = pop_context.generate(&mut rng).unwrap();
+        let vec_pop = pop_generator.generate(&mut rng).unwrap();
         assert_eq!(population_size, vec_pop.size());
         for i in vec_pop {
             assert!(range.contains(&i.val));

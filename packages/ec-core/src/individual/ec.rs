@@ -58,25 +58,22 @@ impl<G: Display, R: Debug> Display for EcIndividual<G, R> {
     }
 }
 
-// TODO: Rename this, and probably many/most of the other generator
-//   contexts. MizardX@Twitch suggests something like "Mold", "Pattern",
-//   "Form", "Flavor", or "Shape"?
-pub struct GeneratorContext<GC, S> {
-    pub genome_context: GC,
+pub struct IndividualGenerator<GG, S> {
+    pub genome_generator: GG,
     pub scorer: S,
 }
 
 // G is Genome
-// GC is GenomeContext
+// GG is Genome generator
 // S is Scorer
 // R is the TestResult type
-impl<G, GC, S, R> Generator<EcIndividual<G, R>> for GeneratorContext<GC, S>
+impl<G, GG, S, R> Generator<EcIndividual<G, R>> for IndividualGenerator<GG, S>
 where
-    GC: Generator<G>,
+    GG: Generator<G>,
     S: Scorer<G, R>,
 {
     fn generate(&self, rng: &mut ThreadRng) -> anyhow::Result<EcIndividual<G, R>> {
-        let genome = self.genome_context.generate(rng)?;
+        let genome = self.genome_generator.generate(rng)?;
         let test_results = self.scorer.score(&genome);
         Ok(EcIndividual::new(genome, test_results))
     }

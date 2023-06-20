@@ -107,8 +107,8 @@ fn main() -> Result<()> {
         element_generator: instruction_set.clone(),
     };
 
-    let individual_context = ec::GeneratorContext {
-        genome_context: plushy_context,
+    let individual_context = ec::IndividualGenerator {
+        genome_generator: plushy_context,
         scorer,
     };
 
