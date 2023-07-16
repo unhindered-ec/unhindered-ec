@@ -1,6 +1,5 @@
-use crate::push_vm::push_state::{pop2, PushState};
-
 use super::{Instruction, PushInstruction};
+use crate::{push_vm::push_state::PushState, util::pop2};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[allow(clippy::module_name_repetitions)]
