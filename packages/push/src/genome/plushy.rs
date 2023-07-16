@@ -5,7 +5,7 @@ use ec_core::{
 use ec_linear::genome::Linear;
 use rand::rngs::ThreadRng;
 
-use crate::push_vm::push_state::PushInstruction;
+use crate::instruction::push::PushInstruction;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Plushy {
@@ -67,7 +67,7 @@ mod test {
     use ec_linear::mutator::umad::Umad;
     use rand::thread_rng;
 
-    use crate::push_vm::push_state::{BoolInstruction, IntInstruction};
+    use crate::instruction::push::{BoolInstruction, IntInstruction};
 
     use super::*;
 

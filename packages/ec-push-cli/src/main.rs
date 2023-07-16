@@ -29,8 +29,9 @@ use ec_core::{
 use ec_linear::mutator::umad::Umad;
 use push::{
     genome::plushy::Plushy,
+    instruction::push::{IntInstruction, PushInstruction},
     push_vm::{
-        push_state::{self, IntInstruction, PushInstruction, PushState},
+        push_state::{self, PushState},
         State,
     },
 };
