@@ -166,9 +166,13 @@ impl PushState {
         &self.exec
     }
 
+    /// # Panics
+    ///
+    /// This panics if we try to access a variable whose `var_index` isn't in the
+    /// variable map.
     pub fn push_input(&mut self, var_index: usize) {
-        // TODO: This `.expect()` is icky, and we really should deal with it better.
-        //   I wonder if the fact that this name might not be there should be telling
+        // TODO: This `panic` here is icky, and we really should deal with it better.
+        //   I wonder if the fact that this index might not be there should be telling
         //   us something...
         let instruction = self
             .input_instructions.get(var_index)

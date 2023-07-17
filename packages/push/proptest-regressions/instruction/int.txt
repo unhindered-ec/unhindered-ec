@@ -1,0 +1,13 @@
+# Seeds for failure cases proptest has generated in the past. It is
+# automatically read and these particular cases re-run before any
+# novel cases are generated.
+#
+# It is recommended to check this file in to source control so that
+# everyone who runs the test benefits from these saved cases.
+cc bd886be92c18b00db5826a040d449a6b2904e3478039ac879f2be67b0ecdbf44 # shrinks to x = 4098586571925584936, y = 5124785464929190872
+cc 82e5f55bb6f90572f041c51a3f5e2fe61a14f739208407677ba403ce5af3c3ef # shrinks to x = 0, y = -1
+cc 62e77057301595056fa0a8d4317a884804e10cef54b8d8a86532e5cc246e35e8 # shrinks to x = 2661671817969299858, y = -3277244385038693905
+cc dfdf015e87918699a3745c7687f18deee5ee1861fa179f8b8e1e1aa01119ba51 # shrinks to instr = FromBoolean, x = 0, y = 0
+cc 7d05c449ea7ffa414c561fdbfaca2cca775db6abb4cd5bd9683e4b178bbae45d # shrinks to instr = Multiply, x = 5, y = -1844674407370955162
+cc 9d8756b42e3c284c2a7770432f04772a7eaaca6454511b3e17b56350efc84dac # shrinks to instr = Square, x = 3037000500, y = 0
+cc c6a453d20d4e50658054c89f1cef1a2f649d5aa1d177e2821e5f75308d5f7d4a # shrinks to instr = Subtract, x = -5434229101245677818, y = 3789142935609097991

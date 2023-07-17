@@ -216,3 +216,96 @@ impl From<IntInstruction> for PushInstruction {
         Self::IntInstruction(instr)
     }
 }
+
+#[cfg(test)]
+mod test {
+    use crate::push_vm::push_state::Inputs;
+
+    use super::*;
+
+    #[test]
+    fn add_overflows() {
+        let x = 4_098_586_571_925_584_936;
+        let y = 5_124_785_464_929_190_872;
+        let mut state = PushState::builder([], &Inputs::default()).build();
+        state.int.push(y);
+        state.int.push(x);
+        IntInstruction::Add.perform(&mut state);
+    }
+
+    #[test]
+    fn inc_overflows() {
+        let x = i64::MAX;
+        let mut state = PushState::builder([], &Inputs::default()).build();
+        state.int.push(x);
+        IntInstruction::Inc.perform(&mut state);
+    }
+
+    #[test]
+    fn dec_overflows() {
+        let x = i64::MIN;
+        let mut state = PushState::builder([], &Inputs::default()).build();
+        state.int.push(x);
+        IntInstruction::Dec.perform(&mut state);
+    }
+}
+
+#[cfg(test)]
+mod property_tests {
+    use crate::{
+        instruction::{Instruction, IntInstruction},
+        push_vm::push_state::{Inputs, PushState},
+    };
+    use proptest::{prop_assert_eq, proptest};
+    use strum::IntoEnumIterator;
+
+    fn all_instructions() -> Vec<IntInstruction> {
+        IntInstruction::iter().collect()
+    }
+
+    proptest! {
+        #![proptest_config(proptest::prelude::ProptestConfig::with_cases(1_000))]
+
+        #[test]
+        fn add_doesnt_crash(x in proptest::num::i64::ANY, y in proptest::num::i64::ANY) {
+            let mut state = PushState::builder([], &Inputs::default()).build();
+            state.int.push(y);
+            state.int.push(x);
+            IntInstruction::Add.perform(&mut state);
+        }
+
+        #[test]
+        fn add_adds_or_does_nothing(x in proptest::num::i64::ANY, y in proptest::num::i64::ANY) {
+            let mut state = PushState::builder([], &Inputs::default()).build();
+            state.int.push(y);
+            state.int.push(x);
+            IntInstruction::Add.perform(&mut state);
+            #[allow(clippy::unwrap_used)]
+            let output = state.int.pop().unwrap();
+            if let Some(result) = x.checked_add(y) {
+                prop_assert_eq!(output, result);
+            } else {
+                // This only checks that `x` is still on the top of the stack.
+                // We arguably want to confirm that the entire state of the system
+                // is unchanged, except that the `Add` instruction has been
+                // removed from the `exec` stack.
+                prop_assert_eq!(output, x);
+            }
+        }
+
+        #[test]
+        fn inc_dec_do_not_crash(x in proptest::num::i64::ANY) {
+            let mut state = PushState::builder([], &Inputs::default()).build();
+            state.int.push(x);
+            IntInstruction::Inc.perform(&mut state);
+        }
+
+        #[test]
+        fn int_ops_do_not_crash(instr in proptest::sample::select(all_instructions()), x in proptest::num::i64::ANY, y in proptest::num::i64::ANY) {
+            let mut state = PushState::builder([], &Inputs::default()).build();
+            state.int.push(y);
+            state.int.push(x);
+            instr.perform(&mut state);
+        }
+    }
+}

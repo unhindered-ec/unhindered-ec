@@ -56,3 +56,27 @@ impl From<BoolInstruction> for PushInstruction {
         Self::BoolInstruction(instr)
     }
 }
+
+#[cfg(test)]
+mod property_tests {
+    use crate::{
+        instruction::{BoolInstruction, Instruction},
+        push_vm::push_state::{Inputs, PushState},
+    };
+    use proptest::proptest;
+    use strum::IntoEnumIterator;
+
+    fn all_instructions() -> Vec<BoolInstruction> {
+        BoolInstruction::iter().collect()
+    }
+
+    proptest! {
+        #[test]
+        fn bool_ops_do_not_crash(instr in proptest::sample::select(all_instructions()), x in proptest::bool::ANY, y in proptest::bool::ANY) {
+            let mut state = PushState::builder([], &Inputs::default()).build();
+            state.bool.push(y);
+            state.bool.push(x);
+            instr.perform(&mut state);
+        }
+    }
+}
