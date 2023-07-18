@@ -49,7 +49,7 @@ impl Inputs {
     }
 }
 
-pub trait PushStack<T> {
+pub trait HasStack<T> {
     fn stack_mut(&mut self) -> &mut Stack<T>;
 }
 
@@ -84,7 +84,7 @@ impl<T> Stack<T> {
     }
 }
 
-impl<T> PushStack<T> for Stack<T> {
+impl<T> HasStack<T> for Stack<T> {
     fn stack_mut(&mut self) -> &mut Stack<T> {
         self
     }
@@ -98,13 +98,13 @@ pub struct PushState {
     input_instructions: Vec<PushInstruction>,
 }
 
-impl PushStack<bool> for PushState {
+impl HasStack<bool> for PushState {
     fn stack_mut(&mut self) -> &mut Stack<bool> {
         &mut self.bool
     }
 }
 
-impl PushStack<i64> for PushState {
+impl HasStack<i64> for PushState {
     fn stack_mut(&mut self) -> &mut Stack<i64> {
         &mut self.int
     }

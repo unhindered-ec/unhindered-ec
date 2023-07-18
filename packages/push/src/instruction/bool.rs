@@ -2,7 +2,7 @@ use strum_macros::EnumIter;
 
 use super::{Instruction, PushInstruction};
 use crate::{
-    push_vm::push_state::{PushStack, PushState, Stack},
+    push_vm::push_state::{HasStack, PushState, Stack},
     util::pop2,
 };
 
@@ -35,7 +35,7 @@ pub enum BoolInstruction {
 
 impl<S> Instruction<S> for BoolInstruction
 where
-    S: PushStack<bool> + PushStack<i64>,
+    S: HasStack<bool> + HasStack<i64>,
 {
     fn perform(&self, state: &mut S) {
         let bool_stack: &mut Stack<bool> = state.stack_mut();
