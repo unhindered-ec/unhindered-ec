@@ -31,7 +31,7 @@ use push::{
     genome::plushy::Plushy,
     instruction::{IntInstruction, PushInstruction},
     push_vm::{
-        push_state::{self, PushState},
+        push_state::{self, HasStack, PushState},
         State,
     },
 };
@@ -65,14 +65,15 @@ fn main() -> Result<()> {
     let scorer = |program: &Plushy| -> TestResults<test_results::Error> {
         let errors: TestResults<test_results::Error> = (0..10)
             .map(|input| {
-                let mut state = PushState::builder(program.get_instructions(), &inputs)
+                let state = PushState::builder(program.get_instructions(), &inputs)
                     .with_int_input("x", input)
                     .build();
                 // This is the degree 3 problem in https://github.com/lspector/Clojush/blob/master/src/clojush/problems/demos/simple_regression.clj
                 let expected = input * input * input - 2 * input * input - input;
                 state
                     .run_to_completion()
-                    .top_int()
+                    .stack_mut()
+                    .top()
                     // If `last()` returns `None`, then there was nothing on top of the integer stack
                     // so we want to use the `PENALTY_VALUE` for the error on this test case.
                     .map_or(PENALTY_VALUE, |answer| (answer - expected).abs())

@@ -1,5 +1,3 @@
-use std::{any::TypeId, default};
-
 use super::State;
 use crate::instruction::{Instruction, PushInstruction};
 
@@ -49,10 +47,6 @@ impl Inputs {
     }
 }
 
-pub trait HasStack<T> {
-    fn stack_mut(&mut self) -> &mut Stack<T>;
-}
-
 #[derive(Debug)]
 pub struct Stack<T> {
     values: Vec<T>,
@@ -65,30 +59,50 @@ pub struct Stack<T> {
 impl<T> Default for Stack<T> {
     fn default() -> Self {
         Self {
-            values: Default::default(),
+            values: Vec::default(),
         }
     }
 }
 
 impl<T> Stack<T> {
+    #[must_use]
+    pub fn size(&self) -> usize {
+        self.values.len()
+    }
+
+    #[must_use]
+    pub fn top(&self) -> Option<&T> {
+        self.values.last()
+    }
+
     pub fn pop(&mut self) -> Option<T> {
         self.values.pop()
     }
 
     pub fn pop2(&mut self) -> Option<(T, T)> {
-        todo!()
+        if self.size() >= 2 {
+            let x = self.pop()?;
+            let y = self.pop()?;
+            Some((x, y))
+        } else {
+            None
+        }
     }
 
     pub fn push(&mut self, value: T) {
-        todo!()
+        self.values.push(value);
     }
 }
 
-impl<T> HasStack<T> for Stack<T> {
-    fn stack_mut(&mut self) -> &mut Stack<T> {
-        self
-    }
+pub trait HasStack<T> {
+    fn stack_mut(&mut self) -> &mut Stack<T>;
 }
+
+// impl<T> HasStack<T> for Stack<T> {
+//     fn stack_mut(&mut self) -> &mut Self {
+//         self
+//     }
+// }
 
 #[derive(Default, Debug)]
 pub struct PushState {
@@ -246,19 +260,13 @@ impl PushState {
             .clone();
         instruction.perform(self);
     }
-
-    #[must_use]
-    pub fn top_int(&self) -> Option<i64> {
-        self.int.values.last().copied()
-    }
 }
 
 impl State for PushState {
     type Instruction = PushInstruction;
 
     // TODO: Need to have some kind of execution limit to prevent infinite loops.
-    // `run` probably isn't a great name here?
-    fn run_to_completion(&mut self) -> &Self {
+    fn run_to_completion(mut self) -> Self {
         while let Some(instruction) = self.exec.pop() {
             self.perform(&instruction);
         }
@@ -309,7 +317,7 @@ mod simple_check {
             BoolInstruction::BoolAnd.into(),
             PushInstruction::InputVar(3),
         ];
-        let mut state = PushState::builder(program, &inputs)
+        let state = PushState::builder(program, &inputs)
             .with_bool_input("a", true)
             .with_bool_input("b", false)
             // I'm reversing the order of the variables on purpose here to make sure
@@ -318,7 +326,7 @@ mod simple_check {
             .with_int_input("x", 5)
             .build();
         println!("{state:?}");
-        state.run_to_completion();
+        let state = state.run_to_completion();
         println!("{state:?}");
         assert!(state.exec().is_empty());
         assert_eq!(&state.int.values, &vec![5, 17]);
