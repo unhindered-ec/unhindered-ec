@@ -1,10 +1,7 @@
 use strum_macros::EnumIter;
 
 use super::{Instruction, PushInstruction};
-use crate::{
-    push_vm::push_state::{HasStack, PushState, Stack},
-    util::pop2,
-};
+use crate::push_vm::push_state::{HasStack, Stack};
 
 #[derive(Debug, Clone, PartialEq, Eq, EnumIter)]
 #[allow(clippy::module_name_repetitions)]
@@ -14,6 +11,7 @@ pub enum BoolInstruction {
     BoolOr,
     BoolAnd,
     BoolXor,
+    BoolImplies,
     // Do we really want either of these? Do they get used?
     // BooleanInvertFirstThenAnd,
     // BoolInvertSecondThenAnd,
@@ -53,16 +51,19 @@ where
                 }
             }
             Self::BoolOr => {
-                // if let Some((x, y)) = pop2(&mut state.bool) {
-                //     state.bool.push(x || y);
-                // }
-                todo!()
+                if let Some::<(bool, bool)>((x, y)) = bool_stack.pop2() {
+                    bool_stack.push(x || y);
+                }
             }
             Self::BoolXor => {
-                // if let Some((x, y)) = pop2(&mut state.bool) {
-                //     state.bool.push(x != y);
-                // }
-                todo!()
+                if let Some::<(bool, bool)>((x, y)) = bool_stack.pop2() {
+                    bool_stack.push(x != y);
+                }
+            }
+            Self::BoolImplies => {
+                if let Some::<(bool, bool)>((x, y)) = bool_stack.pop2() {
+                    bool_stack.push(!x || y);
+                }
             }
             Self::BoolFromInt => {
                 let int_stack: &mut Stack<i64> = state.stack_mut();
@@ -85,23 +86,46 @@ impl From<BoolInstruction> for PushInstruction {
 mod property_tests {
     use crate::{
         instruction::{BoolInstruction, Instruction},
-        push_vm::push_state::{Inputs, PushState},
+        push_vm::push_state::{HasStack, Inputs, PushState},
     };
-    use proptest::proptest;
+    use proptest::{prop_assert_eq, proptest};
     use strum::IntoEnumIterator;
 
     fn all_instructions() -> Vec<BoolInstruction> {
         BoolInstruction::iter().collect()
     }
 
-    // proptest! {
-    //     #[test]
-    //     fn bool_ops_do_not_crash(instr in proptest::sample::select(all_instructions()), x in proptest::bool::ANY, y in proptest::bool::ANY, i in proptest::num::i64::ANY) {
-    //         let mut state = PushState::builder([], &Inputs::default()).build();
-    //         state.bool.push(y);
-    //         state.bool.push(x);
-    //         state.int.push(i);
-    //         instr.perform(&mut state);
-    //     }
-    // }
+    proptest! {
+        #[test]
+        fn bool_ops_do_not_crash(instr in proptest::sample::select(all_instructions()),
+                x in proptest::bool::ANY, y in proptest::bool::ANY, i in proptest::num::i64::ANY) {
+            let mut state = PushState::builder([], &Inputs::default())
+                .with_bool_values(vec![x, y])
+                .with_int_values(vec![i])
+                .build();
+            instr.perform(&mut state);
+        }
+
+        #[test]
+        fn bool_and_is_correct(x in proptest::bool::ANY, y in proptest::bool::ANY) {
+            let mut state = PushState::builder([], &Inputs::default())
+                .with_bool_values(vec![x, y])
+                .build();
+            BoolInstruction::BoolAnd.perform(&mut state);
+            #[allow(clippy::unwrap_used)]
+            let result: &bool = state.stack_mut().top().unwrap();
+            prop_assert_eq!(*result, x && y);
+        }
+
+        #[test]
+        fn bool_implies_is_correct(x in proptest::bool::ANY, y in proptest::bool::ANY) {
+            let mut state = PushState::builder([], &Inputs::default())
+                .with_bool_values(vec![x, y])
+                .build();
+            BoolInstruction::BoolImplies.perform(&mut state);
+            #[allow(clippy::unwrap_used)]
+            let result: &bool = state.stack_mut().top().unwrap();
+            prop_assert_eq!(*result, !x || y);
+        }
+    }
 }

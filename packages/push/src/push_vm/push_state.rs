@@ -92,6 +92,35 @@ impl<T> Stack<T> {
     pub fn push(&mut self, value: T) {
         self.values.push(value);
     }
+
+    /// Adds the given sequence of values to this stack.
+    ///
+    /// The first value in `values` will be the new top of the
+    /// stack. If the stack was initially empty, the last value
+    /// in `values` will be the new bottom of the stack.
+    ///
+    /// # Arguments
+    ///
+    /// * `values` - A `Vec` holding the values to add to the stack
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use push::push_vm::push_state::Stack;
+    /// let mut stack: Stack<i64> = Stack::default();
+    /// assert_eq!(stack.size(), 0);
+    /// stack.extend(vec![5, 8, 9]);
+    /// // Now the top of the stack is 5, followed by 8, then 9 at the bottom.
+    /// assert_eq!(stack.size(), 3);
+    /// assert_eq!(stack.top().unwrap(), &5);
+    /// stack.extend(vec![6, 3]);
+    /// // Now the top of the stack is 6 and the whole stack is 6, 3, 5, 8, 9.
+    /// assert_eq!(stack.size(), 5);
+    /// assert_eq!(stack.top().unwrap(), &6);
+    /// ```  
+    pub fn extend(&mut self, values: Vec<T>) {
+        self.values.extend(values.into_iter().rev());
+    }
 }
 
 pub trait HasStack<T> {
@@ -138,6 +167,86 @@ impl<'i> Builder<'i> {
             input_instructions: vec![None; inputs.input_names.len()],
             partial_state,
         }
+    }
+
+    // TODO: Something like the following would be nice and avoid the repetition
+    //   in the next two functions. This doesn't work, though, because we don't
+    //   have a way to say that the `partial_state` field implements `HasStack<T>`.
+    //   I think we'd have to add a generic to `Builder` and a new `BuildableState`
+    //   trait (or something like that) to make that work.
+    // pub fn with_values<T>(mut self, values: Vec<T>) -> Self
+    // where
+    //     Self: HasStack<T>,
+    // {
+    //     let stack: &mut Stack<T> = self.partial_state.stack_mut();
+    //     stack.extend(values);
+    //     self
+    // }
+
+    /// Adds the given sequence of values to the boolean stack for the state you're building.
+    ///
+    /// The first value in `values` will be the new top of the
+    /// stack. If the stack was initially empty, the last value
+    /// in `values` will be the new bottom of the stack.
+    ///
+    /// # Arguments
+    ///
+    /// * `values` - A `Vec` holding the values to add to the stack
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use push::push_vm::push_state::Inputs;
+    /// use push::push_vm::push_state::Stack;
+    /// use crate::push::push_vm::push_state::HasStack;
+    /// use push::push_vm::push_state::PushState;
+    /// use push::push_vm::push_state::Builder;
+    /// let mut state = Builder::new(&Inputs::default(), PushState::default())
+    ///     .with_bool_values(vec![true, false, false])
+    ///     .build();
+    /// let bool_stack: &Stack<bool> = state.stack_mut();
+    /// assert_eq!(bool_stack.size(), 3);
+    /// // Now the top of the stack is `true`, followed by `false`, then `false` at the bottom.
+    /// assert_eq!(bool_stack.top().unwrap(), &true);
+    /// ```  
+    #[must_use]
+    pub fn with_bool_values(mut self, values: Vec<bool>) -> Self {
+        let bool_stack: &mut Stack<bool> = self.partial_state.stack_mut();
+        bool_stack.extend(values);
+        self
+    }
+
+    /// Adds the given sequence of values to the integer stack for the state you're building.
+    ///
+    /// The first value in `values` will be the new top of the
+    /// stack. If the stack was initially empty, the last value
+    /// in `values` will be the new bottom of the stack.
+    ///
+    /// # Arguments
+    ///
+    /// * `values` - A `Vec` holding the values to add to the stack
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use push::push_vm::push_state::Inputs;
+    /// use push::push_vm::push_state::Stack;
+    /// use crate::push::push_vm::push_state::HasStack;
+    /// use push::push_vm::push_state::PushState;
+    /// use push::push_vm::push_state::Builder;
+    /// let mut state = Builder::new(&Inputs::default(), PushState::default())
+    ///     .with_int_values(vec![5, 8, 9])
+    ///     .build();
+    /// let int_stack: &Stack<i64> = state.stack_mut();
+    /// assert_eq!(int_stack.size(), 3);
+    /// // Now the top of the stack is 5, followed by 8, then 9 at the bottom.
+    /// assert_eq!(int_stack.top().unwrap(), &5);
+    /// ```  
+    #[must_use]
+    pub fn with_int_values(mut self, values: Vec<i64>) -> Self {
+        let int_stack: &mut Stack<i64> = self.partial_state.stack_mut();
+        int_stack.extend(values);
+        self
     }
 
     /// Adds an integer input instruction to the current current state's set
@@ -233,12 +342,6 @@ impl PushState {
             input_instructions: Vec::new(),
         };
         Builder::new(inputs, partial_state)
-    }
-
-    #[must_use]
-    pub fn with_int_values(mut self, values: Vec<i64>) -> Self {
-        self.int = Stack::<i64> { values };
-        self
     }
 
     #[must_use]
