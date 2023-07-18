@@ -15,5 +15,6 @@ rand = { version = "0.8.5", features = ["alloc"] }
 
 ec-core = { path = "../ec-core" }
 ec-linear = { path = "../ec-linear" }
-quickcheck = "1.0.3"
-quickcheck_macros = "1.0.0"
+proptest = "1.2.0"
+strum = "0.25.0"
+strum_macros = "0.25.1"
