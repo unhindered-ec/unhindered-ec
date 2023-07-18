@@ -1,8 +1,21 @@
+use std::{any::TypeId, default};
+
 use super::State;
 use crate::instruction::{Instruction, PushInstruction};
 
+/// `Inputs` stores the set of input variables for a given problem.
+/// If, for example, we're trying to evolve a function for the
+/// area of a triangle given it's height and the length of the base,
+/// the inputs might be `height` and `base`.
 #[derive(Default)]
 pub struct Inputs {
+    // TODO: Change this to use `Rc<str>` instead of `String`?
+    //   I think that if we did that, we could get rid of the whole
+    //   `index` business? We'd have a map here from `Rc<str>` to
+    //   `PushInstruction` and we'd be good to go?
+    //   I'm not sure if this needs to be `Arc<str>` instead of
+    //   just `Rc<str>`, but I figure the system will yell at
+    //   me if I need `Arc<str>`.
     input_names: Vec<String>,
 }
 
@@ -36,15 +49,65 @@ impl Inputs {
     }
 }
 
-// TODO: Create a new `Stack` type to replace the `Vec<T>` in `PushState`.
-//   Possibly move `pop2()` to be a method on that type.
+pub trait PushStack<T> {
+    fn stack_mut(&mut self) -> &mut Stack<T>;
+}
+
+#[derive(Debug)]
+pub struct Stack<T> {
+    values: Vec<T>,
+}
+
+// We implemented this by hand instead of using `derive`
+// because `derive` would have required that `T: Default`,
+// but that's not necessary for an empty stack. Doing this
+// by hand avoids that requirement.
+impl<T> Default for Stack<T> {
+    fn default() -> Self {
+        Self {
+            values: Default::default(),
+        }
+    }
+}
+
+impl<T> Stack<T> {
+    pub fn pop(&mut self) -> Option<T> {
+        self.values.pop()
+    }
+
+    pub fn pop2(&mut self) -> Option<(T, T)> {
+        todo!()
+    }
+
+    pub fn push(&mut self, value: T) {
+        todo!()
+    }
+}
+
+impl<T> PushStack<T> for Stack<T> {
+    fn stack_mut(&mut self) -> &mut Stack<T> {
+        self
+    }
+}
 
 #[derive(Default, Debug)]
 pub struct PushState {
     pub(crate) exec: Vec<PushInstruction>,
-    pub(crate) int: Vec<i64>,
-    pub(crate) bool: Vec<bool>,
+    pub(crate) int: Stack<i64>,
+    pub(crate) bool: Stack<bool>,
     input_instructions: Vec<PushInstruction>,
+}
+
+impl PushStack<bool> for PushState {
+    fn stack_mut(&mut self) -> &mut Stack<bool> {
+        &mut self.bool
+    }
+}
+
+impl PushStack<i64> for PushState {
+    fn stack_mut(&mut self) -> &mut Stack<i64> {
+        &mut self.int
+    }
 }
 
 pub struct Builder<'i> {
@@ -74,6 +137,9 @@ impl<'i> Builder<'i> {
     /// # Panics
     /// This panics if the `input_name` provided isn't included in the set of
     /// names in the `Inputs` object used in the construction of the `Builder`.
+    //
+    // TODO: Create a macro that generates this instruction for a given type
+    //   so we don't have to repeat this logic for every type.
     #[must_use]
     pub fn with_int_input(mut self, input_name: &str, input_value: i64) -> Self {
         let index = self.inputs.get_index(input_name);
@@ -148,16 +214,16 @@ impl PushState {
     {
         let partial_state = Self {
             exec: program.into_iter().rev().collect(),
-            int: Vec::new(),
-            bool: Vec::new(),
+            int: Stack::<i64>::default(),
+            bool: Stack::<bool>::default(),
             input_instructions: Vec::new(),
         };
         Builder::new(inputs, partial_state)
     }
 
     #[must_use]
-    pub fn with_int_stack(mut self, int_stack: Vec<i64>) -> Self {
-        self.int = int_stack;
+    pub fn with_int_values(mut self, values: Vec<i64>) -> Self {
+        self.int = Stack::<i64> { values };
         self
     }
 
@@ -182,13 +248,8 @@ impl PushState {
     }
 
     #[must_use]
-    pub const fn int(&self) -> &Vec<i64> {
-        &self.int
-    }
-
-    #[must_use]
-    pub const fn bool(&self) -> &Vec<bool> {
-        &self.bool
+    pub fn top_int(&self) -> Option<i64> {
+        self.int.values.last().copied()
     }
 }
 
@@ -260,7 +321,7 @@ mod simple_check {
         state.run_to_completion();
         println!("{state:?}");
         assert!(state.exec().is_empty());
-        assert_eq!(state.int(), &vec![5, 17]);
-        assert_eq!(state.bool(), &vec![true, false]);
+        assert_eq!(&state.int.values, &vec![5, 17]);
+        assert_eq!(&state.bool.values, &vec![true, false]);
     }
 }

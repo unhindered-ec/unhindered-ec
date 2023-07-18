@@ -72,8 +72,7 @@ fn main() -> Result<()> {
                 let expected = input * input * input - 2 * input * input - input;
                 state
                     .run_to_completion()
-                    .int()
-                    .last()
+                    .top_int()
                     // If `last()` returns `None`, then there was nothing on top of the integer stack
                     // so we want to use the `PENALTY_VALUE` for the error on this test case.
                     .map_or(PENALTY_VALUE, |answer| (answer - expected).abs())
