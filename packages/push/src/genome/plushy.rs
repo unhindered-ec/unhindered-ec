@@ -62,6 +62,8 @@ impl FromIterator<PushInstruction> for Plushy {
 
 #[cfg(test)]
 mod test {
+    use std::sync::Arc;
+
     use crate::instruction::{BoolInstruction, IntInstruction};
     use ec_core::operator::mutator::Mutator;
     use ec_linear::mutator::umad::Umad;
@@ -92,7 +94,7 @@ mod test {
     fn umad() {
         let mut rng = thread_rng();
 
-        let instruction_options = [PushInstruction::InputVar(0)];
+        let instruction_options = [PushInstruction::InputVar(Arc::from("x"))];
         let umad = Umad::new(0.3, 0.3, instruction_options);
 
         let parent_instructions = vec![
@@ -128,7 +130,7 @@ mod test {
             .unwrap()
             .instructions
             .iter()
-            .filter(|c| **c == PushInstruction::InputVar(0))
+            .filter(|c| **c == PushInstruction::InputVar(Arc::from("x")))
             .count();
         assert!(
             num_inputs > 0,

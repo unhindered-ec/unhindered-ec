@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use crate::push_vm::push_state::PushState;
 
 #[allow(clippy::module_name_repetitions)]
@@ -41,10 +43,12 @@ impl<S> Instruction<S> for Box<dyn Instruction<S>> {
 //     F: Fn(dyn State) -> dyn State
 // {}
 
+pub type VariableName = Arc<str>;
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[allow(clippy::module_name_repetitions)]
 pub enum PushInstruction {
-    InputVar(usize),
+    InputVar(VariableName),
     BoolInstruction(BoolInstruction),
     IntInstruction(IntInstruction),
 }
@@ -64,7 +68,7 @@ impl PushInstruction {
 impl Instruction<PushState> for PushInstruction {
     fn perform(&self, state: &mut PushState) {
         match self {
-            Self::InputVar(var_index) => state.push_input(*var_index),
+            Self::InputVar(var_name) => state.push_input(var_name),
             Self::BoolInstruction(i) => i.perform(state),
             Self::IntInstruction(i) => i.perform(state),
         }

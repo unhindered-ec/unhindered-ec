@@ -1,51 +1,7 @@
+use std::sync::Arc;
+
 use super::State;
-use crate::instruction::{Instruction, PushInstruction};
-
-/// `Inputs` stores the set of input variables for a given problem.
-/// If, for example, we're trying to evolve a function for the
-/// area of a triangle given it's height and the length of the base,
-/// the inputs might be `height` and `base`.
-#[derive(Default)]
-pub struct Inputs {
-    // TODO: Change this to use `Rc<str>` instead of `String`?
-    //   I think that if we did that, we could get rid of the whole
-    //   `index` business? We'd have a map here from `Rc<str>` to
-    //   `PushInstruction` and we'd be good to go?
-    //   I'm not sure if this needs to be `Arc<str>` instead of
-    //   just `Rc<str>`, but I figure the system will yell at
-    //   me if I need `Arc<str>`.
-    input_names: Vec<String>,
-}
-
-impl Inputs {
-    #[must_use]
-    pub fn with_name(mut self, name: &str) -> Self {
-        self.input_names.push(name.to_string());
-        self
-    }
-
-    /// Get the index for the given input variable name.
-    ///
-    /// # Panics
-    /// This will panic if the given name hasn't been added to
-    /// the `Inputs` using, e.g., `with_name()`.
-    #[must_use]
-    pub fn get_index(&self, name: &str) -> usize {
-        self.input_names
-            .iter()
-            .position(|n| n == name)
-            .unwrap_or_else(|| panic!("Tried to access variable '{name}' that had not been added to the `Inputs` list: {:?}.", self.input_names))
-    }
-
-    #[must_use]
-    pub fn to_instructions(&self) -> Vec<PushInstruction> {
-        self.input_names
-            .iter()
-            .enumerate()
-            .map(|(index, _)| PushInstruction::InputVar(index))
-            .collect()
-    }
-}
+use crate::instruction::{Instruction, PushInstruction, VariableName};
 
 #[derive(Debug)]
 pub struct Stack<T> {
@@ -138,7 +94,21 @@ pub struct PushState {
     pub(crate) exec: Vec<PushInstruction>,
     pub(crate) int: Stack<i64>,
     pub(crate) bool: Stack<bool>,
-    input_instructions: Vec<PushInstruction>,
+    // The Internet suggests that when you have fewer than 15 entries,
+    // linear search on `Vec` is faster than `HashMap`. I found that
+    // using `HashMap` here did non-trivially slow things down, mostly
+    // throw substantially increased allocation time for `HashMap` vs.
+    // `Vec`. Since (at least in my experience) there are rarely large
+    // numbers of variables, using a `Vec` is probably reasonable.
+    // If we wanted to get fancy, we could probably have both a
+    // a `Vec` and `HashMap` here, and switch to the `HashMap` when
+    // more than a dozen or so variables have been added.
+    // Also, I suspect that in more complex problems with longer
+    // programs containing loops, etc., the cost of initializing
+    // the `PushState` will be less important as an overall percentage
+    // of the time spent.
+    // input_instructions: HashMap<VariableName, PushInstruction>,
+    input_instructions: Vec<(VariableName, PushInstruction)>,
 }
 
 impl HasStack<bool> for PushState {
@@ -153,20 +123,14 @@ impl HasStack<i64> for PushState {
     }
 }
 
-pub struct Builder<'i> {
-    inputs: &'i Inputs,
-    input_instructions: Vec<Option<PushInstruction>>,
+pub struct Builder {
     partial_state: PushState,
 }
 
-impl<'i> Builder<'i> {
+impl Builder {
     #[must_use]
-    pub fn new(inputs: &'i Inputs, partial_state: PushState) -> Self {
-        Self {
-            inputs,
-            input_instructions: vec![None; inputs.input_names.len()],
-            partial_state,
-        }
+    pub const fn new(partial_state: PushState) -> Self {
+        Self { partial_state }
     }
 
     // TODO: Something like the following would be nice and avoid the repetition
@@ -196,12 +160,11 @@ impl<'i> Builder<'i> {
     /// # Examples
     ///
     /// ```
-    /// use push::push_vm::push_state::Inputs;
     /// use push::push_vm::push_state::Stack;
     /// use crate::push::push_vm::push_state::HasStack;
     /// use push::push_vm::push_state::PushState;
     /// use push::push_vm::push_state::Builder;
-    /// let mut state = Builder::new(&Inputs::default(), PushState::default())
+    /// let mut state = Builder::new(PushState::default())
     ///     .with_bool_values(vec![true, false, false])
     ///     .build();
     /// let bool_stack: &Stack<bool> = state.stack_mut();
@@ -229,12 +192,11 @@ impl<'i> Builder<'i> {
     /// # Examples
     ///
     /// ```
-    /// use push::push_vm::push_state::Inputs;
     /// use push::push_vm::push_state::Stack;
     /// use crate::push::push_vm::push_state::HasStack;
     /// use push::push_vm::push_state::PushState;
     /// use push::push_vm::push_state::Builder;
-    /// let mut state = Builder::new(&Inputs::default(), PushState::default())
+    /// let mut state = Builder::new(PushState::default())
     ///     .with_int_values(vec![5, 8, 9])
     ///     .build();
     /// let int_stack: &Stack<i64> = state.stack_mut();
@@ -265,11 +227,10 @@ impl<'i> Builder<'i> {
     //   so we don't have to repeat this logic for every type.
     #[must_use]
     pub fn with_int_input(mut self, input_name: &str, input_value: i64) -> Self {
-        let index = self.inputs.get_index(input_name);
-        let Some(entry) = self.input_instructions.get_mut(index) else {
-            panic!("Tried to access input name {input_name} with index {index} in set of inputs: {:?}", self.inputs.input_names);
-        };
-        *entry = Some(PushInstruction::push_int(input_value));
+        self.partial_state.input_instructions.push((
+            Arc::from(input_name),
+            PushInstruction::push_int(input_value),
+        ));
         self
     }
 
@@ -286,11 +247,10 @@ impl<'i> Builder<'i> {
     /// names in the `Inputs` object used in the construction of the `Builder`.
     #[must_use]
     pub fn with_bool_input(mut self, input_name: &str, input_value: bool) -> Self {
-        let index = self.inputs.get_index(input_name);
-        let Some(entry) = self.input_instructions.get_mut(index) else {
-            panic!("Tried to access input name {input_name} with index {index} in set of inputs: {:?}", self.inputs.input_names);
-        };
-        *entry = Some(PushInstruction::push_bool(input_value));
+        self.partial_state.input_instructions.push((
+            Arc::from(input_name),
+            PushInstruction::push_bool(input_value),
+        ));
         self
     }
 
@@ -312,25 +272,14 @@ impl<'i> Builder<'i> {
      * names.
      */
     #[must_use]
+    #[allow(clippy::missing_const_for_fn)]
     pub fn build(self) -> PushState {
-        let input_instructions = self
-            .input_instructions
-            .into_iter()
-            .zip(self.inputs.input_names.iter())
-            .map(|(instruction, name)| instruction.ok_or(name))
-            .collect::<Result<Vec<_>, &String>>()
-            .unwrap_or_else(|name| {
-                panic!("The variable {name} wasn't given a value in `PushState::Builder`.")
-            });
-        PushState {
-            input_instructions,
-            ..self.partial_state
-        }
+        self.partial_state
     }
 }
 
 impl PushState {
-    pub fn builder<P>(program: P, inputs: &Inputs) -> Builder
+    pub fn builder<P>(program: P) -> Builder
     where
         P: IntoIterator<Item = PushInstruction>,
         P::IntoIter: DoubleEndedIterator,
@@ -339,9 +288,9 @@ impl PushState {
             exec: program.into_iter().rev().collect(),
             int: Stack::<i64>::default(),
             bool: Stack::<bool>::default(),
-            input_instructions: Vec::new(),
+            input_instructions: Vec::new(), // HashMap::new(),
         };
-        Builder::new(inputs, partial_state)
+        Builder::new(partial_state)
     }
 
     #[must_use]
@@ -353,13 +302,15 @@ impl PushState {
     ///
     /// This panics if we try to access a variable whose `var_index` isn't in the
     /// variable map.
-    pub fn push_input(&mut self, var_index: usize) {
+    pub fn push_input(&mut self, var_name: &VariableName) {
         // TODO: This `panic` here is icky, and we really should deal with it better.
         //   I wonder if the fact that this index might not be there should be telling
         //   us something...
         let instruction = self
-            .input_instructions.get(var_index)
-            .unwrap_or_else(|| panic!("We tried to get an instruction for the input variable with index '{var_index}' that hadn't been added"))
+            .input_instructions
+            .iter()
+            .find_map(|(n, v)| if n == var_name { Some(v) } else { None })
+            .unwrap_or_else(|| panic!("Failed to get an instruction for the input variable '{var_name}' that hadn't been defined"))
             .clone();
         instruction.perform(self);
     }
@@ -379,9 +330,11 @@ impl State for PushState {
 
 #[cfg(test)]
 mod simple_check {
+    use std::sync::Arc;
+
     use crate::{
         instruction::{BoolInstruction, IntInstruction, PushInstruction},
-        push_vm::push_state::{Inputs, PushState},
+        push_vm::push_state::PushState,
     };
 
     use super::State;
@@ -396,31 +349,25 @@ mod simple_check {
             PushInstruction::push_int(i)
         }
 
-        let inputs = Inputs::default()
-            .with_name("x")
-            .with_name("y")
-            .with_name("a")
-            .with_name("b");
-
         // TODO: Can I make this a Vec<dyn Into<PushInstruction>> and
         //   then just `map.(Into::into)` across them all so I don't
         //   have to repeat the `.into()` over and over?
         let program = vec![
             // push_int(5),
             // push_int(8),
-            PushInstruction::InputVar(0),
-            PushInstruction::InputVar(1),
+            PushInstruction::InputVar(Arc::from("x")),
+            PushInstruction::InputVar(Arc::from("y")),
             push_bool(true),
-            PushInstruction::InputVar(2),
+            PushInstruction::InputVar(Arc::from("a")),
             push_int(9),
             BoolInstruction::BoolOr.into(),
             IntInstruction::Add.into(),
             push_int(6),
             IntInstruction::IsEven.into(),
             BoolInstruction::BoolAnd.into(),
-            PushInstruction::InputVar(3),
+            PushInstruction::InputVar(Arc::from("b")),
         ];
-        let state = PushState::builder(program, &inputs)
+        let state = PushState::builder(program)
             .with_bool_input("a", true)
             .with_bool_input("b", false)
             // I'm reversing the order of the variables on purpose here to make sure

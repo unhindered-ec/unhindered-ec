@@ -222,15 +222,13 @@ impl From<IntInstruction> for PushInstruction {
 
 #[cfg(test)]
 mod test {
-    use crate::push_vm::push_state::Inputs;
-
     use super::*;
 
     #[test]
     fn add_overflows() {
         let x = 4_098_586_571_925_584_936;
         let y = 5_124_785_464_929_190_872;
-        let mut state = PushState::builder([], &Inputs::default()).build();
+        let mut state = PushState::builder([]).build();
         state.int.push(y);
         state.int.push(x);
         IntInstruction::Add.perform(&mut state);
@@ -239,7 +237,7 @@ mod test {
     #[test]
     fn inc_overflows() {
         let x = i64::MAX;
-        let mut state = PushState::builder([], &Inputs::default()).build();
+        let mut state = PushState::builder([]).build();
         state.int.push(x);
         IntInstruction::Inc.perform(&mut state);
     }
@@ -247,7 +245,7 @@ mod test {
     #[test]
     fn dec_overflows() {
         let x = i64::MIN;
-        let mut state = PushState::builder([], &Inputs::default()).build();
+        let mut state = PushState::builder([]).build();
         state.int.push(x);
         IntInstruction::Dec.perform(&mut state);
     }
@@ -257,7 +255,7 @@ mod test {
 mod property_tests {
     use crate::{
         instruction::{Instruction, IntInstruction},
-        push_vm::push_state::{Inputs, PushState},
+        push_vm::push_state::PushState,
     };
     use proptest::{prop_assert_eq, proptest};
     use strum::IntoEnumIterator;
@@ -271,7 +269,7 @@ mod property_tests {
 
         #[test]
         fn add_doesnt_crash(x in proptest::num::i64::ANY, y in proptest::num::i64::ANY) {
-            let mut state = PushState::builder([], &Inputs::default()).build();
+            let mut state = PushState::builder([]).build();
             state.int.push(y);
             state.int.push(x);
             IntInstruction::Add.perform(&mut state);
@@ -279,7 +277,7 @@ mod property_tests {
 
         #[test]
         fn add_adds_or_does_nothing(x in proptest::num::i64::ANY, y in proptest::num::i64::ANY) {
-            let mut state = PushState::builder([], &Inputs::default()).build();
+            let mut state = PushState::builder([]).build();
             state.int.push(y);
             state.int.push(x);
             IntInstruction::Add.perform(&mut state);
@@ -298,14 +296,14 @@ mod property_tests {
 
         #[test]
         fn inc_dec_do_not_crash(x in proptest::num::i64::ANY) {
-            let mut state = PushState::builder([], &Inputs::default()).build();
+            let mut state = PushState::builder([]).build();
             state.int.push(x);
             IntInstruction::Inc.perform(&mut state);
         }
 
         #[test]
         fn int_ops_do_not_crash(instr in proptest::sample::select(all_instructions()), x in proptest::num::i64::ANY, y in proptest::num::i64::ANY, b in proptest::bool::ANY) {
-            let mut state = PushState::builder([], &Inputs::default()).build();
+            let mut state = PushState::builder([]).build();
             state.int.push(y);
             state.int.push(x);
             state.bool.push(b);

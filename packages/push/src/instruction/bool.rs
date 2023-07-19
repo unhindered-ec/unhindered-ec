@@ -86,7 +86,7 @@ impl From<BoolInstruction> for PushInstruction {
 mod property_tests {
     use crate::{
         instruction::{BoolInstruction, Instruction},
-        push_vm::push_state::{HasStack, Inputs, PushState},
+        push_vm::push_state::{HasStack, PushState},
     };
     use proptest::{prop_assert_eq, proptest};
     use strum::IntoEnumIterator;
@@ -99,7 +99,7 @@ mod property_tests {
         #[test]
         fn bool_ops_do_not_crash(instr in proptest::sample::select(all_instructions()),
                 x in proptest::bool::ANY, y in proptest::bool::ANY, i in proptest::num::i64::ANY) {
-            let mut state = PushState::builder([], &Inputs::default())
+            let mut state = PushState::builder([])
                 .with_bool_values(vec![x, y])
                 .with_int_values(vec![i])
                 .build();
@@ -108,7 +108,7 @@ mod property_tests {
 
         #[test]
         fn bool_and_is_correct(x in proptest::bool::ANY, y in proptest::bool::ANY) {
-            let mut state = PushState::builder([], &Inputs::default())
+            let mut state = PushState::builder([])
                 .with_bool_values(vec![x, y])
                 .build();
             BoolInstruction::BoolAnd.perform(&mut state);
@@ -119,7 +119,7 @@ mod property_tests {
 
         #[test]
         fn bool_implies_is_correct(x in proptest::bool::ANY, y in proptest::bool::ANY) {
-            let mut state = PushState::builder([], &Inputs::default())
+            let mut state = PushState::builder([])
                 .with_bool_values(vec![x, y])
                 .build();
             BoolInstruction::BoolImplies.perform(&mut state);

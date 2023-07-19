@@ -5,7 +5,7 @@
 
 pub mod args;
 
-use std::ops::Not;
+use std::{ops::Not, sync::Arc};
 
 use crate::args::{Args, RunModel};
 use anyhow::{ensure, Result};
@@ -31,7 +31,7 @@ use push::{
     genome::plushy::Plushy,
     instruction::{IntInstruction, PushInstruction},
     push_vm::{
-        push_state::{self, HasStack, PushState},
+        push_state::{HasStack, PushState},
         State,
     },
 };
@@ -53,8 +53,6 @@ fn main() -> Result<()> {
     //     TargetProblem::DegreeThree => todo!(),
     // };
 
-    let inputs = push_state::Inputs::default().with_name("x");
-
     /*
      * The `scorer` will need to take an evolved program (sequence of instructions) and run it
      * 10 times on each of the 10 test inputs (0 through 9), collecting together the 10 errors,
@@ -65,7 +63,7 @@ fn main() -> Result<()> {
     let scorer = |program: &Plushy| -> TestResults<test_results::Error> {
         let errors: TestResults<test_results::Error> = (0..10)
             .map(|input| {
-                let state = PushState::builder(program.get_instructions(), &inputs)
+                let state = PushState::builder(program.get_instructions())
                     .with_int_input("x", input)
                     .build();
                 // This is the degree 3 problem in https://github.com/lspector/Clojush/blob/master/src/clojush/problems/demos/simple_regression.clj
@@ -101,7 +99,7 @@ fn main() -> Result<()> {
         PushInstruction::IntInstruction(IntInstruction::Multiply),
         PushInstruction::IntInstruction(IntInstruction::ProtectedDivide),
     ];
-    instruction_set.extend(inputs.to_instructions());
+    instruction_set.push(PushInstruction::InputVar(Arc::from("x")));
 
     let plushy_generator = CollectionGenerator {
         size: args.max_initial_instructions,
