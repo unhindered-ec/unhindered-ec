@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::{collections::HashMap, sync::Arc};
 
 use super::State;
 use crate::instruction::{Instruction, PushInstruction, VariableName};
@@ -83,12 +83,6 @@ pub trait HasStack<T> {
     fn stack_mut(&mut self) -> &mut Stack<T>;
 }
 
-// impl<T> HasStack<T> for Stack<T> {
-//     fn stack_mut(&mut self) -> &mut Self {
-//         self
-//     }
-// }
-
 #[derive(Default, Debug)]
 pub struct PushState {
     pub(crate) exec: Vec<PushInstruction>,
@@ -96,19 +90,13 @@ pub struct PushState {
     pub(crate) bool: Stack<bool>,
     // The Internet suggests that when you have fewer than 15 entries,
     // linear search on `Vec` is faster than `HashMap`. I found that
-    // using `HashMap` here did non-trivially slow things down, mostly
-    // throw substantially increased allocation time for `HashMap` vs.
-    // `Vec`. Since (at least in my experience) there are rarely large
-    // numbers of variables, using a `Vec` is probably reasonable.
-    // If we wanted to get fancy, we could probably have both a
-    // a `Vec` and `HashMap` here, and switch to the `HashMap` when
-    // more than a dozen or so variables have been added.
-    // Also, I suspect that in more complex problems with longer
-    // programs containing loops, etc., the cost of initializing
-    // the `PushState` will be less important as an overall percentage
-    // of the time spent.
-    // input_instructions: HashMap<VariableName, PushInstruction>,
-    input_instructions: Vec<(VariableName, PushInstruction)>,
+    // using `HashMap` here did slow things down, mostly
+    // through substantially increased allocation time for `HashMap` vs.
+    // `Vec`. When I substantially increased the size of the programs,
+    // however, the difference pretty much disappeared, presumably
+    // because the execution of long programs swamps the cost of
+    // initialization of `PushState`.
+    input_instructions: HashMap<VariableName, PushInstruction>,
 }
 
 impl HasStack<bool> for PushState {
@@ -227,10 +215,10 @@ impl Builder {
     //   so we don't have to repeat this logic for every type.
     #[must_use]
     pub fn with_int_input(mut self, input_name: &str, input_value: i64) -> Self {
-        self.partial_state.input_instructions.push((
+        self.partial_state.input_instructions.insert(
             Arc::from(input_name),
             PushInstruction::push_int(input_value),
-        ));
+        );
         self
     }
 
@@ -247,10 +235,10 @@ impl Builder {
     /// names in the `Inputs` object used in the construction of the `Builder`.
     #[must_use]
     pub fn with_bool_input(mut self, input_name: &str, input_value: bool) -> Self {
-        self.partial_state.input_instructions.push((
+        self.partial_state.input_instructions.insert(
             Arc::from(input_name),
             PushInstruction::push_bool(input_value),
-        ));
+        );
         self
     }
 
@@ -288,7 +276,7 @@ impl PushState {
             exec: program.into_iter().rev().collect(),
             int: Stack::<i64>::default(),
             bool: Stack::<bool>::default(),
-            input_instructions: Vec::new(), // HashMap::new(),
+            input_instructions: HashMap::new(),
         };
         Builder::new(partial_state)
     }
