@@ -5,8 +5,6 @@
 
 pub mod args;
 
-use std::{ops::Not, sync::Arc};
-
 use crate::args::{Args, RunModel};
 use anyhow::{ensure, Result};
 use clap::Parser;
@@ -29,13 +27,14 @@ use ec_core::{
 use ec_linear::mutator::umad::Umad;
 use push::{
     genome::plushy::Plushy,
-    instruction::{IntInstruction, PushInstruction},
+    instruction::{IntInstruction, PushInstruction, VariableName},
     push_vm::{
         push_state::{HasStack, PushState},
         State,
     },
 };
 use rand::thread_rng;
+use std::ops::Not;
 
 fn main() -> Result<()> {
     // Using `Error` in `TestResults<Error>` will have the run favor smaller
@@ -99,7 +98,7 @@ fn main() -> Result<()> {
         PushInstruction::IntInstruction(IntInstruction::Multiply),
         PushInstruction::IntInstruction(IntInstruction::ProtectedDivide),
     ];
-    instruction_set.push(PushInstruction::InputVar(Arc::from("x")));
+    instruction_set.push(PushInstruction::InputVar(VariableName::from("x")));
 
     let plushy_generator = CollectionGenerator {
         size: args.max_initial_instructions,

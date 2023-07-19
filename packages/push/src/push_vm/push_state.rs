@@ -1,7 +1,6 @@
-use std::{collections::HashMap, sync::Arc};
-
 use super::State;
 use crate::instruction::{Instruction, PushInstruction, VariableName};
+use std::collections::HashMap;
 
 #[derive(Debug)]
 pub struct Stack<T> {
@@ -216,7 +215,7 @@ impl Builder {
     #[must_use]
     pub fn with_int_input(mut self, input_name: &str, input_value: i64) -> Self {
         self.partial_state.input_instructions.insert(
-            Arc::from(input_name),
+            VariableName::from(input_name),
             PushInstruction::push_int(input_value),
         );
         self
@@ -236,7 +235,7 @@ impl Builder {
     #[must_use]
     pub fn with_bool_input(mut self, input_name: &str, input_value: bool) -> Self {
         self.partial_state.input_instructions.insert(
-            Arc::from(input_name),
+            VariableName::from(input_name),
             PushInstruction::push_bool(input_value),
         );
         self
@@ -318,10 +317,8 @@ impl State for PushState {
 
 #[cfg(test)]
 mod simple_check {
-    use std::sync::Arc;
-
     use crate::{
-        instruction::{BoolInstruction, IntInstruction, PushInstruction},
+        instruction::{BoolInstruction, IntInstruction, PushInstruction, VariableName},
         push_vm::push_state::PushState,
     };
 
@@ -343,17 +340,17 @@ mod simple_check {
         let program = vec![
             // push_int(5),
             // push_int(8),
-            PushInstruction::InputVar(Arc::from("x")),
-            PushInstruction::InputVar(Arc::from("y")),
+            PushInstruction::InputVar(VariableName::from("x")),
+            PushInstruction::InputVar(VariableName::from("y")),
             push_bool(true),
-            PushInstruction::InputVar(Arc::from("a")),
+            PushInstruction::InputVar(VariableName::from("a")),
             push_int(9),
             BoolInstruction::BoolOr.into(),
             IntInstruction::Add.into(),
             push_int(6),
             IntInstruction::IsEven.into(),
             BoolInstruction::BoolAnd.into(),
-            PushInstruction::InputVar(Arc::from("b")),
+            PushInstruction::InputVar(VariableName::from("b")),
         ];
         let state = PushState::builder(program)
             .with_bool_input("a", true)

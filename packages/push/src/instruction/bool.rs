@@ -1,7 +1,6 @@
-use strum_macros::EnumIter;
-
 use super::{Instruction, PushInstruction};
 use crate::push_vm::push_state::{HasStack, Stack};
+use strum_macros::EnumIter;
 
 #[derive(Debug, Clone, PartialEq, Eq, EnumIter)]
 #[allow(clippy::module_name_repetitions)]
