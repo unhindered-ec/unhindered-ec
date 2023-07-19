@@ -5,8 +5,6 @@
 
 pub mod args;
 
-use std::ops::Not;
-
 use crate::args::{Args, RunModel};
 use anyhow::{ensure, Result};
 use clap::Parser;
@@ -29,13 +27,14 @@ use ec_core::{
 use ec_linear::mutator::umad::Umad;
 use push::{
     genome::plushy::Plushy,
-    instruction::{IntInstruction, PushInstruction},
+    instruction::{IntInstruction, PushInstruction, VariableName},
     push_vm::{
-        push_state::{self, PushState},
+        push_state::{HasStack, PushState},
         State,
     },
 };
 use rand::thread_rng;
+use std::ops::Not;
 
 fn main() -> Result<()> {
     // Using `Error` in `TestResults<Error>` will have the run favor smaller
@@ -53,8 +52,6 @@ fn main() -> Result<()> {
     //     TargetProblem::DegreeThree => todo!(),
     // };
 
-    let inputs = push_state::Inputs::default().with_name("x");
-
     /*
      * The `scorer` will need to take an evolved program (sequence of instructions) and run it
      * 10 times on each of the 10 test inputs (0 through 9), collecting together the 10 errors,
@@ -65,15 +62,15 @@ fn main() -> Result<()> {
     let scorer = |program: &Plushy| -> TestResults<test_results::Error> {
         let errors: TestResults<test_results::Error> = (0..10)
             .map(|input| {
-                let mut state = PushState::builder(program.get_instructions(), &inputs)
+                let state = PushState::builder(program.get_instructions())
                     .with_int_input("x", input)
                     .build();
                 // This is the degree 3 problem in https://github.com/lspector/Clojush/blob/master/src/clojush/problems/demos/simple_regression.clj
                 let expected = input * input * input - 2 * input * input - input;
                 state
                     .run_to_completion()
-                    .int()
-                    .last()
+                    .stack_mut()
+                    .top()
                     // If `last()` returns `None`, then there was nothing on top of the integer stack
                     // so we want to use the `PENALTY_VALUE` for the error on this test case.
                     .map_or(PENALTY_VALUE, |answer| (answer - expected).abs())
@@ -101,7 +98,7 @@ fn main() -> Result<()> {
         PushInstruction::IntInstruction(IntInstruction::Multiply),
         PushInstruction::IntInstruction(IntInstruction::ProtectedDivide),
     ];
-    instruction_set.extend(inputs.to_instructions());
+    instruction_set.push(PushInstruction::InputVar(VariableName::from("x")));
 
     let plushy_generator = CollectionGenerator {
         size: args.max_initial_instructions,

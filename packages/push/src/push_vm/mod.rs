@@ -9,7 +9,8 @@ pub trait State: Sized {
         instruction.perform(self);
     }
 
-    fn run_to_completion(&mut self) -> &Self;
+    #[must_use]
+    fn run_to_completion(self) -> Self;
 }
 
 /*

@@ -1,66 +1,201 @@
 use super::State;
-use crate::instruction::{Instruction, PushInstruction};
+use crate::instruction::{Instruction, PushInstruction, VariableName};
+use std::collections::HashMap;
 
-#[derive(Default)]
-pub struct Inputs {
-    input_names: Vec<String>,
+#[derive(Debug)]
+pub struct Stack<T> {
+    values: Vec<T>,
 }
 
-impl Inputs {
+// We implemented this by hand instead of using `derive`
+// because `derive` would have required that `T: Default`,
+// but that's not necessary for an empty stack. Doing this
+// by hand avoids that requirement.
+impl<T> Default for Stack<T> {
+    fn default() -> Self {
+        Self {
+            values: Vec::default(),
+        }
+    }
+}
+
+impl<T> Stack<T> {
     #[must_use]
-    pub fn with_name(mut self, name: &str) -> Self {
-        self.input_names.push(name.to_string());
-        self
+    pub fn size(&self) -> usize {
+        self.values.len()
     }
 
-    /// Get the index for the given input variable name.
+    #[must_use]
+    pub fn top(&self) -> Option<&T> {
+        self.values.last()
+    }
+
+    pub fn pop(&mut self) -> Option<T> {
+        self.values.pop()
+    }
+
+    pub fn pop2(&mut self) -> Option<(T, T)> {
+        if self.size() >= 2 {
+            let x = self.pop()?;
+            let y = self.pop()?;
+            Some((x, y))
+        } else {
+            None
+        }
+    }
+
+    pub fn push(&mut self, value: T) {
+        self.values.push(value);
+    }
+
+    /// Adds the given sequence of values to this stack.
     ///
-    /// # Panics
-    /// This will panic if the given name hasn't been added to
-    /// the `Inputs` using, e.g., `with_name()`.
-    #[must_use]
-    pub fn get_index(&self, name: &str) -> usize {
-        self.input_names
-            .iter()
-            .position(|n| n == name)
-            .unwrap_or_else(|| panic!("Tried to access variable '{name}' that had not been added to the `Inputs` list: {:?}.", self.input_names))
-    }
-
-    #[must_use]
-    pub fn to_instructions(&self) -> Vec<PushInstruction> {
-        self.input_names
-            .iter()
-            .enumerate()
-            .map(|(index, _)| PushInstruction::InputVar(index))
-            .collect()
+    /// The first value in `values` will be the new top of the
+    /// stack. If the stack was initially empty, the last value
+    /// in `values` will be the new bottom of the stack.
+    ///
+    /// # Arguments
+    ///
+    /// * `values` - A `Vec` holding the values to add to the stack
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use push::push_vm::push_state::Stack;
+    /// let mut stack: Stack<i64> = Stack::default();
+    /// assert_eq!(stack.size(), 0);
+    /// stack.extend(vec![5, 8, 9]);
+    /// // Now the top of the stack is 5, followed by 8, then 9 at the bottom.
+    /// assert_eq!(stack.size(), 3);
+    /// assert_eq!(stack.top().unwrap(), &5);
+    /// stack.extend(vec![6, 3]);
+    /// // Now the top of the stack is 6 and the whole stack is 6, 3, 5, 8, 9.
+    /// assert_eq!(stack.size(), 5);
+    /// assert_eq!(stack.top().unwrap(), &6);
+    /// ```  
+    pub fn extend(&mut self, values: Vec<T>) {
+        self.values.extend(values.into_iter().rev());
     }
 }
 
-// TODO: Create a new `Stack` type to replace the `Vec<T>` in `PushState`.
-//   Possibly move `pop2()` to be a method on that type.
+pub trait HasStack<T> {
+    fn stack_mut(&mut self) -> &mut Stack<T>;
+}
 
 #[derive(Default, Debug)]
 pub struct PushState {
     pub(crate) exec: Vec<PushInstruction>,
-    pub(crate) int: Vec<i64>,
-    pub(crate) bool: Vec<bool>,
-    input_instructions: Vec<PushInstruction>,
+    pub(crate) int: Stack<i64>,
+    pub(crate) bool: Stack<bool>,
+    // The Internet suggests that when you have fewer than 15 entries,
+    // linear search on `Vec` is faster than `HashMap`. I found that
+    // using `HashMap` here did slow things down, mostly
+    // through substantially increased allocation time for `HashMap` vs.
+    // `Vec`. When I substantially increased the size of the programs,
+    // however, the difference pretty much disappeared, presumably
+    // because the execution of long programs swamps the cost of
+    // initialization of `PushState`.
+    input_instructions: HashMap<VariableName, PushInstruction>,
 }
 
-pub struct Builder<'i> {
-    inputs: &'i Inputs,
-    input_instructions: Vec<Option<PushInstruction>>,
+impl HasStack<bool> for PushState {
+    fn stack_mut(&mut self) -> &mut Stack<bool> {
+        &mut self.bool
+    }
+}
+
+impl HasStack<i64> for PushState {
+    fn stack_mut(&mut self) -> &mut Stack<i64> {
+        &mut self.int
+    }
+}
+
+pub struct Builder {
     partial_state: PushState,
 }
 
-impl<'i> Builder<'i> {
+impl Builder {
     #[must_use]
-    pub fn new(inputs: &'i Inputs, partial_state: PushState) -> Self {
-        Self {
-            inputs,
-            input_instructions: vec![None; inputs.input_names.len()],
-            partial_state,
-        }
+    pub const fn new(partial_state: PushState) -> Self {
+        Self { partial_state }
+    }
+
+    // TODO: Something like the following would be nice and avoid the repetition
+    //   in the next two functions. This doesn't work, though, because we don't
+    //   have a way to say that the `partial_state` field implements `HasStack<T>`.
+    //   I think we'd have to add a generic to `Builder` and a new `BuildableState`
+    //   trait (or something like that) to make that work.
+    // pub fn with_values<T>(mut self, values: Vec<T>) -> Self
+    // where
+    //     Self: HasStack<T>,
+    // {
+    //     let stack: &mut Stack<T> = self.partial_state.stack_mut();
+    //     stack.extend(values);
+    //     self
+    // }
+
+    /// Adds the given sequence of values to the boolean stack for the state you're building.
+    ///
+    /// The first value in `values` will be the new top of the
+    /// stack. If the stack was initially empty, the last value
+    /// in `values` will be the new bottom of the stack.
+    ///
+    /// # Arguments
+    ///
+    /// * `values` - A `Vec` holding the values to add to the stack
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use push::push_vm::push_state::Stack;
+    /// use crate::push::push_vm::push_state::HasStack;
+    /// use push::push_vm::push_state::PushState;
+    /// use push::push_vm::push_state::Builder;
+    /// let mut state = Builder::new(PushState::default())
+    ///     .with_bool_values(vec![true, false, false])
+    ///     .build();
+    /// let bool_stack: &Stack<bool> = state.stack_mut();
+    /// assert_eq!(bool_stack.size(), 3);
+    /// // Now the top of the stack is `true`, followed by `false`, then `false` at the bottom.
+    /// assert_eq!(bool_stack.top().unwrap(), &true);
+    /// ```  
+    #[must_use]
+    pub fn with_bool_values(mut self, values: Vec<bool>) -> Self {
+        let bool_stack: &mut Stack<bool> = self.partial_state.stack_mut();
+        bool_stack.extend(values);
+        self
+    }
+
+    /// Adds the given sequence of values to the integer stack for the state you're building.
+    ///
+    /// The first value in `values` will be the new top of the
+    /// stack. If the stack was initially empty, the last value
+    /// in `values` will be the new bottom of the stack.
+    ///
+    /// # Arguments
+    ///
+    /// * `values` - A `Vec` holding the values to add to the stack
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use push::push_vm::push_state::Stack;
+    /// use crate::push::push_vm::push_state::HasStack;
+    /// use push::push_vm::push_state::PushState;
+    /// use push::push_vm::push_state::Builder;
+    /// let mut state = Builder::new(PushState::default())
+    ///     .with_int_values(vec![5, 8, 9])
+    ///     .build();
+    /// let int_stack: &Stack<i64> = state.stack_mut();
+    /// assert_eq!(int_stack.size(), 3);
+    /// // Now the top of the stack is 5, followed by 8, then 9 at the bottom.
+    /// assert_eq!(int_stack.top().unwrap(), &5);
+    /// ```  
+    #[must_use]
+    pub fn with_int_values(mut self, values: Vec<i64>) -> Self {
+        let int_stack: &mut Stack<i64> = self.partial_state.stack_mut();
+        int_stack.extend(values);
+        self
     }
 
     /// Adds an integer input instruction to the current current state's set
@@ -74,13 +209,15 @@ impl<'i> Builder<'i> {
     /// # Panics
     /// This panics if the `input_name` provided isn't included in the set of
     /// names in the `Inputs` object used in the construction of the `Builder`.
+    //
+    // TODO: Create a macro that generates this instruction for a given type
+    //   so we don't have to repeat this logic for every type.
     #[must_use]
     pub fn with_int_input(mut self, input_name: &str, input_value: i64) -> Self {
-        let index = self.inputs.get_index(input_name);
-        let Some(entry) = self.input_instructions.get_mut(index) else {
-            panic!("Tried to access input name {input_name} with index {index} in set of inputs: {:?}", self.inputs.input_names);
-        };
-        *entry = Some(PushInstruction::push_int(input_value));
+        self.partial_state.input_instructions.insert(
+            VariableName::from(input_name),
+            PushInstruction::push_int(input_value),
+        );
         self
     }
 
@@ -97,11 +234,10 @@ impl<'i> Builder<'i> {
     /// names in the `Inputs` object used in the construction of the `Builder`.
     #[must_use]
     pub fn with_bool_input(mut self, input_name: &str, input_value: bool) -> Self {
-        let index = self.inputs.get_index(input_name);
-        let Some(entry) = self.input_instructions.get_mut(index) else {
-            panic!("Tried to access input name {input_name} with index {index} in set of inputs: {:?}", self.inputs.input_names);
-        };
-        *entry = Some(PushInstruction::push_bool(input_value));
+        self.partial_state.input_instructions.insert(
+            VariableName::from(input_name),
+            PushInstruction::push_bool(input_value),
+        );
         self
     }
 
@@ -123,42 +259,25 @@ impl<'i> Builder<'i> {
      * names.
      */
     #[must_use]
+    #[allow(clippy::missing_const_for_fn)]
     pub fn build(self) -> PushState {
-        let input_instructions = self
-            .input_instructions
-            .into_iter()
-            .zip(self.inputs.input_names.iter())
-            .map(|(instruction, name)| instruction.ok_or(name))
-            .collect::<Result<Vec<_>, &String>>()
-            .unwrap_or_else(|name| {
-                panic!("The variable {name} wasn't given a value in `PushState::Builder`.")
-            });
-        PushState {
-            input_instructions,
-            ..self.partial_state
-        }
+        self.partial_state
     }
 }
 
 impl PushState {
-    pub fn builder<P>(program: P, inputs: &Inputs) -> Builder
+    pub fn builder<P>(program: P) -> Builder
     where
         P: IntoIterator<Item = PushInstruction>,
         P::IntoIter: DoubleEndedIterator,
     {
         let partial_state = Self {
             exec: program.into_iter().rev().collect(),
-            int: Vec::new(),
-            bool: Vec::new(),
-            input_instructions: Vec::new(),
+            int: Stack::<i64>::default(),
+            bool: Stack::<bool>::default(),
+            input_instructions: HashMap::new(),
         };
-        Builder::new(inputs, partial_state)
-    }
-
-    #[must_use]
-    pub fn with_int_stack(mut self, int_stack: Vec<i64>) -> Self {
-        self.int = int_stack;
-        self
+        Builder::new(partial_state)
     }
 
     #[must_use]
@@ -170,25 +289,17 @@ impl PushState {
     ///
     /// This panics if we try to access a variable whose `var_index` isn't in the
     /// variable map.
-    pub fn push_input(&mut self, var_index: usize) {
+    pub fn push_input(&mut self, var_name: &VariableName) {
         // TODO: This `panic` here is icky, and we really should deal with it better.
         //   I wonder if the fact that this index might not be there should be telling
         //   us something...
         let instruction = self
-            .input_instructions.get(var_index)
-            .unwrap_or_else(|| panic!("We tried to get an instruction for the input variable with index '{var_index}' that hadn't been added"))
+            .input_instructions
+            .iter()
+            .find_map(|(n, v)| if n == var_name { Some(v) } else { None })
+            .unwrap_or_else(|| panic!("Failed to get an instruction for the input variable '{var_name}' that hadn't been defined"))
             .clone();
         instruction.perform(self);
-    }
-
-    #[must_use]
-    pub const fn int(&self) -> &Vec<i64> {
-        &self.int
-    }
-
-    #[must_use]
-    pub const fn bool(&self) -> &Vec<bool> {
-        &self.bool
     }
 }
 
@@ -196,8 +307,7 @@ impl State for PushState {
     type Instruction = PushInstruction;
 
     // TODO: Need to have some kind of execution limit to prevent infinite loops.
-    // `run` probably isn't a great name here?
-    fn run_to_completion(&mut self) -> &Self {
+    fn run_to_completion(mut self) -> Self {
         while let Some(instruction) = self.exec.pop() {
             self.perform(&instruction);
         }
@@ -208,8 +318,8 @@ impl State for PushState {
 #[cfg(test)]
 mod simple_check {
     use crate::{
-        instruction::{BoolInstruction, IntInstruction, PushInstruction},
-        push_vm::push_state::{Inputs, PushState},
+        instruction::{BoolInstruction, IntInstruction, PushInstruction, VariableName},
+        push_vm::push_state::PushState,
     };
 
     use super::State;
@@ -224,31 +334,25 @@ mod simple_check {
             PushInstruction::push_int(i)
         }
 
-        let inputs = Inputs::default()
-            .with_name("x")
-            .with_name("y")
-            .with_name("a")
-            .with_name("b");
-
         // TODO: Can I make this a Vec<dyn Into<PushInstruction>> and
         //   then just `map.(Into::into)` across them all so I don't
         //   have to repeat the `.into()` over and over?
         let program = vec![
             // push_int(5),
             // push_int(8),
-            PushInstruction::InputVar(0),
-            PushInstruction::InputVar(1),
+            PushInstruction::InputVar(VariableName::from("x")),
+            PushInstruction::InputVar(VariableName::from("y")),
             push_bool(true),
-            PushInstruction::InputVar(2),
+            PushInstruction::InputVar(VariableName::from("a")),
             push_int(9),
             BoolInstruction::BoolOr.into(),
             IntInstruction::Add.into(),
             push_int(6),
             IntInstruction::IsEven.into(),
             BoolInstruction::BoolAnd.into(),
-            PushInstruction::InputVar(3),
+            PushInstruction::InputVar(VariableName::from("b")),
         ];
-        let mut state = PushState::builder(program, &inputs)
+        let state = PushState::builder(program)
             .with_bool_input("a", true)
             .with_bool_input("b", false)
             // I'm reversing the order of the variables on purpose here to make sure
@@ -257,10 +361,10 @@ mod simple_check {
             .with_int_input("x", 5)
             .build();
         println!("{state:?}");
-        state.run_to_completion();
+        let state = state.run_to_completion();
         println!("{state:?}");
         assert!(state.exec().is_empty());
-        assert_eq!(state.int(), &vec![5, 17]);
-        assert_eq!(state.bool(), &vec![true, false]);
+        assert_eq!(&state.int.values, &vec![5, 17]);
+        assert_eq!(&state.bool.values, &vec![true, false]);
     }
 }

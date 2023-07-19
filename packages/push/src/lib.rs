@@ -6,4 +6,3 @@
 pub mod genome;
 pub mod instruction;
 pub mod push_vm;
-mod util;
