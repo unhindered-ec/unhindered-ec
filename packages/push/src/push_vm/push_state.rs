@@ -334,9 +334,6 @@ mod simple_check {
             PushInstruction::push_int(i)
         }
 
-        // TODO: Can I make this a Vec<dyn Into<PushInstruction>> and
-        //   then just `map.(Into::into)` across them all so I don't
-        //   have to repeat the `.into()` over and over?
         let program = vec![
             // push_int(5),
             // push_int(8),
