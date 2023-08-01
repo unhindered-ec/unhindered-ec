@@ -1,12 +1,16 @@
-use crate::instruction::Instruction;
+use crate::instruction::{Instruction, InstructionResult};
 
 pub mod push_state;
 
+// Need an associated error trait
 pub trait State: Sized {
     type Instruction: Instruction<Self>;
 
-    fn perform(&mut self, instruction: &Self::Instruction) {
-        instruction.perform(self);
+    fn perform(
+        self,
+        instruction: &Self::Instruction,
+    ) -> InstructionResult<Self, <Self::Instruction as Instruction<Self>>::Error> {
+        instruction.perform(self)
     }
 
     #[must_use]

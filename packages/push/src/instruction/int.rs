@@ -1,6 +1,6 @@
 use strum_macros::EnumIter;
 
-use super::{Instruction, PushInstruction};
+use super::{Error, Instruction, InstructionResult, PushInstruction, PushInstructionError};
 use crate::push_vm::push_state::{HasStack, PushState, Stack};
 
 #[derive(Debug, Clone, PartialEq, Eq, EnumIter)]
@@ -33,12 +33,29 @@ pub enum IntInstruction {
     Max,
 }
 
+#[derive(Debug, Eq, PartialEq)]
+pub enum IntInstructionError {
+    Overflow,
+}
+
+impl From<IntInstructionError> for PushInstructionError {
+    fn from(int_error: IntInstructionError) -> Self {
+        PushInstructionError::Int(int_error)
+    }
+}
+
 impl Instruction<PushState> for IntInstruction {
+    type Error = PushInstructionError;
+
     #[allow(clippy::too_many_lines, clippy::cognitive_complexity)]
-    fn perform(&self, state: &mut PushState) {
+    fn perform(&self, mut state: PushState) -> InstructionResult<PushState, Self::Error> {
         let int_stack: &mut Stack<i64> = state.stack_mut();
         match self {
-            Self::Push(i) => int_stack.push(*i),
+            Self::Push(i) => {
+                // TODO: We might want `push` to be able to fail if, e.g., the size of the
+                //   resulting stack exceeded some specified max stack depth.
+                int_stack.push(*i);
+            }
             Self::Negate => {
                 if let Some(i) = int_stack.pop() {
                     int_stack.push(-i);
@@ -56,6 +73,10 @@ impl Instruction<PushState> for IntInstruction {
                     } else {
                         // Do nothing, i.e., put the arguments back
                         int_stack.push(x);
+                        return Err(Error::recoverable_error(
+                            state,
+                            IntInstructionError::Overflow,
+                        ));
                     }
                 }
             }
@@ -66,6 +87,10 @@ impl Instruction<PushState> for IntInstruction {
                     } else {
                         // Do nothing, i.e., put the arguments back
                         int_stack.push(x);
+                        return Err(Error::recoverable_error(
+                            state,
+                            IntInstructionError::Overflow,
+                        ));
                     }
                 }
             }
@@ -76,6 +101,10 @@ impl Instruction<PushState> for IntInstruction {
                     } else {
                         // Do nothing, i.e., put the arguments back
                         int_stack.push(x);
+                        return Err(Error::recoverable_error(
+                            state,
+                            IntInstructionError::Overflow,
+                        ));
                     }
                 }
             }
@@ -84,12 +113,18 @@ impl Instruction<PushState> for IntInstruction {
                 //   sensible if it doesn't. That requires having these return a `Result` or
                 //   `Option`, however, which we don't yet do.
                 if let Some((x, y)) = int_stack.pop2() {
+                    // We quietly ignore it if this returns `None`.
                     if let Some(result) = x.checked_add(y) {
+                        // What's the right thing here?
                         int_stack.push(result);
                     } else {
                         // Do nothing, i.e., put the arguments back
                         int_stack.push(y);
                         int_stack.push(x);
+                        return Err(Error::recoverable_error(
+                            state,
+                            IntInstructionError::Overflow,
+                        ));
                     }
                 }
             }
@@ -104,6 +139,10 @@ impl Instruction<PushState> for IntInstruction {
                         // Do nothing, i.e., put the arguments back
                         int_stack.push(y);
                         int_stack.push(x);
+                        return Err(Error::recoverable_error(
+                            state,
+                            IntInstructionError::Overflow,
+                        ));
                     }
                 }
             }
@@ -118,6 +157,10 @@ impl Instruction<PushState> for IntInstruction {
                         // Do nothing, i.e., put the arguments back
                         int_stack.push(y);
                         int_stack.push(x);
+                        return Err(Error::recoverable_error(
+                            state,
+                            IntInstructionError::Overflow,
+                        ));
                     }
                 }
             }
@@ -211,6 +254,7 @@ impl Instruction<PushState> for IntInstruction {
                 }
             }
         }
+        Ok(state)
     }
 }
 
@@ -222,6 +266,8 @@ impl From<IntInstruction> for PushInstruction {
 
 #[cfg(test)]
 mod test {
+    use crate::instruction::ErrorSeverity;
+
     use super::*;
 
     #[test]
@@ -231,7 +277,10 @@ mod test {
         let mut state = PushState::builder([]).build();
         state.int.push(y);
         state.int.push(x);
-        IntInstruction::Add.perform(&mut state);
+        let result = IntInstruction::Add.perform(state).unwrap_err();
+        assert_eq!(state.int.size(), 0);
+        assert_eq!(result.error, IntInstructionError::Overflow.into());
+        assert_eq!(result.error_kind, ErrorSeverity::Recoverable);
     }
 
     #[test]

@@ -1,5 +1,5 @@
 use super::State;
-use crate::instruction::{Instruction, PushInstruction, VariableName};
+use crate::instruction::{Instruction, InstructionResult, PushInstruction, VariableName};
 use std::collections::HashMap;
 
 #[derive(Debug)]
@@ -285,11 +285,24 @@ impl PushState {
         &self.exec
     }
 
-    /// # Panics
-    ///
-    /// This panics if we try to access a variable whose `var_index` isn't in the
-    /// variable map.
-    pub fn push_input(&mut self, var_name: &VariableName) {
+    // /// # Panics
+    // ///
+    // /// This panics if we try to access a variable whose `var_index` isn't in the
+    // /// variable map.
+    // pub fn push_input(&mut self, var_name: &VariableName) {
+    //     let instruction = self
+    //         .input_instructions
+    //         .iter()
+    //         .find_map(|(n, v)| if n == var_name { Some(v) } else { None })
+    //         .unwrap_or_else(|| panic!("Failed to get an instruction for the input variable '{var_name}' that hadn't been defined"))
+    //         .clone();
+    //     instruction.perform(self);
+    // }
+
+    pub fn with_input(
+        self,
+        var_name: &VariableName,
+    ) -> InstructionResult<Self, <PushInstruction as Instruction<Self>>::Error> {
         // TODO: This `panic` here is icky, and we really should deal with it better.
         //   I wonder if the fact that this index might not be there should be telling
         //   us something...
@@ -299,7 +312,7 @@ impl PushState {
             .find_map(|(n, v)| if n == var_name { Some(v) } else { None })
             .unwrap_or_else(|| panic!("Failed to get an instruction for the input variable '{var_name}' that hadn't been defined"))
             .clone();
-        instruction.perform(self);
+        instruction.perform(self)
     }
 }
 

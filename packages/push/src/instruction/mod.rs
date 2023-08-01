@@ -1,6 +1,7 @@
 use crate::push_vm::push_state::PushState;
 use std::{fmt::Display, sync::Arc};
 
+use self::int::IntInstructionError;
 #[allow(clippy::module_name_repetitions)]
 pub use self::{bool::BoolInstruction, int::IntInstruction};
 
@@ -27,13 +28,49 @@ mod int;
  * - dup (int_dup, exec_dup, bool_dup, ...)
  */
 
-pub trait Instruction<S> {
-    fn perform(&self, state: &mut S);
+#[derive(Debug, Eq, PartialEq)]
+enum ErrorSeverity {
+    Fatal,
+    Recoverable,
 }
 
-impl<S> Instruction<S> for Box<dyn Instruction<S>> {
-    fn perform(&self, state: &mut S) {
-        self.as_ref().perform(state);
+struct Error<S, E> {
+    state: S,
+    error: E,
+    error_kind: ErrorSeverity,
+}
+
+pub type InstructionResult<S, E> = core::result::Result<S, Error<S, E>>;
+
+impl<S, E> Error<S, E> {
+    pub fn fatal_error(state: S, error: impl Into<E>) -> Self {
+        Self {
+            state,
+            error: error.into(),
+            error_kind: ErrorSeverity::Fatal,
+        }
+    }
+
+    pub fn recoverable_error(state: S, error: impl Into<E>) -> Self {
+        Self {
+            state,
+            error: error.into(),
+            error_kind: ErrorSeverity::Recoverable,
+        }
+    }
+}
+
+pub trait Instruction<S> {
+    type Error;
+
+    fn perform(&self, state: S) -> InstructionResult<S, Self::Error>;
+}
+
+impl<S, E> Instruction<S> for Box<dyn Instruction<S, Error = E>> {
+    type Error = E;
+
+    fn perform(&self, state: S) -> InstructionResult<S, E> {
+        self.as_ref().perform(state)
     }
 }
 
@@ -107,10 +144,23 @@ impl PushInstruction {
     }
 }
 
+#[derive(Debug, Eq, PartialEq)]
+enum PushInstructionError {
+    InsufficientArguments,
+    StepLimitExceeded,
+    Int(IntInstructionError),
+}
+
 impl Instruction<PushState> for PushInstruction {
-    fn perform(&self, state: &mut PushState) {
+    type Error = PushInstructionError;
+
+    fn perform(&self, state: PushState) -> InstructionResult<PushState, Self::Error> {
         match self {
-            Self::InputVar(var_name) => state.push_input(var_name),
+            Self::InputVar(var_name) => {
+                // TODO: Should `push_input` return the new state?
+                //   Or add a `with_input` that returns the new state and keep `push_input`?
+                state.with_input(var_name)
+            }
             Self::BoolInstruction(i) => i.perform(state),
             Self::IntInstruction(i) => i.perform(state),
         }
