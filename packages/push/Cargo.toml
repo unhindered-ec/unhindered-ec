@@ -18,3 +18,4 @@ ec-linear = { path = "../ec-linear" }
 proptest = "1.2.0"
 strum = "0.25.0"
 strum_macros = "0.25.1"
+thiserror = "1.0.44"
