@@ -1,12 +1,15 @@
 use strum_macros::EnumIter;
 
 use super::{Error, Instruction, InstructionResult, PushInstruction, PushInstructionError};
-use crate::push_vm::push_state::{HasStack, PushState, Stack};
+use crate::push_vm::push_state::{HasStack, Stack};
 
-#[derive(Debug, Clone, PartialEq, Eq, EnumIter)]
+// We'll use a 64-bit integer for our integer types.
+type PushInteger = i64;
+
+#[derive(Debug, strum_macros::Display, Clone, PartialEq, Eq, EnumIter)]
 #[allow(clippy::module_name_repetitions)]
 pub enum IntInstruction {
-    Push(i64),
+    Push(PushInteger),
     Negate,
     Abs,
     Inc,
@@ -33,26 +36,24 @@ pub enum IntInstruction {
     Max,
 }
 
-#[derive(Debug, Eq, PartialEq)]
+#[derive(thiserror::Error, Debug, Eq, PartialEq)]
 pub enum IntInstructionError {
-    Overflow,
-}
-
-impl From<IntInstructionError> for PushInstructionError {
-    fn from(int_error: IntInstructionError) -> Self {
-        PushInstructionError::Int(int_error)
-    }
+    #[error("Integer arithmetic overflow for instruction {op} with arguments {args:?}")]
+    Overflow {
+        op: IntInstruction,
+        args: Vec<PushInteger>,
+    },
 }
 
 impl<S> Instruction<S> for IntInstruction
 where
-    S: HasStack<i64> + HasStack<bool>,
+    S: HasStack<PushInteger> + HasStack<bool>,
 {
     type Error = PushInstructionError;
 
     #[allow(clippy::too_many_lines, clippy::cognitive_complexity)]
     fn perform(&self, mut state: S) -> InstructionResult<S, Self::Error> {
-        let int_stack: &mut Stack<i64> = state.stack_mut();
+        let int_stack: &mut Stack<PushInteger> = state.stack_mut();
         match self {
             Self::Push(i) => {
                 // TODO: We might want `push` to be able to fail if, e.g., the size of the
@@ -238,7 +239,7 @@ where
             Self::FromBoolean => {
                 let bool_stack: &mut Stack<bool> = state.stack_mut();
                 if let Some(b) = bool_stack.pop() {
-                    let int_stack: &mut Stack<i64> = state.stack_mut();
+                    let int_stack: &mut Stack<PushInteger> = state.stack_mut();
                     if b {
                         int_stack.push(1);
                     } else {
@@ -289,24 +290,24 @@ mod test {
 
     #[test]
     fn inc_overflows() {
-        let x = i64::MAX;
+        let x = PushInteger::MAX;
         let mut state = PushState::builder([]).build();
         state.int.push(x);
         let result = IntInstruction::Inc.perform(state).unwrap_err();
         assert_eq!(result.state.int.size(), 1);
-        assert_eq!(result.state.int.top().unwrap(), &i64::MAX);
+        assert_eq!(result.state.int.top().unwrap(), &PushInteger::MAX);
         assert_eq!(result.error, IntInstructionError::Overflow.into());
         assert_eq!(result.error_kind, ErrorSeverity::Recoverable);
     }
 
     #[test]
     fn dec_overflows() {
-        let x = i64::MIN;
+        let x = PushInteger::MIN;
         let mut state = PushState::builder([]).build();
         state.int.push(x);
         let result = IntInstruction::Dec.perform(state).unwrap_err();
         assert_eq!(result.state.int.size(), 1);
-        assert_eq!(result.state.int.top().unwrap(), &i64::MIN);
+        assert_eq!(result.state.int.top().unwrap(), &PushInteger::MIN);
         assert_eq!(result.error, IntInstructionError::Overflow.into());
         assert_eq!(result.error_kind, ErrorSeverity::Recoverable);
     }

@@ -1,4 +1,4 @@
-use crate::push_vm::push_state::PushState;
+use crate::push_vm::push_state::{PushState, StackError};
 use std::{fmt::Display, sync::Arc};
 
 #[allow(clippy::module_name_repetitions)]
@@ -145,12 +145,16 @@ impl PushInstruction {
     }
 }
 
-#[derive(Debug, Eq, PartialEq)]
+#[derive(thiserror::Error, Debug, Eq, PartialEq)]
 pub enum PushInstructionError {
-    InsufficientArguments,
-    StepLimitExceeded,
-    Int(IntInstructionError),
-    Bool(BoolInstructionError),
+    #[error(transparent)]
+    InsufficientArguments(#[from] StackError),
+    #[error("Exceeded the maximum step limit {step_limit}")]
+    StepLimitExceeded { step_limit: usize },
+    #[error(transparent)]
+    Int(#[from] IntInstructionError),
+    #[error(transparent)]
+    Bool(#[from] BoolInstructionError),
 }
 
 impl Instruction<PushState> for PushInstruction {

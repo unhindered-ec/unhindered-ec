@@ -18,26 +18,8 @@ pub enum BoolInstruction {
     // BoolFromFloat,
 }
 
-// TODO: It would be nice to have a macro to generate these.
-//   Something like:
-//
-//   #[derive(PushInstruction)]
-//   fn bool_and(x: bool, y: bool) -> bool {
-//      x && y
-//   }
-//
-//   The argument types would tell us which stacks values
-//   come from, and the return type tells us which stack
-//   the result goes on.
-
-#[derive(Debug, Eq, PartialEq)]
+#[derive(thiserror::Error, Debug, Eq, PartialEq)]
 pub enum BoolInstructionError {}
-
-impl From<BoolInstructionError> for PushInstructionError {
-    fn from(bool_error: BoolInstructionError) -> Self {
-        PushInstructionError::Bool(bool_error)
-    }
-}
 
 impl<S> Instruction<S> for BoolInstruction
 where
