@@ -1,4 +1,4 @@
-use super::{Instruction, InstructionResult, PushInstruction, PushInstructionError};
+use super::{Error, Instruction, InstructionResult, PushInstruction, PushInstructionError};
 use crate::push_vm::push_state::{HasStack, Stack};
 use strum_macros::EnumIter;
 
@@ -30,6 +30,15 @@ pub enum BoolInstruction {
 //   come from, and the return type tells us which stack
 //   the result goes on.
 
+#[derive(Debug, Eq, PartialEq)]
+pub enum BoolInstructionError {}
+
+impl From<BoolInstructionError> for PushInstructionError {
+    fn from(bool_error: BoolInstructionError) -> Self {
+        PushInstructionError::Bool(bool_error)
+    }
+}
+
 impl<S> Instruction<S> for BoolInstruction
 where
     S: HasStack<bool> + HasStack<i64>,
@@ -44,6 +53,11 @@ where
             Self::BoolNot => {
                 if let Some::<bool>(x) = bool_stack.pop() {
                     bool_stack.push(!x);
+                } else {
+                    return Err(Error::recoverable_error(
+                        state,
+                        PushInstructionError::InsufficientArguments,
+                    ));
                 }
             }
             Self::BoolAnd => {

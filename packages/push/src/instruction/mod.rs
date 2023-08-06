@@ -1,9 +1,9 @@
 use crate::push_vm::push_state::PushState;
 use std::{fmt::Display, sync::Arc};
 
-use self::int::IntInstructionError;
 #[allow(clippy::module_name_repetitions)]
 pub use self::{bool::BoolInstruction, int::IntInstruction};
+use self::{bool::BoolInstructionError, int::IntInstructionError};
 
 mod bool;
 mod int;
@@ -150,6 +150,7 @@ pub enum PushInstructionError {
     InsufficientArguments,
     StepLimitExceeded,
     Int(IntInstructionError),
+    Bool(BoolInstructionError),
 }
 
 impl Instruction<PushState> for PushInstruction {

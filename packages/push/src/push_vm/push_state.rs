@@ -321,10 +321,11 @@ impl State for PushState {
 
     // TODO: Need to have some kind of execution limit to prevent infinite loops.
     fn run_to_completion(mut self) -> Self {
-        while let Some(instruction) = self.exec.pop() {
-            self.perform(&instruction);
-        }
-        self
+        // while let Some(instruction) = self.exec.pop() {
+        //     self.perform(&instruction);
+        // }
+        // self
+        todo!()
     }
 }
 
