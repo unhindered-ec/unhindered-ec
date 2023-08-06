@@ -148,7 +148,7 @@ impl PushInstruction {
 #[derive(thiserror::Error, Debug, Eq, PartialEq)]
 pub enum PushInstructionError {
     #[error(transparent)]
-    InsufficientArguments(#[from] StackError),
+    StackError(#[from] StackError),
     #[error("Exceeded the maximum step limit {step_limit}")]
     StepLimitExceeded { step_limit: usize },
     #[error(transparent)]

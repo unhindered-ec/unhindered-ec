@@ -2,8 +2,24 @@ use super::State;
 use crate::instruction::{Instruction, InstructionResult, PushInstruction, VariableName};
 use std::collections::HashMap;
 
+// TODO: Move the `Stack` bits to their own module.
+// TODO: Add a test to the `Stack` code that confirms that we return the
+//   correct `Underflow` and `Overflow` errors.
+
+#[derive(thiserror::Error, Debug, Eq, PartialEq)]
+pub enum StackError {
+    #[error("Requested {num_requested} elements from stack with {num_present} elements.")]
+    Underflow {
+        num_requested: usize,
+        num_present: usize,
+    },
+    #[error("Pushed onto full stack of type {stack_type}.")]
+    Overflow { stack_type: &'static str },
+}
+
 #[derive(Debug, Eq, PartialEq)]
 pub struct Stack<T> {
+    max_stack_size: usize,
     values: Vec<T>,
 }
 
@@ -14,38 +30,58 @@ pub struct Stack<T> {
 impl<T> Default for Stack<T> {
     fn default() -> Self {
         Self {
+            max_stack_size: usize::MAX,
             values: Vec::default(),
         }
     }
 }
 
 impl<T> Stack<T> {
+    pub fn set_max_stack_size(&mut self, max_stack_size: usize) {
+        self.max_stack_size = max_stack_size;
+    }
+
     #[must_use]
     pub fn size(&self) -> usize {
         self.values.len()
     }
 
     #[must_use]
-    pub fn top(&self) -> Option<&T> {
-        self.values.last()
+    pub fn top(&self) -> Result<&T, StackError> {
+        self.values.last().ok_or(StackError::Underflow {
+            num_requested: 1,
+            num_present: 0,
+        })
     }
 
-    pub fn pop(&mut self) -> Option<T> {
-        self.values.pop()
+    pub fn pop(&mut self) -> Result<T, StackError> {
+        self.values.pop().ok_or(StackError::Underflow {
+            num_requested: 1,
+            num_present: 0,
+        })
     }
 
-    pub fn pop2(&mut self) -> Option<(T, T)> {
+    pub fn pop2(&mut self) -> Result<(T, T), StackError> {
         if self.size() >= 2 {
             let x = self.pop()?;
             let y = self.pop()?;
-            Some((x, y))
+            Ok((x, y))
         } else {
-            None
+            Err(StackError::Underflow {
+                num_requested: 2,
+                num_present: self.size(),
+            })
         }
     }
 
-    pub fn push(&mut self, value: T) {
-        self.values.push(value);
+    pub fn push(&mut self, value: T) -> Result<(), StackError> {
+        if self.values.len() == self.max_stack_size {
+            Err(StackError::Overflow {
+                stack_type: std::any::type_name::<T>(),
+            })
+        } else {
+            Ok(())
+        }
     }
 
     /// Adds the given sequence of values to this stack.
@@ -133,6 +169,32 @@ impl Builder {
     //     stack.extend(values);
     //     self
     // }
+
+    /// Sets the maximum stack size for all the stacks in this state.
+    ///
+    /// # Arguments
+    ///
+    /// * `max_stack_size` - A `usize` specifying the maximum stack size
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use push::push_vm::push_state::Stack;
+    /// use crate::push::push_vm::push_state::HasStack;
+    /// use push::push_vm::push_state::PushState;
+    /// use push::push_vm::push_state::Builder;
+    /// let mut state = Builder::new(PushState::default())
+    ///     .with_max_stack_size(100)
+    ///     .build();
+    /// let bool_stack: &Stack<bool> = state.stack_mut();
+    /// assert_eq!(bool_stack.max_stack_size, 100);
+    /// ```  
+    #[must_use]
+    pub fn with_max_stack_size(mut self, max_stack_size: usize) -> Self {
+        self.partial_state.int.set_max_stack_size(max_stack_size);
+        self.partial_state.bool.set_max_stack_size(max_stack_size);
+        self
+    }
 
     /// Adds the given sequence of values to the boolean stack for the state you're building.
     ///
