@@ -44,11 +44,14 @@ impl From<IntInstructionError> for PushInstructionError {
     }
 }
 
-impl Instruction<PushState> for IntInstruction {
+impl<S> Instruction<S> for IntInstruction
+where
+    S: HasStack<i64> + HasStack<bool>,
+{
     type Error = PushInstructionError;
 
     #[allow(clippy::too_many_lines, clippy::cognitive_complexity)]
-    fn perform(&self, mut state: PushState) -> InstructionResult<PushState, Self::Error> {
+    fn perform(&self, mut state: S) -> InstructionResult<S, Self::Error> {
         let int_stack: &mut Stack<i64> = state.stack_mut();
         match self {
             Self::Push(i) => {
@@ -204,32 +207,32 @@ impl Instruction<PushState> for IntInstruction {
             }
             Self::IsEven => {
                 if let Some(i) = int_stack.pop() {
-                    state.bool.push(i % 2 == 0);
+                    state.stack_mut().push(i % 2 == 0);
                 }
             }
             Self::IsOdd => {
                 if let Some(i) = int_stack.pop() {
-                    state.bool.push(i % 2 != 0);
+                    state.stack_mut().push(i % 2 != 0);
                 }
             }
             Self::LessThan => {
                 if let Some((x, y)) = int_stack.pop2() {
-                    state.bool.push(x < y);
+                    state.stack_mut().push(x < y);
                 }
             }
             Self::LessThanEqual => {
                 if let Some((x, y)) = int_stack.pop2() {
-                    state.bool.push(x <= y);
+                    state.stack_mut().push(x <= y);
                 }
             }
             Self::GreaterThan => {
                 if let Some((x, y)) = int_stack.pop2() {
-                    state.bool.push(x > y);
+                    state.stack_mut().push(x > y);
                 }
             }
             Self::GreaterThanEqual => {
                 if let Some((x, y)) = int_stack.pop2() {
-                    state.bool.push(x >= y);
+                    state.stack_mut().push(x >= y);
                 }
             }
             Self::FromBoolean => {
@@ -265,6 +268,7 @@ impl From<IntInstruction> for PushInstruction {
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used)]
 mod test {
     use crate::instruction::ErrorSeverity;
 
@@ -275,10 +279,10 @@ mod test {
         let x = 4_098_586_571_925_584_936;
         let y = 5_124_785_464_929_190_872;
         let mut state = PushState::builder([]).build();
-        state.int.push(y);
-        state.int.push(x);
+        state.stack_mut().push(y);
+        state.stack_mut().push(x);
         let result = IntInstruction::Add.perform(state).unwrap_err();
-        assert_eq!(state.int.size(), 0);
+        assert_eq!(result.state.int.size(), 2);
         assert_eq!(result.error, IntInstructionError::Overflow.into());
         assert_eq!(result.error_kind, ErrorSeverity::Recoverable);
     }
@@ -288,7 +292,11 @@ mod test {
         let x = i64::MAX;
         let mut state = PushState::builder([]).build();
         state.int.push(x);
-        IntInstruction::Inc.perform(&mut state);
+        let result = IntInstruction::Inc.perform(state).unwrap_err();
+        assert_eq!(result.state.int.size(), 1);
+        assert_eq!(result.state.int.top().unwrap(), &i64::MAX);
+        assert_eq!(result.error, IntInstructionError::Overflow.into());
+        assert_eq!(result.error_kind, ErrorSeverity::Recoverable);
     }
 
     #[test]
@@ -296,7 +304,11 @@ mod test {
         let x = i64::MIN;
         let mut state = PushState::builder([]).build();
         state.int.push(x);
-        IntInstruction::Dec.perform(&mut state);
+        let result = IntInstruction::Dec.perform(state).unwrap_err();
+        assert_eq!(result.state.int.size(), 1);
+        assert_eq!(result.state.int.top().unwrap(), &i64::MIN);
+        assert_eq!(result.error, IntInstructionError::Overflow.into());
+        assert_eq!(result.error_kind, ErrorSeverity::Recoverable);
     }
 }
 
@@ -321,7 +333,7 @@ mod property_tests {
             let mut state = PushState::builder([]).build();
             state.int.push(y);
             state.int.push(x);
-            IntInstruction::Add.perform(&mut state);
+            let _ = IntInstruction::Add.perform(state);
         }
 
         #[test]
@@ -329,16 +341,17 @@ mod property_tests {
             let mut state = PushState::builder([]).build();
             state.int.push(y);
             state.int.push(x);
-            IntInstruction::Add.perform(&mut state);
+            let result = IntInstruction::Add.perform(state);
             #[allow(clippy::unwrap_used)]
-            let output = state.int.pop().unwrap();
-            if let Some(result) = x.checked_add(y) {
-                prop_assert_eq!(output, result);
+            if let Some(expected_result) = x.checked_add(y) {
+                let output = result.unwrap().int.pop().unwrap();
+                prop_assert_eq!(output, expected_result);
             } else {
                 // This only checks that `x` is still on the top of the stack.
                 // We arguably want to confirm that the entire state of the system
                 // is unchanged, except that the `Add` instruction has been
                 // removed from the `exec` stack.
+                let output = result.unwrap_err().state.int.pop().unwrap();
                 prop_assert_eq!(output, x);
             }
         }
@@ -347,7 +360,7 @@ mod property_tests {
         fn inc_dec_do_not_crash(x in proptest::num::i64::ANY) {
             let mut state = PushState::builder([]).build();
             state.int.push(x);
-            IntInstruction::Inc.perform(&mut state);
+            let _ = IntInstruction::Inc.perform(state);
         }
 
         #[test]
@@ -356,7 +369,7 @@ mod property_tests {
             state.int.push(y);
             state.int.push(x);
             state.bool.push(b);
-            instr.perform(&mut state);
+            let _ = instr.perform(state);
         }
     }
 }

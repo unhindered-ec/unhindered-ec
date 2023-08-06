@@ -34,7 +34,8 @@ enum ErrorSeverity {
     Recoverable,
 }
 
-struct Error<S, E> {
+#[derive(Debug)]
+pub struct Error<S, E> {
     state: S,
     error: E,
     error_kind: ErrorSeverity,
@@ -145,7 +146,7 @@ impl PushInstruction {
 }
 
 #[derive(Debug, Eq, PartialEq)]
-enum PushInstructionError {
+pub enum PushInstructionError {
     InsufficientArguments,
     StepLimitExceeded,
     Int(IntInstructionError),
