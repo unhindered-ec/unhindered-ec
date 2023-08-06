@@ -1,5 +1,6 @@
 use super::{Error, Instruction, InstructionResult, PushInstruction, PushInstructionError};
 use crate::push_vm::push_state::{HasStack, Stack};
+use std::ops::Not;
 use strum_macros::EnumIter;
 
 #[derive(Debug, Clone, PartialEq, Eq, EnumIter)]
@@ -29,47 +30,22 @@ where
 
     fn perform(&self, mut state: S) -> InstructionResult<S, Self::Error> {
         let bool_stack: &mut Stack<bool> = state.stack_mut();
-        match self {
-            // let state = state as PushStack<bool>;
-            Self::Push(b) => bool_stack.push(*b),
-            Self::BoolNot => {
-                if let Some::<bool>(x) = bool_stack.pop() {
-                    bool_stack.push(!x);
-                } else {
-                    return Err(Error::recoverable_error(
-                        state,
-                        PushInstructionError::InsufficientArguments,
-                    ));
-                }
-            }
-            Self::BoolAnd => {
-                if let Some::<(bool, bool)>((x, y)) = bool_stack.pop2() {
-                    bool_stack.push(x && y);
-                }
-            }
-            Self::BoolOr => {
-                if let Some::<(bool, bool)>((x, y)) = bool_stack.pop2() {
-                    bool_stack.push(x || y);
-                }
-            }
-            Self::BoolXor => {
-                if let Some::<(bool, bool)>((x, y)) = bool_stack.pop2() {
-                    bool_stack.push(x != y);
-                }
-            }
-            Self::BoolImplies => {
-                if let Some::<(bool, bool)>((x, y)) = bool_stack.pop2() {
-                    bool_stack.push(!x || y);
-                }
-            }
+        let result = match self {
+            Self::Push(b) => Ok(*b),
+            Self::BoolNot => bool_stack.pop().map(Not::not),
+            Self::BoolAnd => bool_stack.pop2().map(|(x, y)| x && y),
+            Self::BoolOr => bool_stack.pop2().map(|(x, y)| x || y),
+            Self::BoolXor => bool_stack.pop2().map(|(x, y)| x != y),
+            Self::BoolImplies => bool_stack.pop2().map(|(x, y)| !x || y),
             Self::BoolFromInt => {
                 let int_stack: &mut Stack<i64> = state.stack_mut();
-                if let Some::<i64>(x) = int_stack.pop() {
-                    let bool_stack: &mut Stack<bool> = state.stack_mut();
-                    bool_stack.push(x != 0);
-                }
+                int_stack.pop().map(|i| i != 0)
             }
-        }
+        };
+        let b = result.map_err(|error| Error::recoverable_error(state, error))?;
+        bool_stack
+            .push(b)
+            .map_err(|error| Error::fatal_error(state, error))?;
         Ok(state)
     }
 }
@@ -94,37 +70,37 @@ mod property_tests {
         BoolInstruction::iter().collect()
     }
 
-    // proptest! {
-    //     #[test]
-    //     fn bool_ops_do_not_crash(instr in proptest::sample::select(all_instructions()),
-    //             x in proptest::bool::ANY, y in proptest::bool::ANY, i in proptest::num::i64::ANY) {
-    //         let mut state = PushState::builder([])
-    //             .with_bool_values(vec![x, y])
-    //             .with_int_values(vec![i])
-    //             .build();
-    //         instr.perform(&mut state);
-    //     }
+    proptest! {
+        #[test]
+        fn ops_do_not_crash(instr in proptest::sample::select(all_instructions()),
+                x in proptest::bool::ANY, y in proptest::bool::ANY, i in proptest::num::i64::ANY) {
+            let mut state = PushState::builder([])
+                .with_bool_values(vec![x, y])
+                .with_int_values(vec![i])
+                .build();
+            instr.perform(state);
+        }
 
-    //     #[test]
-    //     fn bool_and_is_correct(x in proptest::bool::ANY, y in proptest::bool::ANY) {
-    //         let mut state = PushState::builder([])
-    //             .with_bool_values(vec![x, y])
-    //             .build();
-    //         BoolInstruction::BoolAnd.perform(&mut state);
-    //         #[allow(clippy::unwrap_used)]
-    //         let result: &bool = state.stack_mut().top().unwrap();
-    //         prop_assert_eq!(*result, x && y);
-    //     }
+        #[test]
+        fn and_is_correct(x in proptest::bool::ANY, y in proptest::bool::ANY) {
+            let mut state = PushState::builder([])
+                .with_bool_values(vec![x, y])
+                .build();
+            BoolInstruction::BoolAnd.perform(state);
+            #[allow(clippy::unwrap_used)]
+            let result: &bool = state.stack_mut().top().unwrap();
+            prop_assert_eq!(*result, x && y);
+        }
 
-    //     #[test]
-    //     fn bool_implies_is_correct(x in proptest::bool::ANY, y in proptest::bool::ANY) {
-    //         let mut state = PushState::builder([])
-    //             .with_bool_values(vec![x, y])
-    //             .build();
-    //         BoolInstruction::BoolImplies.perform(&mut state);
-    //         #[allow(clippy::unwrap_used)]
-    //         let result: &bool = state.stack_mut().top().unwrap();
-    //         prop_assert_eq!(*result, !x || y);
-    //     }
-    // }
+        #[test]
+        fn implies_is_correct(x in proptest::bool::ANY, y in proptest::bool::ANY) {
+            let mut state = PushState::builder([])
+                .with_bool_values(vec![x, y])
+                .build();
+            BoolInstruction::BoolImplies.perform(state);
+            #[allow(clippy::unwrap_used)]
+            let result: &bool = state.stack_mut().top().unwrap();
+            prop_assert_eq!(*result, !x || y);
+        }
+    }
 }
