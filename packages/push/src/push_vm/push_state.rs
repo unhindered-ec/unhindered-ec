@@ -2,7 +2,7 @@ use super::State;
 use crate::instruction::{Instruction, InstructionResult, PushInstruction, VariableName};
 use std::collections::HashMap;
 
-#[derive(Debug)]
+#[derive(Debug, Eq, PartialEq)]
 pub struct Stack<T> {
     values: Vec<T>,
 }
@@ -82,7 +82,7 @@ pub trait HasStack<T> {
     fn stack_mut(&mut self) -> &mut Stack<T>;
 }
 
-#[derive(Default, Debug)]
+#[derive(Default, Debug, Eq, PartialEq)]
 pub struct PushState {
     pub(crate) exec: Vec<PushInstruction>,
     pub(crate) int: Stack<i64>,
