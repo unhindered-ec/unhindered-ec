@@ -61,7 +61,7 @@ impl From<BoolInstruction> for PushInstruction {
 mod property_tests {
     use crate::{
         instruction::{BoolInstruction, Instruction},
-        push_vm::push_state::PushState,
+        push_vm::{push_state::PushState, stack::HasStack},
     };
     use proptest::{prop_assert_eq, proptest};
     use strum::IntoEnumIterator;
@@ -88,7 +88,7 @@ mod property_tests {
                 .build();
             BoolInstruction::BoolAnd.perform(state);
             #[allow(clippy::unwrap_used)]
-            let result: &bool = state.stack_mut().top().unwrap();
+            let result: &bool = state.stack().top().unwrap();
             prop_assert_eq!(*result, x && y);
         }
 
@@ -99,7 +99,7 @@ mod property_tests {
                 .build();
             BoolInstruction::BoolImplies.perform(state);
             #[allow(clippy::unwrap_used)]
-            let result: &bool = state.stack_mut().top().unwrap();
+            let result: &bool = state.stack().top().unwrap();
             prop_assert_eq!(*result, !x || y);
         }
     }

@@ -1,4 +1,7 @@
-use crate::push_vm::{push_state::PushState, stack::StackError};
+use crate::push_vm::{
+    push_state::{PushInteger, PushState},
+    stack::StackError,
+};
 use std::{fmt::Display, sync::Arc};
 
 #[allow(clippy::module_name_repetitions)]
@@ -140,7 +143,7 @@ impl PushInstruction {
     }
 
     #[must_use]
-    pub fn push_int(i: i64) -> Self {
+    pub fn push_int(i: PushInteger) -> Self {
         IntInstruction::Push(i).into()
     }
 }

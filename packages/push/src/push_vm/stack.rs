@@ -2,6 +2,7 @@
 //   correct `Underflow` and `Overflow` errors.
 
 pub trait HasStack<T> {
+    fn stack(&self) -> &Stack<T>;
     fn stack_mut(&mut self) -> &mut Stack<T>;
 }
 
@@ -106,7 +107,7 @@ impl<T> Stack<T> {
     ///
     /// ```
     /// use push::push_vm::push_state::Stack;
-    /// let mut stack: Stack<i64> = Stack::default();
+    /// let mut stack: Stack<PushInteger> = Stack::default();
     /// assert_eq!(stack.size(), 0);
     /// stack.extend(vec![5, 8, 9]);
     /// // Now the top of the stack is 5, followed by 8, then 9 at the bottom.

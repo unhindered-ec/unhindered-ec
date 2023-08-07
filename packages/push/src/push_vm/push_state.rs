@@ -5,10 +5,13 @@ use super::{
 use crate::instruction::{Instruction, InstructionResult, PushInstruction, VariableName};
 use std::collections::HashMap;
 
+// We'll use a 64-bit integer for our integer types.
+pub type PushInteger = i64;
+
 #[derive(Default, Debug, Eq, PartialEq)]
 pub struct PushState {
     pub(crate) exec: Vec<PushInstruction>,
-    pub(crate) int: Stack<i64>,
+    pub(crate) int: Stack<PushInteger>,
     pub(crate) bool: Stack<bool>,
     // The Internet suggests that when you have fewer than 15 entries,
     // linear search on `Vec` is faster than `HashMap`. I found that
@@ -22,13 +25,21 @@ pub struct PushState {
 }
 
 impl HasStack<bool> for PushState {
+    fn stack(&self) -> &Stack<bool> {
+        &self.bool
+    }
+
     fn stack_mut(&mut self) -> &mut Stack<bool> {
         &mut self.bool
     }
 }
 
-impl HasStack<i64> for PushState {
-    fn stack_mut(&mut self) -> &mut Stack<i64> {
+impl HasStack<PushInteger> for PushState {
+    fn stack(&self) -> &Stack<PushInteger> {
+        &self.int
+    }
+
+    fn stack_mut(&mut self) -> &mut Stack<PushInteger> {
         &mut self.int
     }
 }
@@ -73,7 +84,7 @@ impl Builder {
     /// let mut state = Builder::new(PushState::default())
     ///     .with_max_stack_size(100)
     ///     .build();
-    /// let bool_stack: &Stack<bool> = state.stack_mut();
+    /// let bool_stack: &Stack<bool> = state.stack();
     /// assert_eq!(bool_stack.max_stack_size, 100);
     /// ```  
     #[must_use]
@@ -103,7 +114,7 @@ impl Builder {
     /// let mut state = Builder::new(PushState::default())
     ///     .with_bool_values(vec![true, false, false])
     ///     .build();
-    /// let bool_stack: &Stack<bool> = state.stack_mut();
+    /// let bool_stack: &Stack<bool> = state.stack();
     /// assert_eq!(bool_stack.size(), 3);
     /// // Now the top of the stack is `true`, followed by `false`, then `false` at the bottom.
     /// assert_eq!(bool_stack.top().unwrap(), &true);
@@ -135,14 +146,14 @@ impl Builder {
     /// let mut state = Builder::new(PushState::default())
     ///     .with_int_values(vec![5, 8, 9])
     ///     .build();
-    /// let int_stack: &Stack<i64> = state.stack_mut();
+    /// let int_stack: &Stack<PushInteger> = state.stack();
     /// assert_eq!(int_stack.size(), 3);
     /// // Now the top of the stack is 5, followed by 8, then 9 at the bottom.
     /// assert_eq!(int_stack.top().unwrap(), &5);
     /// ```  
     #[must_use]
-    pub fn with_int_values(mut self, values: Vec<i64>) -> Self {
-        let int_stack: &mut Stack<i64> = self.partial_state.stack_mut();
+    pub fn with_int_values(mut self, values: Vec<PushInteger>) -> Self {
+        let int_stack: &mut Stack<PushInteger> = self.partial_state.stack_mut();
         int_stack.extend(values);
         self
     }
@@ -162,7 +173,7 @@ impl Builder {
     // TODO: Create a macro that generates this instruction for a given type
     //   so we don't have to repeat this logic for every type.
     #[must_use]
-    pub fn with_int_input(mut self, input_name: &str, input_value: i64) -> Self {
+    pub fn with_int_input(mut self, input_name: &str, input_value: PushInteger) -> Self {
         self.partial_state.input_instructions.insert(
             VariableName::from(input_name),
             PushInstruction::push_int(input_value),
@@ -222,7 +233,7 @@ impl PushState {
     {
         let partial_state = Self {
             exec: program.into_iter().rev().collect(),
-            int: Stack::<i64>::default(),
+            int: Stack::<PushInteger>::default(),
             bool: Stack::<bool>::default(),
             input_instructions: HashMap::new(),
         };
@@ -282,7 +293,7 @@ impl State for PushState {
 mod simple_check {
     use crate::{
         instruction::{BoolInstruction, IntInstruction, PushInstruction, VariableName},
-        push_vm::push_state::PushState,
+        push_vm::push_state::{PushInteger, PushState},
     };
 
     use super::State;
@@ -293,7 +304,7 @@ mod simple_check {
             PushInstruction::push_bool(b)
         }
 
-        fn push_int(i: i64) -> PushInstruction {
+        fn push_int(i: PushInteger) -> PushInstruction {
             PushInstruction::push_int(i)
         }
 

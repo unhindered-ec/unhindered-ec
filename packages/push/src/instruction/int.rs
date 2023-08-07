@@ -1,10 +1,10 @@
 use strum_macros::EnumIter;
 
 use super::{Error, Instruction, InstructionResult, PushInstruction, PushInstructionError};
-use crate::push_vm::{push_state::HasStack, stack::Stack};
-
-// We'll use a 64-bit integer for our integer types.
-type PushInteger = i64;
+use crate::push_vm::{
+    push_state::PushInteger,
+    stack::{HasStack, Stack},
+};
 
 #[derive(Debug, strum_macros::Display, Clone, PartialEq, Eq, EnumIter)]
 #[allow(clippy::module_name_repetitions)]
