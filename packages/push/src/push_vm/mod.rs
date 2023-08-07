@@ -1,6 +1,7 @@
 use crate::instruction::{Instruction, InstructionResult};
 
 pub mod push_state;
+pub mod stack;
 
 // Need an associated error trait
 pub trait State: Sized {

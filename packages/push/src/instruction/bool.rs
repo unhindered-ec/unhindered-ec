@@ -1,5 +1,5 @@
 use super::{Error, Instruction, InstructionResult, PushInstruction, PushInstructionError};
-use crate::push_vm::push_state::{HasStack, Stack};
+use crate::push_vm::stack::{HasStack, Stack};
 use std::ops::Not;
 use strum_macros::EnumIter;
 
@@ -61,7 +61,7 @@ impl From<BoolInstruction> for PushInstruction {
 mod property_tests {
     use crate::{
         instruction::{BoolInstruction, Instruction},
-        push_vm::push_state::{HasStack, PushState},
+        push_vm::push_state::PushState,
     };
     use proptest::{prop_assert_eq, proptest};
     use strum::IntoEnumIterator;
