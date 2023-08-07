@@ -122,3 +122,21 @@ impl<T> Stack<T> {
         self.values.extend(values.into_iter().rev());
     }
 }
+
+#[cfg(test)]
+mod test {
+    use super::{Stack, StackError};
+
+    #[test]
+    fn top_from_empty_fails() {
+        let stack: Stack<bool> = Stack::default();
+        let result = stack.top().unwrap_err();
+        assert_eq!(
+            result,
+            StackError::Underflow {
+                num_requested: 1,
+                num_present: 0
+            }
+        );
+    }
+}
