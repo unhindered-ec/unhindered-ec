@@ -3,10 +3,8 @@ use super::{
     State,
 };
 use crate::instruction::{Instruction, InstructionResult, PushInstruction, VariableName};
+use crate::push_vm::PushInteger;
 use std::collections::HashMap;
-
-// We'll use a 64-bit integer for our integer types.
-pub type PushInteger = i64;
 
 #[derive(Default, Debug, Eq, PartialEq)]
 pub struct PushState {

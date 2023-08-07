@@ -1,7 +1,4 @@
-use crate::push_vm::{
-    push_state::{PushInteger, PushState},
-    stack::StackError,
-};
+use crate::push_vm::{push_state::PushState, stack::StackError, PushInteger};
 use std::{fmt::Display, sync::Arc};
 
 #[allow(clippy::module_name_repetitions)]

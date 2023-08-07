@@ -3,6 +3,9 @@ use crate::instruction::{Instruction, InstructionResult};
 pub mod push_state;
 pub mod stack;
 
+// We'll use a 64-bit integer for our integer types.
+pub type PushInteger = i64;
+
 // Need an associated error trait
 pub trait State: Sized {
     type Instruction: Instruction<Self>;

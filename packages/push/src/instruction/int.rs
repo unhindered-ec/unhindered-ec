@@ -2,8 +2,8 @@ use strum_macros::EnumIter;
 
 use super::{Error, Instruction, InstructionResult, PushInstruction, PushInstructionError};
 use crate::push_vm::{
-    push_state::PushInteger,
     stack::{HasStack, Stack},
+    PushInteger,
 };
 
 #[derive(Debug, strum_macros::Display, Clone, PartialEq, Eq, EnumIter)]
