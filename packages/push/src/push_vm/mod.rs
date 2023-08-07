@@ -1,7 +1,7 @@
 use crate::instruction::{Instruction, InstructionResult};
 
 pub mod push_state;
-pub mod stack;
+pub(crate) mod stack;
 
 // We'll use a 64-bit integer for our integer types.
 pub type PushInteger = i64;
