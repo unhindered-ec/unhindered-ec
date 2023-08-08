@@ -97,11 +97,12 @@ impl<T> Stack<T> {
     }
 
     pub fn push(&mut self, value: T) -> Result<(), StackError> {
-        if self.values.len() == self.max_stack_size {
+        if self.size() == self.max_stack_size {
             Err(StackError::Overflow {
                 stack_type: std::any::type_name::<T>(),
             })
         } else {
+            self.values.push(value);
             Ok(())
         }
     }

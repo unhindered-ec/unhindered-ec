@@ -86,51 +86,49 @@ impl From<BoolInstruction> for PushInstruction {
     }
 }
 
-// #[cfg(test)]
-// #[allow(clippy::unwrap_used)]
-// mod property_tests {
-//     use crate::{
-//         instruction::{BoolInstruction, Instruction},
-//         push_vm::{push_state::PushState, stack::HasStack},
-//     };
-//     use proptest::{prop_assert_eq, proptest};
-//     use strum::IntoEnumIterator;
+#[cfg(test)]
+#[allow(clippy::unwrap_used)]
+mod property_tests {
+    use crate::{
+        instruction::{BoolInstruction, Instruction},
+        push_vm::{push_state::PushState, stack::HasStack},
+    };
+    use proptest::{prop_assert_eq, proptest};
+    use strum::IntoEnumIterator;
 
-//     fn all_instructions() -> Vec<BoolInstruction> {
-//         BoolInstruction::iter().collect()
-//     }
+    fn all_instructions() -> Vec<BoolInstruction> {
+        BoolInstruction::iter().collect()
+    }
 
-//     proptest! {
-//         #[test]
-//         fn ops_do_not_crash(instr in proptest::sample::select(all_instructions()),
-//                 x in proptest::bool::ANY, y in proptest::bool::ANY, i in proptest::num::i64::ANY) {
-//             let mut state = PushState::builder([])
-//                 .with_bool_values(vec![x, y])
-//                 .with_int_values(vec![i])
-//                 .build();
-//             instr.perform(state);
-//         }
+    proptest! {
+        #[test]
+        fn ops_do_not_crash(instr in proptest::sample::select(all_instructions()),
+                x in proptest::bool::ANY, y in proptest::bool::ANY, i in proptest::num::i64::ANY) {
+            let state = PushState::builder([])
+                .with_bool_values(vec![x, y])
+                .with_int_values(vec![i])
+                .build();
+            let _ = instr.perform(state).unwrap();
+        }
 
-//         #[test]
-//         fn and_is_correct(x in proptest::bool::ANY, y in proptest::bool::ANY) {
-//             let mut state = PushState::builder([])
-//                 .with_bool_values(vec![x, y])
-//                 .build();
-//             BoolInstruction::BoolAnd.perform(state);
-//             #[allow(clippy::unwrap_used)]
-//             let result: &bool = state.stack().top().unwrap();
-//             prop_assert_eq!(*result, x && y);
-//         }
+        #[test]
+        fn and_is_correct(x in proptest::bool::ANY, y in proptest::bool::ANY) {
+            let state = PushState::builder([])
+                .with_bool_values(vec![x, y])
+                .build();
+            let result_state = BoolInstruction::BoolAnd.perform(state).unwrap();
+            prop_assert_eq!(result_state.bool.size(), 1);
+            prop_assert_eq!(*result_state.bool.top().unwrap(), x && y);
+        }
 
-//         #[test]
-//         fn implies_is_correct(x in proptest::bool::ANY, y in proptest::bool::ANY) {
-//             let mut state = PushState::builder([])
-//                 .with_bool_values(vec![x, y])
-//                 .build();
-//             BoolInstruction::BoolImplies.perform(state);
-//             #[allow(clippy::unwrap_used)]
-//             let result: &bool = state.stack().top().unwrap();
-//             prop_assert_eq!(*result, !x || y);
-//         }
-//     }
-// }
+        #[test]
+        fn implies_is_correct(x in proptest::bool::ANY, y in proptest::bool::ANY) {
+            let state = PushState::builder([])
+                .with_bool_values(vec![x, y])
+                .build();
+            let result_state = BoolInstruction::BoolImplies.perform(state).unwrap();
+            prop_assert_eq!(result_state.bool.size(), 1);
+            prop_assert_eq!(*result_state.bool.top().unwrap(), !x || y);
+        }
+    }
+}
