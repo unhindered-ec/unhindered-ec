@@ -28,10 +28,7 @@ use ec_linear::mutator::umad::Umad;
 use push::{
     genome::plushy::Plushy,
     instruction::{IntInstruction, PushInstruction, VariableName},
-    push_vm::{
-        push_state::{HasStack, PushState},
-        State,
-    },
+    push_vm::{push_state::PushState, State},
 };
 use rand::thread_rng;
 use std::ops::Not;
@@ -60,23 +57,24 @@ fn main() -> Result<()> {
      * The target polynomial is x^3 - 2x^2 - x
      */
     let scorer = |program: &Plushy| -> TestResults<test_results::Error> {
-        let errors: TestResults<test_results::Error> = (0..10)
-            .map(|input| {
-                let state = PushState::builder(program.get_instructions())
-                    .with_int_input("x", input)
-                    .build();
-                // This is the degree 3 problem in https://github.com/lspector/Clojush/blob/master/src/clojush/problems/demos/simple_regression.clj
-                let expected = input * input * input - 2 * input * input - input;
-                state
-                    .run_to_completion()
-                    .stack()
-                    .top()
-                    // If `last()` returns `None`, then there was nothing on top of the integer stack
-                    // so we want to use the `PENALTY_VALUE` for the error on this test case.
-                    .map_or(PENALTY_VALUE, |answer| (answer - expected).abs())
-            })
-            .collect();
-        errors
+        // let errors: TestResults<test_results::Error> = (0..10)
+        //     .map(|input| {
+        //         let state = PushState::builder(program.get_instructions())
+        //             .with_int_input("x", input)
+        //             .build();
+        //         // This is the degree 3 problem in https://github.com/lspector/Clojush/blob/master/src/clojush/problems/demos/simple_regression.clj
+        //         let expected = input * input * input - 2 * input * input - input;
+        //         // state
+        //         //     .run_to_completion()
+        //         //     .stack()
+        //         //     .top()
+        //         //     // If `last()` returns `None`, then there was nothing on top of the integer stack
+        //         //     // so we want to use the `PENALTY_VALUE` for the error on this test case.
+        //         //     .map_or(PENALTY_VALUE, |answer| (answer - expected).abs())
+        //     })
+        //     .collect();
+        todo!()
+        // errors
     };
 
     // The degree 3 problem in https://github.com/lspector/Clojush/blob/master/src/clojush/problems/demos/simple_regression.clj

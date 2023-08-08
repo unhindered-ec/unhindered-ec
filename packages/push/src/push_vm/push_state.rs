@@ -6,7 +6,7 @@ use crate::instruction::{Instruction, InstructionResult, PushInstruction, Variab
 use crate::push_vm::PushInteger;
 use std::collections::HashMap;
 
-#[derive(Default, Debug, Eq, PartialEq)]
+#[derive(Default, Debug, Eq, PartialEq, Clone)]
 pub struct PushState {
     pub(crate) exec: Vec<PushInstruction>,
     pub(crate) int: Stack<PushInteger>,
