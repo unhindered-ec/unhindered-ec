@@ -34,6 +34,15 @@ enum ErrorSeverity {
     Recoverable,
 }
 
+/// Error
+///
+/// - `state`: The state of the system _before_ attempting to perform
+///     the instruction that generated this error
+/// - `error`: The cause of this error
+/// - `error_kind`: Whether this error is `Fatal` (i.e., whether program execution
+///     should terminate immediately) or `Recoverable` (i.e., this instruction
+///     should just be skipped and the program execution continues with the
+///     next instruction).
 #[derive(Debug)]
 pub struct Error<S, E> {
     state: S,

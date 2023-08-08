@@ -45,6 +45,12 @@ where
     }
 }
 
+/// Stack
+///
+/// It's critical that all mutating stack operations be "transactional" in
+/// the sense that they successfully perform all their side-effecting modifications
+/// OR they perform none of them and return a `StackError`. If this isn't true,
+/// then we can end up with inconsistent states when performing instructions.
 impl<T> Stack<T> {
     pub fn set_max_stack_size(&mut self, max_stack_size: usize) {
         self.max_stack_size = max_stack_size;
