@@ -17,7 +17,7 @@ pub enum StackError {
     Overflow { stack_type: &'static str },
 }
 
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Debug, Eq, PartialEq, Clone)]
 pub struct Stack<T> {
     max_stack_size: usize,
     values: Vec<T>,
@@ -55,7 +55,14 @@ impl<T> Stack<T> {
         self.values.len()
     }
 
-    #[must_use]
+    pub fn is_empty(&self) -> bool {
+        self.values.is_empty()
+    }
+
+    pub fn is_full(&self) -> bool {
+        self.size() == self.max_stack_size
+    }
+
     pub fn top(&self) -> Result<&T, StackError> {
         self.values.last().ok_or(StackError::Underflow {
             num_requested: 1,
