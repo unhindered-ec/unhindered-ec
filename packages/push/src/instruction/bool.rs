@@ -39,6 +39,35 @@ where
     //   instruction is `BoolFromInt`, we could pop off an integer before we realize there's
     //   no room to push on the new boolean. We can special case that, but the burden lies
     //   on the programmer, with no help from the type system.
+
+    /*
+    // Get the nth character from a string and push it on the char stack.
+    //   - n comes from the int stack
+    //   - string comes from the string stack
+    //   - result goes on the char stack
+    let transaction: Transaction<PushState> = state.transaction();
+
+    let string = transaction.try_pop<String>()?; // This version has the transaction be mutable.
+    let (string, transaction) = transaction.try_pop<String>()?; // This version returns a "new" transaction.
+
+    let (index, transaction) = transaction.try_pop<PushInteger>()?;
+    let c = string.chars.nth(index)?;
+    let transaction = transaction.try_push<char>(c)?;
+    let new_state = transaction.close()?; // Can closing actually fail?
+     */
+
+    // [pop string] then [pop integer] contains a closure with a tuple of (string, int)
+
+    // state.transaction().pop::<String>().with_min_length(1).and_pop::<Integer>().then_push::<Char>(|(s, i)| s.chars.nth(i))
+    // state.transaction().pop::<String>().with_min_length(1).and_pop::<Integer>().charAt().then_push::<Char>()
+    // state.transaction().pop::<String>().with_min_length(1).and_pop::<Integer>().map::<Char>(|(s, i)| s.chars.nth(i)).then_push::<Char>()
+    // Then you wouldn't be able to chain on that and query what you would push onto the stack so maybe not ideal.
+
+    // Options:
+    //   - Make operations reversible (undo/redo)
+    //   - Hold operations in some kind of queue and apply the at the end
+    //     when we know they'll all work
+
     fn perform(&self, mut state: S) -> InstructionResult<S, Self::Error> {
         // let mut original_state = state.clone();
         let bool_stack: &mut Stack<bool> = state.stack_mut();
