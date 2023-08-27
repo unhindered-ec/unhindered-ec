@@ -1,5 +1,5 @@
 use super::{
-    stack::{HasStack, Stack},
+    stack::{HasStack, Stack, TypeEq},
     State,
 };
 use crate::instruction::{Instruction, InstructionResult, PushInstruction, VariableName};
@@ -23,21 +23,21 @@ pub struct PushState {
 }
 
 impl HasStack<bool> for PushState {
-    fn stack(&self) -> &Stack<bool> {
+    fn stack<U: TypeEq<This = bool>>(&self) -> &Stack<bool> {
         &self.bool
     }
 
-    fn stack_mut(&mut self) -> &mut Stack<bool> {
+    fn stack_mut<U: TypeEq<This = bool>>(&mut self) -> &mut Stack<bool> {
         &mut self.bool
     }
 }
 
 impl HasStack<PushInteger> for PushState {
-    fn stack(&self) -> &Stack<PushInteger> {
+    fn stack<U: TypeEq<This = PushInteger>>(&self) -> &Stack<PushInteger> {
         &self.int
     }
 
-    fn stack_mut(&mut self) -> &mut Stack<PushInteger> {
+    fn stack_mut<U: TypeEq<This = PushInteger>>(&mut self) -> &mut Stack<PushInteger> {
         &mut self.int
     }
 }
@@ -119,7 +119,7 @@ impl Builder {
     /// ```  
     #[must_use]
     pub fn with_bool_values(mut self, values: Vec<bool>) -> Self {
-        let bool_stack: &mut Stack<bool> = self.partial_state.stack_mut();
+        let bool_stack = self.partial_state.stack_mut::<bool>();
         bool_stack.extend(values);
         self
     }
@@ -151,7 +151,7 @@ impl Builder {
     /// ```  
     #[must_use]
     pub fn with_int_values(mut self, values: Vec<PushInteger>) -> Self {
-        let int_stack: &mut Stack<PushInteger> = self.partial_state.stack_mut();
+        let int_stack = self.partial_state.stack_mut::<PushInteger>();
         int_stack.extend(values);
         self
     }
