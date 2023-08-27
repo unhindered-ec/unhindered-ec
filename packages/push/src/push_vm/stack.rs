@@ -1,9 +1,43 @@
-// TODO: Add a test to the `Stack` code that confirms that we return the
-//   correct `Underflow` and `Overflow` errors.
+use crate::instruction::{Error, InstructionResult, MapInstructionError};
+
+pub trait TypeEq {
+    type This: ?Sized;
+}
+
+impl<T: ?Sized> TypeEq for T {
+    type This = Self;
+}
 
 pub trait HasStack<T> {
-    fn stack(&self) -> &Stack<T>;
-    fn stack_mut(&mut self) -> &mut Stack<T>;
+    fn stack<U: TypeEq<This = T>>(&self) -> &Stack<T>;
+    fn stack_mut<U: TypeEq<This = T>>(&mut self) -> &mut Stack<T>;
+
+    fn not_full<U: TypeEq<This = T>>(self) -> InstructionResult<Self, StackError>
+    where
+        Self: Sized,
+    {
+        if self.stack::<U>().is_full() {
+            Err(Error::fatal(
+                self,
+                StackError::Overflow {
+                    // TODO: Should make sure to overflow a stack so we know what this looks like.
+                    stack_type: std::any::type_name::<T>(),
+                },
+            ))
+        } else {
+            Ok(self)
+        }
+    }
+
+    fn with_push(mut self, value: T) -> InstructionResult<Self, StackError>
+    where
+        Self: Sized,
+    {
+        match self.stack_mut::<T>().push(value) {
+            Ok(_) => Ok(self),
+            Err(error) => Err(Error::fatal(self, error)),
+        }
+    }
 }
 
 #[derive(thiserror::Error, Debug, Eq, PartialEq)]
