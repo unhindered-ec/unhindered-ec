@@ -171,11 +171,41 @@ impl<T> Stack<T> {
     }
 }
 
+/// Helper trait to chain instruction operations.
+pub trait StackPush<T, E> {
+    /// Updates the state with `T` pushed to the stack.
+    fn with_stack_push<S>(self, state: S) -> Result<S, Error<S, E>>
+    where
+        S: HasStack<T>;
+}
+
+impl<T, E1, E2> StackPush<T, E2> for Result<T, E1>
+where
+    E2: From<E1> + From<StackError>,
+{
+    fn with_stack_push<S>(self, state: S) -> InstructionResult<S, E2>
+    where
+        S: HasStack<T>,
+    {
+        match self {
+            Ok(val) => state.with_push(val).map_err_into(),
+            // This is a fatal error because if pushing failed, it did so because
+            // the target stack was full, and we don't have a good way to recover
+            // from that.
+            Err(err) => Err(Error::fatal(state, err)),
+        }
+    }
+}
+
+// TODO: Add a test to the `Stack` code that confirms that we return the
+//   correct `Underflow` and `Overflow` errors.
+
 #[cfg(test)]
 mod test {
     use super::{Stack, StackError};
 
     #[test]
+    #[allow(clippy::unwrap_used)]
     fn top_from_empty_fails() {
         let stack: Stack<bool> = Stack::default();
         let result = stack.top().unwrap_err();
