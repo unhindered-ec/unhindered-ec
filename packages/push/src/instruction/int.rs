@@ -2,25 +2,14 @@ use std::ops::Neg;
 
 use strum_macros::EnumIter;
 
-use super::{Error, Instruction, InstructionResult, PushInstruction, PushInstructionError};
+use super::{
+    Error, Instruction, InstructionResult, MapInstructionError, PushInstruction,
+    PushInstructionError,
+};
 use crate::push_vm::{
-    stack::{HasStack, Stack, StackError},
+    stack::{HasStack, Stack, StackError, StackPush},
     PushInteger,
 };
-
-// TODO: FIX THIS!
-trait WithState<E2> {
-    fn with_state_insert<S>(self, state: S) -> Result<S, Error<S, E2>>;
-}
-
-impl<T, E1, E2> WithState<E2> for Result<T, E1>
-where
-    E2: Into<E1>,
-{
-    fn with_state_insert<S>(self, state: S) -> Result<S, Error<S, E2>> {
-        todo!()
-    }
-}
 
 #[derive(Debug, strum_macros::Display, Copy, Clone, PartialEq, Eq, EnumIter)]
 #[allow(clippy::module_name_repetitions)]
@@ -105,8 +94,6 @@ where
     #[allow(clippy::too_many_lines, clippy::cognitive_complexity)]
     #[allow(unreachable_code, clippy::let_unit_value)] // Remove this
     fn perform(&self, mut state: S) -> InstructionResult<S, Self::Error> {
-        // let original_state = state.clone();
-        let int_stack: &mut Stack<PushInteger> = state.stack_mut();
         match self {
             Self::Push(_)
             | Self::Negate
@@ -122,104 +109,113 @@ where
             | Self::Power
             | Self::Min
             | Self::Max => {
-                let result: Result<i64, PushInstructionError> = match self {
-                    Self::Push(i) => Ok(*i),
-                    Self::Negate => int_stack.pop().map(Neg::neg).map_err(Into::into),
-                    Self::Abs => int_stack.pop().map(i64::abs).map_err(Into::into),
+                // All these instructions pop at least one value from the integer stack, so we're
+                // guaranteed that there will be space for the result. So we don't have to check that
+                // any stacks are full before we start.
+                let int_stack = state.stack_mut::<PushInteger>();
+                match self {
+                    Self::Push(i) => state.with_push(*i).map_err_into(),
+                    Self::Negate => int_stack.pop().map(Neg::neg).with_stack_push(state),
+                    Self::Abs => int_stack.pop().map(i64::abs).with_stack_push(state),
 
-                    Self::Inc => int_stack.pop().map_err(Into::into).and_then(|i| {
-                        i.checked_add(1)
-                            .ok_or(IntInstructionError::Overflow {
-                                op: *self,
-                                // args: vec![i],
-                            })
-                            .map_err(Into::into)
-                    }),
-
-                    // I think I like the implementation of `Dec` a little better than `Inc` because
-                    // the action of the instruction is isolated in the body of the closure passed to
-                    // `map`, which may make it easier to refactor out the boilerplate error handling
-                    // before and after that point.
-                    Self::Dec => int_stack
+                    // This works, but is going to be nasty after we repeat a lot. There should
+                    // perhaps be another trait method somewhere that eliminates a lot of this
+                    // boilerplate.
+                    Self::Inc => int_stack
                         .pop()
-                        .map_err(Into::into)
-                        .map(|i| i.checked_sub(1))
-                        .and_then(|v| {
-                            v.ok_or(IntInstructionError::Overflow { op: *self })
+                        .map_err(Into::<PushInstructionError>::into)
+                        .and_then(|i| {
+                            i.checked_add(1)
+                                .ok_or(IntInstructionError::Overflow {
+                                    op: *self,
+                                    // args: vec![i],
+                                })
                                 .map_err(Into::into)
-                        }),
+                        })
+                        .with_stack_push(state),
 
-                    Self::Square => int_stack
-                        .pop()
-                        .map_err(Into::into)
-                        .map(|x| x.checked_mul(x))
-                        .and_then(|v| {
-                            v.ok_or(IntInstructionError::Overflow { op: *self })
-                                .map_err(Into::into)
-                        }),
+                    // // I think I like the implementation of `Dec` a little better than `Inc` because
+                    // // the action of the instruction is isolated in the body of the closure passed to
+                    // // `map`, which may make it easier to refactor out the boilerplate error handling
+                    // // before and after that point.
+                    // Self::Dec => int_stack
+                    //     .pop()
+                    //     .map_err(Into::into)
+                    //     .map(|i| i.checked_sub(1))
+                    //     .and_then(|v| {
+                    //         v.ok_or(IntInstructionError::Overflow { op: *self })
+                    //             .map_err(Into::into)
+                    //     }),
 
-                    Self::Add => int_stack
-                        .pop2()
-                        .map_err(Into::into)
-                        .map(|(x, y)| x.checked_add(y))
-                        .and_then(|v| {
-                            v.ok_or(IntInstructionError::Overflow { op: *self })
-                                .map_err(Into::into)
-                        }),
+                    // Self::Square => int_stack
+                    //     .pop()
+                    //     .map_err(Into::into)
+                    //     .map(|x| x.checked_mul(x))
+                    //     .and_then(|v| {
+                    //         v.ok_or(IntInstructionError::Overflow { op: *self })
+                    //             .map_err(Into::into)
+                    //     }),
 
-                    Self::Subtract => int_stack
-                        .pop2()
-                        .map_err(Into::into)
-                        .map(|(x, y)| x.checked_sub(y))
-                        .and_then(|v| {
-                            v.ok_or(IntInstructionError::Overflow { op: *self })
-                                .map_err(Into::into)
-                        }),
+                    // Self::Add => int_stack
+                    //     .pop2()
+                    //     .map_err(Into::into)
+                    //     .map(|(x, y)| x.checked_add(y))
+                    //     .and_then(|v| {
+                    //         v.ok_or(IntInstructionError::Overflow { op: *self })
+                    //             .map_err(Into::into)
+                    //     }),
 
-                    Self::Multiply => int_stack
-                        .pop2()
-                        .map_err(Into::into)
-                        .map(|(x, y)| x.checked_mul(y))
-                        .and_then(|v| {
-                            v.ok_or(IntInstructionError::Overflow { op: *self })
-                                .map_err(Into::into)
-                        }),
+                    // Self::Subtract => int_stack
+                    //     .pop2()
+                    //     .map_err(Into::into)
+                    //     .map(|(x, y)| x.checked_sub(y))
+                    //     .and_then(|v| {
+                    //         v.ok_or(IntInstructionError::Overflow { op: *self })
+                    //             .map_err(Into::into)
+                    //     }),
 
-                    Self::ProtectedDivide => int_stack
-                        .pop2()
-                        .map_err(Into::into)
-                        .map(|(x, y)| if y == 0 { Some(1) } else { x.checked_div(y) })
-                        .and_then(|v| {
-                            v.ok_or(IntInstructionError::Overflow { op: *self })
-                                .map_err(Into::into)
-                        }),
+                    // Self::Multiply => int_stack
+                    //     .pop2()
+                    //     .map_err(Into::into)
+                    //     .map(|(x, y)| x.checked_mul(y))
+                    //     .and_then(|v| {
+                    //         v.ok_or(IntInstructionError::Overflow { op: *self })
+                    //             .map_err(Into::into)
+                    //     }),
 
-                    Self::Mod => int_stack
-                        .pop2()
-                        .map_err(Into::into)
-                        .map(|(x, y)| if y == 0 { Some(1) } else { x.checked_rem(y) })
-                        .and_then(|v| {
-                            v.ok_or(IntInstructionError::Overflow { op: *self })
-                                .map_err(Into::into)
-                        }),
+                    // Self::ProtectedDivide => int_stack
+                    //     .pop2()
+                    //     .map_err(Into::into)
+                    //     .map(|(x, y)| if y == 0 { Some(1) } else { x.checked_div(y) })
+                    //     .and_then(|v| {
+                    //         v.ok_or(IntInstructionError::Overflow { op: *self })
+                    //             .map_err(Into::into)
+                    //     }),
 
-                    Self::Power => int_stack
-                        .pop2()
-                        .map_err(Into::into)
-                        .map(|(x, y)| u32::try_from(y).map_or(Some(0), |y| x.checked_pow(y)))
-                        .and_then(|v| {
-                            v.ok_or(IntInstructionError::Overflow { op: *self })
-                                .map_err(Into::into)
-                        }),
+                    // Self::Mod => int_stack
+                    //     .pop2()
+                    //     .map_err(Into::into)
+                    //     .map(|(x, y)| if y == 0 { Some(1) } else { x.checked_rem(y) })
+                    //     .and_then(|v| {
+                    //         v.ok_or(IntInstructionError::Overflow { op: *self })
+                    //             .map_err(Into::into)
+                    //     }),
 
-                    Self::Min => int_stack.pop2().map_err(Into::into).map(|(x, y)| x.min(y)),
-                    Self::Max => int_stack.pop2().map_err(Into::into).map(|(x, y)| x.max(y)),
+                    // Self::Power => int_stack
+                    //     .pop2()
+                    //     .map_err(Into::into)
+                    //     .map(|(x, y)| u32::try_from(y).map_or(Some(0), |y| x.checked_pow(y)))
+                    //     .and_then(|v| {
+                    //         v.ok_or(IntInstructionError::Overflow { op: *self })
+                    //             .map_err(Into::into)
+                    //     }),
 
+                    // Self::Min => int_stack.pop2().map_err(Into::into).map(|(x, y)| x.min(y)),
+                    // Self::Max => int_stack.pop2().map_err(Into::into).map(|(x, y)| x.max(y)),
                     _ => {
                         unreachable!("We failed to handle an arithmetic Int instruction: {self:?}")
                     }
-                };
-                todo!()
+                }
             }
             Self::IsEven
             | Self::IsOdd
@@ -229,34 +225,57 @@ where
             | Self::LessThanEqual
             | Self::GreaterThan
             | Self::GreaterThanEqual => {
-                if HasStack::<bool>::stack(&state).is_full() {
-                    return Err(Error::fatal_error(
-                        state,
-                        StackError::Overflow { stack_type: "bool" },
-                    ));
-                }
-                let int_stack: &mut Stack<PushInteger> = state.stack_mut();
-                let result: Result<bool, PushInstructionError> = match self {
-                    Self::IsEven => int_stack.pop().map_err(Into::into).map(|x| x % 2 == 0),
-                    Self::IsOdd => int_stack.pop().map_err(Into::into).map(|x| x % 2 != 0),
-                    Self::Equal => int_stack.pop2().map_err(Into::into).map(|(x, y)| x == y),
-                    Self::NotEqual => int_stack.pop2().map_err(Into::into).map(|(x, y)| x != y),
-                    Self::LessThan => int_stack.pop2().map_err(Into::into).map(|(x, y)| x < y),
-                    Self::LessThanEqual => {
-                        int_stack.pop2().map_err(Into::into).map(|(x, y)| x <= y)
-                    }
-                    Self::GreaterThan => int_stack.pop2().map_err(Into::into).map(|(x, y)| x > y),
-                    Self::GreaterThanEqual => {
-                        int_stack.pop2().map_err(Into::into).map(|(x, y)| x >= y)
-                    }
-                    _ => unreachable!(
-                        "We failed to implement a boolean-valued operation on integers: {self:?}"
-                    ),
-                };
+                // None of these instructions pop anything off the boolean stack, but
+                // they will push a result onto that stack. Thus before we start performing
+                // the instruction, we need to check for the case that the boolean stack is
+                // already full, and return an `Overflow` error if it is.
+                // if HasStack::<bool>::stack(&state).is_full() {
+                //     return Err(Error::fatal(
+                //         state,
+                //         StackError::Overflow { stack_type: "bool" },
+                //     ));
+                // }
+                // let int_stack: &mut Stack<PushInteger> = state.stack_mut();
+                // let result = match self {
+                //     Self::IsEven => int_stack.pop().map_err(Into::into).map(|x| x % 2 == 0),
+                //     Self::IsOdd => int_stack.pop().map_err(Into::into).map(|x| x % 2 != 0),
+                //     Self::Equal => int_stack.pop2().map_err(Into::into).map(|(x, y)| x == y),
+                //     Self::NotEqual => int_stack.pop2().map_err(Into::into).map(|(x, y)| x != y),
+                //     Self::LessThan => int_stack.pop2().map_err(Into::into).map(|(x, y)| x < y),
+                //     Self::LessThanEqual => {
+                //         int_stack.pop2().map_err(Into::into).map(|(x, y)| x <= y)
+                //     }
+                //     Self::GreaterThan => int_stack.pop2().map_err(Into::into).map(|(x, y)| x > y),
+                //     Self::GreaterThanEqual => {
+                //         int_stack.pop2().map_err(Into::into).map(|(x, y)| x >= y)
+                //     }
+                //     _ => unreachable!(
+                //         "We failed to implement a boolean-valued operation on integers: {self:?}"
+                //     ),
+                // };
+                // match result {
+                //     Err::<_, PushInstructionError>(error) => {
+                //         // error.make_recoverable(state)
+                //         Err(Error::recoverable(state, error))
+                //     }
+                //     Ok(b) => {
+                //         let bool_stack: &mut Stack<bool> = state.stack_mut();
+                //         let push_result = bool_stack.push(b);
+                //         match push_result {
+                //             Err(error) => Err(Error::fatal(state, error)), // error.make_fatal(state)
+                //             Ok(_) => Ok(state),
+                //         }
+                //     }
+                // }
                 todo!()
+                // .map_err(|error: PushInstructionError| Error::recoverable_error(state, error))?;
+                // We know there's room on the boolean stack for the result because we confirmed
+                // it wasn't full before we started performing any instructions in this group.
+                // state.stack_mut().push(result);
+                // todo!()
             }
             Self::FromBoolean => todo!(), // Self::FromBoolean => todo!(),
-        };
+        }
         // match self {
         //     Self::Push(i) => {
         //         // TODO: We might want `push` to be able to fail if, e.g., the size of the
@@ -461,7 +480,7 @@ where
         //         }
         //     }
         // }
-        Ok(state)
+        // Ok(state)
     }
 }
 
@@ -478,24 +497,24 @@ mod test {
 
     use super::*;
 
-    #[test]
-    fn add_overflows() {
-        let x = 4_098_586_571_925_584_936;
-        let y = 5_124_785_464_929_190_872;
-        let mut state = PushState::builder([]).build();
-        state.stack_mut().push(y).unwrap();
-        state.stack_mut().push(x).unwrap();
-        let result = IntInstruction::Add.perform(state).unwrap_err();
-        assert_eq!(result.state.int.size(), 2);
-        assert_eq!(
-            result.error,
-            IntInstructionError::Overflow {
-                op: IntInstruction::Add
-            }
-            .into()
-        );
-        assert_eq!(result.error_kind, ErrorSeverity::Recoverable);
-    }
+    // #[test]
+    // fn add_overflows() {
+    //     let x = 4_098_586_571_925_584_936;
+    //     let y = 5_124_785_464_929_190_872;
+    //     let mut state = PushState::builder([]).build();
+    //     state.stack_mut().push(y).unwrap();
+    //     state.stack_mut().push(x).unwrap();
+    //     let result = IntInstruction::Add.perform(state).unwrap_err();
+    //     assert_eq!(result.state.int.size(), 2);
+    //     assert_eq!(
+    //         result.error,
+    //         IntInstructionError::Overflow {
+    //             op: IntInstruction::Add
+    //         }
+    //         .into()
+    //     );
+    //     assert_eq!(result.error_kind, ErrorSeverity::Recoverable);
+    // }
 
     #[test]
     fn inc_overflows() {
@@ -538,7 +557,7 @@ mod test {
 #[cfg(test)]
 mod property_tests {
     use crate::{
-        instruction::{Instruction, IntInstruction},
+        instruction::{int::IntInstructionError, ErrorSeverity, Instruction, IntInstruction},
         push_vm::push_state::PushState,
     };
     use proptest::{prop_assert_eq, proptest};
@@ -574,8 +593,17 @@ mod property_tests {
                 // We arguably want to confirm that the entire state of the system
                 // is unchanged, except that the `Add` instruction has been
                 // removed from the `exec` stack.
-                let output = result.unwrap_err().state.int.pop().unwrap();
-                prop_assert_eq!(output, x);
+                let mut result = result.unwrap_err();
+                assert_eq!(
+                    result.error,
+                    IntInstructionError::Overflow {
+                        op: IntInstruction::Inc
+                    }
+                    .into()
+                );
+                assert_eq!(result.error_kind, ErrorSeverity::Recoverable);
+                let top_int = result.state.int.pop().unwrap();
+                prop_assert_eq!(top_int, x);
             }
         }
 
