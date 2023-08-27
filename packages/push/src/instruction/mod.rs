@@ -70,6 +70,28 @@ impl<S, E> Error<S, E> {
     }
 }
 
+pub trait MapInstructionError<S, E> {
+    fn map_err_into(self) -> InstructionResult<S, E>;
+}
+
+// MizardX@Twitch's initial suggestion here had `E2` as a generic on the
+// _function_ `map_err_into()` instead of at the `impl` level. That provided
+// some additional flexibility, although it wasn't that we would use it.
+// The current approach (suggested by esitsu@Twitch) simplified the
+// `MapInstructionError` trait in a nice way, so I went with that.
+impl<S, E1, E2> MapInstructionError<S, E2> for InstructionResult<S, E1>
+where
+    E1: Into<E2>,
+{
+    fn map_err_into(self) -> InstructionResult<S, E2> {
+        self.map_err(|error| Error {
+            state: error.state,
+            error: error.error.into(),
+            error_kind: error.error_kind,
+        })
+    }
+}
+
 pub trait Instruction<S> {
     type Error;
 
