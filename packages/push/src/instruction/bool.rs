@@ -1,5 +1,10 @@
-use super::{Error, Instruction, InstructionResult, PushInstruction, PushInstructionError};
-use crate::push_vm::stack::{HasStack, Stack, StackError};
+use super::{
+    Instruction, InstructionResult, MapInstructionError, PushInstruction, PushInstructionError,
+};
+use crate::push_vm::{
+    stack::{HasStack, StackPush},
+    PushInteger,
+};
 use std::ops::Not;
 use strum_macros::EnumIter;
 
@@ -69,43 +74,35 @@ where
     //     when we know they'll all work
 
     fn perform(&self, mut state: S) -> InstructionResult<S, Self::Error> {
-        // let mut original_state = state.clone();
-        let bool_stack: &mut Stack<bool> = state.stack_mut();
-        let result = match self {
-            Self::Push(b) => Ok(*b),
-            Self::BoolNot => bool_stack.pop().map(Not::not),
-            Self::BoolAnd => bool_stack.pop2().map(|(x, y)| x && y),
-            Self::BoolOr => bool_stack.pop2().map(|(x, y)| x || y),
-            Self::BoolXor => bool_stack.pop2().map(|(x, y)| x != y),
-            Self::BoolImplies => bool_stack.pop2().map(|(x, y)| !x || y),
+        let bool_stack = state.stack_mut::<bool>();
+        match self {
+            Self::Push(b) => state.with_push(*b).map_err_into(),
+            Self::BoolNot => bool_stack.pop().map(Not::not).with_stack_push(state),
+            Self::BoolAnd => bool_stack
+                .pop2()
+                .map(|(x, y)| x && y)
+                .with_stack_push(state),
+            Self::BoolOr => bool_stack
+                .pop2()
+                .map(|(x, y)| x || y)
+                .with_stack_push(state),
+            Self::BoolXor => bool_stack
+                .pop2()
+                .map(|(x, y)| x != y)
+                .with_stack_push(state),
+            Self::BoolImplies => bool_stack
+                .pop2()
+                .map(|(x, y)| !x || y)
+                .with_stack_push(state),
             Self::BoolFromInt => {
-                if HasStack::<bool>::stack(&state).is_full() {
-                    return Err(Error::fatal_error(
-                        state,
-                        StackError::Overflow { stack_type: "bool" },
-                    ));
-                }
-                let int_stack: &mut Stack<i64> = state.stack_mut();
-                int_stack.pop().map(|i| i != 0)
-            }
-        };
-        match result {
-            Err(error) => Err(Error::recoverable_error(state, error)),
-            Ok(b) => {
-                let bool_stack: &mut Stack<bool> = state.stack_mut();
-                let push_result = bool_stack.push(b);
-                match push_result {
-                    Err(error) => Err(Error::fatal_error(state, error)),
-                    Ok(_) => Ok(state),
-                }
+                let mut state = state.not_full::<bool>().map_err_into()?;
+                state
+                    .stack_mut::<PushInteger>()
+                    .pop()
+                    .map(|i| i != 0)
+                    .with_stack_push(state)
             }
         }
-        // let b = result.map_err(|error| Error::recoverable_error(original_state, error))?;
-        // let bool_stack: &mut Stack<bool> = state.stack_mut();
-        // bool_stack
-        //     .push(b)
-        //     .map_err(|error| Error::fatal_error(original_state, error))?;
-        // Ok(state)
     }
 }
 
@@ -120,7 +117,7 @@ impl From<BoolInstruction> for PushInstruction {
 mod property_tests {
     use crate::{
         instruction::{BoolInstruction, Instruction},
-        push_vm::{push_state::PushState, stack::HasStack},
+        push_vm::push_state::PushState,
     };
     use proptest::{prop_assert_eq, proptest};
     use strum::IntoEnumIterator;
