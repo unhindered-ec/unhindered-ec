@@ -53,7 +53,7 @@ pub struct Error<S, E> {
 pub type InstructionResult<S, E> = core::result::Result<S, Error<S, E>>;
 
 impl<S, E> Error<S, E> {
-    pub fn fatal_error(state: S, error: impl Into<E>) -> Self {
+    pub fn fatal(state: S, error: impl Into<E>) -> Self {
         Self {
             state,
             error: error.into(),
@@ -61,7 +61,7 @@ impl<S, E> Error<S, E> {
         }
     }
 
-    pub fn recoverable_error(state: S, error: impl Into<E>) -> Self {
+    pub fn recoverable(state: S, error: impl Into<E>) -> Self {
         Self {
             state,
             error: error.into(),
