@@ -13,7 +13,7 @@ pub fn hiff(bits: &[bool]) -> TestResults<test_results::Score> {
     scores.into()
 }
 
-pub fn do_hiff(bits: &[bool], scores: &mut Vec<i64>) -> bool {
+fn do_hiff(bits: &[bool], scores: &mut Vec<i64>) -> bool {
     let len = bits.len();
     if len < 2 {
         scores.push(len as i64);
@@ -29,5 +29,25 @@ pub fn do_hiff(bits: &[bool], scores: &mut Vec<i64>) -> bool {
             scores.push(0);
             false
         }
+    }
+}
+
+#[cfg(test)]
+mod test_count_ones {
+    use ec_core::test_results::{self, TestResults};
+
+    use super::count_ones;
+
+    #[test]
+    fn empty() {
+        let empty_vec: TestResults<test_results::Score> = Vec::new().iter().collect();
+        assert_eq!(empty_vec, count_ones(&[]));
+    }
+
+    #[test]
+    fn non_empty() {
+        let input = [false, true, true, true, false, true];
+        let output: TestResults<test_results::Score> = [0, 1, 1, 1, 0, 1].iter().collect();
+        assert_eq!(output, count_ones(&input));
     }
 }

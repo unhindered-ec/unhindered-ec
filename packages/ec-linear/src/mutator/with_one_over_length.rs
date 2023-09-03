@@ -55,7 +55,10 @@ mod tests {
         operator::mutator::Mutator,
     };
 
-    use crate::{genome::bitstring::Bitstring, mutator::with_one_over_length::WithOneOverLength};
+    use crate::{
+        genome::bitstring::{Bitstring, BoolGenerator},
+        mutator::with_one_over_length::WithOneOverLength,
+    };
 
     // This test is stochastic, so I'm going to ignore it most of the time.
     #[test]
@@ -66,7 +69,7 @@ mod tests {
         let num_bits = 100;
         let bitstring_generator = CollectionGenerator {
             size: num_bits,
-            element_generator: 0.5,
+            element_generator: BoolGenerator { p: 0.5 },
         };
         let parent_bits: Bitstring = bitstring_generator.generate(&mut rng).unwrap();
 
