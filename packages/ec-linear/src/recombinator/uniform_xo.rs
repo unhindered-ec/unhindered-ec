@@ -39,12 +39,8 @@ impl<T: Clone> Recombinator<[Vec<T>; 2]> for UniformXo {
 impl<T: Clone> Recombinator<(Vec<T>, Vec<T>)> for UniformXo {
     type Output = Vec<T>;
 
-    fn recombine(
-        &self,
-        (first_genome, second_genome): (Vec<T>, Vec<T>),
-        rng: &mut ThreadRng,
-    ) -> Result<Self::Output> {
-        self.recombine([first_genome, second_genome], rng)
+    fn recombine(&self, genomes: (Vec<T>, Vec<T>), rng: &mut ThreadRng) -> Result<Self::Output> {
+        self.recombine(<[Vec<T>; 2]>::from(genomes), rng)
     }
 }
 
@@ -82,11 +78,7 @@ where
 {
     type Output = G;
 
-    fn recombine(
-        &self,
-        (first_genome, second_genome): (G, G),
-        rng: &mut ThreadRng,
-    ) -> Result<Self::Output> {
-        self.recombine([first_genome, second_genome], rng)
+    fn recombine(&self, genomes: (G, G), rng: &mut ThreadRng) -> Result<Self::Output> {
+        self.recombine(<[G; 2]>::from(genomes), rng)
     }
 }
