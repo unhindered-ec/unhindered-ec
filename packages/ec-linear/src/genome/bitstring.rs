@@ -173,25 +173,38 @@ mod test_count_ones {
     }
 }
 
+/// # Panics
+///
+/// This will panic if the length of `bits` is greater than what will fit in
+/// an `i64`. Since the scores are (currently) stored as `i64`, and the
+/// largest possible score value is the length of the bitstring, we need
+/// that length to fit in an `i64`.
 #[must_use]
 pub fn hiff(bits: &[bool]) -> Vec<i64> {
+    // The largest possible score is the length of the bitstring,
+    // and since we're storing scores as `i64`, we need to make
+    // sure that the length is at most `i64::MAX`.
+    assert!(i64::try_from(bits.len()).is_ok());
     let num_scores = 2 * bits.len() - 1;
     let mut scores = Vec::with_capacity(num_scores);
     do_hiff(bits, &mut scores);
     scores
 }
 
-pub fn do_hiff(bits: &[bool], scores: &mut Vec<i64>) -> bool {
+fn do_hiff(bits: &[bool], scores: &mut Vec<i64>) -> bool {
     let len = bits.len();
+    // We shouldn't ever have wrapping issues here because of the assertion in `hiff()`.
+    #[allow(clippy::cast_possible_wrap)]
+    let len_score: i64 = len as i64;
     if len < 2 {
-        scores.push(len as i64);
+        scores.push(len_score);
         true
     } else {
         let half_len = len / 2;
         let left_all_same = do_hiff(&bits[..half_len], scores);
         let right_all_same = do_hiff(&bits[half_len..], scores);
         if left_all_same && right_all_same && bits[0] == bits[half_len] {
-            scores.push(bits.len() as i64);
+            scores.push(len_score);
             true
         } else {
             scores.push(0);
