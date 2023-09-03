@@ -38,6 +38,21 @@ pub trait HasStack<T> {
             Err(error) => Err(Error::fatal(self, error)),
         }
     }
+
+    fn with_replace(
+        mut self,
+        num_to_replace: usize,
+        value: T,
+    ) -> InstructionResult<Self, StackError>
+    where
+        Self: Sized,
+    {
+        let stack = self.stack_mut::<T>();
+        match stack.pop_discard(num_to_replace) {
+            Ok(_) => self.with_push(value),
+            Err(error) => Err(Error::fatal(self, error)),
+        }
+    }
 }
 
 #[derive(thiserror::Error, Debug, Eq, PartialEq)]
@@ -130,6 +145,25 @@ impl<T> Stack<T> {
         }
     }
 
+    pub fn pop_discard(&mut self, num_to_discard: usize) -> Result<(), StackError> {
+        let stack_size = self.size();
+        if num_to_discard > stack_size {
+            return Err(StackError::Underflow {
+                num_requested: num_to_discard,
+                num_present: stack_size,
+            });
+        }
+        for _ in 0..num_to_discard {
+            match self.pop() {
+                Ok(_) => continue,
+                Err(error) => {
+                    return Err(error);
+                }
+            }
+        }
+        Ok(())
+    }
+
     pub fn push(&mut self, value: T) -> Result<(), StackError> {
         if self.size() == self.max_stack_size {
             Err(StackError::Overflow {
@@ -174,7 +208,11 @@ impl<T> Stack<T> {
 /// Helper trait to chain instruction operations.
 pub trait StackPush<T, E> {
     /// Updates the state with `T` pushed to the stack.
-    fn with_stack_push<S>(self, state: S) -> Result<S, Error<S, E>>
+    fn with_stack_push<S>(self, state: S) -> InstructionResult<S, E>
+    where
+        S: HasStack<T>;
+
+    fn with_stack_replace<S>(self, num_to_replace: usize, state: S) -> InstructionResult<S, E>
     where
         S: HasStack<T>;
 }
@@ -189,10 +227,45 @@ where
     {
         match self {
             Ok(val) => state.with_push(val).map_err_into(),
-            // This is a fatal error because if pushing failed, it did so because
-            // the target stack was full, and we don't have a good way to recover
-            // from that.
-            Err(err) => Err(Error::fatal(state, err)),
+            Err(err) => Err(Error::recoverable(state, err)),
+        }
+    }
+
+    fn with_stack_replace<S>(self, num_to_replace: usize, state: S) -> InstructionResult<S, E2>
+    where
+        S: HasStack<T>,
+    {
+        match self {
+            Ok(val) => state.with_replace(num_to_replace, val).map_err_into(),
+            Err(err) => Err(Error::recoverable(state, err)),
+        }
+    }
+}
+
+pub trait StackDiscard<S, E> {
+    fn with_stack_pop_discard<T>(self, num_to_discard: usize) -> InstructionResult<S, E>
+    where
+        S: HasStack<T>;
+}
+
+impl<S, E> StackDiscard<S, E> for InstructionResult<S, E>
+where
+    E: From<StackError>,
+{
+    fn with_stack_pop_discard<T>(self, num_to_discard: usize) -> Self
+    where
+        S: HasStack<T>,
+    {
+        match self {
+            Ok(mut state) => match state.stack_mut::<T>().pop_discard(num_to_discard) {
+                Ok(_) => Ok(state),
+                // TODO: any::type_name::<T>() to get the type name – put this in Stack
+                // If this fails it's because we tried to pop too many things from the stack.
+                // We _should_ have previously checked that there were that many things (using `top()` for example),
+                // so really this should never happen.
+                Err(error) => Err(Error::fatal(state, error)),
+            },
+            Err(error) => Err(error),
         }
     }
 }

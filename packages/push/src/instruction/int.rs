@@ -7,7 +7,8 @@ use super::{
     PushInstructionError,
 };
 use crate::push_vm::{
-    stack::{HasStack, Stack, StackError, StackPush},
+    push_state::PushState,
+    stack::{HasStack, Stack, StackDiscard, StackError, StackPush},
     PushInteger,
 };
 
@@ -115,37 +116,35 @@ where
                 let int_stack = state.stack_mut::<PushInteger>();
                 match self {
                     Self::Push(i) => state.with_push(*i).map_err_into(),
-                    Self::Negate => int_stack.pop().map(Neg::neg).with_stack_push(state),
-                    Self::Abs => int_stack.pop().map(i64::abs).with_stack_push(state),
+                    Self::Negate => int_stack.top().map(Neg::neg).with_stack_replace(1, state),
+                    Self::Abs => int_stack
+                        .top()
+                        .copied()
+                        .map(i64::abs)
+                        .with_stack_replace(1, state),
 
                     // This works, but is going to be nasty after we repeat a lot. There should
                     // perhaps be another trait method somewhere that eliminates a lot of this
                     // boilerplate.
                     Self::Inc => int_stack
-                        .pop()
+                        .top()
                         .map_err(Into::<PushInstructionError>::into)
-                        .and_then(|i| {
-                            i.checked_add(1)
-                                .ok_or(IntInstructionError::Overflow {
-                                    op: *self,
-                                    // args: vec![i],
-                                })
+                        .map(|i| i.checked_add(1))
+                        .and_then(|v| {
+                            v.ok_or(IntInstructionError::Overflow { op: *self })
                                 .map_err(Into::into)
                         })
-                        .with_stack_push(state),
+                        .with_stack_replace(1, state),
 
-                    // // I think I like the implementation of `Dec` a little better than `Inc` because
-                    // // the action of the instruction is isolated in the body of the closure passed to
-                    // // `map`, which may make it easier to refactor out the boilerplate error handling
-                    // // before and after that point.
-                    // Self::Dec => int_stack
-                    //     .pop()
-                    //     .map_err(Into::into)
-                    //     .map(|i| i.checked_sub(1))
-                    //     .and_then(|v| {
-                    //         v.ok_or(IntInstructionError::Overflow { op: *self })
-                    //             .map_err(Into::into)
-                    //     }),
+                    Self::Dec => int_stack
+                        .top()
+                        .map_err(Into::<PushInstructionError>::into)
+                        .map(|i| i.checked_sub(1))
+                        .and_then(|v| {
+                            v.ok_or(IntInstructionError::Overflow { op: *self })
+                                .map_err(Into::into)
+                        })
+                        .with_stack_replace(1, state),
 
                     // Self::Square => int_stack
                     //     .pop()
@@ -229,30 +228,36 @@ where
                 // they will push a result onto that stack. Thus before we start performing
                 // the instruction, we need to check for the case that the boolean stack is
                 // already full, and return an `Overflow` error if it is.
-                // if HasStack::<bool>::stack(&state).is_full() {
-                //     return Err(Error::fatal(
-                //         state,
-                //         StackError::Overflow { stack_type: "bool" },
-                //     ));
-                // }
-                // let int_stack: &mut Stack<PushInteger> = state.stack_mut();
-                // let result = match self {
-                //     Self::IsEven => int_stack.pop().map_err(Into::into).map(|x| x % 2 == 0),
-                //     Self::IsOdd => int_stack.pop().map_err(Into::into).map(|x| x % 2 != 0),
-                //     Self::Equal => int_stack.pop2().map_err(Into::into).map(|(x, y)| x == y),
-                //     Self::NotEqual => int_stack.pop2().map_err(Into::into).map(|(x, y)| x != y),
-                //     Self::LessThan => int_stack.pop2().map_err(Into::into).map(|(x, y)| x < y),
-                //     Self::LessThanEqual => {
-                //         int_stack.pop2().map_err(Into::into).map(|(x, y)| x <= y)
-                //     }
-                //     Self::GreaterThan => int_stack.pop2().map_err(Into::into).map(|(x, y)| x > y),
-                //     Self::GreaterThanEqual => {
-                //         int_stack.pop2().map_err(Into::into).map(|(x, y)| x >= y)
-                //     }
-                //     _ => unreachable!(
-                //         "We failed to implement a boolean-valued operation on integers: {self:?}"
-                //     ),
-                // };
+                if state.stack::<bool>().is_full() {
+                    return Err(Error::fatal(
+                        state,
+                        StackError::Overflow { stack_type: "bool" },
+                    ));
+                }
+                let int_stack: &mut Stack<PushInteger> = state.stack_mut::<PushInteger>();
+                match self {
+                    // TODO: Write a test for IsEven that makes sure all the stack manipulation is correct.
+                    Self::IsEven => int_stack
+                        .top()
+                        .map_err(Into::<PushInstructionError>::into)
+                        .map(|x| x % 2 == 0)
+                        .with_stack_push(state)
+                        .with_stack_pop_discard::<PushInteger>(1),
+                    //     Self::IsOdd => int_stack.pop().map_err(Into::into).map(|x| x % 2 != 0),
+                    //     Self::Equal => int_stack.pop2().map_err(Into::into).map(|(x, y)| x == y),
+                    //     Self::NotEqual => int_stack.pop2().map_err(Into::into).map(|(x, y)| x != y),
+                    //     Self::LessThan => int_stack.pop2().map_err(Into::into).map(|(x, y)| x < y),
+                    //     Self::LessThanEqual => {
+                    //         int_stack.pop2().map_err(Into::into).map(|(x, y)| x <= y)
+                    //     }
+                    //     Self::GreaterThan => int_stack.pop2().map_err(Into::into).map(|(x, y)| x > y),
+                    //     Self::GreaterThanEqual => {
+                    //         int_stack.pop2().map_err(Into::into).map(|(x, y)| x >= y)
+                    //     }
+                    _ => unreachable!(
+                        "We failed to implement a boolean-valued operation on integers: {self:?}"
+                    ),
+                }
                 // match result {
                 //     Err::<_, PushInstructionError>(error) => {
                 //         // error.make_recoverable(state)
@@ -267,7 +272,6 @@ where
                 //         }
                 //     }
                 // }
-                todo!()
                 // .map_err(|error: PushInstructionError| Error::recoverable_error(state, error))?;
                 // We know there's room on the boolean stack for the result because we confirmed
                 // it wasn't full before we started performing any instructions in this group.
