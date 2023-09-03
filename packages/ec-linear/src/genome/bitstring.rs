@@ -5,7 +5,7 @@ use ec_core::{
     generator::{collection::CollectionGenerator, Generator},
     genome::Genome,
 };
-use rand::rngs::ThreadRng;
+use rand::{rngs::ThreadRng, Rng};
 
 use crate::recombinator::crossover::Crossover;
 
@@ -14,12 +14,22 @@ use super::Linear;
 // TODO: Ought to have `LinearGenome<T>` so that `Bitstring` is just
 //   `LinearGenome<bool>`.
 
+pub struct BoolGenerator {
+    pub p: f64,
+}
+
+impl Generator<bool> for BoolGenerator {
+    fn generate(&self, rng: &mut ThreadRng) -> anyhow::Result<bool> {
+        Ok(rng.gen_bool(self.p))
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Bitstring {
     pub bits: Vec<bool>,
 }
 
-impl Generator<Bitstring> for CollectionGenerator<f64> {
+impl Generator<Bitstring> for CollectionGenerator<BoolGenerator> {
     fn generate(&self, rng: &mut ThreadRng) -> anyhow::Result<Bitstring> {
         let bits = self.generate(rng)?;
         Ok(Bitstring { bits })
@@ -52,7 +62,7 @@ impl Bitstring {
     ) -> anyhow::Result<Self> {
         CollectionGenerator {
             size: num_bits,
-            element_generator: probability,
+            element_generator: BoolGenerator { p: probability },
         }
         .generate(rng)
     }

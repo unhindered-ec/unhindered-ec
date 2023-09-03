@@ -59,8 +59,8 @@ impl<G: Display, R: Debug> Display for EcIndividual<G, R> {
 }
 
 pub struct IndividualGenerator<GG, S> {
-    pub genome_generator: GG,
     pub scorer: S,
+    pub genome_generator: GG,
 }
 
 // G is Genome
