@@ -5,7 +5,7 @@ use ec_core::{
     generator::{collection::CollectionGenerator, Generator},
     genome::Genome,
 };
-use rand::rngs::ThreadRng;
+use rand::{rngs::ThreadRng, Rng};
 
 use crate::recombinator::crossover::Crossover;
 
@@ -14,12 +14,22 @@ use super::Linear;
 // TODO: Ought to have `LinearGenome<T>` so that `Bitstring` is just
 //   `LinearGenome<bool>`.
 
+pub struct BoolGenerator {
+    pub p: f64,
+}
+
+impl Generator<bool> for BoolGenerator {
+    fn generate(&self, rng: &mut ThreadRng) -> anyhow::Result<bool> {
+        Ok(rng.gen_bool(self.p))
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Bitstring {
     pub bits: Vec<bool>,
 }
 
-impl Generator<Bitstring> for CollectionGenerator<f64> {
+impl Generator<Bitstring> for CollectionGenerator<BoolGenerator> {
     fn generate(&self, rng: &mut ThreadRng) -> anyhow::Result<Bitstring> {
         let bits = self.generate(rng)?;
         Ok(Bitstring { bits })
@@ -52,7 +62,7 @@ impl Bitstring {
     ) -> anyhow::Result<Self> {
         CollectionGenerator {
             size: num_bits,
-            element_generator: probability,
+            element_generator: BoolGenerator { p: probability },
         }
         .generate(rng)
     }
@@ -143,59 +153,6 @@ impl Crossover for Bitstring {
             Ok(())
         } else {
             bail!("Crossing {self} and {other} with range {range:?} failed")
-        }
-    }
-}
-
-// TODO: We need to move `count_ones` and `hiff` (and their tests)
-//   out into their own module, and possibly their own package?
-
-#[must_use]
-pub fn count_ones(bits: &[bool]) -> Vec<i64> {
-    bits.iter().map(|bit| i64::from(*bit)).collect()
-}
-
-#[cfg(test)]
-mod test_count_ones {
-    use super::count_ones;
-
-    #[test]
-    fn empty() {
-        let empty_vec: Vec<i64> = Vec::new();
-        assert_eq!(empty_vec, count_ones(&[]));
-    }
-
-    #[test]
-    fn non_empty() {
-        let input = [false, true, true, true, false, true];
-        let output = vec![0, 1, 1, 1, 0, 1];
-        assert_eq!(output, count_ones(&input));
-    }
-}
-
-#[must_use]
-pub fn hiff(bits: &[bool]) -> Vec<i64> {
-    let num_scores = 2 * bits.len() - 1;
-    let mut scores = Vec::with_capacity(num_scores);
-    do_hiff(bits, &mut scores);
-    scores
-}
-
-pub fn do_hiff(bits: &[bool], scores: &mut Vec<i64>) -> bool {
-    let len = bits.len();
-    if len < 2 {
-        scores.push(len as i64);
-        true
-    } else {
-        let half_len = len / 2;
-        let left_all_same = do_hiff(&bits[..half_len], scores);
-        let right_all_same = do_hiff(&bits[half_len..], scores);
-        if left_all_same && right_all_same && bits[0] == bits[half_len] {
-            scores.push(bits.len() as i64);
-            true
-        } else {
-            scores.push(0);
-            false
         }
     }
 }

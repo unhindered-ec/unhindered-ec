@@ -27,7 +27,7 @@ use ec_core::{
 };
 use ec_linear::{
     genome::{
-        bitstring::Bitstring,
+        bitstring::{Bitstring, BoolGenerator},
         demo_scorers::{count_ones, hiff},
     },
     mutator::with_one_over_length::WithOneOverLength,
@@ -64,14 +64,16 @@ fn main() -> Result<()> {
 
     let mut rng = thread_rng();
 
+    let boolean_generator = BoolGenerator { p: 0.5 };
+
     let bitstring_generator = CollectionGenerator {
         size: args.bit_length,
-        element_generator: 0.5,
+        element_generator: boolean_generator,
     };
 
     let individual_generator = ec::IndividualGenerator {
-        genome_generator: bitstring_generator,
         scorer,
+        genome_generator: bitstring_generator,
     };
 
     let population_generator = CollectionGenerator {
@@ -115,7 +117,7 @@ fn main() -> Result<()> {
         let best = Best.select(generation.population(), &mut rng)?;
         // TODO: Change 2 to be the smallest number of digits needed for
         //  args.num_generations-1.
-        println!("Generation {generation_number:2} best is {best:?}");
+        println!("Generation {generation_number:2} best is {best}");
 
         Ok::<(), anyhow::Error>(())
     })?;
