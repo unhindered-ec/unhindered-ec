@@ -125,6 +125,25 @@ impl<T> Stack<T> {
         })
     }
 
+    pub fn top2(&self) -> Result<(&T, &T), StackError> {
+        if self.size() >= 2 {
+            let x = self.top()?;
+            let y = self
+                .values
+                .get(self.size() - 2)
+                .ok_or(StackError::Underflow {
+                    num_requested: 2,
+                    num_present: 1,
+                })?;
+            Ok((x, y))
+        } else {
+            Err(StackError::Underflow {
+                num_requested: 2,
+                num_present: self.size(),
+            })
+        }
+    }
+
     pub fn pop(&mut self) -> Result<T, StackError> {
         self.values.pop().ok_or(StackError::Underflow {
             num_requested: 1,
