@@ -1,16 +1,13 @@
-use std::ops::Neg;
-
-use strum_macros::EnumIter;
-
 use super::{
     Error, Instruction, InstructionResult, MapInstructionError, PushInstruction,
     PushInstructionError,
 };
 use crate::push_vm::{
-    push_state::PushState,
     stack::{HasStack, Stack, StackDiscard, StackError, StackPush},
     PushInteger,
 };
+use std::ops::Neg;
+use strum_macros::EnumIter;
 
 #[derive(Debug, strum_macros::Display, Copy, Clone, PartialEq, Eq, EnumIter)]
 #[allow(clippy::module_name_repetitions)]
@@ -146,23 +143,25 @@ where
                         })
                         .with_stack_replace(1, state),
 
-                    // Self::Square => int_stack
-                    //     .pop()
-                    //     .map_err(Into::into)
-                    //     .map(|x| x.checked_mul(x))
-                    //     .and_then(|v| {
-                    //         v.ok_or(IntInstructionError::Overflow { op: *self })
-                    //             .map_err(Into::into)
-                    //     }),
+                    Self::Square => int_stack
+                        .top()
+                        .map_err(Into::<PushInstructionError>::into)
+                        .map(|x| (*x).checked_mul(*x))
+                        .and_then(|v| {
+                            v.ok_or(IntInstructionError::Overflow { op: *self })
+                                .map_err(Into::into)
+                        })
+                        .with_stack_replace(1, state),
 
-                    // Self::Add => int_stack
-                    //     .pop2()
-                    //     .map_err(Into::into)
-                    //     .map(|(x, y)| x.checked_add(y))
-                    //     .and_then(|v| {
-                    //         v.ok_or(IntInstructionError::Overflow { op: *self })
-                    //             .map_err(Into::into)
-                    //     }),
+                    Self::Add => int_stack
+                        .top2()
+                        .map_err(Into::<PushInstructionError>::into)
+                        .map(|(x, y)| (*x).checked_add(*y))
+                        .and_then(|v| {
+                            v.ok_or(IntInstructionError::Overflow { op: *self })
+                                .map_err(Into::into)
+                        })
+                        .with_stack_replace(2, state),
 
                     // Self::Subtract => int_stack
                     //     .pop2()
@@ -501,24 +500,36 @@ mod test {
 
     use super::*;
 
-    // #[test]
-    // fn add_overflows() {
-    //     let x = 4_098_586_571_925_584_936;
-    //     let y = 5_124_785_464_929_190_872;
-    //     let mut state = PushState::builder([]).build();
-    //     state.stack_mut().push(y).unwrap();
-    //     state.stack_mut().push(x).unwrap();
-    //     let result = IntInstruction::Add.perform(state).unwrap_err();
-    //     assert_eq!(result.state.int.size(), 2);
-    //     assert_eq!(
-    //         result.error,
-    //         IntInstructionError::Overflow {
-    //             op: IntInstruction::Add
-    //         }
-    //         .into()
-    //     );
-    //     assert_eq!(result.error_kind, ErrorSeverity::Recoverable);
-    // }
+    #[test]
+    fn add() {
+        let x = 409;
+        let y = 512;
+        let mut state = PushState::builder([]).build();
+        state.stack_mut::<PushInteger>().push(y).unwrap();
+        state.stack_mut::<PushInteger>().push(x).unwrap();
+        let result = IntInstruction::Add.perform(state).unwrap();
+        assert_eq!(result.int.size(), 1);
+        assert_eq!(*result.int.top().unwrap(), x + y);
+    }
+
+    #[test]
+    fn add_overflows() {
+        let x = 4_098_586_571_925_584_936;
+        let y = 5_124_785_464_929_190_872;
+        let mut state = PushState::builder([]).build();
+        state.stack_mut::<PushInteger>().push(y).unwrap();
+        state.stack_mut::<PushInteger>().push(x).unwrap();
+        let result = IntInstruction::Add.perform(state).unwrap_err();
+        assert_eq!(result.state.int.size(), 2);
+        assert_eq!(
+            result.error,
+            IntInstructionError::Overflow {
+                op: IntInstruction::Add
+            }
+            .into()
+        );
+        assert_eq!(result.error_kind, ErrorSeverity::Recoverable);
+    }
 
     #[test]
     fn inc_overflows() {
@@ -562,7 +573,7 @@ mod test {
 mod property_tests {
     use crate::{
         instruction::{int::IntInstructionError, ErrorSeverity, Instruction, IntInstruction},
-        push_vm::push_state::PushState,
+        push_vm::{push_state::PushState, stack::HasStack, PushInteger},
     };
     use proptest::{prop_assert_eq, proptest};
     use strum::IntoEnumIterator;
@@ -573,6 +584,48 @@ mod property_tests {
 
     proptest! {
         #![proptest_config(proptest::prelude::ProptestConfig::with_cases(1_000))]
+
+        #[test]
+        fn negate(x in proptest::num::i64::ANY) {
+            let mut state = PushState::builder([]).build();
+            state.stack_mut::<PushInteger>().push(x).unwrap();
+            let result = IntInstruction::Negate.perform(state).unwrap();
+            prop_assert_eq!(result.int.size(), 1);
+            prop_assert_eq!(*result.int.top().unwrap(), -x);
+        }
+
+        #[test]
+        fn abs(x in proptest::num::i64::ANY) {
+            let mut state = PushState::builder([]).build();
+            state.stack_mut::<PushInteger>().push(x).unwrap();
+            let result = IntInstruction::Abs.perform(state).unwrap();
+            prop_assert_eq!(result.int.size(), 1);
+            prop_assert_eq!(*result.int.top().unwrap(), x.abs());
+        }
+
+        #[test]
+        fn sqr(x in proptest::num::i64::ANY) {
+            let mut state = PushState::builder([]).build();
+            state.stack_mut::<PushInteger>().push(x).unwrap();
+            let result = IntInstruction::Square.perform(state);
+            if let Some(x_squared) = x.checked_mul(x) {
+                let result = result.unwrap();
+                prop_assert_eq!(result.int.size(), 1);
+                let output = *result.int.top().unwrap();
+                prop_assert_eq!(output, x_squared);
+            } else {
+                let result = result.unwrap_err();
+                assert_eq!(
+                    result.error,
+                    IntInstructionError::Overflow {
+                        op: IntInstruction::Square
+                    }.into()
+                );
+                assert_eq!(result.error_kind, ErrorSeverity::Recoverable);
+                let top_int = result.state.int.top().unwrap();
+                prop_assert_eq!(*top_int, x);
+            }
+        }
 
         #[test]
         fn add_doesnt_crash(x in proptest::num::i64::ANY, y in proptest::num::i64::ANY) {
@@ -601,7 +654,7 @@ mod property_tests {
                 assert_eq!(
                     result.error,
                     IntInstructionError::Overflow {
-                        op: IntInstruction::Inc
+                        op: IntInstruction::Add
                     }
                     .into()
                 );
