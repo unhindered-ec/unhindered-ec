@@ -163,41 +163,57 @@ where
                         })
                         .with_stack_replace(2, state),
 
-                    // Self::Subtract => int_stack
-                    //     .pop2()
-                    //     .map_err(Into::into)
-                    //     .map(|(x, y)| x.checked_sub(y))
-                    //     .and_then(|v| {
-                    //         v.ok_or(IntInstructionError::Overflow { op: *self })
-                    //             .map_err(Into::into)
-                    //     }),
+                    Self::Subtract => int_stack
+                        .top2()
+                        .map_err(Into::<PushInstructionError>::into)
+                        .map(|(x, y)| (*x).checked_sub(*y))
+                        .and_then(|v| {
+                            v.ok_or(IntInstructionError::Overflow { op: *self })
+                                .map_err(Into::into)
+                        })
+                        .with_stack_replace(2, state),
 
-                    // Self::Multiply => int_stack
-                    //     .pop2()
-                    //     .map_err(Into::into)
-                    //     .map(|(x, y)| x.checked_mul(y))
-                    //     .and_then(|v| {
-                    //         v.ok_or(IntInstructionError::Overflow { op: *self })
-                    //             .map_err(Into::into)
-                    //     }),
+                    Self::Multiply => int_stack
+                        .top2()
+                        .map_err(Into::<PushInstructionError>::into)
+                        .map(|(x, y)| (*x).checked_mul(*y))
+                        .and_then(|v| {
+                            v.ok_or(IntInstructionError::Overflow { op: *self })
+                                .map_err(Into::into)
+                        })
+                        .with_stack_replace(2, state),
 
-                    // Self::ProtectedDivide => int_stack
-                    //     .pop2()
-                    //     .map_err(Into::into)
-                    //     .map(|(x, y)| if y == 0 { Some(1) } else { x.checked_div(y) })
-                    //     .and_then(|v| {
-                    //         v.ok_or(IntInstructionError::Overflow { op: *self })
-                    //             .map_err(Into::into)
-                    //     }),
+                    Self::ProtectedDivide => int_stack
+                        .top2()
+                        .map_err(Into::<PushInstructionError>::into)
+                        .map(|(x, y)| {
+                            if *y == 0 {
+                                Some(1)
+                            } else {
+                                (*x).checked_div(*y)
+                            }
+                        })
+                        .and_then(|v| {
+                            v.ok_or(IntInstructionError::Overflow { op: *self })
+                                .map_err(Into::into)
+                        })
+                        .with_stack_replace(2, state),
 
-                    // Self::Mod => int_stack
-                    //     .pop2()
-                    //     .map_err(Into::into)
-                    //     .map(|(x, y)| if y == 0 { Some(1) } else { x.checked_rem(y) })
-                    //     .and_then(|v| {
-                    //         v.ok_or(IntInstructionError::Overflow { op: *self })
-                    //             .map_err(Into::into)
-                    //     }),
+                    Self::Mod => int_stack
+                        .top2()
+                        .map_err(Into::<PushInstructionError>::into)
+                        .map(|(x, y)| {
+                            if *y == 0 {
+                                Some(1)
+                            } else {
+                                (*x).checked_rem(*y)
+                            }
+                        })
+                        .and_then(|v| {
+                            v.ok_or(IntInstructionError::Overflow { op: *self })
+                                .map_err(Into::into)
+                        })
+                        .with_stack_replace(2, state),
 
                     // Self::Power => int_stack
                     //     .pop2()
@@ -665,7 +681,151 @@ mod property_tests {
         }
 
         #[test]
-        fn inc_dec_do_not_crash(x in proptest::num::i64::ANY) {
+        fn subtract_subs_or_does_nothing(x in proptest::num::i64::ANY, y in proptest::num::i64::ANY) {
+            let mut state = PushState::builder([]).build();
+            state.int.push(y).unwrap();
+            state.int.push(x).unwrap();
+            let result = IntInstruction::Subtract.perform(state);
+            #[allow(clippy::unwrap_used)]
+            if let Some(expected_result) = x.checked_sub(y) {
+                let output = result.unwrap().int.pop().unwrap();
+                prop_assert_eq!(output, expected_result);
+            } else {
+                // This only checks that `x` is still on the top of the stack.
+                // We arguably want to confirm that the entire state of the system
+                // is unchanged, except that the `Add` instruction has been
+                // removed from the `exec` stack.
+                let mut result = result.unwrap_err();
+                assert_eq!(
+                    result.error,
+                    IntInstructionError::Overflow {
+                        op: IntInstruction::Subtract
+                    }
+                    .into()
+                );
+                assert_eq!(result.error_kind, ErrorSeverity::Recoverable);
+                let top_int = result.state.int.pop().unwrap();
+                prop_assert_eq!(top_int, x);
+            }
+        }
+
+        #[test]
+        fn multiply_muls_or_does_nothing(x in proptest::num::i64::ANY, y in proptest::num::i64::ANY) {
+            let mut state = PushState::builder([]).build();
+            state.int.push(y).unwrap();
+            state.int.push(x).unwrap();
+            let result = IntInstruction::Multiply.perform(state);
+            #[allow(clippy::unwrap_used)]
+            if let Some(expected_result) = x.checked_mul(y) {
+                let output = result.unwrap().int.pop().unwrap();
+                prop_assert_eq!(output, expected_result);
+            } else {
+                // This only checks that `x` is still on the top of the stack.
+                // We arguably want to confirm that the entire state of the system
+                // is unchanged, except that the `Add` instruction has been
+                // removed from the `exec` stack.
+                let mut result = result.unwrap_err();
+                assert_eq!(
+                    result.error,
+                    IntInstructionError::Overflow {
+                        op: IntInstruction::Multiply
+                    }
+                    .into()
+                );
+                assert_eq!(result.error_kind, ErrorSeverity::Recoverable);
+                let top_int = result.state.int.pop().unwrap();
+                prop_assert_eq!(top_int, x);
+            }
+        }
+
+        #[test]
+        fn protected_divide_zero_denominator(x in proptest::num::i64::ANY) {
+            let mut state = PushState::builder([]).build();
+            state.int.push(0).unwrap();
+            state.int.push(x).unwrap();
+            let result = IntInstruction::ProtectedDivide.perform(state);
+            #[allow(clippy::unwrap_used)]
+            let output = result.unwrap().int.pop().unwrap();
+            // Dividing by zero should always return 1.
+            prop_assert_eq!(output, 1);
+        }
+
+        #[test]
+        fn protected_divide_divs_or_does_nothing(x in proptest::num::i64::ANY, y in proptest::num::i64::ANY) {
+            let mut state = PushState::builder([]).build();
+            state.int.push(y).unwrap();
+            state.int.push(x).unwrap();
+            let result = IntInstruction::ProtectedDivide.perform(state);
+            #[allow(clippy::unwrap_used)]
+            if let Some(expected_result) = x.checked_div(y) {
+                let output = result.unwrap().int.pop().unwrap();
+                prop_assert_eq!(output, expected_result);
+            } else {
+                // This only checks that `x` is still on the top of the stack.
+                // We arguably want to confirm that the entire state of the system
+                // is unchanged, except that the `Add` instruction has been
+                // removed from the `exec` stack.
+                let mut result = result.unwrap_err();
+                assert_eq!(
+                    result.error,
+                    IntInstructionError::Overflow {
+                        op: IntInstruction::ProtectedDivide
+                    }
+                    .into()
+                );
+                assert_eq!(result.error_kind, ErrorSeverity::Recoverable);
+                let top_int = result.state.int.pop().unwrap();
+                prop_assert_eq!(top_int, x);
+            }
+        }
+
+        #[test]
+        fn mod_zero_denominator(x in proptest::num::i64::ANY) {
+            let mut state = PushState::builder([]).build();
+            state.int.push(0).unwrap();
+            state.int.push(x).unwrap();
+            let result = IntInstruction::Mod.perform(state);
+            #[allow(clippy::unwrap_used)]
+            let output = result.unwrap().int.pop().unwrap();
+            // Modding by zero should always return 1.
+            prop_assert_eq!(output, 1);
+        }
+
+        #[test]
+        fn mod_rems_or_does_nothing(x in proptest::num::i64::ANY, y in proptest::num::i64::ANY) {
+            let mut state = PushState::builder([]).build();
+            state.int.push(y).unwrap();
+            state.int.push(x).unwrap();
+            let result = IntInstruction::ProtectedDivide.perform(state);
+            #[allow(clippy::unwrap_used)]
+            if let Some(expected_result) = x.checked_rem(y) {
+                let output = result.unwrap().int.pop().unwrap();
+                prop_assert_eq!(output, expected_result);
+            } else if y == 0 {
+                let output = result.unwrap().int.pop().unwrap();
+                // Modding by zero should always return 1.
+                prop_assert_eq!(output, 1);
+            } else {
+                // This only checks that `x` is still on the top of the stack.
+                // We arguably want to confirm that the entire state of the system
+                // is unchanged, except that the `Add` instruction has been
+                // removed from the `exec` stack.
+                let mut result = result.unwrap_err();
+                assert_eq!(
+                    result.error,
+                    IntInstructionError::Overflow {
+                        op: IntInstruction::Mod
+                    }
+                    .into()
+                );
+                assert_eq!(result.error_kind, ErrorSeverity::Recoverable);
+                let top_int = result.state.int.pop().unwrap();
+                prop_assert_eq!(top_int, x);
+            }
+        }
+
+        #[test]
+        fn inc_does_not_crash(x in proptest::num::i64::ANY) {
             let mut state = PushState::builder([]).build();
             state.int.push(x).unwrap();
             let _ = IntInstruction::Inc.perform(state);
