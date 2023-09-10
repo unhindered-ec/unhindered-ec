@@ -28,8 +28,8 @@ mod int;
  * - dup (int_dup, exec_dup, bool_dup, ...)
  */
 
-#[derive(Debug, Eq, PartialEq)]
-enum ErrorSeverity {
+#[derive(Debug, Eq, PartialEq, Copy, Clone)]
+pub enum ErrorSeverity {
     Fatal,
     Recoverable,
 }
@@ -75,6 +75,14 @@ impl<S, E> Error<S, E> {
             error: error.into(),
             error_kind: ErrorSeverity::Recoverable,
         }
+    }
+
+    pub const fn severity(&self) -> ErrorSeverity {
+        self.error_kind
+    }
+
+    pub fn into_state(self) -> S {
+        *self.state
     }
 }
 

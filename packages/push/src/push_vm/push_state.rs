@@ -1,8 +1,9 @@
-use super::{
-    stack::{HasStack, Stack, TypeEq},
-    State,
+use super::stack::{HasStack, Stack, TypeEq};
+use super::State;
+use crate::instruction::{
+    ErrorSeverity, Instruction, InstructionResult, PushInstruction, PushInstructionError,
+    VariableName,
 };
-use crate::instruction::{Instruction, InstructionResult, PushInstruction, VariableName};
 use crate::push_vm::PushInteger;
 use std::collections::HashMap;
 
@@ -257,6 +258,14 @@ impl PushState {
     //     instruction.perform(self);
     // }
 
+    /// # Errors
+    ///
+    /// This returns an error if the `PushInstruction` returns an error, which really shouldn't happen.
+    ///
+    /// # Panics
+    ///
+    /// This panics if there is no instruction associated with `var_name`, i.e.,
+    /// we have not yet added that variable name to the map of names to instructions.
     pub fn with_input(
         self,
         var_name: &VariableName,
@@ -278,12 +287,20 @@ impl State for PushState {
     type Instruction = PushInstruction;
 
     // TODO: Need to have some kind of execution limit to prevent infinite loops.
-    fn run_to_completion(mut self) -> Self {
-        // while let Some(instruction) = self.exec.pop() {
-        //     self.perform(&instruction);
-        // }
-        // self
-        todo!()
+    fn run_to_completion(mut self) -> InstructionResult<Self, PushInstructionError> {
+        // This smells off to me. In places we're using side effects on mutable structures (e.g., `pop`)
+        // while in other places we're taking a more functional approach (e.g., `self = self.perform()`).
+        // It seems that maybe I should pick one or the other.
+        while let Some(instruction) = self.exec.pop() {
+            self = match self.perform(&instruction) {
+                Ok(result_state) => result_state,
+                Err(error) => match error.severity() {
+                    ErrorSeverity::Fatal => return Err(error),
+                    ErrorSeverity::Recoverable => error.into_state(),
+                },
+            }
+        }
+        Ok(self)
     }
 }
 
@@ -330,7 +347,7 @@ mod simple_check {
             .with_int_input("x", 5)
             .build();
         println!("{state:?}");
-        let state = state.run_to_completion();
+        let state = state.run_to_completion().unwrap();
         println!("{state:?}");
         assert!(state.exec().is_empty());
         assert_eq!(&state.int, &vec![5, 17]);

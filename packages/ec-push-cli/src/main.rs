@@ -29,6 +29,7 @@ use push::{
     genome::plushy::Plushy,
     instruction::{IntInstruction, PushInstruction, VariableName},
     push_vm::{push_state::PushState, State},
+    push_vm::{HasStack, PushInteger},
 };
 use rand::thread_rng;
 use std::ops::Not;
@@ -57,24 +58,30 @@ fn main() -> Result<()> {
      * The target polynomial is x^3 - 2x^2 - x
      */
     let scorer = |program: &Plushy| -> TestResults<test_results::Error> {
-        // let errors: TestResults<test_results::Error> = (0..10)
-        //     .map(|input| {
-        //         let state = PushState::builder(program.get_instructions())
-        //             .with_int_input("x", input)
-        //             .build();
-        //         // This is the degree 3 problem in https://github.com/lspector/Clojush/blob/master/src/clojush/problems/demos/simple_regression.clj
-        //         let expected = input * input * input - 2 * input * input - input;
-        //         // state
-        //         //     .run_to_completion()
-        //         //     .stack()
-        //         //     .top()
-        //         //     // If `last()` returns `None`, then there was nothing on top of the integer stack
-        //         //     // so we want to use the `PENALTY_VALUE` for the error on this test case.
-        //         //     .map_or(PENALTY_VALUE, |answer| (answer - expected).abs())
-        //     })
-        //     .collect();
-        todo!()
-        // errors
+        let errors: TestResults<test_results::Error> = (0..10)
+            .map(|input| {
+                let state = PushState::builder(program.get_instructions())
+                    .with_int_input("x", input)
+                    .build();
+                // This is the degree 3 problem in https://github.com/lspector/Clojush/blob/master/src/clojush/problems/demos/simple_regression.clj
+                let expected = input * input * input - 2 * input * input - input;
+                match state.run_to_completion() {
+                    Ok(final_state) => final_state
+                        .stack::<PushInteger>()
+                        .top()
+                        .map_or(PENALTY_VALUE, |answer| (answer - expected).abs()),
+                    Err(error) => match error.severity() {
+                        // TODO: It would be nice to log the state here that led to the fatal error
+                        //   so we can explore when and how fatal errors occur.
+                        push::instruction::ErrorSeverity::Fatal => PENALTY_VALUE,
+                        push::instruction::ErrorSeverity::Recoverable => unreachable!(
+                            "We should never get a recoverable error from `run_to_completion"
+                        ),
+                    },
+                }
+            })
+            .collect();
+        errors
     };
 
     // The degree 3 problem in https://github.com/lspector/Clojush/blob/master/src/clojush/problems/demos/simple_regression.clj
@@ -141,7 +148,7 @@ fn main() -> Result<()> {
         let best = Best.select(generation.population(), &mut rng)?;
         // TODO: Change 2 to be the smallest number of digits needed for
         //  args.num_generations-1.
-        println!("Generation {generation_number:2} best is {best:?}");
+        println!("Generation {generation_number:2} best is {best:#?}");
 
         if best.test_results.total_result.error == 0 {
             break;

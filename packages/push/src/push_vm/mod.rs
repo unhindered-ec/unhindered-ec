@@ -3,6 +3,8 @@ use crate::instruction::{Instruction, InstructionResult};
 pub mod push_state;
 pub(crate) mod stack;
 
+pub use self::stack::HasStack;
+
 // We'll use a 64-bit integer for our integer types.
 pub type PushInteger = i64;
 
@@ -10,6 +12,9 @@ pub type PushInteger = i64;
 pub trait State: Sized {
     type Instruction: Instruction<Self>;
 
+    /// # Errors
+    ///
+    /// Fails if the instruction being performed fails.
     fn perform(
         self,
         instruction: &Self::Instruction,
@@ -17,8 +22,12 @@ pub trait State: Sized {
         instruction.perform(self)
     }
 
-    #[must_use]
-    fn run_to_completion(self) -> Self;
+    /// # Errors
+    ///
+    /// Fails if any of the performed instructions fails.
+    fn run_to_completion(
+        self,
+    ) -> InstructionResult<Self, <Self::Instruction as Instruction<Self>>::Error>;
 }
 
 /*
