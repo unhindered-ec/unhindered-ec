@@ -45,7 +45,15 @@ enum ErrorSeverity {
 ///     next instruction).
 #[derive(Debug)]
 pub struct Error<S, E> {
-    state: S,
+    // Without the `Box` the size of this Error ended up being 156 bytes
+    // with a `PushState` and a `PushInstructionError`. That led to a Clippy
+    // warning (https://rust-lang.github.io/rust-clippy/master/index.html#/result_large_err)
+    // our `Error` was then larger than the 128 byte limit. They recommended boxing
+    // the big piece (the state in our case), and doing that brought the size down to
+    // 40 bytes. Since `Error`s are only constructed through `::fatal()` or `::recoverable()`,
+    // we'd nicely encapsulated this and only had to make changes in those two places to
+    // get things working.
+    state: Box<S>,
     error: E,
     error_kind: ErrorSeverity,
 }
@@ -55,7 +63,7 @@ pub type InstructionResult<S, E> = core::result::Result<S, Error<S, E>>;
 impl<S, E> Error<S, E> {
     pub fn fatal(state: S, error: impl Into<E>) -> Self {
         Self {
-            state,
+            state: Box::new(state),
             error: error.into(),
             error_kind: ErrorSeverity::Fatal,
         }
@@ -63,7 +71,7 @@ impl<S, E> Error<S, E> {
 
     pub fn recoverable(state: S, error: impl Into<E>) -> Self {
         Self {
-            state,
+            state: Box::new(state),
             error: error.into(),
             error_kind: ErrorSeverity::Recoverable,
         }
