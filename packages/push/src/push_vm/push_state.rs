@@ -67,6 +67,10 @@ impl Builder {
     //     self
     // }
 
+    // TODO: These Doctests fail because of the change in the visibility of `Stack`.
+    //   I'm not sure what environment Doctests are run in, so I'm not entirely
+    //   sure how to fix this.
+
     /// Sets the maximum stack size for all the stacks in this state.
     ///
     /// # Arguments
