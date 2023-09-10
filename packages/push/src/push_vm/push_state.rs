@@ -347,6 +347,7 @@ mod simple_check {
             .with_int_input("x", 5)
             .build();
         println!("{state:?}");
+        #[allow(clippy::unwrap_used)]
         let state = state.run_to_completion().unwrap();
         println!("{state:?}");
         assert!(state.exec().is_empty());

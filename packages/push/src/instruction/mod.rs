@@ -86,7 +86,16 @@ impl<S, E> Error<S, E> {
     }
 }
 
+/// Maps a (presumably error) type into an `InstructionResult`.
+/// This is in fact used to convert `InstructionResult<S, E1>`
+/// into `InstructionResult<S, E2>`, i.e. do `map_err()` on
+/// the inner error types of an `InstructionResult`, preserving
+/// the other fields in `Error`.
 pub trait MapInstructionError<S, E> {
+    ///  
+    /// # Errors
+    ///
+    /// This always returns an error type.
     fn map_err_into(self) -> InstructionResult<S, E>;
 }
 
@@ -111,6 +120,11 @@ where
 pub trait Instruction<S> {
     type Error;
 
+    /// # Errors
+    ///
+    /// This returns an error if the instruction being performed
+    /// returns some kind of error. This could include things like
+    /// stack over- or underflows, or numeric errors like integer overflow.
     fn perform(&self, state: S) -> InstructionResult<S, Self::Error>;
 }
 
