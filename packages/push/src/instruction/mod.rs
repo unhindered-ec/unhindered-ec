@@ -1,5 +1,5 @@
 use crate::push_vm::push_state::PushState;
-use std::{fmt::Display, sync::Arc};
+use std::{fmt::Debug, fmt::Display, sync::Arc};
 
 #[allow(clippy::module_name_repetitions)]
 pub use self::{bool::BoolInstruction, int::IntInstruction};
@@ -87,12 +87,22 @@ mod variable_name_test {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Clone, PartialEq, Eq)]
 #[allow(clippy::module_name_repetitions)]
 pub enum PushInstruction {
     InputVar(VariableName),
     BoolInstruction(BoolInstruction),
     IntInstruction(IntInstruction),
+}
+
+impl Debug for PushInstruction {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::InputVar(arg0) => write!(f, "{arg0}"),
+            Self::BoolInstruction(arg0) => write!(f, "Bool-{arg0}"),
+            Self::IntInstruction(arg0) => write!(f, "Int-{arg0}"),
+        }
+    }
 }
 
 impl PushInstruction {
