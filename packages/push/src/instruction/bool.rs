@@ -8,19 +8,19 @@ use crate::push_vm::{
 use std::ops::Not;
 use strum_macros::EnumIter;
 
-#[derive(Debug, Clone, PartialEq, Eq, EnumIter)]
+#[derive(Debug, strum_macros::Display, Clone, PartialEq, Eq, EnumIter)]
 #[allow(clippy::module_name_repetitions)]
 pub enum BoolInstruction {
     Push(bool),
-    BoolNot,
-    BoolOr,
-    BoolAnd,
-    BoolXor,
-    BoolImplies,
+    Not,
+    Or,
+    And,
+    Xor,
+    Implies,
     // Do we really want either of these? Do they get used?
     // BooleanInvertFirstThenAnd,
     // BoolInvertSecondThenAnd,
-    BoolFromInt,
+    FromInt,
     // BoolFromFloat,
 }
 
@@ -77,24 +77,24 @@ where
         let bool_stack = state.stack_mut::<bool>();
         match self {
             Self::Push(b) => state.with_push(*b).map_err_into(),
-            Self::BoolNot => bool_stack.pop().map(Not::not).with_stack_push(state),
-            Self::BoolAnd => bool_stack
+            Self::Not => bool_stack.pop().map(Not::not).with_stack_push(state),
+            Self::And => bool_stack
                 .pop2()
                 .map(|(x, y)| x && y)
                 .with_stack_push(state),
-            Self::BoolOr => bool_stack
+            Self::Or => bool_stack
                 .pop2()
                 .map(|(x, y)| x || y)
                 .with_stack_push(state),
-            Self::BoolXor => bool_stack
+            Self::Xor => bool_stack
                 .pop2()
                 .map(|(x, y)| x != y)
                 .with_stack_push(state),
-            Self::BoolImplies => bool_stack
+            Self::Implies => bool_stack
                 .pop2()
                 .map(|(x, y)| !x || y)
                 .with_stack_push(state),
-            Self::BoolFromInt => {
+            Self::FromInt => {
                 let mut state = state.not_full::<bool>().map_err_into()?;
                 state
                     .stack_mut::<PushInteger>()
@@ -142,7 +142,7 @@ mod property_tests {
             let state = PushState::builder([])
                 .with_bool_values(vec![x, y])
                 .build();
-            let result_state = BoolInstruction::BoolAnd.perform(state).unwrap();
+            let result_state = BoolInstruction::And.perform(state).unwrap();
             prop_assert_eq!(result_state.bool.size(), 1);
             prop_assert_eq!(*result_state.bool.top().unwrap(), x && y);
         }
@@ -152,7 +152,7 @@ mod property_tests {
             let state = PushState::builder([])
                 .with_bool_values(vec![x, y])
                 .build();
-            let result_state = BoolInstruction::BoolImplies.perform(state).unwrap();
+            let result_state = BoolInstruction::Implies.perform(state).unwrap();
             prop_assert_eq!(result_state.bool.size(), 1);
             prop_assert_eq!(*result_state.bool.top().unwrap(), !x || y);
         }

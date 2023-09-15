@@ -335,11 +335,11 @@ mod simple_check {
             push_bool(true),
             PushInstruction::InputVar(VariableName::from("a")),
             push_int(9),
-            BoolInstruction::BoolOr.into(),
+            BoolInstruction::Or.into(),
             IntInstruction::Add.into(),
             push_int(6),
             IntInstruction::IsEven.into(),
-            BoolInstruction::BoolAnd.into(),
+            BoolInstruction::And.into(),
             PushInstruction::InputVar(VariableName::from("b")),
         ];
         let state = PushState::builder(program)
