@@ -2,19 +2,19 @@ use super::{Instruction, PushInstruction};
 use crate::push_vm::push_state::{HasStack, Stack};
 use strum_macros::EnumIter;
 
-#[derive(Debug, Clone, PartialEq, Eq, EnumIter)]
+#[derive(Debug, strum_macros::Display, Clone, PartialEq, Eq, EnumIter)]
 #[allow(clippy::module_name_repetitions)]
 pub enum BoolInstruction {
     Push(bool),
-    BoolNot,
-    BoolOr,
-    BoolAnd,
-    BoolXor,
-    BoolImplies,
+    Not,
+    Or,
+    And,
+    Xor,
+    Implies,
     // Do we really want either of these? Do they get used?
     // BooleanInvertFirstThenAnd,
     // BoolInvertSecondThenAnd,
-    BoolFromInt,
+    FromInt,
     // BoolFromFloat,
 }
 
@@ -39,32 +39,32 @@ where
         match self {
             // let state = state as PushStack<bool>;
             Self::Push(b) => bool_stack.push(*b),
-            Self::BoolNot => {
+            Self::Not => {
                 if let Some::<bool>(x) = bool_stack.pop() {
                     bool_stack.push(!x);
                 }
             }
-            Self::BoolAnd => {
+            Self::And => {
                 if let Some::<(bool, bool)>((x, y)) = bool_stack.pop2() {
                     bool_stack.push(x && y);
                 }
             }
-            Self::BoolOr => {
+            Self::Or => {
                 if let Some::<(bool, bool)>((x, y)) = bool_stack.pop2() {
                     bool_stack.push(x || y);
                 }
             }
-            Self::BoolXor => {
+            Self::Xor => {
                 if let Some::<(bool, bool)>((x, y)) = bool_stack.pop2() {
                     bool_stack.push(x != y);
                 }
             }
-            Self::BoolImplies => {
+            Self::Implies => {
                 if let Some::<(bool, bool)>((x, y)) = bool_stack.pop2() {
                     bool_stack.push(!x || y);
                 }
             }
-            Self::BoolFromInt => {
+            Self::FromInt => {
                 let int_stack: &mut Stack<i64> = state.stack_mut();
                 if let Some::<i64>(x) = int_stack.pop() {
                     let bool_stack: &mut Stack<bool> = state.stack_mut();
@@ -110,10 +110,10 @@ mod property_tests {
             let mut state = PushState::builder([])
                 .with_bool_values(vec![x, y])
                 .build();
-            BoolInstruction::BoolAnd.perform(&mut state);
             #[allow(clippy::unwrap_used)]
             let result: &bool = state.stack_mut().top().unwrap();
             prop_assert_eq!(*result, x && y);
+            BoolInstruction::And.perform(&mut state);
         }
 
         #[test]
@@ -121,7 +121,7 @@ mod property_tests {
             let mut state = PushState::builder([])
                 .with_bool_values(vec![x, y])
                 .build();
-            BoolInstruction::BoolImplies.perform(&mut state);
+            BoolInstruction::Implies.perform(&mut state);
             #[allow(clippy::unwrap_used)]
             let result: &bool = state.stack_mut().top().unwrap();
             prop_assert_eq!(*result, !x || y);

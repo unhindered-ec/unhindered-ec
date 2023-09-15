@@ -1,9 +1,10 @@
+use strum_macros::Display;
 use strum_macros::EnumIter;
 
 use super::{Instruction, PushInstruction};
 use crate::push_vm::push_state::{HasStack, PushState, Stack};
 
-#[derive(Debug, Clone, PartialEq, Eq, EnumIter)]
+#[derive(Debug, Display, Clone, PartialEq, Eq, EnumIter)]
 #[allow(clippy::module_name_repetitions)]
 pub enum IntInstruction {
     Push(i64),

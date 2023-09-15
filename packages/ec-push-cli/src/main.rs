@@ -143,7 +143,7 @@ fn main() -> Result<()> {
         let best = Best.select(generation.population(), &mut rng)?;
         // TODO: Change 2 to be the smallest number of digits needed for
         //  args.num_generations-1.
-        println!("Generation {generation_number:2} best is {best:?}");
+        println!("Generation {generation_number:2} best is {best:#?}");
 
         if best.test_results.total_result.error == 0 {
             break;
