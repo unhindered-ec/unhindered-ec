@@ -65,19 +65,16 @@ fn main() -> Result<()> {
                     .build();
                 // This is the degree 3 problem in https://github.com/lspector/Clojush/blob/master/src/clojush/problems/demos/simple_regression.clj
                 let expected = input * input * input - 2 * input * input - input;
+                #[allow(clippy::option_if_let_else)]
                 match state.run_to_completion() {
                     Ok(final_state) => final_state
                         .stack::<PushInteger>()
                         .top()
                         .map_or(PENALTY_VALUE, |answer| (answer - expected).abs()),
-                    Err(error) => match error.severity() {
-                        // TODO: It would be nice to log the state here that led to the fatal error
-                        //   so we can explore when and how fatal errors occur.
-                        push::instruction::ErrorSeverity::Fatal => PENALTY_VALUE,
-                        push::instruction::ErrorSeverity::Recoverable => unreachable!(
-                            "We should never get a recoverable error from `run_to_completion"
-                        ),
-                    },
+                    Err(_) => {
+                        // Do some logging, perhaps?
+                        PENALTY_VALUE
+                    }
                 }
             })
             .collect();

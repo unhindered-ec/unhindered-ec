@@ -1,4 +1,4 @@
-use crate::instruction::{Instruction, InstructionResult};
+use crate::instruction::{FatalError, Instruction, InstructionResult};
 
 pub mod push_state;
 pub(crate) mod stack;
@@ -27,7 +27,7 @@ pub trait State: Sized {
     /// Fails if any of the performed instructions fails.
     fn run_to_completion(
         self,
-    ) -> InstructionResult<Self, <Self::Instruction as Instruction<Self>>::Error>;
+    ) -> Result<Self, FatalError<Self, <Self::Instruction as Instruction<Self>>::Error>>;
 }
 
 /*

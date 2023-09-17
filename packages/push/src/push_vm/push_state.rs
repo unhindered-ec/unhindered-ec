@@ -1,8 +1,8 @@
 use super::stack::{HasStack, Stack, TypeEq};
 use super::State;
 use crate::instruction::{
-    ErrorSeverity, Instruction, InstructionResult, PushInstruction, PushInstructionError,
-    VariableName,
+    Error, ErrorSeverity, FatalError, Instruction, InstructionResult, PushInstruction,
+    PushInstructionError, VariableName,
 };
 use crate::push_vm::PushInteger;
 use std::collections::HashMap;
@@ -291,17 +291,24 @@ impl State for PushState {
     type Instruction = PushInstruction;
 
     // TODO: Need to have some kind of execution limit to prevent infinite loops.
-    fn run_to_completion(mut self) -> InstructionResult<Self, PushInstructionError> {
+    fn run_to_completion(mut self) -> Result<Self, FatalError<PushState, PushInstructionError>> {
         // This smells off to me. In places we're using side effects on mutable structures (e.g., `pop`)
         // while in other places we're taking a more functional approach (e.g., `self = self.perform()`).
-        // It seems that maybe I should pick one or the other.
+        // It seems that maybe I should pick one or the other. Being able to store the state in
+        // the errors appears to be part of the source of the problem here (again), which more and
+        // more makes me wonder if that's a good idea.
+        //
+        // TODO: Justus_Fluegel@Twitch suggested a `try_recover()?` method to encapsulate the
+        //   `match error.severity()` logic.
         while let Some(instruction) = self.exec.pop() {
             self = match self.perform(&instruction) {
                 Ok(result_state) => result_state,
-                Err(error) => match error.severity() {
-                    ErrorSeverity::Fatal => return Err(error),
-                    ErrorSeverity::Recoverable => error.into_state(),
-                },
+                Err(Error::Fatal(error)) => return Err(error),
+                Err(Error::Recoverable(error)) => error.into_state(),
+                // Err(Error::Fatal(error) => match error.severity() {
+                //     ErrorSeverity::Fatal => return Err(error),
+                //     ErrorSeverity::Recoverable => error.into_state(),
+                // },
             }
         }
         Ok(self)
