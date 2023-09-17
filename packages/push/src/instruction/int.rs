@@ -484,7 +484,7 @@ impl From<IntInstruction> for PushInstruction {
 #[cfg(test)]
 #[allow(clippy::unwrap_used)]
 mod test {
-    use crate::{instruction::ErrorSeverity, push_vm::push_state::PushState};
+    use crate::push_vm::push_state::PushState;
 
     use super::*;
 
@@ -508,15 +508,14 @@ mod test {
         state.stack_mut::<PushInteger>().push(y).unwrap();
         state.stack_mut::<PushInteger>().push(x).unwrap();
         let result = IntInstruction::Add.perform(state).unwrap_err();
-        assert_eq!(result.state.int.size(), 2);
+        assert_eq!(result.state().int.size(), 2);
         assert_eq!(
-            result.error,
-            IntInstructionError::Overflow {
+            result.error(),
+            &PushInstructionError::from(IntInstructionError::Overflow {
                 op: IntInstruction::Add
-            }
-            .into()
+            })
         );
-        assert_eq!(result.error_kind, ErrorSeverity::Recoverable);
+        assert!(result.is_recoverable());
     }
 
     #[test]
@@ -525,16 +524,16 @@ mod test {
         let mut state = PushState::builder([]).build();
         state.int.push(x).unwrap();
         let result = IntInstruction::Inc.perform(state).unwrap_err();
-        assert_eq!(result.state.int.size(), 1);
-        assert_eq!(result.state.int.top().unwrap(), &PushInteger::MAX);
+        assert_eq!(result.state().int.size(), 1);
+        assert_eq!(result.state().int.top().unwrap(), &PushInteger::MAX);
         assert_eq!(
-            result.error,
-            IntInstructionError::Overflow {
+            result.error(),
+            &IntInstructionError::Overflow {
                 op: IntInstruction::Inc
             }
             .into()
         );
-        assert_eq!(result.error_kind, ErrorSeverity::Recoverable);
+        assert!(result.is_recoverable());
     }
 
     #[test]
@@ -543,16 +542,16 @@ mod test {
         let mut state = PushState::builder([]).build();
         state.int.push(x).unwrap();
         let result = IntInstruction::Dec.perform(state).unwrap_err();
-        assert_eq!(result.state.int.size(), 1);
-        assert_eq!(result.state.int.top().unwrap(), &PushInteger::MIN);
+        assert_eq!(result.state().int.size(), 1);
+        assert_eq!(result.state().int.top().unwrap(), &PushInteger::MIN);
         assert_eq!(
-            result.error,
-            IntInstructionError::Overflow {
+            result.error(),
+            &IntInstructionError::Overflow {
                 op: IntInstruction::Dec
             }
             .into()
         );
-        assert_eq!(result.error_kind, ErrorSeverity::Recoverable);
+        assert!(result.is_recoverable());
     }
 }
 
@@ -560,7 +559,7 @@ mod test {
 #[cfg(test)]
 mod property_tests {
     use crate::{
-        instruction::{int::IntInstructionError, ErrorSeverity, Instruction, IntInstruction},
+        instruction::{int::IntInstructionError, Instruction, IntInstruction},
         push_vm::{push_state::PushState, stack::HasStack, PushInteger},
     };
     use proptest::{prop_assert_eq, proptest};
@@ -604,13 +603,13 @@ mod property_tests {
             } else {
                 let result = result.unwrap_err();
                 assert_eq!(
-                    result.error,
-                    IntInstructionError::Overflow {
+                    result.error(),
+                    &IntInstructionError::Overflow {
                         op: IntInstruction::Square
                     }.into()
                 );
-                assert_eq!(result.error_kind, ErrorSeverity::Recoverable);
-                let top_int = result.state.int.top().unwrap();
+                assert!(result.is_recoverable());
+                let top_int = result.state().int.top().unwrap();
                 prop_assert_eq!(*top_int, x);
             }
         }
@@ -638,17 +637,17 @@ mod property_tests {
                 // We arguably want to confirm that the entire state of the system
                 // is unchanged, except that the `Add` instruction has been
                 // removed from the `exec` stack.
-                let mut result = result.unwrap_err();
+                let result = result.unwrap_err();
                 assert_eq!(
-                    result.error,
-                    IntInstructionError::Overflow {
+                    result.error(),
+                    &IntInstructionError::Overflow {
                         op: IntInstruction::Add
                     }
                     .into()
                 );
-                assert_eq!(result.error_kind, ErrorSeverity::Recoverable);
-                let top_int = result.state.int.pop().unwrap();
-                prop_assert_eq!(top_int, x);
+                assert!(result.is_recoverable());
+                let top_int = result.state().int.top().unwrap();
+                prop_assert_eq!(*top_int, x);
             }
         }
 
@@ -667,17 +666,17 @@ mod property_tests {
                 // We arguably want to confirm that the entire state of the system
                 // is unchanged, except that the `Add` instruction has been
                 // removed from the `exec` stack.
-                let mut result = result.unwrap_err();
+                let result = result.unwrap_err();
                 assert_eq!(
-                    result.error,
-                    IntInstructionError::Overflow {
+                    result.error(),
+                    &IntInstructionError::Overflow {
                         op: IntInstruction::Subtract
                     }
                     .into()
                 );
-                assert_eq!(result.error_kind, ErrorSeverity::Recoverable);
-                let top_int = result.state.int.pop().unwrap();
-                prop_assert_eq!(top_int, x);
+                assert!(result.is_recoverable());
+                let top_int = result.state().int.top().unwrap();
+                prop_assert_eq!(*top_int, x);
             }
         }
 
@@ -696,17 +695,17 @@ mod property_tests {
                 // We arguably want to confirm that the entire state of the system
                 // is unchanged, except that the `Add` instruction has been
                 // removed from the `exec` stack.
-                let mut result = result.unwrap_err();
+                let result = result.unwrap_err();
                 assert_eq!(
-                    result.error,
-                    IntInstructionError::Overflow {
+                    result.error(),
+                    &IntInstructionError::Overflow {
                         op: IntInstruction::Multiply
                     }
                     .into()
                 );
-                assert_eq!(result.error_kind, ErrorSeverity::Recoverable);
-                let top_int = result.state.int.pop().unwrap();
-                prop_assert_eq!(top_int, x);
+                assert!(result.is_recoverable());
+                let top_int = result.state().int.top().unwrap();
+                prop_assert_eq!(*top_int, x);
             }
         }
 
@@ -737,17 +736,17 @@ mod property_tests {
                 // We arguably want to confirm that the entire state of the system
                 // is unchanged, except that the `Add` instruction has been
                 // removed from the `exec` stack.
-                let mut result = result.unwrap_err();
+                let result = result.unwrap_err();
                 assert_eq!(
-                    result.error,
-                    IntInstructionError::Overflow {
+                    result.error(),
+                    &IntInstructionError::Overflow {
                         op: IntInstruction::ProtectedDivide
                     }
                     .into()
                 );
-                assert_eq!(result.error_kind, ErrorSeverity::Recoverable);
-                let top_int = result.state.int.pop().unwrap();
-                prop_assert_eq!(top_int, x);
+                assert!(result.is_recoverable());
+                let top_int = result.state().int.top().unwrap();
+                prop_assert_eq!(*top_int, x);
             }
         }
 
@@ -782,17 +781,17 @@ mod property_tests {
                 // We arguably want to confirm that the entire state of the system
                 // is unchanged, except that the `Add` instruction has been
                 // removed from the `exec` stack.
-                let mut result = result.unwrap_err();
+                let result = result.unwrap_err();
                 assert_eq!(
-                    result.error,
-                    IntInstructionError::Overflow {
+                    result.error(),
+                    &IntInstructionError::Overflow {
                         op: IntInstruction::Mod
                     }
                     .into()
                 );
-                assert_eq!(result.error_kind, ErrorSeverity::Recoverable);
-                let top_int = result.state.int.pop().unwrap();
-                prop_assert_eq!(top_int, x);
+                assert!(result.is_recoverable());
+                let top_int = result.state().int.top().unwrap();
+                prop_assert_eq!(*top_int, x);
             }
         }
 
