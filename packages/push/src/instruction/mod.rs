@@ -1,5 +1,5 @@
 use crate::push_vm::{push_state::PushState, stack::StackError, PushInteger};
-use std::{fmt::Debug, fmt::Display, sync::Arc};
+use std::{convert::Infallible, fmt::Debug, fmt::Display, sync::Arc};
 
 #[allow(clippy::module_name_repetitions)]
 pub use self::{bool::BoolInstruction, int::IntInstruction};
@@ -126,6 +126,38 @@ impl<S, E> Error<S, E> {
         match self {
             Self::Recoverable(error) => *error.state,
             Self::Fatal(error) => *error.state,
+        }
+    }
+}
+
+pub trait TryRecover<T> {
+    type Error;
+
+    /// # Errors
+    ///
+    /// `x.try_recover()` returns an error if `x` is not a `Recoverable` error type.
+    fn try_recover(self) -> Result<T, Self::Error>;
+}
+
+impl<S, E> TryRecover<S> for Result<S, Error<S, E>> {
+    type Error = FatalError<S, E>;
+
+    fn try_recover(self) -> Result<S, FatalError<S, E>> {
+        match self {
+            Ok(s) => Ok(s),
+            Err(Error::Recoverable(s)) => Ok(s.into_state()),
+            Err(Error::Fatal(error)) => Err(error),
+        }
+    }
+}
+
+impl<S, E> TryRecover<S> for Result<S, RecoverableError<S, E>> {
+    type Error = Infallible;
+
+    fn try_recover(self) -> Result<S, Infallible> {
+        match self {
+            Ok(s) => Ok(s),
+            Err(s) => Ok(s.into_state()),
         }
     }
 }
