@@ -28,12 +28,6 @@ mod int;
  * - dup (int_dup, exec_dup, bool_dup, ...)
  */
 
-#[derive(Debug, Eq, PartialEq, Copy, Clone)]
-pub enum ErrorSeverity {
-    Fatal,
-    Recoverable,
-}
-
 /// Error
 ///
 /// - `state`: The state of the system _before_ attempting to perform
