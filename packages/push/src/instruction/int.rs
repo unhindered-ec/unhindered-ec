@@ -55,34 +55,6 @@ pub enum IntInstructionError {
     },
 }
 
-// struct Negate;
-
-// impl<S> Instruction<S> for Negate
-// where
-//     S: Clone + HasStack<PushInteger>,
-// {
-//     type Error = PushInstructionError;
-
-//     fn perform(&self, mut state: S) -> InstructionResult<S, Self::Error> {
-//         let result: Result<i64, PushInstructionError> =
-//             HasStack::<PushInteger>::stack_mut(&mut state)
-//                 .pop()
-//                 .map(Neg::neg)
-//                 .map_err(Into::into);
-//         match result {
-//             Err(error) => Err(Error::recoverable_error(state, error)),
-//             Ok(i) => {
-//                 let int_stack: &mut Stack<PushInteger> = state.stack_mut();
-//                 let push_result = int_stack.push(i);
-//                 match push_result {
-//                     Err(error) => Err(Error::fatal_error(state, error)),
-//                     Ok(_) => Ok(state),
-//                 }
-//             }
-//         }
-//     }
-// }
-
 impl<S> Instruction<S> for IntInstruction
 where
     S: Clone + HasStack<PushInteger> + HasStack<bool>,
