@@ -44,7 +44,7 @@ pub enum ErrorSeverity {
 ///     should just be skipped and the program execution continues with the
 ///     next instruction).
 #[derive(Debug)]
-pub struct Error<S, E> {
+pub struct RecoverableError<S, E> {
     // Without the `Box` the size of this Error ended up being 156 bytes
     // with a `PushState` and a `PushInstructionError`. That led to a Clippy
     // warning (https://rust-lang.github.io/rust-clippy/master/index.html#/result_large_err)
@@ -55,35 +55,91 @@ pub struct Error<S, E> {
     // get things working.
     state: Box<S>,
     error: E,
-    error_kind: ErrorSeverity,
+}
+
+impl<S, E> RecoverableError<S, E> {
+    pub fn into_state(self) -> S {
+        *self.state
+    }
+}
+
+#[derive(Debug)]
+pub struct FatalError<S, E> {
+    // Without the `Box` the size of this Error ended up being 156 bytes
+    // with a `PushState` and a `PushInstructionError`. That led to a Clippy
+    // warning (https://rust-lang.github.io/rust-clippy/master/index.html#/result_large_err)
+    // our `Error` was then larger than the 128 byte limit. They recommended boxing
+    // the big piece (the state in our case), and doing that brought the size down to
+    // 40 bytes. Since `Error`s are only constructed through `::fatal()` or `::recoverable()`,
+    // we'd nicely encapsulated this and only had to make changes in those two places to
+    // get things working.
+    state: Box<S>,
+    error: E,
+}
+
+#[derive(Debug)]
+pub enum Error<S, E> {
+    Recoverable(RecoverableError<S, E>),
+    Fatal(FatalError<S, E>),
 }
 
 pub type InstructionResult<S, E> = core::result::Result<S, Error<S, E>>;
 
 impl<S, E> Error<S, E> {
     pub fn fatal(state: S, error: impl Into<E>) -> Self {
-        Self {
+        Self::Fatal(FatalError {
             state: Box::new(state),
             error: error.into(),
-            error_kind: ErrorSeverity::Fatal,
-        }
+        })
     }
 
     pub fn recoverable(state: S, error: impl Into<E>) -> Self {
-        Self {
+        Self::Recoverable(RecoverableError {
             state: Box::new(state),
             error: error.into(),
-            error_kind: ErrorSeverity::Recoverable,
+        })
+    }
+
+    pub const fn is_recoverable(&self) -> bool {
+        matches!(self, Self::Recoverable(_))
+    }
+
+    pub const fn is_fatal(&self) -> bool {
+        matches!(self, Self::Fatal(_))
+    }
+
+    pub fn state(&self) -> &S {
+        match self {
+            Self::Recoverable(error) => &error.state,
+            Self::Fatal(error) => &error.state,
         }
     }
 
-    pub const fn severity(&self) -> ErrorSeverity {
-        self.error_kind
+    pub const fn error(&self) -> &E {
+        match self {
+            Self::Recoverable(error) => &error.error,
+            Self::Fatal(error) => &error.error,
+        }
     }
 
     pub fn into_state(self) -> S {
-        *self.state
+        match self {
+            Self::Recoverable(error) => *error.state,
+            Self::Fatal(error) => *error.state,
+        }
     }
+}
+
+#[derive(thiserror::Error, Debug, Eq, PartialEq)]
+pub enum PushInstructionError {
+    #[error(transparent)]
+    StackError(#[from] StackError),
+    #[error("Exceeded the maximum step limit {step_limit}")]
+    StepLimitExceeded { step_limit: usize },
+    #[error(transparent)]
+    Int(#[from] IntInstructionError),
+    #[error(transparent)]
+    Bool(#[from] BoolInstructionError),
 }
 
 /// Maps a (presumably error) type into an `InstructionResult`.
@@ -109,10 +165,15 @@ where
     E1: Into<E2>,
 {
     fn map_err_into(self) -> InstructionResult<S, E2> {
-        self.map_err(|error| Error {
-            state: error.state,
-            error: error.error.into(),
-            error_kind: error.error_kind,
+        self.map_err(|error| match error {
+            Error::Recoverable(error) => Error::Recoverable(RecoverableError {
+                state: error.state,
+                error: error.error.into(),
+            }),
+            Error::Fatal(error) => Error::Fatal(FatalError {
+                state: error.state,
+                error: error.error.into(),
+            }),
         })
     }
 }
@@ -214,18 +275,6 @@ impl PushInstruction {
     pub fn push_int(i: PushInteger) -> Self {
         IntInstruction::Push(i).into()
     }
-}
-
-#[derive(thiserror::Error, Debug, Eq, PartialEq)]
-pub enum PushInstructionError {
-    #[error(transparent)]
-    StackError(#[from] StackError),
-    #[error("Exceeded the maximum step limit {step_limit}")]
-    StepLimitExceeded { step_limit: usize },
-    #[error(transparent)]
-    Int(#[from] IntInstructionError),
-    #[error(transparent)]
-    Bool(#[from] BoolInstructionError),
 }
 
 impl Instruction<PushState> for PushInstruction {
