@@ -1,10 +1,11 @@
-use super::stack::{HasStack, Stack, TypeEq};
-use super::State;
-use crate::instruction::{
-    FatalError, Instruction, InstructionResult, PushInstruction, PushInstructionError, TryRecover,
-    VariableName,
+use crate::{
+    error::{stateful::FatalError, try_recover::TryRecover, InstructionResult},
+    instruction::{Instruction, PushInstruction, PushInstructionError, VariableName},
+    push_vm::{
+        stack::{HasStack, Stack, TypeEq},
+        PushInteger, State,
+    },
 };
-use crate::push_vm::PushInteger;
 use std::collections::HashMap;
 
 #[derive(Default, Debug, Eq, PartialEq, Clone)]

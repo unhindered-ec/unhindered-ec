@@ -1,4 +1,7 @@
-use crate::instruction::{Error, InstructionResult, MapInstructionError};
+use crate::{
+    error::{Error, InstructionResult},
+    instruction::MapInstructionError,
+};
 
 pub trait TypeEq {
     type This: ?Sized;

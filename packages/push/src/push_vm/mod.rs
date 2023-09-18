@@ -1,4 +1,7 @@
-use crate::instruction::{FatalError, Instruction, InstructionResult};
+use crate::{
+    error::{stateful::FatalError, InstructionResult},
+    instruction::Instruction,
+};
 
 pub mod push_state;
 pub(crate) mod stack;
