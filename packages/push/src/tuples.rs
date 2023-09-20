@@ -95,7 +95,13 @@ macro_rules! peel {
     ($(@$pref:ident)? $name:ident, $($other:ident,)* $(| doc=$doc:literal)?) => (tuple! { $(@$pref)? $($other),* $(| doc=$doc)?})
 }
 
+// I know this is a mess. Please bear with me as declaraive macros are currently quite limited. The easiest way to understand
+// this is probably to expand the macro (VSCode: Command (Ctrl + Shift + P): Expand macro recursively) at its execution point below.
+// Using a macro ensures that we can easily add implementations for tuples of higher arity, just modifying the call of the macro
+// is enough for that purpose.
+// ~ Justus Flügel
 macro_rules! tuple {
+    // This is the "Entrypoint" of the macro
     ($first:ident $(,$($name:ident),+)? | doc=$doc:literal) => (
         #[allow(clippy::all)]
         #[allow(non_snake_case)]
@@ -110,30 +116,36 @@ macro_rules! tuple {
             tuple!(@recursive $first $(,$($name),+)? | doc=$doc);
         }
     );
+    // Create a enum for the iterator with the name of the first ident passed
     (@enum_with_name $first:ident $(,$($name:ident),+)?) => {
         tuple!(@build_enum enum $first<T> {} | $first $(,$($name),+)?);
     };
+    // Build a enum of variants of sizes up to the amount of idents passed
     (@build_enum enum $name:ident<T> { $( $variant:ident($($t:ty),+),)* } | $last:ident) => {
         pub enum $name<T> {
             $( $variant($(for_each_token!($t|T)),+),)*
             $last(T),
         }
     };
+    // Recursive steps for more and more idents
     (@build_enum enum $name:ident<T> { $($variant:ident($($t:ty),+),)* } | $curr:ident, $($remaining:ident),+) => {
         tuple!{ @build_enum enum $name<T> {
             $( $variant($($t),+),)*
             $curr($curr,$($remaining),+),
         } | $($remaining),+}
     };
+    // Create a match statement for splitting of the head from the iterator enum
     (@match_arms_head match $match_i:ident { $([$first:ident, $second:ident, $($($name:ident,)+)?]);* } | $last:ident) => {
         match $match_i {
             $(Self::$first($first,$second$(,$($name),+)?) => ($first, Some(Self::$second($second $(,$($name),+)?))),)*
             Self::$last($last) => ($last,None)
         }
     };
+    // Recursive steps for generating the pattern & value for each variant of the enum
     (@match_arms_head match $match_i:ident { $([$($name:ident,)+]);* } | $curr:ident, $($remaining:ident),+) => {
         tuple!(@match_arms_head match $match_i {$([$($name,)+];)*[$curr,$($remaining,)+]} | $($remaining),+)
     };
+    // Same as above, just for splitting of the tail
     (@match_arms_tail match $match_i:ident { $([$first:ident, $second:ident, $($name:ident,)+]);* $( - [$first_e:ident, $second_e:ident,]);*  } | $last:ident) => {
         match $match_i {
             $(Self::$first($first,$second,$($name,)+) => (tuple!(@last $($name),+), Some(tuple!(@except_last $first, $second # $($name),+ | ))),)*
@@ -141,25 +153,33 @@ macro_rules! tuple {
             Self::$last($last) => ($last,None)
         }
     };
+    // Same as above, just for splitting of the tail
     (@match_arms_tail match $match_i:ident { $([$($name:ident,)+]);* $( - [$first_e:ident, $second_e:ident,]);*} | $curr:ident, $sec_curr:ident) => {
         tuple!(@match_arms_tail match $match_i {$([$($name,)+]);* $( - [$first_e, $second_e,]);* - [$curr,$sec_curr,]} | $sec_curr)
     };
+    // Same as above, just for splitting of the tail
     (@match_arms_tail match $match_i:ident { $([$($name:ident,)+]);* $( - [$first_e:ident, $second_e:ident,]);*} | $curr:ident, $($remaining:ident),+) => {
         tuple!(@match_arms_tail match $match_i {$([$($name,)+];)* $( - [$first_e, $second_e,]);*[$curr,$($remaining,)+]} | $($remaining),+)
     };
+    // Get the last ident of a list of passed idents
     (@last $last:ident) => {
         $last
     };
+    // Get the last ident of a list of passed idents - recursive steps
     (@last $first:ident, $($rest:ident),+) => {
         tuple!(@last $($rest),+)
     };
+    // Build a enum variant for the tail match case ignoring the last ident (the tail)
     (@except_last $first:ident, $second:ident # $last:ident | $($tokens:ident),*) => {
         Self::$second($first,$second,$($tokens),*)
     };
+    // Recursive steps for the above
     (@except_last $first:ident, $second:ident # $start:ident, $($rest:ident),+ | $($tokens:ident),*) => {
         tuple!(@except_last $first, $second # $($rest),+ | $($tokens,)* $start)
     };
+    // Don't do anything for no idents
     (@mod_decl) => {};
+    // Generate iterator enum for all sizes of tuples & implement the required trait to use them as Iterators
     (@mod_decl $first:ident $(,$($name:ident),*)?) => {
         tuple!(@enum_with_name $first $(,$($name),+)?);
         impl<T> EnumIterBackend<(T,$($(for_each_token!($name|T),)?)*)> for $first<T> {
@@ -178,7 +198,9 @@ macro_rules! tuple {
         }
         peel!(@mod_decl $first, $($($name,)*)?);
     };
+    // Recursion exit
     (@recursive | doc=$doc:literal) => ();
+    // Generate actual trait implementation for all passed idents
     (@recursive $first:ident $(,$($name:ident),+)? | doc=$doc:literal) => (
         maybe_tuple_doc! {
             $first $($($name)+)? @
@@ -233,6 +255,7 @@ macro_rules! tuple {
     )
 }
 
+// This macro ensures that only one of the tuple implementations is documented in the docs to avoid spamming them
 macro_rules! maybe_tuple_doc {
     ($a:ident @  $item:item | doc=$doc:literal) => {
         // #[doc(fake_variadic)]
