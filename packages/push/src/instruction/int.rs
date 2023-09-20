@@ -125,7 +125,7 @@ where
                         .with_stack_replace(1, state),
 
                     Self::Add => int_stack
-                        .top2()
+                        .top_n()
                         .map_err(Into::<PushInstructionError>::into)
                         .map(|(x, y)| (*x).checked_add(*y))
                         .and_then(|v| {
@@ -135,7 +135,7 @@ where
                         .with_stack_replace(2, state),
 
                     Self::Subtract => int_stack
-                        .top2()
+                        .top_n()
                         .map_err(Into::<PushInstructionError>::into)
                         .map(|(x, y)| (*x).checked_sub(*y))
                         .and_then(|v| {
@@ -145,7 +145,7 @@ where
                         .with_stack_replace(2, state),
 
                     Self::Multiply => int_stack
-                        .top2()
+                        .top_n()
                         .map_err(Into::<PushInstructionError>::into)
                         .map(|(x, y)| (*x).checked_mul(*y))
                         .and_then(|v| {
@@ -155,7 +155,7 @@ where
                         .with_stack_replace(2, state),
 
                     Self::ProtectedDivide => int_stack
-                        .top2()
+                        .top_n()
                         .map_err(Into::<PushInstructionError>::into)
                         .map(|(x, y)| {
                             if *y == 0 {
@@ -171,7 +171,7 @@ where
                         .with_stack_replace(2, state),
 
                     Self::Mod => int_stack
-                        .top2()
+                        .top_n()
                         .map_err(Into::<PushInstructionError>::into)
                         .map(|(x, y)| {
                             if *y == 0 {
@@ -483,7 +483,8 @@ impl From<IntInstruction> for PushInstruction {
 #[cfg(test)]
 #[allow(clippy::unwrap_used)]
 mod test {
-    use crate::push_vm::push_state::PushState;
+
+    use crate::push_vm::state::PushState;
 
     use super::*;
 
@@ -559,7 +560,7 @@ mod test {
 mod property_tests {
     use crate::{
         instruction::{int::IntInstructionError, Instruction, IntInstruction},
-        push_vm::{push_state::PushState, stack::HasStack, PushInteger},
+        push_vm::{state::PushState, HasStack, PushInteger},
     };
     use proptest::{prop_assert_eq, proptest};
     use strum::IntoEnumIterator;

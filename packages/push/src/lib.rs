@@ -12,3 +12,5 @@ pub mod error;
 pub mod genome;
 pub mod instruction;
 pub mod push_vm;
+pub(crate) mod tuples;
+pub(crate) mod type_eq;

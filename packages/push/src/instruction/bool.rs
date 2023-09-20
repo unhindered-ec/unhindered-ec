@@ -79,19 +79,19 @@ where
             Self::Push(b) => state.with_push(*b).map_err_into(),
             Self::Not => bool_stack.pop().map(Not::not).with_stack_push(state),
             Self::And => bool_stack
-                .pop2()
+                .pop_n()
                 .map(|(x, y)| x && y)
                 .with_stack_push(state),
             Self::Or => bool_stack
-                .pop2()
+                .pop_n()
                 .map(|(x, y)| x || y)
                 .with_stack_push(state),
             Self::Xor => bool_stack
-                .pop2()
+                .pop_n()
                 .map(|(x, y)| x != y)
                 .with_stack_push(state),
             Self::Implies => bool_stack
-                .pop2()
+                .pop_n()
                 .map(|(x, y)| !x || y)
                 .with_stack_push(state),
             Self::FromInt => {
@@ -115,10 +115,7 @@ impl From<BoolInstruction> for PushInstruction {
 #[cfg(test)]
 #[allow(clippy::unwrap_used)]
 mod property_tests {
-    use crate::{
-        instruction::{BoolInstruction, Instruction},
-        push_vm::push_state::PushState,
-    };
+    use crate::instruction::{BoolInstruction, Instruction, PushState};
     use proptest::{prop_assert_eq, proptest};
     use strum::IntoEnumIterator;
 

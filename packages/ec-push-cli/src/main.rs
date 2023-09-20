@@ -28,7 +28,7 @@ use ec_linear::mutator::umad::Umad;
 use push::{
     genome::plushy::Plushy,
     instruction::{IntInstruction, PushInstruction, VariableName},
-    push_vm::{push_state::PushState, State},
+    push_vm::{state::PushState, State},
     push_vm::{HasStack, PushInteger},
 };
 use rand::thread_rng;

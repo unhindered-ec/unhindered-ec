@@ -19,3 +19,8 @@ proptest = "1.2.0"
 strum = "0.25.0"
 strum_macros = "0.25.1"
 thiserror = "1.0.44"
+
+[features]
+default = ["transactional_additive_stacks", "transactional_substractive_stacks"]
+transactional_additive_stacks = []
+transactional_substractive_stacks = []

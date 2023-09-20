@@ -3,10 +3,10 @@ use crate::{
     instruction::Instruction,
 };
 
-pub mod push_state;
-pub(crate) mod stack;
+pub mod stack;
+pub mod state;
 
-pub use self::stack::HasStack;
+pub use stack::has_stack::HasStack;
 
 // We'll use a 64-bit integer for our integer types.
 pub type PushInteger = i64;
