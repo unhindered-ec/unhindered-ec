@@ -29,7 +29,7 @@ use push::{
     genome::plushy::Plushy,
     instruction::{IntInstruction, PushInstruction, VariableName},
     push_vm::{state::PushState, State},
-    push_vm::{HasStack, PushInteger},
+    push_vm::{HasStackOld, PushInteger},
 };
 use rand::thread_rng;
 use std::ops::Not;

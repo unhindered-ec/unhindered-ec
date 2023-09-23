@@ -1,5 +1,6 @@
-use super::stack::{HasStack, Stack, TypeEq};
-use super::State;
+use super::stack::traits::has_stack::{HasStack, HasStackMut};
+use super::stack::Stack;
+use super::{HasStackOld, State};
 use crate::instruction::{
     FatalError, Instruction, InstructionResult, PushInstruction, PushInstructionError, TryRecover,
     VariableName,
@@ -27,13 +28,25 @@ impl HasStack<bool> for PushState {
     fn stack<U: TypeEq<This = bool>>(&self) -> &Stack<bool> {
         &self.bool
     }
+}
+
+impl HasStackMut<bool> for PushState {
+    fn stack_mut<U: TypeEq<This = bool>>(&mut self) -> &mut Stack<bool> {
+        &mut self.bool
+    }
+}
+
+impl HasStackOld<bool> for PushState {
+    fn stack<U: TypeEq<This = bool>>(&self) -> &Stack<bool> {
+        &self.bool
+    }
 
     fn stack_mut<U: TypeEq<This = bool>>(&mut self) -> &mut Stack<bool> {
         &mut self.bool
     }
 }
 
-impl HasStack<PushInteger> for PushState {
+impl HasStackOld<PushInteger> for PushState {
     fn stack<U: TypeEq<This = PushInteger>>(&self) -> &Stack<PushInteger> {
         &self.int
     }
@@ -124,8 +137,11 @@ impl Builder {
     /// ```  
     #[must_use]
     pub fn with_bool_values(mut self, values: Vec<bool>) -> Self {
-        let bool_stack = self.partial_state.stack_mut::<bool>();
-        bool_stack.extend(values);
+        let bool_stack = crate::push_vm::stack::traits::has_stack::HasStackOld::stack_mut::<bool>(
+            &mut self.partial_state,
+        );
+        // TODO: Add actual error handling
+        bool_stack.extend(values).unwrap();
         self
     }
 
@@ -156,8 +172,11 @@ impl Builder {
     /// ```  
     #[must_use]
     pub fn with_int_values(mut self, values: Vec<PushInteger>) -> Self {
-        let int_stack = self.partial_state.stack_mut::<PushInteger>();
-        int_stack.extend(values);
+        let int_stack = crate::push_vm::stack::traits::has_stack::HasStackOld::stack_mut::<
+            PushInteger,
+        >(&mut self.partial_state);
+        // TODO: Add actual error handling
+        int_stack.extend(values).unwrap();
         self
     }
 

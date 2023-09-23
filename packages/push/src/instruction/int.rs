@@ -56,7 +56,7 @@ pub enum IntInstructionError {
 
 impl<S> Instruction<S> for IntInstruction
 where
-    S: Clone + HasStack<PushInteger> + HasStack<bool>,
+    S: Clone + HasStackOld<PushInteger> + HasStackOld<bool>,
 {
     type Error = PushInstructionError;
 
@@ -215,10 +215,7 @@ where
                 // the instruction, we need to check for the case that the boolean stack is
                 // already full, and return an `Overflow` error if it is.
                 if state.stack::<bool>().is_full() {
-                    return Err(Error::fatal(
-                        state,
-                        StackError::Overflow { stack_type: "bool" },
-                    ));
+                    return Err(Error::fatal(state, StackError::overflow::<bool>(0, 1)));
                 }
                 let int_stack: &mut Stack<PushInteger> = state.stack_mut::<PushInteger>();
                 match self {
@@ -560,7 +557,7 @@ mod test {
 mod property_tests {
     use crate::{
         instruction::{int::IntInstructionError, Instruction, IntInstruction},
-        push_vm::{state::PushState, HasStack, PushInteger},
+        push_vm::{state::PushState, HasStackOld, PushInteger},
     };
     use proptest::{prop_assert_eq, proptest};
     use strum::IntoEnumIterator;

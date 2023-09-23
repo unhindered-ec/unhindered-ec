@@ -1,3 +1,5 @@
+// We maybe should put this module into it's own crate if all the macro magic ends up affecting compile times
+// significantly, as then it should be recompiled less often (hopefully)
 use std::marker::PhantomData;
 
 /// # Safety
@@ -31,6 +33,8 @@ pub unsafe trait MonotonicTuple {
     fn into_boxed_slice(self) -> Box<[Self::Item]>;
 
     fn into_iterator(self) -> Self::Iterator;
+
+    fn reverse(self) -> Self;
 }
 
 pub trait EnumIterBackend<T: MonotonicTuple>: Sized {
@@ -84,7 +88,15 @@ impl<T: MonotonicTuple, B: EnumIterBackend<T>> DoubleEndedIterator for EnumIter<
     }
 }
 
-impl<T: MonotonicTuple, B: EnumIterBackend<T>> ExactSizeIterator for EnumIter<T, B> {}
+// This impl does not strictly need a `len` method as it is implemented over [`Iterator::size_hint`] already
+// over the default impl, but just returning self.current_length in practice will require a few less instructions
+// as the default impl asserts for both values from size_hint to be the same.
+impl<T: MonotonicTuple, B: EnumIterBackend<T>> ExactSizeIterator for EnumIter<T, B> {
+    #[inline]
+    fn len(&self) -> usize {
+        self.current_length
+    }
+}
 
 // Some of the macro code is taken from the `Debug` impl on Tuples in the rust standard library.
 macro_rules! for_each_token {
@@ -198,6 +210,14 @@ macro_rules! tuple {
         }
         peel!(@mod_decl $first, $($($name,)*)?);
     };
+    // Build a tuple from ident in reverse order (Recursion exit)
+    (@reverse_tuple | ($($existing:ident,)*)) => {
+      ($($existing ,)*)
+    };
+    // Main part
+    (@reverse_tuple $first:ident $(,$($name:ident),*)? | ($($existing:ident,)*)) => {
+        tuple!(@reverse_tuple $($($name),*)? | ($($existing,)* $first,))
+    };
     // Recursion exit
     (@recursive | doc=$doc:literal) => ();
     // Generate actual trait implementation for all passed idents
@@ -247,6 +267,13 @@ macro_rules! tuple {
 
                 fn into_iterator(self) -> Self::Iterator {
                     EnumIter::new(self)
+                }
+
+                fn reverse(self) -> Self {
+                    let ($first,$($($name,)+)?) = self;
+
+                    tuple!(@reverse_tuple $first $(,$($name),+)? | ())
+
                 }
             }
             | doc=$doc
@@ -309,5 +336,9 @@ tuple! {
 
 //     fn into_iterator(self) -> Self::Iterator {
 //         std::iter::once(self)
+//     }
+
+//     fn reverse(self) {
+//         self
 //     }
 // }

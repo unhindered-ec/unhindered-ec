@@ -1,17 +1,21 @@
 use crate::{
-    instruction::{Error, InstructionResult},
+    instruction::{Error, InstructionResult, MakeError},
+    push_vm::stack::{Stack, StackError},
     type_eq::TypeEq,
 };
 
-use super::{Stack, StackError};
-
-pub trait HasStack<T> {
+#[deprecated(note = "Use HasStack and HasStackMut instead")]
+pub trait HasStackOld<T> {
     fn stack<U: TypeEq<This = T>>(&self) -> &Stack<T>;
+    #[deprecated(note = "Use HasStackMut::stack_mut instead")]
     fn stack_mut<U: TypeEq<This = T>>(&mut self) -> &mut Stack<T>;
 
     /// # Errors
     ///
     /// Returns a fatal error if the stack is in fact full.
+    #[deprecated(
+        note = "Use WithStack::with_stack_try::<U>(Stack::not_full).map_err(WithState::drop_state).map_err(MakeError::make_fatal) instead"
+    )]
     fn not_full<U: TypeEq<This = T>>(self) -> InstructionResult<Self, StackError>
     where
         Self: Sized,
@@ -19,10 +23,7 @@ pub trait HasStack<T> {
         if self.stack::<U>().is_full() {
             Err(Error::fatal(
                 self,
-                StackError::Overflow {
-                    // TODO: Should make sure to overflow a stack so we know what this looks like.
-                    stack_type: std::any::type_name::<T>(),
-                },
+                StackError::overflow_unknown_requested::<T>(0),
             ))
         } else {
             Ok(self)
@@ -32,13 +33,16 @@ pub trait HasStack<T> {
     /// # Errors
     ///
     /// Returns a fatal error if pushing onto the specified stack overflows.
+    #[deprecated(
+        note = "Use WithStack::with_stack_try::<U>(|s| s.push(value)).make_fatal() instead"
+    )]
     fn with_push(mut self, value: T) -> InstructionResult<Self, StackError>
     where
         Self: Sized,
     {
         match self.stack_mut::<T>().push(value) {
             Ok(_) => Ok(self),
-            Err(error) => Err(Error::fatal(self, error)),
+            Err(error) => Err(error).make_fatal(self).map_err(Into::into),
         }
     }
 
@@ -65,6 +69,7 @@ pub trait HasStack<T> {
     /// This also returns a fatal error if pushing onto the specified stack
     /// overflows, which should really never happen assuming we pop at least
     /// one value off the stack.
+    #[deprecated(note = "Use transactions instead")]
     fn with_replace(
         mut self,
         num_to_replace: usize,
@@ -78,5 +83,40 @@ pub trait HasStack<T> {
             Ok(_) => self.with_push(value),
             Err(error) => Err(Error::fatal(self, error)),
         }
+    }
+}
+
+pub trait HasStack<T> {
+    fn stack<U: TypeEq<This = T>>(&self) -> &Stack<T>;
+}
+
+impl<'a, T, R> HasStack<T> for &'a R
+where
+    R: HasStack<T>,
+{
+    fn stack<U: TypeEq<This = T>>(&self) -> &Stack<T> {
+        (**self).stack::<U>()
+    }
+}
+
+impl<'a, T, R> HasStack<T> for &'a mut R
+where
+    R: HasStack<T>,
+{
+    fn stack<U: TypeEq<This = T>>(&self) -> &Stack<T> {
+        (**self).stack::<U>()
+    }
+}
+
+pub trait HasStackMut<T>: HasStack<T> {
+    fn stack_mut<U: TypeEq<This = T>>(&mut self) -> &mut Stack<T>;
+}
+
+impl<'a, T, R> HasStackMut<T> for &'a mut R
+where
+    R: HasStackMut<T>,
+{
+    fn stack_mut<U: TypeEq<This = T>>(&mut self) -> &mut Stack<T> {
+        (*self).stack_mut::<U>()
     }
 }

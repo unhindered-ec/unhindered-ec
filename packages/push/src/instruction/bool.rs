@@ -29,7 +29,7 @@ pub enum BoolInstructionError {}
 
 impl<S> Instruction<S> for BoolInstruction
 where
-    S: Clone + HasStack<bool> + HasStack<i64>,
+    S: Clone + HasStackOld<bool> + HasStackOld<i64>,
 {
     type Error = PushInstructionError;
 

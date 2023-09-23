@@ -1,6 +1,6 @@
 use crate::{
     instruction::{Error, InstructionResult, MapInstructionError},
-    push_vm::HasStack,
+    push_vm::HasStackOld,
 };
 
 use super::StackError;
@@ -8,13 +8,19 @@ use super::StackError;
 /// Helper trait to chain instruction operations.
 pub trait StackPush<T, E> {
     /// Updates the state with `T` pushed to the stack.
+    /// # Errors
+    /// - [`StackError::Overflow`] is returned when the remaining capacity of the stack is less than one
     fn with_stack_push<S>(self, state: S) -> InstructionResult<S, E>
     where
-        S: HasStack<T>;
+        S: HasStackOld<T>;
 
+    /// # Errors
+    /// - [`StackError::Overflow`] is returned when there is no element removed and the remaining capacity of
+    /// the stack is less than one
+    /// - [`StackError::Underflow`] is returned when there are more elements removed than are present in the stack
     fn with_stack_replace<S>(self, num_to_replace: usize, state: S) -> InstructionResult<S, E>
     where
-        S: HasStack<T>;
+        S: HasStackOld<T>;
 }
 
 impl<T, E1, E2> StackPush<T, E2> for Result<T, E1>
@@ -23,7 +29,7 @@ where
 {
     fn with_stack_push<S>(self, state: S) -> InstructionResult<S, E2>
     where
-        S: HasStack<T>,
+        S: HasStackOld<T>,
     {
         match self {
             Ok(val) => state.with_push(val).map_err_into(),
@@ -33,7 +39,7 @@ where
 
     fn with_stack_replace<S>(self, num_to_replace: usize, state: S) -> InstructionResult<S, E2>
     where
-        S: HasStack<T>,
+        S: HasStackOld<T>,
     {
         match self {
             Ok(val) => state.with_replace(num_to_replace, val).map_err_into(),

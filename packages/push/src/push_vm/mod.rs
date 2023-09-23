@@ -6,7 +6,7 @@ use crate::{
 pub mod stack;
 pub mod state;
 
-pub use stack::has_stack::HasStack;
+pub use stack::traits::has_stack::HasStackOld;
 
 // We'll use a 64-bit integer for our integer types.
 pub type PushInteger = i64;

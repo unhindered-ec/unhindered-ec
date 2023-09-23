@@ -1,18 +1,54 @@
-use crate::tuples::MonotonicTuple;
+use crate::{maybe_known::MaybeKnown, tuples::MonotonicTuple};
 
-pub mod has_stack;
+pub mod simple;
 pub mod stack_discard;
 pub mod stack_push;
+pub mod traits;
+pub mod transactional;
 
 #[derive(thiserror::Error, Debug, Eq, PartialEq)]
 pub enum StackError {
-    #[error("Requested {num_requested} elements from stack with {num_present} elements.")]
+    #[error("Requested {num_requested} elements from stack of type {stack_type} with {num_present} elements.")]
     Underflow {
         num_requested: usize,
         num_present: usize,
+        stack_type: &'static str,
     },
-    #[error("Pushed onto full stack of type {stack_type}.")]
-    Overflow { stack_type: &'static str },
+    #[error("Attempted to push to stack of type {stack_type} where the requested capacity was {num_requested} was larger than the one available {capacity_remaining}")]
+    Overflow {
+        num_requested: MaybeKnown<usize>,
+        capacity_remaining: usize,
+        stack_type: &'static str,
+    },
+}
+
+impl StackError {
+    #[must_use]
+    pub fn overflow<T>(capacity: usize, requested: usize) -> Self {
+        Self::Overflow {
+            capacity_remaining: capacity,
+            num_requested: MaybeKnown::Known(requested),
+            stack_type: std::any::type_name::<T>(),
+        }
+    }
+
+    #[must_use]
+    pub fn overflow_unknown_requested<T>(capacity: usize) -> Self {
+        Self::Overflow {
+            capacity_remaining: capacity,
+            num_requested: MaybeKnown::Unknown,
+            stack_type: std::any::type_name::<T>(),
+        }
+    }
+
+    #[must_use]
+    pub fn underflow<T>(present: usize, requested: usize) -> Self {
+        Self::Underflow {
+            num_requested: requested,
+            num_present: present,
+            stack_type: std::any::type_name::<T>(),
+        }
+    }
 }
 
 #[derive(Debug, Eq, PartialEq, Clone)]
@@ -40,190 +76,6 @@ where
 {
     fn eq(&self, other: &Vec<T>) -> bool {
         &self.values == other
-    }
-}
-
-pub trait TypedStack {
-    type Item;
-}
-
-pub trait SizeLimit {
-    #[must_use]
-    fn max_size(&self) -> usize;
-
-    fn set_max_size(&mut self, max_size: usize);
-
-    #[must_use]
-    fn is_full(&self) -> bool
-    where
-        Self: StackSize,
-    {
-        self.max_size() == self.size()
-    }
-}
-
-pub trait StackSize {
-    #[must_use]
-    fn size(&self) -> usize;
-
-    #[must_use]
-    fn is_empty(&self) -> bool {
-        self.size() == 0
-    }
-}
-
-// All items returning a tuple of items from the stack should return them in a first-in-stack goes first ordering.
-
-pub trait GetHead: TypedStack {
-    /// # Errors
-    /// - [`StackError::Underflow`] is returned when there is not at least one item on the Stack to return.
-    fn head(&self) -> Result<&Self::Item, StackError> {
-        Ok(self.get_n_head::<(_,)>()?.0)
-    }
-
-    /// # Errors
-    /// - [`StackError::Underflow`] is returned when there are not at least [`MonotonicTuple::Length`] items on the Stack to return.
-    fn get_n_head<'a, Tuple: MonotonicTuple<Item = &'a Self::Item>>(
-        &'a self,
-    ) -> Result<Tuple, StackError>;
-}
-
-pub trait PopHead: GetHead {
-    /// # Errors
-    /// - [`StackError::Underflow`] is returned when there is not at least one item on the Stack to return.
-    fn pop_head(&mut self) -> Result<&Self::Item, StackError> {
-        Ok(self.pop_n_head::<(_,)>()?.0)
-    }
-
-    /// # Errors
-    /// - [`StackError::Underflow`] is returned when there are not at least [`MonotonicTuple::Length`] items on the Stack to return.
-    fn pop_n_head<'a, Tuple: MonotonicTuple<Item = &'a Self::Item>>(
-        &'a mut self,
-    ) -> Result<Tuple, StackError>;
-}
-
-pub trait GetTail: TypedStack {
-    /// # Errors
-    /// - [`StackError::Underflow`] is returned when there is not at least one item on the Stack to return.
-    fn tail(&self) -> Result<&Self::Item, StackError> {
-        Ok(self.get_n_tail::<(_,)>()?.0)
-    }
-
-    /// # Errors
-    /// - [`StackError::Underflow`] is returned when there are not at least [`MonotonicTuple::Length`] items on the Stack to return.
-    fn get_n_tail<'a, Tuple: MonotonicTuple<Item = &'a Self::Item>>(
-        &'a self,
-    ) -> Result<Tuple, StackError>;
-}
-
-pub trait PopTail: GetTail {
-    /// # Errors
-    /// - [`StackError::Underflow`] is returned when there is not at least one item on the Stack to return.
-    fn pop_tail(&mut self) -> Result<&Self::Item, StackError> {
-        Ok(self.pop_n_tail::<(_,)>()?.0)
-    }
-
-    /// # Errors
-    /// - [`StackError::Underflow`] is returned when there are not at least [`MonotonicTuple::Length`] items on the Stack to return.
-    fn pop_n_tail<'a, Tuple: MonotonicTuple<Item = &'a Self::Item>>(
-        &'a mut self,
-    ) -> Result<Tuple, StackError>;
-}
-
-pub trait DiscardHead {
-    /// # Errors
-    /// - [`StackError::Underflow`] is returned when there is not at least one item on the Stack to discard
-    fn discard_head(&mut self) -> Result<(), StackError> {
-        self.discard_n_head(1)
-    }
-
-    /// # Errors
-    /// - [`StackError::Underflow`] is returned when there are not at least [`MonotonicTuple::Length`] items on the Stack to discard.
-    fn discard_n_head(&mut self, n: usize) -> Result<(), StackError>;
-}
-
-pub trait DiscardTail {
-    /// # Errors
-    /// - [`StackError::Underflow`] is returned when there is not at least one item on the Stack to discard
-    fn discard_tail(&mut self) -> Result<(), StackError> {
-        self.discard_n_tail(1)
-    }
-
-    /// # Errors
-    /// - [`StackError::Underflow`] is returned when there are not at least [`MonotonicTuple::Length`] items on the Stack to discard.
-    fn discard_n_tail(&mut self, n: usize) -> Result<(), StackError>;
-}
-
-pub trait PushHead: TypedStack {
-    /// # Errors
-    /// - [`StackError::Overflow`] is returned when the stack has not enough capacity for one new value remaining.
-    fn push_head(&mut self, value: Self::Item) -> Result<(), StackError> {
-        self.push_n_head((value,))
-    }
-
-    /// # Errors
-    /// - [`StackError::Overflow`] is returned when the stack has not enough capacity for n new values remaining.
-    fn push_n_head<Tuple: MonotonicTuple<Item = Self::Item>>(
-        &mut self,
-        value: Tuple,
-    ) -> Result<(), StackError>;
-}
-
-pub trait PushTail: TypedStack {
-    /// # Errors
-    /// - [`StackError::Overflow`] is returned when the stack has not enough capacity for one new value remaining.
-    fn push_tail(&mut self, value: Self::Item) -> Result<(), StackError> {
-        self.push_n_tail((value,))
-    }
-
-    /// # Errors
-    /// - [`StackError::Overflow`] is returned when the stack has not enough capacity for n new values remaining.
-    fn push_n_tail<Tuple: MonotonicTuple<Item = Self::Item>>(
-        &mut self,
-        value: Tuple,
-    ) -> Result<(), StackError>;
-}
-
-pub trait ExtendTail: TypedStack {
-    /// # Errors
-    /// - [`StackError::Overflow`] is returned when the stack has not enough capacity for [`Iter::len()`] new values remaining.
-    fn extend_tail<Iter>(&mut self, iter: Iter) -> Result<(), StackError>
-    where
-        Iter: IntoIterator<Item = Self::Item>,
-        Iter::IntoIter: DoubleEndedIterator + ExactSizeIterator;
-}
-
-pub trait ExtendHead: TypedStack {
-    /// # Errors
-    /// - [`StackError::Overflow`] is returned when the stack has not enough capacity for [`Iter::len()`] new values remaining.
-    fn extend_head<Iter>(&mut self, iter: Iter) -> Result<(), StackError>
-    where
-        Iter: IntoIterator<Item = Self::Item>,
-        Iter::IntoIter: DoubleEndedIterator + ExactSizeIterator;
-}
-
-// Blanket impl - Is this a good idea even when specialization is not stable yet?
-impl<T> PushHead for T
-where
-    T: ExtendHead,
-{
-    fn push_n_head<Tuple: MonotonicTuple<Item = Self::Item>>(
-        &mut self,
-        value: Tuple,
-    ) -> Result<(), StackError> {
-        self.extend_head(value.into_iterator())
-    }
-}
-
-impl<T> PushTail for T
-where
-    T: ExtendTail,
-{
-    fn push_n_tail<Tuple: MonotonicTuple<Item = Self::Item>>(
-        &mut self,
-        value: Tuple,
-    ) -> Result<(), StackError> {
-        self.extend_tail(value.into_iterator())
     }
 }
 
@@ -261,10 +113,9 @@ impl<T> Stack<T> {
     /// # Errors
     /// - [`StackError::Underflow`] this Error is returned when there is not at least one Element in the Stack
     pub fn top(&self) -> Result<&T, StackError> {
-        self.values.last().ok_or(StackError::Underflow {
-            num_requested: 1,
-            num_present: 0,
-        })
+        self.values
+            .last()
+            .ok_or_else(|| StackError::underflow::<T>(0, 1))
     }
 
     /// # Errors
@@ -272,10 +123,8 @@ impl<T> Stack<T> {
     pub fn top_n<'a, Tuple: MonotonicTuple<Item = &'a T>>(&'a self) -> Result<Tuple, StackError> {
         let initial_stack_size = self.size();
 
-        let construct_underflow_error = || StackError::Underflow {
-            num_requested: Tuple::LENGTH,
-            num_present: initial_stack_size,
-        };
+        let construct_underflow_error =
+            || StackError::underflow::<T>(initial_stack_size, Tuple::LENGTH);
 
         if self.size() < Tuple::LENGTH {
             return Err(construct_underflow_error());
@@ -292,26 +141,19 @@ impl<T> Stack<T> {
             let y = self
                 .values
                 .get(self.size() - 2)
-                .ok_or(StackError::Underflow {
-                    num_requested: 2,
-                    num_present: 1,
-                })?;
+                .ok_or_else(|| StackError::underflow::<T>(1, 2))?;
             Ok((x, y))
         } else {
-            Err(StackError::Underflow {
-                num_requested: 2,
-                num_present: self.size(),
-            })
+            Err(StackError::underflow::<T>(self.size(), 2))
         }
     }
 
     /// # Errors
     /// - [`StackError::Underflow`] this Error is returned when there is not at least one Element in the Stack
     pub fn pop(&mut self) -> Result<T, StackError> {
-        self.values.pop().ok_or(StackError::Underflow {
-            num_requested: 1,
-            num_present: 0,
-        })
+        self.values
+            .pop()
+            .ok_or_else(|| StackError::underflow::<T>(0, 1))
     }
 
     /// # Errors
@@ -319,10 +161,8 @@ impl<T> Stack<T> {
     pub fn pop_n<Tuple: MonotonicTuple<Item = T>>(&mut self) -> Result<Tuple, StackError> {
         let initial_stack_size = self.size();
 
-        let construct_underflow_error = || StackError::Underflow {
-            num_requested: Tuple::LENGTH,
-            num_present: initial_stack_size,
-        };
+        let construct_underflow_error =
+            || StackError::underflow::<T>(initial_stack_size, Tuple::LENGTH);
 
         if self.size() < Tuple::LENGTH {
             return Err(construct_underflow_error());
@@ -339,10 +179,7 @@ impl<T> Stack<T> {
             let y = self.pop()?;
             Ok((x, y))
         } else {
-            Err(StackError::Underflow {
-                num_requested: 2,
-                num_present: self.size(),
-            })
+            Err(StackError::underflow::<T>(self.size(), 2))
         }
     }
 
@@ -351,10 +188,7 @@ impl<T> Stack<T> {
     pub fn discard_from_top(&mut self, num_to_discard: usize) -> Result<(), StackError> {
         let stack_size = self.size();
         if num_to_discard > stack_size {
-            return Err(StackError::Underflow {
-                num_requested: num_to_discard,
-                num_present: stack_size,
-            });
+            return Err(StackError::underflow::<T>(stack_size, num_to_discard));
         }
         // truncate is more performant than popping each individually
         self.values.truncate(self.values.len() - num_to_discard);
@@ -365,9 +199,10 @@ impl<T> Stack<T> {
     /// - [`StackError::Overflow`] is returned when adding `value` to the stack would increase the stack size above the allowed maximum
     pub fn push(&mut self, value: T) -> Result<(), StackError> {
         if self.size() == self.max_stack_size {
-            Err(StackError::Overflow {
-                stack_type: std::any::type_name::<T>(),
-            })
+            Err(StackError::overflow::<T>(
+                self.max_stack_size - self.size(),
+                1,
+            ))
         } else {
             self.values.push(value);
             Ok(())
@@ -410,9 +245,10 @@ impl<T> Stack<T> {
     {
         let iter = values.into_iter();
         if iter.len() > self.max_stack_size - self.values.len() {
-            return Err(StackError::Overflow {
-                stack_type: std::any::type_name::<T>(),
-            });
+            return Err(StackError::overflow::<T>(
+                self.max_stack_size - self.values.len(),
+                iter.len(),
+            ));
         }
         self.values.extend(iter.rev());
         Ok(())
@@ -431,12 +267,6 @@ mod test {
     fn top_from_empty_fails() {
         let stack: Stack<bool> = Stack::default();
         let result = stack.top().unwrap_err();
-        assert_eq!(
-            result,
-            StackError::Underflow {
-                num_requested: 1,
-                num_present: 0
-            }
-        );
+        assert_eq!(result, StackError::underflow::<bool>(0, 1));
     }
 }
