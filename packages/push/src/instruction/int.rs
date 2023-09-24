@@ -1,16 +1,15 @@
-use super::{
-    Error, Instruction, InstructionResult, MapInstructionError, PushInstruction,
-    PushInstructionError,
-};
-use crate::push_vm::{
-    stack::{HasStack, Stack, StackDiscard, StackError, StackPush},
-    PushInteger,
+use super::{Instruction, MapInstructionError, PushInstruction, PushInstructionError};
+use crate::{
+    error::{Error, InstructionResult},
+    push_vm::{
+        stack::{HasStack, Stack, StackDiscard, StackError, StackPush},
+        PushInteger,
+    },
 };
 use std::ops::Neg;
 use strum_macros::EnumIter;
 
 #[derive(Debug, strum_macros::Display, Copy, Clone, PartialEq, Eq, EnumIter)]
-#[allow(clippy::module_name_repetitions)]
 pub enum IntInstruction {
     Push(PushInteger),
 

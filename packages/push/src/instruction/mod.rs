@@ -1,7 +1,9 @@
-use crate::push_vm::{push_state::PushState, stack::StackError, PushInteger};
-use std::{convert::Infallible, fmt::Debug, fmt::Display, sync::Arc};
+use crate::{
+    error::InstructionResult,
+    push_vm::{push_state::PushState, stack::StackError, PushInteger},
+};
+use std::{fmt::Debug, fmt::Display, sync::Arc};
 
-#[allow(clippy::module_name_repetitions)]
 pub use self::{bool::BoolInstruction, int::IntInstruction};
 use self::{bool::BoolInstructionError, int::IntInstructionError};
 
@@ -27,134 +29,6 @@ mod int;
  * - pop
  * - dup (int_dup, exec_dup, bool_dup, ...)
  */
-
-/// Error
-///
-/// - `state`: The state of the system _before_ attempting to perform
-///     the instruction that generated this error
-/// - `error`: The cause of this error
-/// - `error_kind`: Whether this error is `Fatal` (i.e., whether program execution
-///     should terminate immediately) or `Recoverable` (i.e., this instruction
-///     should just be skipped and the program execution continues with the
-///     next instruction).
-#[derive(Debug)]
-pub struct RecoverableError<S, E> {
-    // Without the `Box` the size of this Error ended up being 156 bytes
-    // with a `PushState` and a `PushInstructionError`. That led to a Clippy
-    // warning (https://rust-lang.github.io/rust-clippy/master/index.html#/result_large_err)
-    // our `Error` was then larger than the 128 byte limit. They recommended boxing
-    // the big piece (the state in our case), and doing that brought the size down to
-    // 40 bytes. Since `Error`s are only constructed through `::fatal()` or `::recoverable()`,
-    // we'd nicely encapsulated this and only had to make changes in those two places to
-    // get things working.
-    state: Box<S>,
-    error: E,
-}
-
-impl<S, E> RecoverableError<S, E> {
-    pub fn into_state(self) -> S {
-        *self.state
-    }
-}
-
-#[derive(Debug)]
-pub struct FatalError<S, E> {
-    // Without the `Box` the size of this Error ended up being 156 bytes
-    // with a `PushState` and a `PushInstructionError`. That led to a Clippy
-    // warning (https://rust-lang.github.io/rust-clippy/master/index.html#/result_large_err)
-    // our `Error` was then larger than the 128 byte limit. They recommended boxing
-    // the big piece (the state in our case), and doing that brought the size down to
-    // 40 bytes. Since `Error`s are only constructed through `::fatal()` or `::recoverable()`,
-    // we'd nicely encapsulated this and only had to make changes in those two places to
-    // get things working.
-    state: Box<S>,
-    error: E,
-}
-
-#[derive(Debug)]
-pub enum Error<S, E> {
-    Recoverable(RecoverableError<S, E>),
-    Fatal(FatalError<S, E>),
-}
-
-pub type InstructionResult<S, E> = core::result::Result<S, Error<S, E>>;
-
-impl<S, E> Error<S, E> {
-    pub fn fatal(state: S, error: impl Into<E>) -> Self {
-        Self::Fatal(FatalError {
-            state: Box::new(state),
-            error: error.into(),
-        })
-    }
-
-    pub fn recoverable(state: S, error: impl Into<E>) -> Self {
-        Self::Recoverable(RecoverableError {
-            state: Box::new(state),
-            error: error.into(),
-        })
-    }
-
-    pub const fn is_recoverable(&self) -> bool {
-        matches!(self, Self::Recoverable(_))
-    }
-
-    pub const fn is_fatal(&self) -> bool {
-        matches!(self, Self::Fatal(_))
-    }
-
-    pub fn state(&self) -> &S {
-        match self {
-            Self::Recoverable(error) => &error.state,
-            Self::Fatal(error) => &error.state,
-        }
-    }
-
-    pub const fn error(&self) -> &E {
-        match self {
-            Self::Recoverable(error) => &error.error,
-            Self::Fatal(error) => &error.error,
-        }
-    }
-
-    pub fn into_state(self) -> S {
-        match self {
-            Self::Recoverable(error) => *error.state,
-            Self::Fatal(error) => *error.state,
-        }
-    }
-}
-
-pub trait TryRecover<T> {
-    type Error;
-
-    /// # Errors
-    ///
-    /// `x.try_recover()` returns an error if `x` is not a `Recoverable` error type.
-    fn try_recover(self) -> Result<T, Self::Error>;
-}
-
-impl<S, E> TryRecover<S> for Result<S, Error<S, E>> {
-    type Error = FatalError<S, E>;
-
-    fn try_recover(self) -> Result<S, FatalError<S, E>> {
-        match self {
-            Ok(s) => Ok(s),
-            Err(Error::Recoverable(s)) => Ok(s.into_state()),
-            Err(Error::Fatal(error)) => Err(error),
-        }
-    }
-}
-
-impl<S, E> TryRecover<S> for Result<S, RecoverableError<S, E>> {
-    type Error = Infallible;
-
-    fn try_recover(self) -> Result<S, Infallible> {
-        match self {
-            Ok(s) => Ok(s),
-            Err(s) => Ok(s.into_state()),
-        }
-    }
-}
 
 #[derive(thiserror::Error, Debug, Eq, PartialEq)]
 pub enum PushInstructionError {
@@ -191,16 +65,7 @@ where
     E1: Into<E2>,
 {
     fn map_err_into(self) -> InstructionResult<S, E2> {
-        self.map_err(|error| match error {
-            Error::Recoverable(error) => Error::Recoverable(RecoverableError {
-                state: error.state,
-                error: error.error.into(),
-            }),
-            Error::Fatal(error) => Error::Fatal(FatalError {
-                state: error.state,
-                error: error.error.into(),
-            }),
-        })
+        self.map_err(|e| e.map_inner_err(Into::into))
     }
 }
 
@@ -274,7 +139,6 @@ mod variable_name_test {
 }
 
 #[derive(Clone, PartialEq, Eq)]
-#[allow(clippy::module_name_repetitions)]
 pub enum PushInstruction {
     InputVar(VariableName),
     BoolInstruction(BoolInstruction),

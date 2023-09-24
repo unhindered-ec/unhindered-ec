@@ -1,10 +1,11 @@
-use super::stack::{HasStack, Stack, TypeEq};
-use super::State;
-use crate::instruction::{
-    FatalError, Instruction, InstructionResult, PushInstruction, PushInstructionError, TryRecover,
-    VariableName,
+use crate::{
+    error::{stateful::FatalError, try_recover::TryRecover, InstructionResult},
+    instruction::{Instruction, PushInstruction, PushInstructionError, VariableName},
+    push_vm::{
+        stack::{HasStack, Stack, TypeEq},
+        PushInteger, State,
+    },
 };
-use crate::push_vm::PushInteger;
 use std::collections::HashMap;
 
 #[derive(Default, Debug, Eq, PartialEq, Clone)]
@@ -297,9 +298,6 @@ impl State for PushState {
         // It seems that maybe I should pick one or the other. Being able to store the state in
         // the errors appears to be part of the source of the problem here (again), which more and
         // more makes me wonder if that's a good idea.
-        //
-        // TODO: Justus_Fluegel@Twitch suggested a `try_recover()?` method to encapsulate the
-        //   `match error.severity()` logic.
         while let Some(instruction) = self.exec.pop() {
             self = self.perform(&instruction).try_recover()?;
         }

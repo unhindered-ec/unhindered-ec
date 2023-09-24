@@ -8,6 +8,7 @@
 // violations.
 #![allow(clippy::module_name_repetitions)]
 
+pub mod error;
 pub mod genome;
 pub mod instruction;
 pub mod push_vm;

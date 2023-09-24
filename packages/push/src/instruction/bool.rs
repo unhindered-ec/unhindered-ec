@@ -1,15 +1,15 @@
-use super::{
-    Instruction, InstructionResult, MapInstructionError, PushInstruction, PushInstructionError,
-};
-use crate::push_vm::{
-    stack::{HasStack, StackPush},
-    PushInteger,
+use super::{Instruction, MapInstructionError, PushInstruction, PushInstructionError};
+use crate::{
+    error::InstructionResult,
+    push_vm::{
+        stack::{HasStack, StackPush},
+        PushInteger,
+    },
 };
 use std::ops::Not;
 use strum_macros::EnumIter;
 
 #[derive(Debug, strum_macros::Display, Clone, PartialEq, Eq, EnumIter)]
-#[allow(clippy::module_name_repetitions)]
 pub enum BoolInstruction {
     Push(bool),
     Not,
