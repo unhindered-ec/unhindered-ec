@@ -148,8 +148,8 @@ mod property_tests {
     use crate::{
         instruction::{BoolInstruction, Instruction},
         push_vm::{
-            stack::traits::{get::GetHead, size::StackSize},
-            state::PushState,
+            stack::traits::{get::GetHeadIn, size::StackSizeOf},
+            state::{with_state::WithStateOps, PushState},
         },
     };
     use proptest::{prop_assert_eq, proptest};
@@ -176,8 +176,8 @@ mod property_tests {
                 .with_bool_values(vec![x, y])
                 .build();
             BoolInstruction::And.perform(&mut state).unwrap();
-            prop_assert_eq!(state.bool.size(), 1);
-            prop_assert_eq!(*state.bool.head().unwrap(), x && y);
+            prop_assert_eq!(state.size_of::<bool>().drop_state(), 1);
+            prop_assert_eq!(*state.head_in::<bool>().drop_state().unwrap(), x && y);
         }
 
         #[test]
@@ -186,8 +186,8 @@ mod property_tests {
                 .with_bool_values(vec![x, y])
                 .build();
             BoolInstruction::Implies.perform(&mut state).unwrap();
-            prop_assert_eq!(state.bool.size(), 1);
-            prop_assert_eq!(*state.bool.head().unwrap(), !x || y);
+            prop_assert_eq!(state.size_of::<bool>().drop_state(), 1);
+            prop_assert_eq!(*state.head_in::<bool>().drop_state().unwrap(), !x || y);
         }
     }
 }

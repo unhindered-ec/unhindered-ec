@@ -11,7 +11,7 @@ use crate::{
                 push::{AttemptPushHead, PushHead, PushHeadIn},
                 TypedStack,
             },
-            Stack, StackError,
+            StackError,
         },
         state::with_state::AddState,
         PushInteger,
@@ -238,7 +238,7 @@ where
                 if state.stack::<bool>().is_full() {
                     return Err(Error::fatal(state, StackError::overflow::<bool>(0, 1)));
                 }
-                let int_stack: &mut Stack<PushInteger> = state.stack_mut::<PushInteger>();
+                let int_stack = state.stack_mut::<PushInteger>();
                 match self {
                     // TODO: Write a test for IsEven that makes sure all the stack manipulation is correct.
                     Self::IsEven => int_stack
@@ -503,10 +503,7 @@ impl From<IntInstruction> for PushInstruction {
 #[allow(clippy::unwrap_used)]
 mod test {
 
-    use crate::push_vm::{
-        stack::traits::{get::GetHeadIn, push::PushHeadIn, size::StackSizeOf},
-        state::{with_state::WithStateOps, PushState},
-    };
+    use crate::push_vm::state::PushState;
 
     use super::*;
 
@@ -593,11 +590,7 @@ mod property_tests {
     use crate::{
         instruction::{int::IntInstructionError, Instruction, IntInstruction},
         push_vm::{
-            stack::traits::{
-                get::{GetHead, GetHeadIn},
-                push::PushHeadIn,
-                size::StackSize,
-            },
+            stack::traits::get::GetHeadIn,
             state::{with_state::WithStateOps, PushState},
             PushInteger,
         },
@@ -617,8 +610,8 @@ mod property_tests {
             let mut state = PushState::builder([]).build();
             state.push_head_in::<PushInteger>(x).unwrap();
             IntInstruction::Negate.perform(&mut state).unwrap();
-            prop_assert_eq!(state.int.size(), 1);
-            prop_assert_eq!(*state.int.head().unwrap(), -x);
+            prop_assert_eq!(state.size_of::<PushInteger>().drop_state(), 1);
+            prop_assert_eq!(*state.head_in::<PushInteger>().drop_state().unwrap(), -x);
         }
 
         #[test]
@@ -626,8 +619,8 @@ mod property_tests {
             let mut state = PushState::builder([]).build();
             state.push_head_in::<PushInteger>(x).unwrap();
             IntInstruction::Abs.perform(&mut state).unwrap();
-            prop_assert_eq!(state.int.size(), 1);
-            prop_assert_eq!(*state.int.head().unwrap(), x.abs());
+            prop_assert_eq!(state.size_of::<PushInteger>().drop_state(), 1);
+            prop_assert_eq!(*state.head_in::<PushInteger>().drop_state().unwrap(), x.abs());
         }
 
         #[test]
@@ -636,8 +629,8 @@ mod property_tests {
             state.push_head_in::<PushInteger>(x).unwrap();
             let err = IntInstruction::Square.perform(&mut state);
             if let Some(x_squared) = x.checked_mul(x) {
-                prop_assert_eq!(state.int.size(), 1);
-                let output = *state.int.head().unwrap();
+                prop_assert_eq!(state.size_of::<PushInteger>().drop_state(), 1);
+                let output = *state.head_in::<PushInteger>().drop_state().unwrap();
                 prop_assert_eq!(output, x_squared);
             } else {
                 let err = err.unwrap_err();
@@ -648,7 +641,7 @@ mod property_tests {
                     }.into()
                 );
                 assert!(err.is_recoverable());
-                let top_int = err.state().int.head().unwrap();
+                let top_int = (*err.state()).head_in::<PushInteger>().drop_state().unwrap();
                 prop_assert_eq!(*top_int, x);
             }
         }
@@ -683,7 +676,7 @@ mod property_tests {
                     .into()
                 );
                 assert!(err.is_recoverable());
-                let top_int = err.state().int.head().unwrap();
+                let top_int = (*err.state()).head_in::<PushInteger>().drop_state().unwrap();
                 prop_assert_eq!(*top_int, x);
             }
         }
