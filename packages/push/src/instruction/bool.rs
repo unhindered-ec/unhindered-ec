@@ -82,7 +82,7 @@ where
     //   - Hold operations in some kind of queue and apply the at the end
     //     when we know they'll all work
 
-    fn perform(&self, state: &mut S) -> InstructionResult<&mut S, Self::Error> {
+    fn perform<'a>(&'a self, state: &'a mut S) -> InstructionResult<&'a mut S, Self::Error> {
         let bool_stack = state.stack_mut::<bool>();
 
         match self {
@@ -123,7 +123,7 @@ where
                 .attempt_push_head()
                 .make_fatal()?,
             Self::FromInt => state
-                .not_full::<bool>()
+                .not_full_in::<bool>()
                 .make_recoverable()?
                 .pop_head_in::<i64>()
                 .map_value(|i| i != 0)
@@ -163,29 +163,29 @@ mod property_tests {
         #[test]
         fn ops_do_not_crash(instr in proptest::sample::select(all_instructions()),
                 x in proptest::bool::ANY, y in proptest::bool::ANY, i in proptest::num::i64::ANY) {
-            let state = PushState::builder([])
+            let state = &mut PushState::builder([])
                 .with_bool_values(vec![x, y])
                 .with_int_values(vec![i])
                 .build();
-            let _ = instr.perform(&mut state).unwrap();
+            let _ = instr.perform(state).unwrap();
         }
 
         #[test]
         fn and_is_correct(x in proptest::bool::ANY, y in proptest::bool::ANY) {
-            let state = PushState::builder([])
+            let state = &mut PushState::builder([])
                 .with_bool_values(vec![x, y])
                 .build();
-            BoolInstruction::And.perform(&mut state).unwrap();
+            BoolInstruction::And.perform(state).unwrap();
             prop_assert_eq!(state.size_of::<bool>().drop_state(), 1);
             prop_assert_eq!(*state.head_in::<bool>().drop_state().unwrap(), x && y);
         }
 
         #[test]
         fn implies_is_correct(x in proptest::bool::ANY, y in proptest::bool::ANY) {
-            let state = PushState::builder([])
+            let state =&mut  PushState::builder([])
                 .with_bool_values(vec![x, y])
                 .build();
-            BoolInstruction::Implies.perform(&mut state).unwrap();
+            BoolInstruction::Implies.perform(state).unwrap();
             prop_assert_eq!(state.size_of::<bool>().drop_state(), 1);
             prop_assert_eq!(*state.head_in::<bool>().drop_state().unwrap(), !x || y);
         }

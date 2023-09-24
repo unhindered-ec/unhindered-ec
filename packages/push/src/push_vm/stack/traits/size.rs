@@ -2,7 +2,7 @@ use crate::{
     error::stateful::UnknownError,
     push_vm::{
         stack::StackError,
-        state::with_state::{AddState, WithState, WithStateOps},
+        state::with_state::{AddState, WithState},
     },
     type_eq::TypeEq,
 };
@@ -58,7 +58,7 @@ where
     where
         <State as HasStack<Stack>>::StackType: StackSize;
 
-    fn not_full<U: TypeEq<This = Stack>>(self) -> Result<State, UnknownError<State, StackError>>
+    fn not_full_in<U: TypeEq<This = Stack>>(self) -> Result<State, UnknownError<State, StackError>>
     where
         <State as HasStack<Stack>>::StackType: StackSize;
 
@@ -114,11 +114,11 @@ where
         self.stack::<U>().capacity().with_state(self)
     }
 
-    fn not_full<U: TypeEq<This = Stack>>(self) -> Result<State, UnknownError<State, StackError>>
+    fn not_full_in<U: TypeEq<This = Stack>>(self) -> Result<State, UnknownError<State, StackError>>
     where
         <State as HasStack<Stack>>::StackType: StackSize,
     {
-        if self.is_full_of::<U>().drop_state() {
+        if self.stack::<U>().is_full() {
             Err(
                 StackError::overflow_unknown_requested::<<State as HasStack<Stack>>::StackType>(0)
                     .with_state(self)
@@ -139,11 +139,10 @@ where
         mut self,
         max_size: usize,
     ) -> Result<Self, UnknownError<Self, StackError>> {
-        self.stack_mut::<U>()
-            .set_max_size(max_size)
-            .map_err(|e| e.with_state(self))?;
-
-        Ok(self)
+        match self.stack_mut::<U>().set_max_size(max_size) {
+            Err(e) => Err(e.with_state(self).into()),
+            Ok(_) => Ok(self),
+        }
     }
 }
 

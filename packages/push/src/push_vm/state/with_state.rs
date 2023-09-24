@@ -176,12 +176,28 @@ pub trait AddState<State>: Sized {
     fn with_state(self, state: State) -> Self::Output;
 }
 
+pub trait AddMultipleStates<State1, State2>: Sized {
+    type Output;
+    fn with_states(self, state1: State1, state2: State2) -> Self::Output;
+}
+
 impl<State, Value> AddState<State> for Value {
     type Output = WithState<Self, State>;
 
     #[inline(always)]
     fn with_state(self, state: State) -> WithState<Self, State> {
         WithState { value: self, state }
+    }
+}
+
+impl<State1, State2, Value, Error> AddMultipleStates<State1, State2> for Result<Value, Error> {
+    type Output = Result<WithState<Value, State1>, UnknownError<State2, Error>>;
+
+    fn with_states(self, state1: State1, state2: State2) -> Self::Output {
+        match self {
+            Err(e) => Err(e.with_state(state2).into()),
+            Ok(o) => Ok(o.with_state(state1)),
+        }
     }
 }
 

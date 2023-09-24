@@ -50,13 +50,13 @@ pub trait Instruction<S> {
     /// This returns an error if the instruction being performed
     /// returns some kind of error. This could include things like
     /// stack over- or underflows, or numeric errors like integer overflow.
-    fn perform(&self, state: &mut S) -> InstructionResult<&mut S, Self::Error>;
+    fn perform<'a>(&'a self, state: &'a mut S) -> InstructionResult<&'a mut S, Self::Error>;
 }
 
 impl<S, E> Instruction<S> for Box<dyn Instruction<S, Error = E>> {
     type Error = E;
 
-    fn perform(&self, state: &mut S) -> InstructionResult<&mut S, E> {
+    fn perform<'a>(&'a self, state: &'a mut S) -> InstructionResult<&'a mut S, E> {
         self.as_ref().perform(state)
     }
 }
@@ -143,7 +143,10 @@ impl PushInstruction {
 impl Instruction<PushState> for PushInstruction {
     type Error = PushInstructionError;
 
-    fn perform(&self, state: &mut PushState) -> InstructionResult<&mut PushState, Self::Error> {
+    fn perform<'a>(
+        &'a self,
+        state: &'a mut PushState,
+    ) -> InstructionResult<&'a mut PushState, Self::Error> {
         match self {
             Self::InputVar(var_name) => {
                 // TODO: Should `push_input` return the new state?

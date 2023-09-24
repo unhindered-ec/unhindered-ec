@@ -1,5 +1,5 @@
 use crate::{
-    error::stateful::UnknownError,
+    error::{into_state::IntoState, stateful::UnknownError},
     push_vm::{stack::StackError, state::with_state::AddState},
     type_eq::TypeEq,
 };
@@ -35,14 +35,14 @@ pub trait DiscardHeadIn<Stack, State>: Sized {
     /// - [`StackError::Underflow`] is returned when there is not at least one item on the Stack to discard
     fn discard_head_in<U: TypeEq<This = Stack>>(
         self,
-    ) -> Result<State, UnknownError<State, StackError>>;
+    ) -> Result<Self, UnknownError<State, StackError>>;
 
     /// # Errors
     /// - [`StackError::Underflow`] is returned when there are not at least [`MonotonicTuple::Length`] items on the Stack to discard.
     fn discard_n_head_in<U: TypeEq<This = Stack>>(
         self,
         n: usize,
-    ) -> Result<State, UnknownError<State, StackError>>;
+    ) -> Result<Self, UnknownError<State, StackError>>;
 }
 
 pub trait DiscardTailIn<Stack, State>: Sized {
@@ -50,65 +50,75 @@ pub trait DiscardTailIn<Stack, State>: Sized {
     /// - [`StackError::Underflow`] is returned when there is not at least one item on the Stack to discard
     fn discard_tail_in<U: TypeEq<This = Stack>>(
         self,
-    ) -> Result<State, UnknownError<State, StackError>>;
+    ) -> Result<Self, UnknownError<State, StackError>>;
 
     /// # Errors
     /// - [`StackError::Underflow`] is returned when there are not at least [`MonotonicTuple::Length`] items on the Stack to discard.
     fn discard_n_tail_in<U: TypeEq<This = Stack>>(
         self,
         n: usize,
-    ) -> Result<State, UnknownError<State, StackError>>;
+    ) -> Result<Self, UnknownError<State, StackError>>;
 }
 
-impl<State, Stack> DiscardHeadIn<Stack, State> for State
+impl<WithState, State, Stack> DiscardHeadIn<Stack, State> for WithState
 where
+    WithState: IntoState<State>,
     State: HasStackMut<Stack>,
     <State as HasStack<Stack>>::StackType: DiscardHead,
 {
     fn discard_head_in<U: TypeEq<This = Stack>>(
-        mut self,
-    ) -> Result<State, UnknownError<State, StackError>> {
-        self.stack_mut::<U>()
+        self,
+    ) -> Result<Self, UnknownError<State, StackError>> {
+        let mut state = self.into_state();
+        state
+            .stack_mut::<U>()
             .discard_head()
-            .map_err(|e| e.with_state(self))?;
+            .map_err(|e| e.with_state(state))?;
 
         Ok(self)
     }
 
     fn discard_n_head_in<U: TypeEq<This = Stack>>(
-        mut self,
+        self,
         n: usize,
-    ) -> Result<State, UnknownError<State, StackError>> {
-        self.stack_mut::<U>()
+    ) -> Result<Self, UnknownError<State, StackError>> {
+        let mut state = self.into_state();
+        state
+            .stack_mut::<U>()
             .discard_n_head(n)
-            .map_err(|e| e.with_state(self))?;
+            .map_err(|e| e.with_state(state))?;
 
         Ok(self)
     }
 }
 
-impl<State, Stack> DiscardTailIn<Stack, State> for State
+impl<WithState, State, Stack> DiscardTailIn<Stack, State> for WithState
 where
+    WithState: IntoState<State>,
     State: HasStackMut<Stack>,
     <State as HasStack<Stack>>::StackType: DiscardTail,
 {
     fn discard_tail_in<U: TypeEq<This = Stack>>(
-        mut self,
-    ) -> Result<State, UnknownError<State, StackError>> {
-        self.stack_mut::<U>()
+        self,
+    ) -> Result<Self, UnknownError<State, StackError>> {
+        let mut state = self.into_state();
+        state
+            .stack_mut::<U>()
             .discard_tail()
-            .map_err(|e| e.with_state(self))?;
+            .map_err(|e| e.with_state(state))?;
 
         Ok(self)
     }
 
     fn discard_n_tail_in<U: TypeEq<This = Stack>>(
-        mut self,
+        self,
         n: usize,
-    ) -> Result<State, UnknownError<State, StackError>> {
-        self.stack_mut::<U>()
+    ) -> Result<Self, UnknownError<State, StackError>> {
+        let mut state = self.into_state();
+        state
+            .stack_mut::<U>()
             .discard_n_tail(n)
-            .map_err(|e| e.with_state(self))?;
+            .map_err(|e| e.with_state(state))?;
 
         Ok(self)
     }

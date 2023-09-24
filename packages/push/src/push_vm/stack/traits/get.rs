@@ -1,7 +1,8 @@
 use crate::{
+    error::{into_state::IntoState, stateful::UnknownError},
     push_vm::{
         stack::StackError,
-        state::with_state::{AddState, WithState},
+        state::with_state::{AddMultipleStates, WithState},
     },
     tuples::MonotonicTuple,
     type_eq::TypeEq,
@@ -48,8 +49,8 @@ where
     fn head_in<U: TypeEq<This = Stack>>(
         self,
     ) -> Result<
-        WithState<&'a <<State as HasStack<Stack>>::StackType as TypedStack>::Item, State>,
-        StackError,
+        WithState<&'a <<State as HasStack<Stack>>::StackType as TypedStack>::Item, Self>,
+        UnknownError<State, StackError>,
     >;
 
     /// # Errors
@@ -59,7 +60,7 @@ where
         Tuple: MonotonicTuple<Item = &'a <<State as HasStack<Stack>>::StackType as TypedStack>::Item>,
     >(
         self,
-    ) -> Result<WithState<Tuple, State>, StackError>;
+    ) -> Result<WithState<Tuple, Self>, UnknownError<State, StackError>>;
 }
 
 pub trait GetTailIn<'a, Stack, State>: Sized
@@ -73,8 +74,8 @@ where
     fn tail_in<U: TypeEq<This = Stack>>(
         self,
     ) -> Result<
-        WithState<&'a <<State as HasStack<Stack>>::StackType as TypedStack>::Item, State>,
-        StackError,
+        WithState<&'a <<State as HasStack<Stack>>::StackType as TypedStack>::Item, Self>,
+        UnknownError<State, StackError>,
     >;
 
     /// # Errors
@@ -84,22 +85,24 @@ where
         Tuple: MonotonicTuple<Item = &'a <<State as HasStack<Stack>>::StackType as TypedStack>::Item>,
     >(
         self,
-    ) -> Result<WithState<Tuple, State>, StackError>;
+    ) -> Result<WithState<Tuple, Self>, UnknownError<State, StackError>>;
 }
 
-impl<'a, Stack, State> GetHeadIn<'a, Stack, State> for State
+impl<'a, Stack, T, State> GetHeadIn<'a, Stack, State> for T
 where
-    State: HasStack<Stack>,
-    <State as HasStack<Stack>>::StackType: GetHead + TypedStack,
+    T: IntoState<State>,
+    State: HasStack<Stack> + 'a,
+    <State as HasStack<Stack>>::StackType: GetHead + TypedStack + 'a,
     <<State as HasStack<Stack>>::StackType as TypedStack>::Item: 'a,
 {
     fn head_in<U: TypeEq<This = Stack>>(
         self,
     ) -> Result<
-        WithState<&'a <<State as HasStack<Stack>>::StackType as TypedStack>::Item, State>,
-        StackError,
+        WithState<&'a <<State as HasStack<Stack>>::StackType as TypedStack>::Item, Self>,
+        UnknownError<State, StackError>,
     > {
-        self.stack::<U>().head().map(|v| v.with_state(self))
+        let mut state = self.into_state();
+        state.stack::<U>().head().with_states(self, state)
     }
 
     fn get_n_head_in<
@@ -107,15 +110,18 @@ where
         Tuple: MonotonicTuple<Item = &'a <<State as HasStack<Stack>>::StackType as TypedStack>::Item>,
     >(
         self,
-    ) -> Result<WithState<Tuple, State>, StackError> {
-        self.stack::<U>()
+    ) -> Result<WithState<Tuple, Self>, UnknownError<State, StackError>> {
+        let mut state = self.into_state();
+        state
+            .stack::<U>()
             .get_n_head::<Tuple>()
-            .map(|v| v.with_state(self))
+            .with_states(self, state)
     }
 }
 
-impl<'a, Stack, State> GetTailIn<'a, Stack, State> for State
+impl<'a, Stack, T, State> GetTailIn<'a, Stack, State> for T
 where
+    T: IntoState<State>,
     State: HasStack<Stack>,
     <State as HasStack<Stack>>::StackType: GetTail + TypedStack,
     <<State as HasStack<Stack>>::StackType as TypedStack>::Item: 'a,
@@ -123,10 +129,11 @@ where
     fn tail_in<U: TypeEq<This = Stack>>(
         self,
     ) -> Result<
-        WithState<&'a <<State as HasStack<Stack>>::StackType as TypedStack>::Item, State>,
-        StackError,
+        WithState<&'a <<State as HasStack<Stack>>::StackType as TypedStack>::Item, Self>,
+        UnknownError<State, StackError>,
     > {
-        self.stack::<U>().tail().map(|v| v.with_state(self))
+        let mut state = self.into_state();
+        state.stack::<U>().tail().with_states(self, state)
     }
 
     fn get_n_tail_in<
@@ -134,9 +141,11 @@ where
         Tuple: MonotonicTuple<Item = &'a <<State as HasStack<Stack>>::StackType as TypedStack>::Item>,
     >(
         self,
-    ) -> Result<WithState<Tuple, State>, StackError> {
-        self.stack::<U>()
+    ) -> Result<WithState<Tuple, Self>, UnknownError<State, StackError>> {
+        let mut state = self.into_state();
+        state
+            .stack::<U>()
             .get_n_tail::<Tuple>()
-            .map(|v| v.with_state(self))
+            .with_states(self, state)
     }
 }

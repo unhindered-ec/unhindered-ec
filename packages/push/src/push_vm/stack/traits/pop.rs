@@ -1,8 +1,8 @@
 use crate::{
-    error::stateful::UnknownError,
+    error::{into_state::IntoState, stateful::UnknownError},
     push_vm::{
         stack::StackError,
-        state::with_state::{AddState, WithState},
+        state::with_state::{AddMultipleStates, AddState, WithState},
     },
     tuples::MonotonicTuple,
     type_eq::TypeEq,
@@ -50,7 +50,7 @@ where
     fn pop_head_in<U: TypeEq<This = Stack>>(
         self,
     ) -> Result<
-        WithState<<<State as HasStack<Stack>>::StackType as TypedStack>::Item, State>,
+        WithState<<<State as HasStack<Stack>>::StackType as TypedStack>::Item, Self>,
         UnknownError<State, StackError>,
     >;
 
@@ -61,7 +61,7 @@ where
         Tuple: MonotonicTuple<Item = <<State as HasStack<Stack>>::StackType as TypedStack>::Item>,
     >(
         self,
-    ) -> Result<WithState<Tuple, State>, UnknownError<State, StackError>>;
+    ) -> Result<WithState<Tuple, Self>, UnknownError<State, StackError>>;
 }
 
 pub trait PopTailIn<Stack, State>: Sized
@@ -74,7 +74,7 @@ where
     fn pop_tail_in<U: TypeEq<This = Stack>>(
         self,
     ) -> Result<
-        WithState<<<State as HasStack<Stack>>::StackType as TypedStack>::Item, State>,
+        WithState<<<State as HasStack<Stack>>::StackType as TypedStack>::Item, Self>,
         UnknownError<State, StackError>,
     >;
 
@@ -85,23 +85,25 @@ where
         Tuple: MonotonicTuple<Item = <<State as HasStack<Stack>>::StackType as TypedStack>::Item>,
     >(
         self,
-    ) -> Result<WithState<Tuple, State>, UnknownError<State, StackError>>;
+    ) -> Result<WithState<Tuple, Self>, UnknownError<State, StackError>>;
 }
 
-impl<Stack, State> PopHeadIn<Stack, State> for State
+impl<Stack, T, State> PopHeadIn<Stack, State> for T
 where
+    T: IntoState<State>,
     State: HasStackMut<Stack>,
     <State as HasStack<Stack>>::StackType: PopHead,
 {
     fn pop_head_in<U: TypeEq<This = Stack>>(
-        mut self,
+        self,
     ) -> Result<
-        WithState<<<State as HasStack<Stack>>::StackType as TypedStack>::Item, State>,
+        WithState<<<State as HasStack<Stack>>::StackType as TypedStack>::Item, Self>,
         UnknownError<State, StackError>,
     > {
-        match self.stack_mut::<U>().pop_head() {
+        let mut state = self.into_state();
+        match state.stack_mut::<U>().pop_head() {
             Ok(v) => Ok(v.with_state(self)),
-            Err(e) => Err(e.with_state(self))?,
+            Err(e) => Err(e.with_state(state))?,
         }
     }
 
@@ -109,27 +111,30 @@ where
         U: TypeEq<This = Stack>,
         Tuple: MonotonicTuple<Item = <<State as HasStack<Stack>>::StackType as TypedStack>::Item>,
     >(
-        mut self,
-    ) -> Result<WithState<Tuple, State>, UnknownError<State, StackError>> {
-        self.stack_mut::<U>()
+        self,
+    ) -> Result<WithState<Tuple, Self>, UnknownError<State, StackError>> {
+        let mut state = self.into_state();
+        state
+            .stack_mut::<U>()
             .pop_n_head::<Tuple>()
-            .with_state(self)
-            .into()
+            .with_states(self, state)
     }
 }
 
-impl<Stack, State> PopTailIn<Stack, State> for State
+impl<Stack, T, State> PopTailIn<Stack, State> for T
 where
+    T: IntoState<State>,
     State: HasStackMut<Stack>,
     <State as HasStack<Stack>>::StackType: PopTail,
 {
     fn pop_tail_in<U: TypeEq<This = Stack>>(
-        mut self,
+        self,
     ) -> Result<
-        WithState<<<State as HasStack<Stack>>::StackType as TypedStack>::Item, State>,
+        WithState<<<State as HasStack<Stack>>::StackType as TypedStack>::Item, Self>,
         UnknownError<State, StackError>,
     > {
-        self.stack_mut::<U>().pop_tail().with_state(self).into()
+        let mut state = self.into_state();
+        state.stack_mut::<U>().pop_tail().with_states(self, state)
     }
 
     fn pop_n_tail_in<
@@ -137,10 +142,11 @@ where
         Tuple: MonotonicTuple<Item = <<State as HasStack<Stack>>::StackType as TypedStack>::Item>,
     >(
         mut self,
-    ) -> Result<WithState<Tuple, State>, UnknownError<State, StackError>> {
-        self.stack_mut::<U>()
+    ) -> Result<WithState<Tuple, Self>, UnknownError<State, StackError>> {
+        let mut state = self.into_state();
+        state
+            .stack_mut::<U>()
             .pop_n_tail::<Tuple>()
-            .with_state(self)
-            .into()
+            .with_states(self, state)
     }
 }

@@ -16,10 +16,10 @@ pub trait State: Sized {
     /// # Errors
     ///
     /// Fails if the instruction being performed fails.
-    fn perform(
-        &mut self,
-        instruction: &Self::Instruction,
-    ) -> InstructionResult<&mut Self, <Self::Instruction as Instruction<Self>>::Error> {
+    fn perform<'a>(
+        &'a mut self,
+        instruction: &'a Self::Instruction,
+    ) -> InstructionResult<&'a mut Self, <Self::Instruction as Instruction<Self>>::Error> {
         instruction.perform(self)
     }
 

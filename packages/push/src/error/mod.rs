@@ -79,20 +79,26 @@ where
 
     fn try_recover(self) -> Result<S, FatalError<V, E>> {
         self.or_else(|err| match err {
-            Error::Recoverable(s) => Ok(S::default()),
+            Error::Recoverable(_) => Ok(S::default()),
             Error::Fatal(error) => Err(error),
         })
     }
 }
 
-impl<S, E> From<RecoverableError<S, E>> for Error<S, E> {
-    fn from(value: RecoverableError<S, E>) -> Self {
-        Self::Recoverable(value)
+impl<S, E1, E2> From<RecoverableError<S, E1>> for Error<S, E2>
+where
+    E1: Into<E2>,
+{
+    fn from(value: RecoverableError<S, E1>) -> Self {
+        Error::Recoverable(value).map_inner_err(Into::into)
     }
 }
 
-impl<S, E> From<FatalError<S, E>> for Error<S, E> {
-    fn from(value: FatalError<S, E>) -> Self {
-        Self::Fatal(value)
+impl<S, E1, E2> From<FatalError<S, E1>> for Error<S, E2>
+where
+    E1: Into<E2>,
+{
+    fn from(value: FatalError<S, E1>) -> Self {
+        Error::Fatal(value).map_inner_err(Into::into)
     }
 }

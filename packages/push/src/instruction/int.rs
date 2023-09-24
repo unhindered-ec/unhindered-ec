@@ -1,19 +1,17 @@
 use super::{Instruction, InstructionResult, PushInstruction, PushInstructionError};
 use crate::{
-    error::{stateful::SpecifySeverity, Error},
+    error::stateful::SpecifySeverity,
     push_vm::{
-        stack::{
-            traits::{
-                discard::DiscardHead,
-                discard::DiscardHeadIn,
-                get::GetHead,
-                has_stack::{HasStack, HasStackMut},
-                push::{AttemptPushHead, PushHead, PushHeadIn},
-                TypedStack,
-            },
-            StackError,
+        stack::traits::{
+            discard::DiscardHead,
+            discard::DiscardHeadIn,
+            get::{GetHead, GetHeadIn},
+            has_stack::{HasStack, HasStackMut},
+            push::{AttemptPushHead, PushHead, PushHeadIn},
+            size::{SizeLimit, SizeLimitOf, StackSize},
+            TypedStack,
         },
-        state::with_state::AddState,
+        state::with_state::{AddState, WithStateOps},
         PushInteger,
     },
 };
@@ -70,12 +68,13 @@ where
     S: Clone + HasStackMut<PushInteger> + HasStackMut<bool>,
     <S as HasStack<PushInteger>>::StackType:
         TypedStack<Item = PushInteger> + PushHead + GetHead + DiscardHead,
+    <S as HasStack<bool>>::StackType: TypedStack<Item = bool> + StackSize + SizeLimit + PushHead,
 {
     type Error = PushInstructionError;
 
     #[allow(clippy::too_many_lines, clippy::cognitive_complexity)]
     #[allow(unreachable_code, clippy::let_unit_value)] // Remove this
-    fn perform(&self, state: &mut S) -> InstructionResult<&mut S, Self::Error> {
+    fn perform<'a>(&'a self, state: &'a mut S) -> InstructionResult<&'a mut S, Self::Error> {
         match self {
             Self::Push(_)
             | Self::Negate
@@ -107,76 +106,111 @@ where
                         .attempt_push_head()
                         .make_fatal()?,
                     Self::Abs => int_stack
-                        .top()
+                        .head()
                         .copied()
                         .map(i64::abs)
-                        .with_stack_replace(1, state),
+                        .with_state(state)
+                        .make_recoverable()?
+                        .discard_head_in::<PushInteger>()
+                        .make_recoverable()?
+                        .attempt_push_head()
+                        .make_fatal()?,
 
                     // This works, but is going to be nasty after we repeat a lot. There should
                     // perhaps be another trait method somewhere that eliminates a lot of this
                     // boilerplate.
                     Self::Inc => int_stack
-                        .top()
+                        .head()
                         .map_err(Into::<PushInstructionError>::into)
                         .map(|i| i.checked_add(1))
                         .and_then(|v| {
                             v.ok_or(IntInstructionError::Overflow { op: *self })
                                 .map_err(Into::into)
                         })
-                        .with_stack_replace(1, state),
+                        .with_state(state)
+                        .make_recoverable()?
+                        .discard_head_in::<PushInteger>()
+                        .make_recoverable()?
+                        .attempt_push_head()
+                        .make_fatal()?,
 
                     Self::Dec => int_stack
-                        .top()
+                        .head()
                         .map_err(Into::<PushInstructionError>::into)
                         .map(|i| i.checked_sub(1))
                         .and_then(|v| {
                             v.ok_or(IntInstructionError::Overflow { op: *self })
                                 .map_err(Into::into)
                         })
-                        .with_stack_replace(1, state),
+                        .with_state(state)
+                        .make_recoverable()?
+                        .discard_head_in::<PushInteger>()
+                        .make_recoverable()?
+                        .attempt_push_head()
+                        .make_fatal()?,
 
                     Self::Square => int_stack
-                        .top()
+                        .head()
                         .map_err(Into::<PushInstructionError>::into)
                         .map(|x| (*x).checked_mul(*x))
                         .and_then(|v| {
                             v.ok_or(IntInstructionError::Overflow { op: *self })
                                 .map_err(Into::into)
                         })
-                        .with_stack_replace(1, state),
+                        .with_state(state)
+                        .make_recoverable()?
+                        .discard_head_in::<PushInteger>()
+                        .make_recoverable()?
+                        .attempt_push_head()
+                        .make_fatal()?,
 
                     Self::Add => int_stack
-                        .top_n()
+                        .get_n_head()
                         .map_err(Into::<PushInstructionError>::into)
                         .map(|(x, y)| (*x).checked_add(*y))
                         .and_then(|v| {
                             v.ok_or(IntInstructionError::Overflow { op: *self })
                                 .map_err(Into::into)
                         })
-                        .with_stack_replace(2, state),
+                        .with_state(state)
+                        .make_recoverable()?
+                        .discard_n_head_in::<PushInteger>(2)
+                        .make_recoverable()?
+                        .attempt_push_head()
+                        .make_fatal()?,
 
                     Self::Subtract => int_stack
-                        .top_n()
+                        .get_n_head()
                         .map_err(Into::<PushInstructionError>::into)
                         .map(|(x, y)| (*x).checked_sub(*y))
                         .and_then(|v| {
                             v.ok_or(IntInstructionError::Overflow { op: *self })
                                 .map_err(Into::into)
                         })
-                        .with_stack_replace(2, state),
+                        .with_state(state)
+                        .make_recoverable()?
+                        .discard_n_head_in::<PushInteger>(2)
+                        .make_recoverable()?
+                        .attempt_push_head()
+                        .make_fatal()?,
 
                     Self::Multiply => int_stack
-                        .top_n()
+                        .get_n_head()
                         .map_err(Into::<PushInstructionError>::into)
                         .map(|(x, y)| (*x).checked_mul(*y))
                         .and_then(|v| {
                             v.ok_or(IntInstructionError::Overflow { op: *self })
                                 .map_err(Into::into)
                         })
-                        .with_stack_replace(2, state),
+                        .with_state(state)
+                        .make_recoverable()?
+                        .discard_n_head_in::<PushInteger>(2)
+                        .make_recoverable()?
+                        .attempt_push_head()
+                        .make_fatal()?,
 
                     Self::ProtectedDivide => int_stack
-                        .top_n()
+                        .get_n_head()
                         .map_err(Into::<PushInstructionError>::into)
                         .map(|(x, y)| {
                             if *y == 0 {
@@ -189,10 +223,15 @@ where
                             v.ok_or(IntInstructionError::Overflow { op: *self })
                                 .map_err(Into::into)
                         })
-                        .with_stack_replace(2, state),
+                        .with_state(state)
+                        .make_recoverable()?
+                        .discard_n_head_in::<PushInteger>(2)
+                        .make_recoverable()?
+                        .attempt_push_head()
+                        .make_fatal()?,
 
                     Self::Mod => int_stack
-                        .top_n()
+                        .get_n_head()
                         .map_err(Into::<PushInstructionError>::into)
                         .map(|(x, y)| {
                             if *y == 0 {
@@ -205,7 +244,12 @@ where
                             v.ok_or(IntInstructionError::Overflow { op: *self })
                                 .map_err(Into::into)
                         })
-                        .with_stack_replace(2, state),
+                        .with_state(state)
+                        .make_recoverable()?
+                        .discard_n_head_in::<PushInteger>(2)
+                        .make_recoverable()?
+                        .attempt_push_head()
+                        .make_fatal()?,
 
                     // Self::Power => int_stack
                     //     .pop2()
@@ -221,7 +265,7 @@ where
                     _ => {
                         unreachable!("We failed to handle an arithmetic Int instruction: {self:?}")
                     }
-                }
+                };
             }
             Self::IsEven
             | Self::IsOdd
@@ -235,18 +279,19 @@ where
                 // they will push a result onto that stack. Thus before we start performing
                 // the instruction, we need to check for the case that the boolean stack is
                 // already full, and return an `Overflow` error if it is.
-                if state.stack::<bool>().is_full() {
-                    return Err(Error::fatal(state, StackError::overflow::<bool>(0, 1)));
+                {
+                    state.not_full_in::<bool>().make_recoverable()?;
                 }
-                let int_stack = state.stack_mut::<PushInteger>();
                 match self {
                     // TODO: Write a test for IsEven that makes sure all the stack manipulation is correct.
-                    Self::IsEven => int_stack
-                        .top()
-                        .map_err(Into::<PushInstructionError>::into)
-                        .map(|x| x % 2 == 0)
-                        .with_stack_push(state)
-                        .with_stack_pop_discard::<PushInteger>(1),
+                    Self::IsEven => state
+                        .head_in::<PushInteger>()
+                        .map_value(|x| x % 2 == 0)
+                        .make_recoverable()?
+                        .attempt_push_head()
+                        .make_recoverable()?
+                        .discard_head_in::<PushInteger>()
+                        .make_fatal()?,
                     //     Self::IsOdd => int_stack.pop().map_err(Into::into).map(|x| x % 2 != 0),
                     //     Self::Equal => int_stack.pop2().map_err(Into::into).map(|(x, y)| x == y),
                     //     Self::NotEqual => int_stack.pop2().map_err(Into::into).map(|(x, y)| x != y),
@@ -261,7 +306,7 @@ where
                     _ => unreachable!(
                         "We failed to implement a boolean-valued operation on integers: {self:?}"
                     ),
-                }
+                };
                 // match result {
                 //     Err::<_, PushInstructionError>(error) => {
                 //         // error.make_recoverable(state)
@@ -503,7 +548,10 @@ impl From<IntInstruction> for PushInstruction {
 #[allow(clippy::unwrap_used)]
 mod test {
 
-    use crate::push_vm::state::PushState;
+    use crate::push_vm::{
+        stack::traits::{get::GetHeadIn, size::StackSizeOf},
+        state::{with_state::WithStateOps, PushState},
+    };
 
     use super::*;
 
@@ -590,7 +638,7 @@ mod property_tests {
     use crate::{
         instruction::{int::IntInstructionError, Instruction, IntInstruction},
         push_vm::{
-            stack::traits::get::GetHeadIn,
+            stack::traits::{get::GetHeadIn, push::PushHeadIn, size::StackSizeOf},
             state::{with_state::WithStateOps, PushState},
             PushInteger,
         },
@@ -660,7 +708,7 @@ mod property_tests {
             let err = IntInstruction::Add.perform(&mut state);
             #[allow(clippy::unwrap_used)]
             if let Some(expected_result) = x.checked_add(y) {
-                let output = state.int.head().unwrap();
+                let output = state.head_in::<PushInteger>().drop_state().unwrap();
                 prop_assert_eq!(output, &expected_result);
             } else {
                 // This only checks that `x` is still on the top of the stack.
@@ -813,25 +861,25 @@ mod property_tests {
                     .into()
                 );
                 assert!(err.is_recoverable());
-                let top_int = (*err.state()).head_in::<PushInteger>().drop_state().unwrap();
+                let top_int = err.state().head_in::<PushInteger>().drop_state().unwrap();
                 prop_assert_eq!(*top_int, x);
             }
         }
 
         #[test]
         fn inc_does_not_crash(x in proptest::num::i64::ANY) {
-            let mut state = PushState::builder([]).build();
+            let  state = &mut PushState::builder([]).build();
             state.push_head_in::<PushInteger>(x).unwrap();
-            let _ = IntInstruction::Inc.perform(&mut state);
+            let _ = IntInstruction::Inc.perform(state);
         }
 
         #[test]
         #[ignore]
         fn int_ops_do_not_crash(instr in proptest::sample::select(all_instructions()), x in proptest::num::i64::ANY, y in proptest::num::i64::ANY, b in proptest::bool::ANY) {
-            let mut state = PushState::builder([]).build();
+            let state =&mut PushState::builder([]).build();
             state.push_n_head_in::<PushInteger,_>((y,x)).unwrap();
             state.push_head_in::<bool>(b).unwrap();
-            let _ = instr.perform(&mut state);
+            let _ = instr.perform(state);
         }
     }
 }
