@@ -1,5 +1,5 @@
 use crate::{
-    error::stateful::UnknownError,
+    error::into_state::{State, StateMut},
     push_vm::{
         stack::StackError,
         state::with_state::{AddState, WithState},
@@ -51,19 +51,20 @@ where
     State: HasStack<Stack>,
 {
     #[must_use]
-    fn max_size_of<U: TypeEq<This = Stack>>(self) -> WithState<usize, State>;
+    fn max_size_of<U: TypeEq<This = Stack>>(self) -> WithState<usize, Self>;
 
     #[must_use]
-    fn is_full_of<U: TypeEq<This = Stack>>(self) -> WithState<bool, State>
+    #[allow(clippy::wrong_self_convention)]
+    fn is_full_of<U: TypeEq<This = Stack>>(self) -> WithState<bool, Self>
     where
         <State as HasStack<Stack>>::StackType: StackSize;
 
-    fn not_full_in<U: TypeEq<This = Stack>>(self) -> Result<State, UnknownError<State, StackError>>
+    fn not_full_in<U: TypeEq<This = Stack>>(self) -> Result<Self, StackError>
     where
         <State as HasStack<Stack>>::StackType: StackSize;
 
     #[must_use]
-    fn capacity_of<U: TypeEq<This = Stack>>(self) -> WithState<usize, State>
+    fn capacity_of<U: TypeEq<This = Stack>>(self) -> WithState<usize, Self>
     where
         <State as HasStack<Stack>>::StackType: StackSize;
 }
@@ -74,88 +75,82 @@ where
 {
     /// # Errors
     /// - [`StackError::Overflow`] when the new `max_size` is smaller than the current length of the stack.
-    fn set_max_size_of<U: TypeEq<This = Stack>>(
-        self,
-        max_size: usize,
-    ) -> Result<State, UnknownError<State, StackError>>;
+    fn set_max_size_of<U: TypeEq<This = Stack>>(self, max_size: usize) -> Result<Self, StackError>;
 }
 
-pub trait StackSizeOf<Stack, State>: Sized
-where
-    State: HasStack<Stack>,
-{
+pub trait StackSizeOf<Stack>: Sized {
     #[must_use]
-    fn size_of<U: TypeEq<This = Stack>>(self) -> WithState<usize, State>;
+    fn size_of<U: TypeEq<This = Stack>>(self) -> WithState<usize, Self>;
 
     #[must_use]
-    fn is_empty_of<U: TypeEq<This = Stack>>(self) -> WithState<bool, State>;
+    #[allow(clippy::wrong_self_convention)]
+    fn is_empty_of<U: TypeEq<This = Stack>>(self) -> WithState<bool, Self>;
 }
 
-impl<Stack, State> SizeLimitOf<Stack, State> for State
+impl<Stack, T> SizeLimitOf<Stack, <T as State>::State> for T
 where
-    State: HasStack<Stack>,
-    <State as HasStack<Stack>>::StackType: SizeLimit,
+    T: State,
+    <T as State>::State: HasStack<Stack>,
+    <<T as State>::State as HasStack<Stack>>::StackType: SizeLimit,
 {
-    fn max_size_of<U: TypeEq<This = Stack>>(self) -> WithState<usize, State> {
-        self.stack::<U>().max_size().with_state(self)
+    fn max_size_of<U: TypeEq<This = Stack>>(self) -> WithState<usize, Self> {
+        self.state().stack::<U>().max_size().with_state(self)
     }
 
-    fn is_full_of<U: TypeEq<This = Stack>>(self) -> WithState<bool, State>
+    fn is_full_of<U: TypeEq<This = Stack>>(self) -> WithState<bool, Self>
     where
-        <State as HasStack<Stack>>::StackType: StackSize,
+        <<T as State>::State as HasStack<Stack>>::StackType: StackSize,
     {
-        self.stack::<U>().is_full().with_state(self)
+        self.state().stack::<U>().is_full().with_state(self)
     }
 
-    fn capacity_of<U: TypeEq<This = Stack>>(self) -> WithState<usize, State>
+    fn capacity_of<U: TypeEq<This = Stack>>(self) -> WithState<usize, Self>
     where
-        <State as HasStack<Stack>>::StackType: StackSize,
+        <<T as State>::State as HasStack<Stack>>::StackType: StackSize,
     {
-        self.stack::<U>().capacity().with_state(self)
+        self.state().stack::<U>().capacity().with_state(self)
     }
 
-    fn not_full_in<U: TypeEq<This = Stack>>(self) -> Result<State, UnknownError<State, StackError>>
+    fn not_full_in<U: TypeEq<This = Stack>>(self) -> Result<Self, StackError>
     where
-        <State as HasStack<Stack>>::StackType: StackSize,
+        <<T as State>::State as HasStack<Stack>>::StackType: StackSize,
     {
-        if self.stack::<U>().is_full() {
-            Err(
-                StackError::overflow_unknown_requested::<<State as HasStack<Stack>>::StackType>(0)
-                    .with_state(self)
-                    .into(),
-            )
+        if self.state().stack::<U>().is_full() {
+            Err(StackError::overflow_unknown_requested::<
+                <<T as State>::State as HasStack<Stack>>::StackType,
+            >(0))
         } else {
             Ok(self)
         }
     }
 }
 
-impl<State, Stack> SizeLimitOfMut<Stack, State> for State
+impl<Stack, T> SizeLimitOfMut<Stack, <T as State>::State> for T
 where
-    State: HasStackMut<Stack>,
-    <State as HasStack<Stack>>::StackType: SizeLimit,
+    T: StateMut,
+    <T as State>::State: HasStackMut<Stack>,
+    <<T as State>::State as HasStack<Stack>>::StackType: SizeLimit,
 {
     fn set_max_size_of<U: TypeEq<This = Stack>>(
         mut self,
         max_size: usize,
-    ) -> Result<Self, UnknownError<Self, StackError>> {
-        match self.stack_mut::<U>().set_max_size(max_size) {
-            Err(e) => Err(e.with_state(self).into()),
-            Ok(_) => Ok(self),
-        }
+    ) -> Result<Self, StackError> {
+        self.state_mut().stack_mut::<U>().set_max_size(max_size)?;
+        Ok(self)
     }
 }
 
-impl<State, Stack> StackSizeOf<Stack, State> for State
+impl<Stack, T> StackSizeOf<Stack> for T
 where
-    State: HasStack<Stack>,
-    <State as HasStack<Stack>>::StackType: StackSize,
+    T: State,
+    <T as State>::State: HasStack<Stack>,
+    <<T as State>::State as HasStack<Stack>>::StackType: StackSize,
 {
-    fn size_of<U: TypeEq<This = Stack>>(self) -> WithState<usize, State> {
-        self.stack::<U>().size().with_state(self)
+    fn size_of<U: TypeEq<This = Stack>>(self) -> WithState<usize, Self> {
+        self.state().stack::<U>().size().with_state(self)
     }
 
-    fn is_empty_of<U: TypeEq<This = Stack>>(self) -> WithState<bool, State> {
-        self.stack::<U>().is_empty().with_state(self)
+    fn is_empty_of<U: TypeEq<This = Stack>>(self) -> WithState<bool, Self> {
+        self.state().stack::<U>().is_empty().with_state(self)
     }
 }

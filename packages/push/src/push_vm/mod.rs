@@ -10,16 +10,16 @@ pub mod state;
 pub type PushInteger = i64;
 
 // Need an associated error trait
-pub trait State: Sized {
-    type Instruction: Instruction<Self>;
+pub trait Exec<'a>: Sized + 'a {
+    type Instruction: Instruction<&'a mut Self>;
 
     /// # Errors
     ///
     /// Fails if the instruction being performed fails.
-    fn perform<'a>(
+    fn perform<'b>(
         &'a mut self,
-        instruction: &'a Self::Instruction,
-    ) -> InstructionResult<&'a mut Self, <Self::Instruction as Instruction<Self>>::Error> {
+        instruction: &'b Self::Instruction,
+    ) -> InstructionResult<<Self::Instruction as Instruction<&'a mut Self>>::Error> {
         instruction.perform(self)
     }
 
@@ -28,7 +28,7 @@ pub trait State: Sized {
     /// Fails if any of the performed instructions fails.
     fn run_to_completion(
         &mut self,
-    ) -> Result<(), FatalError<&mut Self, <Self::Instruction as Instruction<Self>>::Error>>;
+    ) -> Result<(), FatalError<<Self::Instruction as Instruction<&'a mut Self>>::Error>>;
 }
 
 /*

@@ -1,13 +1,21 @@
-use crate::error::{into_state::IntoState, stateful::UnknownError};
+use crate::error::into_state::{State, StateMut};
 
 pub struct WithState<Value, State> {
     pub value: Value,
     pub state: State,
 }
 
-impl<Value, State> IntoState<State> for WithState<Value, State> {
-    fn into_state(self) -> State {
-        self.state
+impl<Value, T> State for WithState<Value, T> {
+    type State = T;
+
+    fn state(&self) -> &Self::State {
+        &self.state
+    }
+}
+
+impl<Value, T> StateMut for WithState<Value, T> {
+    fn state_mut(&mut self) -> &mut Self::State {
+        &mut self.state
     }
 }
 
@@ -176,39 +184,20 @@ pub trait AddState<State>: Sized {
     fn with_state(self, state: State) -> Self::Output;
 }
 
-pub trait AddMultipleStates<State1, State2>: Sized {
-    type Output;
-    fn with_states(self, state1: State1, state2: State2) -> Self::Output;
-}
-
 impl<State, Value> AddState<State> for Value {
     type Output = WithState<Self, State>;
 
-    #[inline(always)]
+    #[inline]
     fn with_state(self, state: State) -> WithState<Self, State> {
         WithState { value: self, state }
     }
 }
 
-impl<State1, State2, Value, Error> AddMultipleStates<State1, State2> for Result<Value, Error> {
-    type Output = Result<WithState<Value, State1>, UnknownError<State2, Error>>;
-
-    fn with_states(self, state1: State1, state2: State2) -> Self::Output {
-        match self {
-            Err(e) => Err(e.with_state(state2).into()),
-            Ok(o) => Ok(o.with_state(state1)),
-        }
-    }
-}
-
 impl<Value, Error, State> From<WithState<Result<Value, Error>, State>>
-    for Result<WithState<Value, State>, UnknownError<State, Error>>
+    for Result<WithState<Value, State>, Error>
 {
-    #[inline(always)]
+    #[inline]
     fn from(WithState { value, state }: WithState<Result<Value, Error>, State>) -> Self {
-        match value {
-            Err(error) => Err(UnknownError::new(state, error)),
-            Ok(value) => Ok(value.with_state(state)),
-        }
+        Ok(value?.with_state(state))
     }
 }

@@ -1,4 +1,8 @@
-use crate::{error::into_state::IntoState, push_vm::stack::StackError, type_eq::TypeEq};
+use crate::{
+    error::into_state::{State, StateMut},
+    push_vm::stack::StackError,
+    type_eq::TypeEq,
+};
 
 use super::{
     has_stack::{HasStack, HasStackMut},
@@ -49,38 +53,45 @@ where
         Iter::IntoIter: DoubleEndedIterator + ExactSizeIterator;
 }
 
-impl<WithState, State, Stack> ExtendHeadIn<Stack, State> for WithState
+impl<T, Stack> ExtendHeadIn<Stack, <T as State>::State> for T
 where
-    WithState: IntoState<State>,
-    State: HasStackMut<Stack>,
-    <State as HasStack<Stack>>::StackType: ExtendHead + TypedStack,
+    T: StateMut,
+    <T as State>::State: HasStackMut<Stack>,
+    <<T as State>::State as HasStack<Stack>>::StackType: ExtendHead + TypedStack,
 {
-    fn extend_head_in<U: TypeEq<This = Stack>, Iter>(self, iter: Iter) -> Result<Self, StackError>
+    fn extend_head_in<U: TypeEq<This = Stack>, Iter>(
+        mut self,
+        iter: Iter,
+    ) -> Result<Self, StackError>
     where
-        Iter: IntoIterator<Item = <<State as HasStack<Stack>>::StackType as TypedStack>::Item>,
+        Iter: IntoIterator<
+            Item = <<<T as State>::State as HasStack<Stack>>::StackType as TypedStack>::Item,
+        >,
         Iter::IntoIter: DoubleEndedIterator + ExactSizeIterator,
     {
-        self.into_state().stack_mut::<U>().extend_head(iter)?;
+        self.state_mut().stack_mut::<U>().extend_head(iter)?;
 
         Ok(self)
     }
 }
 
-impl<WithState, State, Stack> ExtendTailIn<Stack, State> for WithState
+impl<T, Stack> ExtendTailIn<Stack, <T as State>::State> for T
 where
-    WithState: IntoState<State>,
-    State: HasStackMut<Stack>,
-    <State as HasStack<Stack>>::StackType: ExtendTail + TypedStack,
+    T: StateMut,
+    <T as State>::State: HasStackMut<Stack>,
+    <<T as State>::State as HasStack<Stack>>::StackType: ExtendTail + TypedStack,
 {
     fn extend_tail_in<U: TypeEq<This = Stack>, Iter>(
         mut self,
         iter: Iter,
     ) -> Result<Self, StackError>
     where
-        Iter: IntoIterator<Item = <<State as HasStack<Stack>>::StackType as TypedStack>::Item>,
+        Iter: IntoIterator<
+            Item = <<<T as State>::State as HasStack<Stack>>::StackType as TypedStack>::Item,
+        >,
         Iter::IntoIter: DoubleEndedIterator + ExactSizeIterator,
     {
-        self.into_state().stack_mut::<U>().extend_tail(iter)?;
+        self.state_mut().stack_mut::<U>().extend_tail(iter)?;
 
         Ok(self)
     }

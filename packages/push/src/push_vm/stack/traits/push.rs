@@ -1,9 +1,6 @@
 use crate::{
-    error::stateful::UnknownError,
-    push_vm::{
-        stack::StackError,
-        state::with_state::{AddState, WithState},
-    },
+    error::into_state::{State, StateMut},
+    push_vm::{stack::StackError, state::with_state::WithState},
     tuples::MonotonicTuple,
     type_eq::TypeEq,
 };
@@ -83,7 +80,7 @@ where
     fn push_head_in<U: TypeEq<This = Stack>>(
         self,
         value: <<State as HasStack<Stack>>::StackType as TypedStack>::Item,
-    ) -> Result<Self, UnknownError<Self, StackError>>;
+    ) -> Result<Self, StackError>;
 
     /// # Errors
     /// - [`StackError::Overflow`] is returned when the stack has not enough capacity for n new values remaining.
@@ -93,7 +90,7 @@ where
     >(
         self,
         value: Tuple,
-    ) -> Result<Self, UnknownError<Self, StackError>>;
+    ) -> Result<Self, StackError>;
 }
 
 pub trait PushTailIn<Stack, State>: Sized
@@ -106,7 +103,7 @@ where
     fn push_tail_in<U: TypeEq<This = Stack>>(
         self,
         value: <<State as HasStack<Stack>>::StackType as TypedStack>::Item,
-    ) -> Result<Self, UnknownError<Self, StackError>>;
+    ) -> Result<Self, StackError>;
 
     /// # Errors
     /// - [`StackError::Overflow`] is returned when the stack has not enough capacity for n new values remaining.
@@ -116,129 +113,133 @@ where
     >(
         self,
         value: Tuple,
-    ) -> Result<Self, UnknownError<Self, StackError>>;
+    ) -> Result<Self, StackError>;
 }
 
-impl<Stack, State> PushHeadIn<Stack, State> for State
+impl<Stack, T> PushHeadIn<Stack, <T as State>::State> for T
 where
-    State: HasStackMut<Stack>,
-    <State as HasStack<Stack>>::StackType: PushHead + TypedStack,
+    T: StateMut,
+    <T as State>::State: HasStackMut<Stack>,
+    <<T as State>::State as HasStack<Stack>>::StackType: PushHead + TypedStack,
 {
     fn push_head_in<U: TypeEq<This = Stack>>(
         mut self,
-        value: <<State as HasStack<Stack>>::StackType as TypedStack>::Item,
-    ) -> Result<Self, UnknownError<Self, StackError>> {
-        self.stack_mut::<U>()
-            .push_head(value)
-            .map_err(|e| e.with_state(self))?;
+        value: <<<T as State>::State as HasStack<Stack>>::StackType as TypedStack>::Item,
+    ) -> Result<Self, StackError> {
+        self.state_mut().stack_mut::<U>().push_head(value)?;
 
         Ok(self)
     }
 
     fn push_n_head_in<
         U: TypeEq<This = Stack>,
-        Tuple: MonotonicTuple<Item = <<State as HasStack<Stack>>::StackType as TypedStack>::Item>,
+        Tuple: MonotonicTuple<
+            Item = <<<T as State>::State as HasStack<Stack>>::StackType as TypedStack>::Item,
+        >,
     >(
         mut self,
         value: Tuple,
-    ) -> Result<Self, UnknownError<Self, StackError>> {
-        self.stack_mut::<U>()
-            .push_n_head(value)
-            .map_err(|e| e.with_state(self))?;
+    ) -> Result<Self, StackError> {
+        self.state_mut().stack_mut::<U>().push_n_head(value)?;
 
         Ok(self)
     }
 }
 
-impl<Stack, State> PushTailIn<Stack, State> for State
+impl<Stack, T> PushTailIn<Stack, <T as State>::State> for T
 where
-    State: HasStackMut<Stack>,
-    <State as HasStack<Stack>>::StackType: PushTail + TypedStack,
+    T: StateMut,
+    <T as State>::State: HasStackMut<Stack>,
+    <<T as State>::State as HasStack<Stack>>::StackType: PushTail + TypedStack,
 {
     fn push_tail_in<U: TypeEq<This = Stack>>(
         mut self,
-        value: <<State as HasStack<Stack>>::StackType as TypedStack>::Item,
-    ) -> std::result::Result<State, UnknownError<State, StackError>> {
-        self.stack_mut::<U>()
-            .push_tail(value)
-            .map_err(|e| e.with_state(self))?;
+        value: <<<T as State>::State as HasStack<Stack>>::StackType as TypedStack>::Item,
+    ) -> std::result::Result<Self, StackError> {
+        self.state_mut().stack_mut::<U>().push_tail(value)?;
 
         Ok(self)
     }
 
     fn push_n_tail_in<
         U: TypeEq<This = Stack>,
-        Tuple: MonotonicTuple<Item = <<State as HasStack<Stack>>::StackType as TypedStack>::Item>,
+        Tuple: MonotonicTuple<
+            Item = <<<T as State>::State as HasStack<Stack>>::StackType as TypedStack>::Item,
+        >,
     >(
         mut self,
         value: Tuple,
-    ) -> std::result::Result<State, UnknownError<State, StackError>> {
-        self.stack_mut::<U>()
-            .push_n_tail(value)
-            .map_err(|e| e.with_state(self))?;
+    ) -> std::result::Result<Self, StackError> {
+        self.state_mut().stack_mut::<U>().push_n_tail(value)?;
 
         Ok(self)
     }
 }
 
 pub trait AttemptPushHead<Stack, State> {
-    fn attempt_push_head(self) -> Result<State, UnknownError<State, StackError>>;
+    fn attempt_push_head(self) -> Result<State, StackError>;
 }
 
-impl<Value, State> AttemptPushHead<Value, State> for WithState<Value, State>
+impl<Value, T> AttemptPushHead<Value, T> for WithState<Value, T>
 where
-    State: HasStackMut<Value>,
-    <State as HasStack<Value>>::StackType: PushHead + TypedStack<Item = Value>,
+    T: StateMut,
+    <T as State>::State: HasStackMut<Value>,
+    <<T as State>::State as HasStack<Value>>::StackType: PushHead + TypedStack<Item = Value>,
 {
-    fn attempt_push_head(self) -> Result<State, UnknownError<State, StackError>> {
-        let WithState { value, state } = self;
+    fn attempt_push_head(self) -> Result<T, StackError> {
+        let Self { value, state } = self;
         state.push_head_in::<Value>(value)
     }
 }
 
 pub trait AttemptPushHeadN<Stack, State> {
-    fn attempt_push_head_n(self) -> Result<State, UnknownError<State, StackError>>;
+    fn attempt_push_head_n(self) -> Result<State, StackError>;
 }
 
-impl<Tuple, State, Stack> AttemptPushHeadN<Stack, State> for WithState<Tuple, State>
+impl<Value, T> AttemptPushHeadN<Value, T> for WithState<Value, T>
 where
-    Tuple: MonotonicTuple,
-    State: HasStackMut<Stack>,
-    <State as HasStack<Stack>>::StackType: PushHead + TypedStack<Item = Tuple::Item>,
+    Value: MonotonicTuple,
+    T: StateMut,
+    <T as State>::State: HasStackMut<Value::Item>,
+    <<T as State>::State as HasStack<Value::Item>>::StackType:
+        PushHead + TypedStack<Item = Value::Item>,
 {
-    fn attempt_push_head_n(self) -> Result<State, UnknownError<State, StackError>> {
-        let WithState { value, state } = self;
-        state.push_n_head_in::<Stack, Tuple>(value)
+    fn attempt_push_head_n(self) -> Result<T, StackError> {
+        let Self { value, state } = self;
+        state.push_n_head_in::<Value::Item, Value>(value)
     }
 }
 
 pub trait AttemptPushTail<Stack, State> {
-    fn attempt_push_tail(self) -> Result<State, UnknownError<State, StackError>>;
+    fn attempt_push_tail(self) -> Result<State, StackError>;
 }
 
-impl<Value, State, Stack> AttemptPushTail<Stack, State> for WithState<Value, State>
+impl<Value, T> AttemptPushTail<Value, T> for WithState<Value, T>
 where
-    State: HasStackMut<Stack>,
-    <State as HasStack<Stack>>::StackType: PushTail + TypedStack<Item = Value>,
+    T: StateMut,
+    <T as State>::State: HasStackMut<Value>,
+    <<T as State>::State as HasStack<Value>>::StackType: PushTail + TypedStack<Item = Value>,
 {
-    fn attempt_push_tail(self) -> Result<State, UnknownError<State, StackError>> {
-        let WithState { value, state } = self;
-        state.push_tail_in::<Stack>(value)
+    fn attempt_push_tail(self) -> Result<T, StackError> {
+        let Self { value, state } = self;
+        state.push_tail_in::<Value>(value)
     }
 }
 
 pub trait AttemptPushTailN<Stack, State> {
-    fn attempt_push_tail_n(self) -> Result<State, UnknownError<State, StackError>>;
+    fn attempt_push_tail_n(self) -> Result<State, StackError>;
 }
 
-impl<Tuple, State, Stack> AttemptPushTailN<Stack, State> for WithState<Tuple, State>
+impl<Value, T> AttemptPushTailN<Value, T> for WithState<Value, T>
 where
-    Tuple: MonotonicTuple,
-    State: HasStackMut<Stack>,
-    <State as HasStack<Stack>>::StackType: PushTail + TypedStack<Item = Tuple::Item>,
+    Value: MonotonicTuple,
+    T: StateMut,
+    <T as State>::State: HasStackMut<Value::Item>,
+    <<T as State>::State as HasStack<Value::Item>>::StackType:
+        PushTail + TypedStack<Item = Value::Item>,
 {
-    fn attempt_push_tail_n(self) -> Result<State, UnknownError<State, StackError>> {
-        let WithState { value, state } = self;
-        state.push_n_tail_in::<Stack, Tuple>(value)
+    fn attempt_push_tail_n(self) -> Result<T, StackError> {
+        let Self { value, state } = self;
+        state.push_n_tail_in::<Value::Item, Value>(value)
     }
 }

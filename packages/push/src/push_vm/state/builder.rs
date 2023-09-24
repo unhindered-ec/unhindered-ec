@@ -1,12 +1,15 @@
 use crate::{
     instruction::{PushInstruction, VariableName},
     push_vm::{
-        stack::traits::{extend::ExtendHeadIn, size::SizeLimit},
+        stack::{
+            traits::{extend::ExtendHeadIn, size::SizeLimitOfMut},
+            StackError,
+        },
         PushInteger,
     },
 };
 
-use super::PushState;
+use super::{PushState, PushStateUnmasked};
 
 pub struct Builder {
     partial_state: PushState,
@@ -14,8 +17,10 @@ pub struct Builder {
 
 impl Builder {
     #[must_use]
-    pub const fn new(partial_state: PushState) -> Self {
-        Self { partial_state }
+    pub const fn new(partial_state: PushStateUnmasked) -> Self {
+        Self {
+            partial_state: PushState(partial_state),
+        }
     }
 
     // TODO: Something like the following would be nice and avoid the repetition
@@ -55,11 +60,10 @@ impl Builder {
     /// let bool_stack: &Stack<bool> = state.stack();
     /// assert_eq!(bool_stack.max_stack_size, 100);
     /// ```  
-    #[must_use]
-    pub fn with_max_stack_size(mut self, max_stack_size: usize) -> Self {
-        self.partial_state.int.set_max_size(max_stack_size);
-        self.partial_state.bool.set_max_size(max_stack_size);
-        self
+    pub fn with_max_stack_size(mut self, max_stack_size: usize) -> Result<Self, StackError> {
+        (&mut self.partial_state).set_max_size_of::<PushInteger>(max_stack_size)?;
+        (&mut self.partial_state).set_max_size_of::<bool>(max_stack_size)?;
+        Ok(self)
     }
 
     /// Adds the given sequence of values to the boolean stack for the state you're building.
@@ -87,12 +91,9 @@ impl Builder {
     /// // Now the top of the stack is `true`, followed by `false`, then `false` at the bottom.
     /// assert_eq!(bool_stack.top().unwrap(), &true);
     /// ```  
-    #[must_use]
-    pub fn with_bool_values(mut self, values: Vec<bool>) -> Self {
-        self.partial_state
-            .extend_head_in::<bool, _>(values)
-            .unwrap();
-        self
+    pub fn with_bool_values(mut self, values: Vec<bool>) -> Result<Self, StackError> {
+        (&mut self.partial_state).extend_head_in::<bool, _>(values)?;
+        Ok(self)
     }
 
     /// Adds the given sequence of values to the integer stack for the state you're building.
@@ -120,12 +121,9 @@ impl Builder {
     /// // Now the top of the stack is 5, followed by 8, then 9 at the bottom.
     /// assert_eq!(int_stack.top().unwrap(), &5);
     /// ```  
-    #[must_use]
-    pub fn with_int_values(mut self, values: Vec<PushInteger>) -> Self {
-        self.partial_state
-            .extend_head_in::<PushInteger, _>(values)
-            .unwrap();
-        self
+    pub fn with_int_values(mut self, values: Vec<PushInteger>) -> Result<Self, StackError> {
+        (&mut self.partial_state).extend_head_in::<PushInteger, _>(values)?;
+        Ok(self)
     }
 
     /// Adds an integer input instruction to the current current state's set
@@ -144,7 +142,7 @@ impl Builder {
     //   so we don't have to repeat this logic for every type.
     #[must_use]
     pub fn with_int_input(mut self, input_name: &str, input_value: PushInteger) -> Self {
-        self.partial_state.input_instructions.insert(
+        self.partial_state.0.input_instructions.insert(
             VariableName::from(input_name),
             PushInstruction::push_int(input_value),
         );
@@ -164,7 +162,7 @@ impl Builder {
     /// names in the `Inputs` object used in the construction of the `Builder`.
     #[must_use]
     pub fn with_bool_input(mut self, input_name: &str, input_value: bool) -> Self {
-        self.partial_state.input_instructions.insert(
+        self.partial_state.0.input_instructions.insert(
             VariableName::from(input_name),
             PushInstruction::push_bool(input_value),
         );

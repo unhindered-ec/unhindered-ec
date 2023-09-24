@@ -8,10 +8,15 @@ use super::{
         simple::{Limited, SimpleStack, SimpleStackLimited},
         traits::has_stack::{HasStack, HasStackMut},
     },
-    State,
+    Exec,
 };
 use crate::{
-    error::{stateful::FatalError, try_recover::TryRecover, InstructionResult},
+    error::{
+        into_state::{State, StateMut},
+        stateful::FatalError,
+        try_recover::TryRecover,
+        InstructionResult,
+    },
     instruction::{Instruction, PushInstruction, PushInstructionError, VariableName},
     push_vm::PushInteger,
     type_eq::TypeEq,
@@ -19,7 +24,7 @@ use crate::{
 use std::collections::HashMap;
 
 #[derive(Default, Debug, Eq, PartialEq, Clone)]
-pub struct PushState {
+pub struct PushStateUnmasked {
     pub(crate) exec: Vec<PushInstruction>,
     pub(crate) int: SimpleStackLimited<PushInteger>,
     pub(crate) bool: SimpleStackLimited<bool>,
@@ -34,54 +39,10 @@ pub struct PushState {
     input_instructions: HashMap<VariableName, PushInstruction>,
 }
 
-impl HasStack<bool> for PushState {
-    type StackType = SimpleStack<bool, Limited>;
-
-    fn stack<U: TypeEq<This = bool>>(&self) -> &Self::StackType {
-        &self.bool
-    }
-}
-
-impl HasStackMut<bool> for PushState {
-    fn stack_mut<U: TypeEq<This = bool>>(&mut self) -> &mut Self::StackType {
-        &mut self.bool
-    }
-}
-
-impl HasStack<PushInteger> for PushState {
-    type StackType = SimpleStackLimited<PushInteger>;
-
-    fn stack<U: TypeEq<This = PushInteger>>(&self) -> &Self::StackType {
-        &self.int
-    }
-}
-
-impl HasStackMut<PushInteger> for PushState {
-    fn stack_mut<U: TypeEq<This = PushInteger>>(&mut self) -> &mut Self::StackType {
-        &mut self.int
-    }
-}
+#[derive(Default, Debug, Eq, PartialEq, Clone)]
+pub struct PushState(PushStateUnmasked);
 
 impl PushState {
-    pub fn builder<P>(program: P) -> Builder
-    where
-        P: IntoIterator<Item = PushInstruction>,
-        P::IntoIter: DoubleEndedIterator,
-    {
-        let partial_state = Self {
-            exec: program.into_iter().rev().collect(),
-            int: SimpleStackLimited::<PushInteger>::default(),
-            bool: SimpleStackLimited::<bool>::default(),
-            input_instructions: HashMap::new(),
-        };
-        Builder::new(partial_state)
-    }
-
-    #[must_use]
-    pub const fn exec(&self) -> &Vec<PushInstruction> {
-        &self.exec
-    }
-
     // /// # Panics
     // ///
     // /// This panics if we try to access a variable whose `var_index` isn't in the
@@ -107,11 +68,11 @@ impl PushState {
     pub fn with_input(
         &mut self,
         var_name: &VariableName,
-    ) -> InstructionResult<&mut Self, <PushInstruction as Instruction<Self>>::Error> {
+    ) -> InstructionResult<<PushInstruction as Instruction<&mut Self>>::Error> {
         // TODO: This `panic` here is icky, and we really should deal with it better.
         //   I wonder if the fact that this index might not be there should be telling
         //   us something...
-        let instruction = self
+        let instruction = self.0
             .input_instructions
             .iter()
             .find_map(|(n, v)| if n == var_name { Some(v) } else { None })
@@ -123,11 +84,80 @@ impl PushState {
 }
 
 impl State for PushState {
+    type State = PushStateUnmasked;
+
+    fn state(&self) -> &Self::State {
+        &self.0
+    }
+}
+
+impl StateMut for PushState {
+    fn state_mut(&mut self) -> &mut Self::State {
+        &mut self.0
+    }
+}
+
+impl From<PushStateUnmasked> for PushState {
+    fn from(value: PushStateUnmasked) -> Self {
+        Self(value)
+    }
+}
+
+impl HasStack<bool> for PushStateUnmasked {
+    type StackType = SimpleStack<bool, Limited>;
+
+    fn stack<U: TypeEq<This = bool>>(&self) -> &Self::StackType {
+        &self.bool
+    }
+}
+
+impl HasStackMut<bool> for PushStateUnmasked {
+    fn stack_mut<U: TypeEq<This = bool>>(&mut self) -> &mut Self::StackType {
+        &mut self.bool
+    }
+}
+
+impl HasStack<PushInteger> for PushStateUnmasked {
+    type StackType = SimpleStackLimited<PushInteger>;
+
+    fn stack<U: TypeEq<This = PushInteger>>(&self) -> &Self::StackType {
+        &self.int
+    }
+}
+
+impl HasStackMut<PushInteger> for PushStateUnmasked {
+    fn stack_mut<U: TypeEq<This = PushInteger>>(&mut self) -> &mut Self::StackType {
+        &mut self.int
+    }
+}
+
+impl PushStateUnmasked {
+    pub fn builder<P>(program: P) -> Builder
+    where
+        P: IntoIterator<Item = PushInstruction>,
+        P::IntoIter: DoubleEndedIterator,
+    {
+        let partial_state = Self {
+            exec: program.into_iter().rev().collect(),
+            int: SimpleStackLimited::<PushInteger>::default(),
+            bool: SimpleStackLimited::<bool>::default(),
+            input_instructions: HashMap::new(),
+        };
+        Builder::new(partial_state)
+    }
+
+    #[must_use]
+    pub const fn exec(&self) -> &Vec<PushInstruction> {
+        &self.exec
+    }
+}
+
+impl<'a> Exec<'a> for PushState {
     type Instruction = PushInstruction;
 
     // TODO: Need to have some kind of execution limit to prevent infinite loops.
-    fn run_to_completion(&mut self) -> Result<(), FatalError<&mut Self, PushInstructionError>> {
-        while let Some(instruction) = self.exec.pop() {
+    fn run_to_completion(&mut self) -> Result<(), FatalError<PushInstructionError>> {
+        while let Some(instruction) = self.0.exec.pop() {
             self.perform(&instruction).try_recover()?;
         }
         Ok(())
@@ -140,8 +170,8 @@ mod simple_check {
         instruction::{BoolInstruction, IntInstruction, PushInstruction, VariableName},
         push_vm::{
             stack::traits::{get::GetHeadIn, size::StackSizeOf},
-            state::{with_state::WithStateOps, PushInteger, PushState},
-            State,
+            state::{with_state::WithStateOps, PushInteger, PushStateUnmasked},
+            Exec,
         },
     };
 
@@ -170,7 +200,7 @@ mod simple_check {
             BoolInstruction::And.into(),
             PushInstruction::InputVar(VariableName::from("b")),
         ];
-        let state = PushState::builder(program)
+        let state = &mut PushStateUnmasked::builder(program)
             .with_bool_input("a", true)
             .with_bool_input("b", false)
             // I'm reversing the order of the variables on purpose here to make sure
@@ -182,16 +212,14 @@ mod simple_check {
         #[allow(clippy::unwrap_used)]
         state.run_to_completion().unwrap();
         println!("{state:?}");
-        assert!(state.exec().is_empty());
+        assert!(state.0.exec().is_empty());
         assert_eq!(state.size_of::<PushInteger>().drop_state(), 2);
-        assert_eq!(
-            state.get_n_head_in::<PushInteger, _>().drop_state(),
-            Ok((&5, &17))
-        );
+        #[allow(clippy::unwrap_used)]
+        let head = state.get_n_head_in::<PushInteger, (_, _)>().unwrap();
+        assert_eq!(head, (&5, &17));
         assert_eq!(state.size_of::<bool>().drop_state(), 2);
-        assert_eq!(
-            state.get_n_head_in::<bool, _>().drop_state(),
-            Ok((&true, &false))
-        );
+        #[allow(clippy::unwrap_used)]
+        let head = state.get_n_head_in::<bool, (_, _)>().unwrap();
+        assert_eq!(head, (&true, &false));
     }
 }

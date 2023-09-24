@@ -1,6 +1,9 @@
 use super::{Instruction, InstructionResult, PushInstruction, PushInstructionError};
 use crate::{
-    error::stateful::SpecifySeverity,
+    error::{
+        into_state::{State, StateMut},
+        stateful::SpecifySeverity,
+    },
     push_vm::{
         stack::traits::{
             has_stack::{HasStack, HasStackMut},
@@ -35,10 +38,11 @@ pub enum BoolInstructionError {}
 
 impl<S> Instruction<S> for BoolInstruction
 where
-    S: Clone + HasStackMut<bool> + HasStackMut<i64>,
-    <S as HasStack<bool>>::StackType:
+    S: StateMut,
+    <S as State>::State: HasStackMut<bool> + HasStackMut<i64>,
+    <<S as State>::State as HasStack<bool>>::StackType:
         TypedStack<Item = bool> + PushHead + PopHead + StackSize + SizeLimit,
-    <S as HasStack<i64>>::StackType: TypedStack<Item = i64> + PopHead,
+    <<S as State>::State as HasStack<i64>>::StackType: TypedStack<Item = i64> + PopHead,
 {
     type Error = PushInstructionError;
 
@@ -82,8 +86,9 @@ where
     //   - Hold operations in some kind of queue and apply the at the end
     //     when we know they'll all work
 
-    fn perform<'a>(&'a self, state: &'a mut S) -> InstructionResult<&'a mut S, Self::Error> {
-        let bool_stack = state.stack_mut::<bool>();
+    fn perform(&self, mut state: S) -> InstructionResult<Self::Error> {
+        let state_res = state.state_mut();
+        let bool_stack = state_res.stack_mut::<bool>();
 
         match self {
             Self::Push(b) => state.push_head_in::<bool>(*b).make_recoverable()?,
@@ -149,7 +154,7 @@ mod property_tests {
         instruction::{BoolInstruction, Instruction},
         push_vm::{
             stack::traits::{get::GetHeadIn, size::StackSizeOf},
-            state::{with_state::WithStateOps, PushState},
+            state::{with_state::WithStateOps, PushStateUnmasked},
         },
     };
     use proptest::{prop_assert_eq, proptest};
@@ -163,31 +168,31 @@ mod property_tests {
         #[test]
         fn ops_do_not_crash(instr in proptest::sample::select(all_instructions()),
                 x in proptest::bool::ANY, y in proptest::bool::ANY, i in proptest::num::i64::ANY) {
-            let state = &mut PushState::builder([])
-                .with_bool_values(vec![x, y])
-                .with_int_values(vec![i])
+            let state = &mut PushStateUnmasked::builder([])
+                .with_bool_values(vec![x, y])?
+                .with_int_values(vec![i])?
                 .build();
-            let _ = instr.perform(state).unwrap();
+            instr.perform(state).unwrap();
         }
 
         #[test]
         fn and_is_correct(x in proptest::bool::ANY, y in proptest::bool::ANY) {
-            let state = &mut PushState::builder([])
-                .with_bool_values(vec![x, y])
+            let mut state = PushStateUnmasked::builder([])
+                .with_bool_values(vec![x, y])?
                 .build();
-            BoolInstruction::And.perform(state).unwrap();
-            prop_assert_eq!(state.size_of::<bool>().drop_state(), 1);
-            prop_assert_eq!(*state.head_in::<bool>().drop_state().unwrap(), x && y);
+            BoolInstruction::And.perform(&mut state).unwrap();
+            prop_assert_eq!((&state).size_of::<bool>().drop_state(), 1);
+            prop_assert_eq!(*state.head_in::<bool>().unwrap(), x && y);
         }
 
         #[test]
         fn implies_is_correct(x in proptest::bool::ANY, y in proptest::bool::ANY) {
-            let state =&mut  PushState::builder([])
-                .with_bool_values(vec![x, y])
+            let mut state = PushStateUnmasked::builder([])
+                .with_bool_values(vec![x, y])?
                 .build();
-            BoolInstruction::Implies.perform(state).unwrap();
-            prop_assert_eq!(state.size_of::<bool>().drop_state(), 1);
-            prop_assert_eq!(*state.head_in::<bool>().drop_state().unwrap(), !x || y);
+            BoolInstruction::Implies.perform(&mut state).unwrap();
+            prop_assert_eq!((&state).size_of::<bool>().drop_state(), 1);
+            prop_assert_eq!(*state.head_in::<bool>().unwrap(), !x || y);
         }
     }
 }

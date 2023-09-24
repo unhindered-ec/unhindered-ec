@@ -1,6 +1,6 @@
 use crate::{
-    error::{into_state::IntoState, stateful::UnknownError},
-    push_vm::{stack::StackError, state::with_state::AddState},
+    error::into_state::{State, StateMut},
+    push_vm::stack::StackError,
     type_eq::TypeEq,
 };
 
@@ -30,95 +30,59 @@ pub trait DiscardTail {
     fn discard_n_tail(&mut self, n: usize) -> Result<(), StackError>;
 }
 
-pub trait DiscardHeadIn<Stack, State>: Sized {
+pub trait DiscardHeadIn<Stack>: Sized {
     /// # Errors
     /// - [`StackError::Underflow`] is returned when there is not at least one item on the Stack to discard
-    fn discard_head_in<U: TypeEq<This = Stack>>(
-        self,
-    ) -> Result<Self, UnknownError<State, StackError>>;
+    fn discard_head_in<U: TypeEq<This = Stack>>(self) -> Result<Self, StackError>;
 
     /// # Errors
     /// - [`StackError::Underflow`] is returned when there are not at least [`MonotonicTuple::Length`] items on the Stack to discard.
-    fn discard_n_head_in<U: TypeEq<This = Stack>>(
-        self,
-        n: usize,
-    ) -> Result<Self, UnknownError<State, StackError>>;
+    fn discard_n_head_in<U: TypeEq<This = Stack>>(self, n: usize) -> Result<Self, StackError>;
 }
 
-pub trait DiscardTailIn<Stack, State>: Sized {
+pub trait DiscardTailIn<Stack>: Sized {
     /// # Errors
     /// - [`StackError::Underflow`] is returned when there is not at least one item on the Stack to discard
-    fn discard_tail_in<U: TypeEq<This = Stack>>(
-        self,
-    ) -> Result<Self, UnknownError<State, StackError>>;
+    fn discard_tail_in<U: TypeEq<This = Stack>>(self) -> Result<Self, StackError>;
 
     /// # Errors
     /// - [`StackError::Underflow`] is returned when there are not at least [`MonotonicTuple::Length`] items on the Stack to discard.
-    fn discard_n_tail_in<U: TypeEq<This = Stack>>(
-        self,
-        n: usize,
-    ) -> Result<Self, UnknownError<State, StackError>>;
+    fn discard_n_tail_in<U: TypeEq<This = Stack>>(self, n: usize) -> Result<Self, StackError>;
 }
 
-impl<WithState, State, Stack> DiscardHeadIn<Stack, State> for WithState
+impl<T, Stack> DiscardHeadIn<Stack> for T
 where
-    WithState: IntoState<State>,
-    State: HasStackMut<Stack>,
-    <State as HasStack<Stack>>::StackType: DiscardHead,
+    T: StateMut,
+    <T as State>::State: HasStackMut<Stack>,
+    <<T as State>::State as HasStack<Stack>>::StackType: DiscardHead,
 {
-    fn discard_head_in<U: TypeEq<This = Stack>>(
-        self,
-    ) -> Result<Self, UnknownError<State, StackError>> {
-        let mut state = self.into_state();
-        state
-            .stack_mut::<U>()
-            .discard_head()
-            .map_err(|e| e.with_state(state))?;
+    fn discard_head_in<U: TypeEq<This = Stack>>(mut self) -> Result<Self, StackError> {
+        self.state_mut().stack_mut::<U>().discard_head()?;
 
         Ok(self)
     }
 
-    fn discard_n_head_in<U: TypeEq<This = Stack>>(
-        self,
-        n: usize,
-    ) -> Result<Self, UnknownError<State, StackError>> {
-        let mut state = self.into_state();
-        state
-            .stack_mut::<U>()
-            .discard_n_head(n)
-            .map_err(|e| e.with_state(state))?;
+    fn discard_n_head_in<U: TypeEq<This = Stack>>(mut self, n: usize) -> Result<Self, StackError> {
+        self.state_mut().stack_mut::<U>().discard_n_head(n)?;
 
         Ok(self)
     }
 }
 
-impl<WithState, State, Stack> DiscardTailIn<Stack, State> for WithState
+impl<T, Stack> DiscardTailIn<Stack> for T
 where
-    WithState: IntoState<State>,
-    State: HasStackMut<Stack>,
-    <State as HasStack<Stack>>::StackType: DiscardTail,
+    T: StateMut,
+    <T as State>::State: HasStackMut<Stack>,
+    <<T as State>::State as HasStack<Stack>>::StackType: DiscardTail,
 {
-    fn discard_tail_in<U: TypeEq<This = Stack>>(
-        self,
-    ) -> Result<Self, UnknownError<State, StackError>> {
-        let mut state = self.into_state();
-        state
-            .stack_mut::<U>()
-            .discard_tail()
-            .map_err(|e| e.with_state(state))?;
+    fn discard_tail_in<U: TypeEq<This = Stack>>(mut self) -> Result<Self, StackError> {
+        self.state_mut().stack_mut::<U>().discard_tail()?;
 
         Ok(self)
     }
 
-    fn discard_n_tail_in<U: TypeEq<This = Stack>>(
-        self,
-        n: usize,
-    ) -> Result<Self, UnknownError<State, StackError>> {
-        let mut state = self.into_state();
-        state
-            .stack_mut::<U>()
-            .discard_n_tail(n)
-            .map_err(|e| e.with_state(state))?;
+    fn discard_n_tail_in<U: TypeEq<This = Stack>>(mut self, n: usize) -> Result<Self, StackError> {
+        self.state_mut().stack_mut::<U>().discard_n_tail(n)?;
 
         Ok(self)
     }

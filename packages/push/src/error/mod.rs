@@ -1,5 +1,4 @@
 use self::{
-    into_state::IntoState,
     stateful::{FatalError, RecoverableError, StatefulError},
     try_recover::TryRecover,
 };
@@ -9,20 +8,20 @@ pub mod stateful;
 pub mod try_recover;
 
 #[derive(Debug)]
-pub enum Error<S, E> {
-    Recoverable(RecoverableError<S, E>),
-    Fatal(FatalError<S, E>),
+pub enum Error<E> {
+    Recoverable(RecoverableError<E>),
+    Fatal(FatalError<E>),
 }
 
-pub type InstructionResult<S, E> = core::result::Result<(), Error<S, E>>;
+pub type InstructionResult<E> = core::result::Result<(), Error<E>>;
 
-impl<S, E> Error<S, E> {
-    pub fn fatal(state: S, error: impl Into<E>) -> Self {
-        Self::Fatal(FatalError::new(state, error.into()))
+impl<E> Error<E> {
+    pub fn fatal(error: impl Into<E>) -> Self {
+        Self::Fatal(FatalError::new(error.into()))
     }
 
-    pub fn recoverable(state: S, error: impl Into<E>) -> Self {
-        Self::Recoverable(RecoverableError::new(state, error.into()))
+    pub fn recoverable(error: impl Into<E>) -> Self {
+        Self::Recoverable(RecoverableError::new(error.into()))
     }
 
     pub const fn is_recoverable(&self) -> bool {
@@ -33,13 +32,6 @@ impl<S, E> Error<S, E> {
         matches!(self, Self::Fatal(_))
     }
 
-    pub fn state(&self) -> &S {
-        match self {
-            Self::Recoverable(StatefulError { state, .. })
-            | Self::Fatal(StatefulError { state, .. }) => state,
-        }
-    }
-
     pub const fn error(&self) -> &E {
         match self {
             Self::Recoverable(StatefulError { error, .. })
@@ -47,58 +39,47 @@ impl<S, E> Error<S, E> {
         }
     }
 
-    pub fn map_inner_err<F, E1>(self, f: F) -> Error<S, E1>
+    pub fn map_inner_err<F, E1>(self, f: F) -> Error<E1>
     where
         F: FnOnce(E) -> E1,
     {
         match self {
-            Self::Recoverable(RecoverableError { state, error, .. }) => {
-                Error::Recoverable(RecoverableError::new_boxed(state, f(error)))
+            Self::Recoverable(RecoverableError { error, .. }) => {
+                Error::Recoverable(RecoverableError::new(f(error)))
             }
-            Self::Fatal(FatalError { state, error, .. }) => {
-                Error::Fatal(FatalError::new_boxed(state, f(error)))
-            }
+            Self::Fatal(FatalError { error, .. }) => Error::Fatal(FatalError::new(f(error))),
         }
     }
 }
 
-impl<S, E> IntoState<S> for Error<S, E> {
-    fn into_state(self) -> S {
-        match self {
-            Self::Recoverable(StatefulError { state, .. })
-            | Self::Fatal(StatefulError { state, .. }) => *state,
-        }
-    }
-}
-
-impl<S, E, V> TryRecover<S> for Result<S, Error<V, E>>
+impl<E, V> TryRecover<V> for Result<V, Error<E>>
 where
-    S: Default,
+    V: Default,
 {
-    type Error = FatalError<V, E>;
+    type Error = FatalError<E>;
 
-    fn try_recover(self) -> Result<S, FatalError<V, E>> {
+    fn try_recover(self) -> Result<V, FatalError<E>> {
         self.or_else(|err| match err {
-            Error::Recoverable(_) => Ok(S::default()),
+            Error::Recoverable(_) => Ok(V::default()),
             Error::Fatal(error) => Err(error),
         })
     }
 }
 
-impl<S, E1, E2> From<RecoverableError<S, E1>> for Error<S, E2>
+impl<E1, E2> From<RecoverableError<E1>> for Error<E2>
 where
     E1: Into<E2>,
 {
-    fn from(value: RecoverableError<S, E1>) -> Self {
+    fn from(value: RecoverableError<E1>) -> Self {
         Error::Recoverable(value).map_inner_err(Into::into)
     }
 }
 
-impl<S, E1, E2> From<FatalError<S, E1>> for Error<S, E2>
+impl<E1, E2> From<FatalError<E1>> for Error<E2>
 where
     E1: Into<E2>,
 {
-    fn from(value: FatalError<S, E1>) -> Self {
+    fn from(value: FatalError<E1>) -> Self {
         Error::Fatal(value).map_inner_err(Into::into)
     }
 }
