@@ -1,10 +1,16 @@
-use super::{Instruction, MapInstructionError, PushInstruction, PushInstructionError};
-use crate::{
-    error::InstructionResult,
-    push_vm::{
-        stack::{HasStack, StackPush},
-        PushInteger,
+use crate::push_vm::{
+    stack::traits::{
+        has_stack::{HasStack, HasStackMut},
+        pop::{PopHead, PopHeadIn},
+        push::{AttemptPushHead, PushHead, PushHeadIn},
+        size::{SizeLimit, SizeLimitOf, StackSize},
+        TypedStack,
     },
+    state::with_state::{AddState, WithStateOps},
+};
+
+use super::{
+    Instruction, InstructionResult, PushInstruction, PushInstructionError, SpecifyFatality,
 };
 use std::ops::Not;
 use strum_macros::EnumIter;
@@ -29,7 +35,10 @@ pub enum BoolInstructionError {}
 
 impl<S> Instruction<S> for BoolInstruction
 where
-    S: Clone + HasStackOld<bool> + HasStackOld<i64>,
+    S: Clone + HasStackMut<bool> + HasStackMut<i64>,
+    <S as HasStack<bool>>::StackType:
+        TypedStack<Item = bool> + PushHead + PopHead + StackSize + SizeLimit,
+    <S as HasStack<i64>>::StackType: TypedStack<Item = i64> + PopHead,
 {
     type Error = PushInstructionError;
 
@@ -73,36 +82,57 @@ where
     //   - Hold operations in some kind of queue and apply the at the end
     //     when we know they'll all work
 
-    fn perform(&self, mut state: S) -> InstructionResult<S, Self::Error> {
+    fn perform(&self, state: &mut S) -> InstructionResult<&mut S, Self::Error> {
         let bool_stack = state.stack_mut::<bool>();
+
         match self {
-            Self::Push(b) => state.with_push(*b).map_err_into(),
-            Self::Not => bool_stack.pop().map(Not::not).with_stack_push(state),
+            Self::Push(b) => state.push_head_in::<bool>(*b).make_recoverable()?,
+            Self::Not => bool_stack
+                .pop_head()
+                .map(Not::not)
+                .with_state(state)
+                .make_recoverable()?
+                .attempt_push_head()
+                .make_fatal()?,
             Self::And => bool_stack
-                .pop_n()
+                .pop_n_head()
                 .map(|(x, y)| x && y)
-                .with_stack_push(state),
+                .with_state(state)
+                .make_recoverable()?
+                .attempt_push_head()
+                .make_fatal()?,
             Self::Or => bool_stack
-                .pop_n()
+                .pop_n_head()
                 .map(|(x, y)| x || y)
-                .with_stack_push(state),
+                .with_state(state)
+                .make_recoverable()?
+                .attempt_push_head()
+                .make_fatal()?,
             Self::Xor => bool_stack
-                .pop_n()
+                .pop_n_head()
                 .map(|(x, y)| x != y)
-                .with_stack_push(state),
+                .with_state(state)
+                .make_recoverable()?
+                .attempt_push_head()
+                .make_fatal()?,
             Self::Implies => bool_stack
-                .pop_n()
+                .pop_n_head()
                 .map(|(x, y)| !x || y)
-                .with_stack_push(state),
-            Self::FromInt => {
-                let mut state = state.not_full::<bool>().map_err_into()?;
-                state
-                    .stack_mut::<PushInteger>()
-                    .pop()
-                    .map(|i| i != 0)
-                    .with_stack_push(state)
-            }
-        }
+                .with_state(state)
+                .make_recoverable()?
+                .attempt_push_head()
+                .make_fatal()?,
+            Self::FromInt => state
+                .not_full::<bool>()
+                .make_recoverable()?
+                .pop_head_in::<i64>()
+                .map_value(|i| i != 0)
+                .make_fatal()?
+                .attempt_push_head()
+                .make_fatal()?,
+        };
+
+        Ok(())
     }
 }
 
@@ -115,7 +145,10 @@ impl From<BoolInstruction> for PushInstruction {
 #[cfg(test)]
 #[allow(clippy::unwrap_used)]
 mod property_tests {
-    use crate::instruction::{BoolInstruction, Instruction, PushState};
+    use crate::{
+        instruction::{BoolInstruction, Instruction, PushState},
+        push_vm::stack::traits::{get::GetHead, size::StackSize},
+    };
     use proptest::{prop_assert_eq, proptest};
     use strum::IntoEnumIterator;
 
@@ -131,7 +164,7 @@ mod property_tests {
                 .with_bool_values(vec![x, y])
                 .with_int_values(vec![i])
                 .build();
-            let _ = instr.perform(state).unwrap();
+            let _ = instr.perform(&mut state).unwrap();
         }
 
         #[test]
@@ -139,9 +172,9 @@ mod property_tests {
             let state = PushState::builder([])
                 .with_bool_values(vec![x, y])
                 .build();
-            let result_state = BoolInstruction::And.perform(state).unwrap();
-            prop_assert_eq!(result_state.bool.size(), 1);
-            prop_assert_eq!(*result_state.bool.top().unwrap(), x && y);
+            BoolInstruction::And.perform(&mut state).unwrap();
+            prop_assert_eq!(state.bool.size(), 1);
+            prop_assert_eq!(*state.bool.head().unwrap(), x && y);
         }
 
         #[test]
@@ -149,9 +182,9 @@ mod property_tests {
             let state = PushState::builder([])
                 .with_bool_values(vec![x, y])
                 .build();
-            let result_state = BoolInstruction::Implies.perform(state).unwrap();
-            prop_assert_eq!(result_state.bool.size(), 1);
-            prop_assert_eq!(*result_state.bool.top().unwrap(), !x || y);
+            BoolInstruction::Implies.perform(&mut state).unwrap();
+            prop_assert_eq!(state.bool.size(), 1);
+            prop_assert_eq!(*state.bool.head().unwrap(), !x || y);
         }
     }
 }

@@ -1,3 +1,6 @@
+pub mod with_state;
+
+use super::stack::simple::{Limited, SimpleStack, SimpleStackLimited};
 use super::stack::traits::has_stack::{HasStack, HasStackMut};
 use super::stack::Stack;
 use super::{HasStackOld, State};
@@ -11,8 +14,8 @@ use std::collections::HashMap;
 #[derive(Default, Debug, Eq, PartialEq, Clone)]
 pub struct PushState {
     pub(crate) exec: Vec<PushInstruction>,
-    pub(crate) int: Stack<PushInteger>,
-    pub(crate) bool: Stack<bool>,
+    pub(crate) int: SimpleStackLimited<PushInteger>,
+    pub(crate) bool: SimpleStackLimited<bool>,
     // The Internet suggests that when you have fewer than 15 entries,
     // linear search on `Vec` is faster than `HashMap`. I found that
     // using `HashMap` here did slow things down, mostly
@@ -25,33 +28,29 @@ pub struct PushState {
 }
 
 impl HasStack<bool> for PushState {
-    fn stack<U: TypeEq<This = bool>>(&self) -> &Stack<bool> {
+    type StackType = SimpleStack<bool, Limited>;
+
+    fn stack<U: TypeEq<This = bool>>(&self) -> &Self::StackType {
         &self.bool
     }
 }
 
 impl HasStackMut<bool> for PushState {
-    fn stack_mut<U: TypeEq<This = bool>>(&mut self) -> &mut Stack<bool> {
+    fn stack_mut<U: TypeEq<This = bool>>(&mut self) -> &mut Self::StackType {
         &mut self.bool
     }
 }
 
-impl HasStackOld<bool> for PushState {
-    fn stack<U: TypeEq<This = bool>>(&self) -> &Stack<bool> {
-        &self.bool
-    }
+impl HasStack<PushInteger> for PushState {
+    type StackType = SimpleStackLimited<PushInteger>;
 
-    fn stack_mut<U: TypeEq<This = bool>>(&mut self) -> &mut Stack<bool> {
-        &mut self.bool
-    }
-}
-
-impl HasStackOld<PushInteger> for PushState {
-    fn stack<U: TypeEq<This = PushInteger>>(&self) -> &Stack<PushInteger> {
+    fn stack<U: TypeEq<This = PushInteger>>(&self) -> &Self::StackType {
         &self.int
     }
+}
 
-    fn stack_mut<U: TypeEq<This = PushInteger>>(&mut self) -> &mut Stack<PushInteger> {
+impl HasStackMut<PushInteger> for PushState {
+    fn stack_mut<U: TypeEq<This = PushInteger>>(&mut self) -> &mut Self::StackType {
         &mut self.int
     }
 }

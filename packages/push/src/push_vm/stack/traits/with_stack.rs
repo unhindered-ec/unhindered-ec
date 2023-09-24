@@ -2,31 +2,6 @@ use crate::push_vm::stack::Stack;
 
 use super::has_stack::{HasStack, HasStackMut};
 
-pub struct WithState<Value, State> {
-    value: Value,
-    state: State,
-}
-
-impl<Value, State> WithState<Value, State> {
-    pub fn drop_state(self) -> Value {
-        self.value
-    }
-
-    pub fn drop_value(self) -> State {
-        self.state
-    }
-}
-
-trait AddState<State>: Sized {
-    fn with_state(self, state: State) -> WithState<Self, State>;
-}
-
-impl<State, Value> AddState<State> for Value {
-    fn with_state(self, state: State) -> WithState<Self, State> {
-        WithState { value: self, state }
-    }
-}
-
 pub trait WithStack<T> {
     #[must_use]
     fn with_stack(self, f: impl FnOnce(&Stack<T>)) -> Self;

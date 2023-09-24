@@ -21,10 +21,12 @@ mod sealed {
 
 pub trait SimpleStackType: sealed::Sealed {}
 
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Default)]
 pub struct Limited;
 impl sealed::Sealed for Limited {}
 impl SimpleStackType for Limited {}
 
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Default)]
 pub struct Unlimited;
 impl sealed::Sealed for Unlimited {}
 impl SimpleStackType for Unlimited {}
@@ -34,6 +36,7 @@ impl SimpleStackType for Unlimited {}
 // field should obviously not be used when the type is Unlimited so it just kinda sits there in that case.
 // I don't know if the rust compiler is smart enough to figure that out and it gets removed, may be worth a
 // look at using something like CompilerExplorer.
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Clone, Default)]
 pub struct SimpleStack<T, Type: SimpleStackType = Unlimited> {
     backend: Vec<T>,
     max_size: usize,

@@ -81,12 +81,67 @@ pub struct FatalError<S, E> {
 }
 
 #[derive(Debug)]
+pub struct UnknownError<S, E> {
+    state: Box<S>,
+    error: E,
+}
+
+impl<E, S> From<WithState<E, S>> for UnknownError<S, E> {
+    fn from(value: WithState<E, S>) -> Self {
+        UnknownError {
+            state: Box::new(value.state),
+            error: value.value,
+        }
+    }
+}
+
+pub trait SpecifyFatality<V, S, E> {
+    type Output<Error>;
+    fn make_fatal(self) -> Self::Output<FatalError<S, E>>;
+    fn make_recoverable(self) -> Self::Output<RecoverableError<S, E>>;
+}
+
+// impl<V, S, E, T> SpecifyFatality<V, S, E> for T
+// where
+//     T: Into<UnknownError<S, E>>,
+// {
+//     type Output<Error> = Error;
+
+//     fn make_fatal(self) -> Self::Output<FatalError<S, E>> {
+//         let UnknownError { state, error } = self.into();
+//         FatalError { state, error }
+//     }
+
+//     fn make_recoverable(self) -> Self::Output<RecoverableError<S, E>> {
+//         let UnknownError { state, error } = self.into();
+//         RecoverableError { state, error }
+//     }
+// }
+
+impl<Value, State, Error, ImplType> SpecifyFatality<Value, State, Error> for ImplType
+where
+    ImplType: Into<Result<Value, UnknownError<State, Error>>>,
+{
+    type Output<E> = Result<Value, E>;
+
+    fn make_fatal(self) -> Self::Output<FatalError<State, Error>> {
+        self.into()
+            .map_err(|UnknownError { state, error }| FatalError { state, error }.into())
+    }
+
+    fn make_recoverable(self) -> Self::Output<RecoverableError<State, Error>> {
+        self.into()
+            .map_err(|UnknownError { state, error }| RecoverableError { state, error }.into())
+    }
+}
+
+#[derive(Debug)]
 pub enum Error<S, E> {
     Recoverable(RecoverableError<S, E>),
     Fatal(FatalError<S, E>),
 }
 
-pub type InstructionResult<S, E> = core::result::Result<S, Error<S, E>>;
+pub type InstructionResult<S, E> = core::result::Result<(), Error<S, E>>;
 
 impl<S, E> Error<S, E> {
     pub fn fatal(state: S, error: impl Into<E>) -> Self {
@@ -131,37 +186,38 @@ impl<S, E> Error<S, E> {
             Self::Fatal(error) => *error.state,
         }
     }
-}
 
-impl<S, E> From<RecoverableError<S, E>> for Error<S, E> {
-    fn from(value: RecoverableError<S, E>) -> Self {
-        Self::Recoverable(value)
+    fn map_inner<E2>(self, f: impl FnOnce(E) -> E2) -> Error<S, E2> {
+        match self {
+            Error::Recoverable(RecoverableError { state, error }) => {
+                Error::Recoverable(RecoverableError {
+                    state,
+                    error: f(error),
+                })
+            }
+            Error::Fatal(FatalError { state, error }) => Error::Fatal(FatalError {
+                state,
+                error: f(error),
+            }),
+        }
     }
 }
-impl<S, E> From<FatalError<S, E>> for Error<S, E> {
-    fn from(value: FatalError<S, E>) -> Self {
-        Self::Fatal(value)
+
+impl<S, E1, E2> From<RecoverableError<S, E1>> for Error<S, E2>
+where
+    E1: Into<E2>,
+{
+    fn from(value: RecoverableError<S, E1>) -> Self {
+        Error::Recoverable(value).map_inner(Into::into)
     }
 }
 
-pub trait MakeError<E, S, V>: Sized {
-    fn make_fatal(self, state: impl Into<Box<S>>) -> Result<V, FatalError<S, E>>;
-    fn make_recoverable(self, state: impl Into<Box<S>>) -> Result<V, RecoverableError<S, E>>;
-}
-
-impl<E, S, V> MakeError<E, S, V> for Result<V, E> {
-    fn make_fatal(self, state: impl Into<Box<S>>) -> Result<V, FatalError<S, E>> {
-        self.map_err(|error| FatalError {
-            state: state.into(),
-            error,
-        })
-    }
-
-    fn make_recoverable(self, state: impl Into<Box<S>>) -> Result<V, RecoverableError<S, E>> {
-        self.map_err(|error| RecoverableError {
-            state: state.into(),
-            error,
-        })
+impl<S, E1, E2> From<FatalError<S, E1>> for Error<S, E2>
+where
+    E1: Into<E2>,
+{
+    fn from(value: FatalError<S, E1>) -> Self {
+        Error::Fatal(value).map_inner(Into::into)
     }
 }
 
@@ -244,13 +300,13 @@ pub trait Instruction<S> {
     /// This returns an error if the instruction being performed
     /// returns some kind of error. This could include things like
     /// stack over- or underflows, or numeric errors like integer overflow.
-    fn perform(&self, state: S) -> InstructionResult<S, Self::Error>;
+    fn perform(&self, state: &mut S) -> InstructionResult<&mut S, Self::Error>;
 }
 
 impl<S, E> Instruction<S> for Box<dyn Instruction<S, Error = E>> {
     type Error = E;
 
-    fn perform(&self, state: S) -> InstructionResult<S, E> {
+    fn perform(&self, state: &mut S) -> InstructionResult<&mut S, E> {
         self.as_ref().perform(state)
     }
 }

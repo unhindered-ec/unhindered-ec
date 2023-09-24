@@ -1,10 +1,20 @@
-use super::{Instruction, MapInstructionError, PushInstruction, PushInstructionError};
-use crate::{
-    error::{Error, InstructionResult},
-    push_vm::{
-        stack::{HasStack, Stack, StackDiscard, StackError, StackPush},
-        PushInteger,
+use super::{
+    Error, Instruction, InstructionResult, PushInstruction, PushInstructionError, SpecifyFatality,
+};
+use crate::push_vm::{
+    stack::{
+        traits::{
+            discard::DiscardHead,
+            discard::DiscardHeadIn,
+            get::GetHead,
+            has_stack::{HasStack, HasStackMut},
+            push::{AttemptPushHead, PushHead, PushHeadIn},
+            TypedStack,
+        },
+        Stack, StackError,
     },
+    state::with_state::AddState,
+    PushInteger,
 };
 use std::ops::Neg;
 use strum_macros::EnumIter;
@@ -56,13 +66,15 @@ pub enum IntInstructionError {
 
 impl<S> Instruction<S> for IntInstruction
 where
-    S: Clone + HasStackOld<PushInteger> + HasStackOld<bool>,
+    S: Clone + HasStackMut<PushInteger> + HasStackMut<bool>,
+    <S as HasStack<PushInteger>>::StackType:
+        TypedStack<Item = PushInteger> + PushHead + GetHead + DiscardHead,
 {
     type Error = PushInstructionError;
 
     #[allow(clippy::too_many_lines, clippy::cognitive_complexity)]
     #[allow(unreachable_code, clippy::let_unit_value)] // Remove this
-    fn perform(&self, mut state: S) -> InstructionResult<S, Self::Error> {
+    fn perform(&self, state: &mut S) -> InstructionResult<&mut S, Self::Error> {
         match self {
             Self::Push(_)
             | Self::Negate
@@ -83,8 +95,16 @@ where
                 // any stacks are full before we start.
                 let int_stack = state.stack_mut::<PushInteger>();
                 match self {
-                    Self::Push(i) => state.with_push(*i).map_err_into(),
-                    Self::Negate => int_stack.top().map(Neg::neg).with_stack_replace(1, state),
+                    Self::Push(i) => state.push_head_in::<PushInteger>(*i).make_recoverable()?,
+                    Self::Negate => int_stack
+                        .head()
+                        .map(Neg::neg)
+                        .with_state(state)
+                        .make_recoverable()?
+                        .discard_head_in::<PushInteger>()
+                        .make_recoverable()?
+                        .attempt_push_head()
+                        .make_fatal()?,
                     Self::Abs => int_stack
                         .top()
                         .copied()
@@ -468,6 +488,7 @@ where
         //     }
         // }
         // Ok(state)
+        Ok(())
     }
 }
 
@@ -481,7 +502,10 @@ impl From<IntInstruction> for PushInstruction {
 #[allow(clippy::unwrap_used)]
 mod test {
 
-    use crate::push_vm::state::PushState;
+    use crate::push_vm::{
+        stack::traits::{get::GetHeadIn, push::PushHeadIn, size::StackSizeOf},
+        state::{with_state::WithStateOps, PushState},
+    };
 
     use super::*;
 
@@ -490,11 +514,10 @@ mod test {
         let x = 409;
         let y = 512;
         let mut state = PushState::builder([]).build();
-        state.stack_mut::<PushInteger>().push(y).unwrap();
-        state.stack_mut::<PushInteger>().push(x).unwrap();
-        let result = IntInstruction::Add.perform(state).unwrap();
-        assert_eq!(result.int.size(), 1);
-        assert_eq!(*result.int.top().unwrap(), x + y);
+        state.push_n_head_in::<PushInteger, _>((y, x)).unwrap();
+        IntInstruction::Add.perform(&mut state).unwrap();
+        assert_eq!(state.size_of::<PushInteger>().drop_state(), 1);
+        assert_eq!(*state.head_in::<PushInteger>().drop_state().unwrap(), x + y);
     }
 
     #[test]
@@ -502,53 +525,64 @@ mod test {
         let x = 4_098_586_571_925_584_936;
         let y = 5_124_785_464_929_190_872;
         let mut state = PushState::builder([]).build();
-        state.stack_mut::<PushInteger>().push(y).unwrap();
-        state.stack_mut::<PushInteger>().push(x).unwrap();
-        let result = IntInstruction::Add.perform(state).unwrap_err();
-        assert_eq!(result.state().int.size(), 2);
+        state.push_n_head_in::<PushInteger, _>((y, x)).unwrap();
+        let err = IntInstruction::Add.perform(&mut state).unwrap_err();
+        assert_eq!((*err.state()).size_of::<PushInteger>().drop_state(), 2);
         assert_eq!(
-            result.error(),
+            err.error(),
             &PushInstructionError::from(IntInstructionError::Overflow {
                 op: IntInstruction::Add
             })
         );
-        assert!(result.is_recoverable());
+        assert!(err.is_recoverable());
     }
 
     #[test]
     fn inc_overflows() {
         let x = PushInteger::MAX;
         let mut state = PushState::builder([]).build();
-        state.int.push(x).unwrap();
-        let result = IntInstruction::Inc.perform(state).unwrap_err();
-        assert_eq!(result.state().int.size(), 1);
-        assert_eq!(result.state().int.top().unwrap(), &PushInteger::MAX);
+        state.push_head_in::<PushInteger>(x).unwrap();
+        let err = IntInstruction::Inc.perform(&mut state).unwrap_err();
+        assert_eq!((*err.state()).size_of::<PushInteger>().drop_state(), 1);
         assert_eq!(
-            result.error(),
+            (*err.state())
+                .head_in::<PushInteger>()
+                .drop_state()
+                .unwrap(),
+            &PushInteger::MAX
+        );
+        assert_eq!(
+            err.error(),
             &IntInstructionError::Overflow {
                 op: IntInstruction::Inc
             }
             .into()
         );
-        assert!(result.is_recoverable());
+        assert!(err.is_recoverable());
     }
 
     #[test]
     fn dec_overflows() {
         let x = PushInteger::MIN;
         let mut state = PushState::builder([]).build();
-        state.int.push(x).unwrap();
-        let result = IntInstruction::Dec.perform(state).unwrap_err();
-        assert_eq!(result.state().int.size(), 1);
-        assert_eq!(result.state().int.top().unwrap(), &PushInteger::MIN);
+        state.push_head_in::<PushInteger>(x).unwrap();
+        let err = IntInstruction::Dec.perform(&mut state).unwrap_err();
+        assert_eq!((*err.state()).size_of::<PushInteger>().drop_state(), 1);
         assert_eq!(
-            result.error(),
+            (*err.state())
+                .head_in::<PushInteger>()
+                .drop_state()
+                .unwrap(),
+            &PushInteger::MIN
+        );
+        assert_eq!(
+            err.error(),
             &IntInstructionError::Overflow {
                 op: IntInstruction::Dec
             }
             .into()
         );
-        assert!(result.is_recoverable());
+        assert!(err.is_recoverable());
     }
 }
 
@@ -557,7 +591,15 @@ mod test {
 mod property_tests {
     use crate::{
         instruction::{int::IntInstructionError, Instruction, IntInstruction},
-        push_vm::{state::PushState, HasStackOld, PushInteger},
+        push_vm::{
+            stack::traits::{
+                get::{GetHead, GetHeadIn},
+                push::PushHeadIn,
+                size::StackSize,
+            },
+            state::{with_state::WithStateOps, PushState},
+            PushInteger,
+        },
     };
     use proptest::{prop_assert_eq, proptest};
     use strum::IntoEnumIterator;
@@ -572,41 +614,40 @@ mod property_tests {
         #[test]
         fn negate(x in proptest::num::i64::ANY) {
             let mut state = PushState::builder([]).build();
-            state.stack_mut::<PushInteger>().push(x).unwrap();
-            let result = IntInstruction::Negate.perform(state).unwrap();
-            prop_assert_eq!(result.int.size(), 1);
-            prop_assert_eq!(*result.int.top().unwrap(), -x);
+            state.push_head_in::<PushInteger>(x).unwrap();
+            IntInstruction::Negate.perform(&mut state).unwrap();
+            prop_assert_eq!(state.int.size(), 1);
+            prop_assert_eq!(*state.int.head().unwrap(), -x);
         }
 
         #[test]
         fn abs(x in proptest::num::i64::ANY) {
             let mut state = PushState::builder([]).build();
-            state.stack_mut::<PushInteger>().push(x).unwrap();
-            let result = IntInstruction::Abs.perform(state).unwrap();
-            prop_assert_eq!(result.int.size(), 1);
-            prop_assert_eq!(*result.int.top().unwrap(), x.abs());
+            state.push_head_in::<PushInteger>(x).unwrap();
+            IntInstruction::Abs.perform(&mut state).unwrap();
+            prop_assert_eq!(state.int.size(), 1);
+            prop_assert_eq!(*state.int.head().unwrap(), x.abs());
         }
 
         #[test]
         fn sqr(x in proptest::num::i64::ANY) {
             let mut state = PushState::builder([]).build();
-            state.stack_mut::<PushInteger>().push(x).unwrap();
-            let result = IntInstruction::Square.perform(state);
+            state.push_head_in::<PushInteger>(x).unwrap();
+            let err = IntInstruction::Square.perform(&mut state);
             if let Some(x_squared) = x.checked_mul(x) {
-                let result = result.unwrap();
-                prop_assert_eq!(result.int.size(), 1);
-                let output = *result.int.top().unwrap();
+                prop_assert_eq!(state.int.size(), 1);
+                let output = *state.int.head().unwrap();
                 prop_assert_eq!(output, x_squared);
             } else {
-                let result = result.unwrap_err();
+                let err = err.unwrap_err();
                 assert_eq!(
-                    result.error(),
+                    err.error(),
                     &IntInstructionError::Overflow {
                         op: IntInstruction::Square
                     }.into()
                 );
-                assert!(result.is_recoverable());
-                let top_int = result.state().int.top().unwrap();
+                assert!(err.is_recoverable());
+                let top_int = err.state().int.head().unwrap();
                 prop_assert_eq!(*top_int, x);
             }
         }
@@ -614,36 +655,34 @@ mod property_tests {
         #[test]
         fn add_doesnt_crash(x in proptest::num::i64::ANY, y in proptest::num::i64::ANY) {
             let mut state = PushState::builder([]).build();
-            state.int.push(y).unwrap();
-            state.int.push(x).unwrap();
-            let _ = IntInstruction::Add.perform(state);
+            state.push_n_head_in::<PushInteger,_>((y,x)).unwrap();
+            IntInstruction::Add.perform(&mut state).unwrap();
         }
 
         #[test]
         fn add_adds_or_does_nothing(x in proptest::num::i64::ANY, y in proptest::num::i64::ANY) {
             let mut state = PushState::builder([]).build();
-            state.int.push(y).unwrap();
-            state.int.push(x).unwrap();
-            let result = IntInstruction::Add.perform(state);
+            state.push_n_head_in::<PushInteger,_>((y,x)).unwrap();
+            let err = IntInstruction::Add.perform(&mut state);
             #[allow(clippy::unwrap_used)]
             if let Some(expected_result) = x.checked_add(y) {
-                let output = result.unwrap().int.pop().unwrap();
-                prop_assert_eq!(output, expected_result);
+                let output = state.int.head().unwrap();
+                prop_assert_eq!(output, &expected_result);
             } else {
                 // This only checks that `x` is still on the top of the stack.
                 // We arguably want to confirm that the entire state of the system
                 // is unchanged, except that the `Add` instruction has been
                 // removed from the `exec` stack.
-                let result = result.unwrap_err();
+                let err = err.unwrap_err();
                 assert_eq!(
-                    result.error(),
+                    err.error(),
                     &IntInstructionError::Overflow {
                         op: IntInstruction::Add
                     }
                     .into()
                 );
-                assert!(result.is_recoverable());
-                let top_int = result.state().int.top().unwrap();
+                assert!(err.is_recoverable());
+                let top_int = err.state().int.head().unwrap();
                 prop_assert_eq!(*top_int, x);
             }
         }
@@ -651,28 +690,27 @@ mod property_tests {
         #[test]
         fn subtract_subs_or_does_nothing(x in proptest::num::i64::ANY, y in proptest::num::i64::ANY) {
             let mut state = PushState::builder([]).build();
-            state.int.push(y).unwrap();
-            state.int.push(x).unwrap();
-            let result = IntInstruction::Subtract.perform(state);
+            state.push_n_head_in::<PushInteger,_>((y,x)).unwrap();
+            let err = IntInstruction::Subtract.perform(&mut state);
             #[allow(clippy::unwrap_used)]
             if let Some(expected_result) = x.checked_sub(y) {
-                let output = result.unwrap().int.pop().unwrap();
-                prop_assert_eq!(output, expected_result);
+                let output = state.head_in::<PushInteger>().unwrap().drop_state();
+                prop_assert_eq!(output, &expected_result);
             } else {
                 // This only checks that `x` is still on the top of the stack.
                 // We arguably want to confirm that the entire state of the system
                 // is unchanged, except that the `Add` instruction has been
                 // removed from the `exec` stack.
-                let result = result.unwrap_err();
+                let err = err.unwrap_err();
                 assert_eq!(
-                    result.error(),
+                    err.error(),
                     &IntInstructionError::Overflow {
                         op: IntInstruction::Subtract
                     }
                     .into()
                 );
-                assert!(result.is_recoverable());
-                let top_int = result.state().int.top().unwrap();
+                assert!(err.is_recoverable());
+                let top_int = (*err.state()).head_in::<PushInteger>().unwrap().drop_state();
                 prop_assert_eq!(*top_int, x);
             }
         }
@@ -680,28 +718,27 @@ mod property_tests {
         #[test]
         fn multiply_muls_or_does_nothing(x in proptest::num::i64::ANY, y in proptest::num::i64::ANY) {
             let mut state = PushState::builder([]).build();
-            state.int.push(y).unwrap();
-            state.int.push(x).unwrap();
-            let result = IntInstruction::Multiply.perform(state);
+            state.push_n_head_in::<PushInteger,_>((y,x)).unwrap();
+            let err = IntInstruction::Multiply.perform(&mut state);
             #[allow(clippy::unwrap_used)]
             if let Some(expected_result) = x.checked_mul(y) {
-                let output = result.unwrap().int.pop().unwrap();
-                prop_assert_eq!(output, expected_result);
+                let output = state.head_in::<PushInteger>().drop_state().unwrap();
+                prop_assert_eq!(output, &expected_result);
             } else {
                 // This only checks that `x` is still on the top of the stack.
                 // We arguably want to confirm that the entire state of the system
                 // is unchanged, except that the `Add` instruction has been
                 // removed from the `exec` stack.
-                let result = result.unwrap_err();
+                let err = err.unwrap_err();
                 assert_eq!(
-                    result.error(),
+                    err.error(),
                     &IntInstructionError::Overflow {
                         op: IntInstruction::Multiply
                     }
                     .into()
                 );
-                assert!(result.is_recoverable());
-                let top_int = result.state().int.top().unwrap();
+                assert!(err.is_recoverable());
+                let top_int = (*err.state()).head_in::<PushInteger>().drop_state().unwrap();
                 prop_assert_eq!(*top_int, x);
             }
         }
@@ -709,40 +746,37 @@ mod property_tests {
         #[test]
         fn protected_divide_zero_denominator(x in proptest::num::i64::ANY) {
             let mut state = PushState::builder([]).build();
-            state.int.push(0).unwrap();
-            state.int.push(x).unwrap();
-            let result = IntInstruction::ProtectedDivide.perform(state);
-            #[allow(clippy::unwrap_used)]
-            let output = result.unwrap().int.pop().unwrap();
+            state.push_n_head_in::<PushInteger,_>((0,x)).unwrap();
+            IntInstruction::ProtectedDivide.perform(&mut state).unwrap();
+            let output = state.head_in::<PushInteger>().drop_state().unwrap();
             // Dividing by zero should always return 1.
-            prop_assert_eq!(output, 1);
+            prop_assert_eq!(output, &1);
         }
 
         #[test]
         fn protected_divide_divs_or_does_nothing(x in proptest::num::i64::ANY, y in proptest::num::i64::ANY) {
             let mut state = PushState::builder([]).build();
-            state.int.push(y).unwrap();
-            state.int.push(x).unwrap();
-            let result = IntInstruction::ProtectedDivide.perform(state);
+            state.push_n_head_in::<PushInteger,_>((y,x)).unwrap();
+            let err = IntInstruction::ProtectedDivide.perform(&mut state);
             #[allow(clippy::unwrap_used)]
             if let Some(expected_result) = x.checked_div(y) {
-                let output = result.unwrap().int.pop().unwrap();
-                prop_assert_eq!(output, expected_result);
+                let output = state.head_in::<PushInteger>().drop_state().unwrap();
+                prop_assert_eq!(output, &expected_result);
             } else {
                 // This only checks that `x` is still on the top of the stack.
                 // We arguably want to confirm that the entire state of the system
                 // is unchanged, except that the `Add` instruction has been
                 // removed from the `exec` stack.
-                let result = result.unwrap_err();
+                let err = err.unwrap_err();
                 assert_eq!(
-                    result.error(),
+                    err.error(),
                     &IntInstructionError::Overflow {
                         op: IntInstruction::ProtectedDivide
                     }
                     .into()
                 );
-                assert!(result.is_recoverable());
-                let top_int = result.state().int.top().unwrap();
+                assert!(err.is_recoverable());
+                let top_int = (*err.state()).head_in::<PushInteger>().drop_state().unwrap();
                 prop_assert_eq!(*top_int, x);
             }
         }
@@ -750,44 +784,42 @@ mod property_tests {
         #[test]
         fn mod_zero_denominator(x in proptest::num::i64::ANY) {
             let mut state = PushState::builder([]).build();
-            state.int.push(0).unwrap();
-            state.int.push(x).unwrap();
-            let result = IntInstruction::Mod.perform(state);
+            state.push_n_head_in::<PushInteger,_>((0,x)).unwrap();
+            IntInstruction::Mod.perform(&mut state).unwrap();
             #[allow(clippy::unwrap_used)]
-            let output = result.unwrap().int.pop().unwrap();
+            let output = state.head_in::<PushInteger>().drop_state().unwrap();
             // Modding by zero should always return 0 since x % x = 0 for all x != 0.
-            prop_assert_eq!(output, 0);
+            prop_assert_eq!(output, &0);
         }
 
         #[test]
         fn mod_rems_or_does_nothing(x in proptest::num::i64::ANY, y in proptest::num::i64::ANY) {
             let mut state = PushState::builder([]).build();
-            state.int.push(y).unwrap();
-            state.int.push(x).unwrap();
-            let result = IntInstruction::Mod.perform(state);
+            state.push_n_head_in::<PushInteger,_>((y,x)).unwrap();
+            let err = IntInstruction::Mod.perform(&mut state);
             #[allow(clippy::unwrap_used)]
             if let Some(expected_result) = x.checked_rem(y) {
-                let output = result.unwrap().int.pop().unwrap();
-                prop_assert_eq!(output, expected_result);
+                let output = state.head_in::<PushInteger>().drop_state().unwrap();
+                prop_assert_eq!(output, &expected_result);
             } else if y == 0 {
-                let output = result.unwrap().int.pop().unwrap();
+                let output = state.head_in::<PushInteger>().drop_state().unwrap();
                 // Modding by zero should always return 0 since x % x == 0 for all x != 0.
-                prop_assert_eq!(output, 0);
+                prop_assert_eq!(output, &0);
             } else {
                 // This only checks that `x` is still on the top of the stack.
                 // We arguably want to confirm that the entire state of the system
                 // is unchanged, except that the `Add` instruction has been
                 // removed from the `exec` stack.
-                let result = result.unwrap_err();
+                let err = err.unwrap_err();
                 assert_eq!(
-                    result.error(),
+                    err.error(),
                     &IntInstructionError::Overflow {
                         op: IntInstruction::Mod
                     }
                     .into()
                 );
-                assert!(result.is_recoverable());
-                let top_int = result.state().int.top().unwrap();
+                assert!(err.is_recoverable());
+                let top_int = (*err.state()).head_in::<PushInteger>().drop_state().unwrap();
                 prop_assert_eq!(*top_int, x);
             }
         }
@@ -795,18 +827,17 @@ mod property_tests {
         #[test]
         fn inc_does_not_crash(x in proptest::num::i64::ANY) {
             let mut state = PushState::builder([]).build();
-            state.int.push(x).unwrap();
-            let _ = IntInstruction::Inc.perform(state);
+            state.push_head_in::<PushInteger>(x).unwrap();
+            let _ = IntInstruction::Inc.perform(&mut state);
         }
 
         #[test]
         #[ignore]
         fn int_ops_do_not_crash(instr in proptest::sample::select(all_instructions()), x in proptest::num::i64::ANY, y in proptest::num::i64::ANY, b in proptest::bool::ANY) {
             let mut state = PushState::builder([]).build();
-            state.int.push(y).unwrap();
-            state.int.push(x).unwrap();
-            state.bool.push(b).unwrap();
-            let _ = instr.perform(state);
+            state.push_n_head_in::<PushInteger,_>((y,x)).unwrap();
+            state.push_head_in::<bool>(b).unwrap();
+            let _ = instr.perform(&mut state);
         }
     }
 }

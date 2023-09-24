@@ -1,6 +1,9 @@
 use crate::{
-    instruction::{Error, InstructionResult, MakeError},
-    push_vm::stack::{Stack, StackError},
+    instruction::{Error, InstructionResult, SpecifyFatality},
+    push_vm::{
+        stack::{Stack, StackError},
+        state::with_state::{AddState, WithState, WithStateOps},
+    },
     type_eq::TypeEq,
 };
 
@@ -26,7 +29,7 @@ pub trait HasStackOld<T> {
                 StackError::overflow_unknown_requested::<T>(0),
             ))
         } else {
-            Ok(self)
+            Ok(())
         }
     }
 
@@ -41,8 +44,12 @@ pub trait HasStackOld<T> {
         Self: Sized,
     {
         match self.stack_mut::<T>().push(value) {
-            Ok(_) => Ok(self),
-            Err(error) => Err(error).make_fatal(self).map_err(Into::into),
+            Ok(_) => Ok(()),
+            Err(error) => Err(error)
+                .with_state(self)
+                .make_fatal()
+                .drop_state()
+                .map_err(Into::into),
         }
     }
 
@@ -87,15 +94,30 @@ pub trait HasStackOld<T> {
 }
 
 pub trait HasStack<T> {
-    fn stack<U: TypeEq<This = T>>(&self) -> &Stack<T>;
+    type StackType;
+
+    fn stack<U: TypeEq<This = T>>(&self) -> &Self::StackType;
 }
 
 impl<'a, T, R> HasStack<T> for &'a R
 where
     R: HasStack<T>,
 {
-    fn stack<U: TypeEq<This = T>>(&self) -> &Stack<T> {
+    type StackType = R::StackType;
+
+    fn stack<U: TypeEq<This = T>>(&self) -> &Self::StackType {
         (**self).stack::<U>()
+    }
+}
+
+impl<'a, T, R, V> HasStack<T> for WithState<V, &'a R>
+where
+    R: HasStack<T>,
+{
+    type StackType = R::StackType;
+
+    fn stack<U: TypeEq<This = T>>(&self) -> &Self::StackType {
+        self.state.stack::<U>()
     }
 }
 
@@ -103,20 +125,42 @@ impl<'a, T, R> HasStack<T> for &'a mut R
 where
     R: HasStack<T>,
 {
-    fn stack<U: TypeEq<This = T>>(&self) -> &Stack<T> {
+    type StackType = R::StackType;
+
+    fn stack<U: TypeEq<This = T>>(&self) -> &Self::StackType {
         (**self).stack::<U>()
     }
 }
 
+impl<'a, T, R, V> HasStack<T> for WithState<V, &'a mut R>
+where
+    R: HasStack<T>,
+{
+    type StackType = R::StackType;
+
+    fn stack<U: TypeEq<This = T>>(&self) -> &Self::StackType {
+        self.state.stack::<U>()
+    }
+}
+
 pub trait HasStackMut<T>: HasStack<T> {
-    fn stack_mut<U: TypeEq<This = T>>(&mut self) -> &mut Stack<T>;
+    fn stack_mut<U: TypeEq<This = T>>(&mut self) -> &mut Self::StackType;
 }
 
 impl<'a, T, R> HasStackMut<T> for &'a mut R
 where
     R: HasStackMut<T>,
 {
-    fn stack_mut<U: TypeEq<This = T>>(&mut self) -> &mut Stack<T> {
+    fn stack_mut<U: TypeEq<This = T>>(&mut self) -> &mut Self::StackType {
         (*self).stack_mut::<U>()
+    }
+}
+
+impl<'a, T, R, V> HasStackMut<T> for WithState<V, &'a mut R>
+where
+    R: HasStackMut<T>,
+{
+    fn stack_mut<U: TypeEq<This = T>>(&mut self) -> &mut Self::StackType {
+        self.state.stack_mut::<U>()
     }
 }
