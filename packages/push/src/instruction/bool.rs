@@ -1,16 +1,16 @@
-use crate::push_vm::{
-    stack::traits::{
-        has_stack::{HasStack, HasStackMut},
-        pop::{PopHead, PopHeadIn},
-        push::{AttemptPushHead, PushHead, PushHeadIn},
-        size::{SizeLimit, SizeLimitOf, StackSize},
-        TypedStack,
+use super::{Instruction, InstructionResult, PushInstruction, PushInstructionError};
+use crate::{
+    error::stateful::SpecifySeverity,
+    push_vm::{
+        stack::traits::{
+            has_stack::{HasStack, HasStackMut},
+            pop::{PopHead, PopHeadIn},
+            push::{AttemptPushHead, PushHead, PushHeadIn},
+            size::{SizeLimit, SizeLimitOf, StackSize},
+            TypedStack,
+        },
+        state::with_state::{AddState, WithStateOps},
     },
-    state::with_state::{AddState, WithStateOps},
-};
-
-use super::{
-    Instruction, InstructionResult, PushInstruction, PushInstructionError, SpecifyFatality,
 };
 use std::ops::Not;
 use strum_macros::EnumIter;
@@ -146,8 +146,11 @@ impl From<BoolInstruction> for PushInstruction {
 #[allow(clippy::unwrap_used)]
 mod property_tests {
     use crate::{
-        instruction::{BoolInstruction, Instruction, PushState},
-        push_vm::stack::traits::{get::GetHead, size::StackSize},
+        instruction::{BoolInstruction, Instruction},
+        push_vm::{
+            stack::traits::{get::GetHead, size::StackSize},
+            state::PushState,
+        },
     };
     use proptest::{prop_assert_eq, proptest};
     use strum::IntoEnumIterator;

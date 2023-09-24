@@ -1,14 +1,22 @@
 pub mod with_state;
 
-use super::stack::simple::{Limited, SimpleStack, SimpleStackLimited};
-use super::stack::traits::has_stack::{HasStack, HasStackMut};
-use super::stack::Stack;
-use super::{HasStackOld, State};
-use crate::instruction::{
-    FatalError, Instruction, InstructionResult, PushInstruction, PushInstructionError, TryRecover,
-    VariableName,
+use super::{
+    stack::{
+        simple::{Limited, SimpleStack, SimpleStackLimited},
+        traits::{
+            extend::ExtendHeadIn,
+            has_stack::{HasStack, HasStackMut},
+            size::SizeLimit,
+        },
+    },
+    State,
 };
-use crate::push_vm::PushInteger;
+use crate::{
+    error::{stateful::FatalError, try_recover::TryRecover, InstructionResult},
+    instruction::{Instruction, PushInstruction, PushInstructionError, VariableName},
+    push_vm::PushInteger,
+    type_eq::TypeEq,
+};
 use std::collections::HashMap;
 
 #[derive(Default, Debug, Eq, PartialEq, Clone)]
@@ -104,8 +112,8 @@ impl Builder {
     /// ```  
     #[must_use]
     pub fn with_max_stack_size(mut self, max_stack_size: usize) -> Self {
-        self.partial_state.int.set_max_stack_size(max_stack_size);
-        self.partial_state.bool.set_max_stack_size(max_stack_size);
+        self.partial_state.int.set_max_size(max_stack_size);
+        self.partial_state.bool.set_max_size(max_stack_size);
         self
     }
 
@@ -136,11 +144,9 @@ impl Builder {
     /// ```  
     #[must_use]
     pub fn with_bool_values(mut self, values: Vec<bool>) -> Self {
-        let bool_stack = crate::push_vm::stack::traits::has_stack::HasStackOld::stack_mut::<bool>(
-            &mut self.partial_state,
-        );
-        // TODO: Add actual error handling
-        bool_stack.extend(values).unwrap();
+        self.partial_state
+            .extend_head_in::<bool, _>(values)
+            .unwrap();
         self
     }
 
@@ -171,11 +177,9 @@ impl Builder {
     /// ```  
     #[must_use]
     pub fn with_int_values(mut self, values: Vec<PushInteger>) -> Self {
-        let int_stack = crate::push_vm::stack::traits::has_stack::HasStackOld::stack_mut::<
-            PushInteger,
-        >(&mut self.partial_state);
-        // TODO: Add actual error handling
-        int_stack.extend(values).unwrap();
+        self.partial_state
+            .extend_head_in::<PushInteger, _>(values)
+            .unwrap();
         self
     }
 
@@ -254,8 +258,8 @@ impl PushState {
     {
         let partial_state = Self {
             exec: program.into_iter().rev().collect(),
-            int: Stack::<PushInteger>::default(),
-            bool: Stack::<bool>::default(),
+            int: SimpleStackLimited::<PushInteger>::default(),
+            bool: SimpleStackLimited::<bool>::default(),
             input_instructions: HashMap::new(),
         };
         Builder::new(partial_state)
@@ -289,9 +293,9 @@ impl PushState {
     /// This panics if there is no instruction associated with `var_name`, i.e.,
     /// we have not yet added that variable name to the map of names to instructions.
     pub fn with_input(
-        self,
+        &mut self,
         var_name: &VariableName,
-    ) -> InstructionResult<Self, <PushInstruction as Instruction<Self>>::Error> {
+    ) -> InstructionResult<&mut Self, <PushInstruction as Instruction<Self>>::Error> {
         // TODO: This `panic` here is icky, and we really should deal with it better.
         //   I wonder if the fact that this index might not be there should be telling
         //   us something...
@@ -309,19 +313,11 @@ impl State for PushState {
     type Instruction = PushInstruction;
 
     // TODO: Need to have some kind of execution limit to prevent infinite loops.
-    fn run_to_completion(mut self) -> Result<Self, FatalError<Self, PushInstructionError>> {
-        // This smells off to me. In places we're using side effects on mutable structures (e.g., `pop`)
-        // while in other places we're taking a more functional approach (e.g., `self = self.perform()`).
-        // It seems that maybe I should pick one or the other. Being able to store the state in
-        // the errors appears to be part of the source of the problem here (again), which more and
-        // more makes me wonder if that's a good idea.
-        //
-        // TODO: Justus_Fluegel@Twitch suggested a `try_recover()?` method to encapsulate the
-        //   `match error.severity()` logic.
+    fn run_to_completion(&mut self) -> Result<(), FatalError<&mut Self, PushInstructionError>> {
         while let Some(instruction) = self.exec.pop() {
-            self = self.perform(&instruction).try_recover()?;
+            self.perform(&instruction).try_recover()?;
         }
-        Ok(self)
+        Ok(())
     }
 }
 
@@ -329,7 +325,10 @@ impl State for PushState {
 mod simple_check {
     use crate::{
         instruction::{BoolInstruction, IntInstruction, PushInstruction, VariableName},
-        push_vm::push_state::{PushInteger, PushState},
+        push_vm::{
+            stack::traits::{get::GetHeadIn, size::StackSizeOf},
+            state::{with_state::WithStateOps, PushInteger, PushState},
+        },
     };
 
     use super::State;
@@ -369,10 +368,18 @@ mod simple_check {
             .build();
         println!("{state:?}");
         #[allow(clippy::unwrap_used)]
-        let state = state.run_to_completion().unwrap();
+        state.run_to_completion().unwrap();
         println!("{state:?}");
         assert!(state.exec().is_empty());
-        assert_eq!(&state.int, &vec![5, 17]);
-        assert_eq!(&state.bool, &vec![true, false]);
+        assert_eq!(state.size_of::<PushInteger>().drop_state(), 2);
+        assert_eq!(
+            state.get_n_head_in::<PushInteger, _>().drop_state(),
+            Ok((&5, &17))
+        );
+        assert_eq!(state.size_of::<bool>().drop_state(), 2);
+        assert_eq!(
+            state.get_n_head_in::<bool, _>().drop_state(),
+            Ok((&true, &false))
+        );
     }
 }

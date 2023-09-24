@@ -1,8 +1,6 @@
 use crate::{maybe_known::MaybeKnown, tuples::MonotonicTuple};
 
 pub mod simple;
-pub mod stack_discard;
-pub mod stack_push;
 pub mod traits;
 pub mod transactional;
 

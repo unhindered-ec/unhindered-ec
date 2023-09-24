@@ -6,8 +6,6 @@ use crate::{
 pub mod stack;
 pub mod state;
 
-pub use stack::traits::has_stack::HasStackOld;
-
 // We'll use a 64-bit integer for our integer types.
 pub type PushInteger = i64;
 
@@ -19,9 +17,9 @@ pub trait State: Sized {
     ///
     /// Fails if the instruction being performed fails.
     fn perform(
-        self,
+        &mut self,
         instruction: &Self::Instruction,
-    ) -> InstructionResult<Self, <Self::Instruction as Instruction<Self>>::Error> {
+    ) -> InstructionResult<&mut Self, <Self::Instruction as Instruction<Self>>::Error> {
         instruction.perform(self)
     }
 
@@ -29,8 +27,8 @@ pub trait State: Sized {
     ///
     /// Fails if any of the performed instructions fails.
     fn run_to_completion(
-        self,
-    ) -> Result<Self, FatalError<Self, <Self::Instruction as Instruction<Self>>::Error>>;
+        &mut self,
+    ) -> Result<(), FatalError<&mut Self, <Self::Instruction as Instruction<Self>>::Error>>;
 }
 
 /*

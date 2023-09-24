@@ -1,8 +1,14 @@
-use crate::instruction::UnknownError;
+use crate::error::{into_state::IntoState, stateful::UnknownError};
 
 pub struct WithState<Value, State> {
     pub value: Value,
     pub state: State,
+}
+
+impl<Value, State> IntoState<State> for WithState<Value, State> {
+    fn into_state(self) -> State {
+        self.state
+    }
 }
 
 pub trait WithStateOps<Value, State> {
@@ -185,10 +191,7 @@ impl<Value, Error, State> From<WithState<Result<Value, Error>, State>>
     #[inline(always)]
     fn from(WithState { value, state }: WithState<Result<Value, Error>, State>) -> Self {
         match value {
-            Err(error) => Err(UnknownError {
-                state: Box::new(state),
-                error,
-            }),
+            Err(error) => Err(UnknownError::new(state, error)),
             Ok(value) => Ok(value.with_state(state)),
         }
     }

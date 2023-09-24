@@ -1,20 +1,21 @@
-use super::{
-    Error, Instruction, InstructionResult, PushInstruction, PushInstructionError, SpecifyFatality,
-};
-use crate::push_vm::{
-    stack::{
-        traits::{
-            discard::DiscardHead,
-            discard::DiscardHeadIn,
-            get::GetHead,
-            has_stack::{HasStack, HasStackMut},
-            push::{AttemptPushHead, PushHead, PushHeadIn},
-            TypedStack,
+use super::{Instruction, InstructionResult, PushInstruction, PushInstructionError};
+use crate::{
+    error::{stateful::SpecifySeverity, Error},
+    push_vm::{
+        stack::{
+            traits::{
+                discard::DiscardHead,
+                discard::DiscardHeadIn,
+                get::GetHead,
+                has_stack::{HasStack, HasStackMut},
+                push::{AttemptPushHead, PushHead, PushHeadIn},
+                TypedStack,
+            },
+            Stack, StackError,
         },
-        Stack, StackError,
+        state::with_state::AddState,
+        PushInteger,
     },
-    state::with_state::AddState,
-    PushInteger,
 };
 use std::ops::Neg;
 use strum_macros::EnumIter;

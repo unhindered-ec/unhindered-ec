@@ -1,5 +1,5 @@
 use crate::{
-    instruction::UnknownError,
+    error::stateful::UnknownError,
     push_vm::{
         stack::StackError,
         state::with_state::{AddState, WithState, WithStateOps},
@@ -7,10 +7,7 @@ use crate::{
     type_eq::TypeEq,
 };
 
-use super::{
-    has_stack::{HasStack, HasStackMut},
-    TypedStack,
-};
+use super::has_stack::{HasStack, HasStackMut};
 
 pub trait SizeLimit {
     #[must_use]

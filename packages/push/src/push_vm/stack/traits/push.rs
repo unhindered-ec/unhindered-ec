@@ -1,5 +1,5 @@
 use crate::{
-    instruction::UnknownError,
+    error::stateful::UnknownError,
     push_vm::{
         stack::StackError,
         state::with_state::{AddState, WithState},

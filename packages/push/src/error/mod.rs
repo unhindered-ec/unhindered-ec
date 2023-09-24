@@ -14,7 +14,7 @@ pub enum Error<S, E> {
     Fatal(FatalError<S, E>),
 }
 
-pub type InstructionResult<S, E> = core::result::Result<S, Error<S, E>>;
+pub type InstructionResult<S, E> = core::result::Result<(), Error<S, E>>;
 
 impl<S, E> Error<S, E> {
     pub fn fatal(state: S, error: impl Into<E>) -> Self {
@@ -71,13 +71,28 @@ impl<S, E> IntoState<S> for Error<S, E> {
     }
 }
 
-impl<S, E> TryRecover<S> for Result<S, Error<S, E>> {
-    type Error = FatalError<S, E>;
+impl<S, E, V> TryRecover<S> for Result<S, Error<V, E>>
+where
+    S: Default,
+{
+    type Error = FatalError<V, E>;
 
-    fn try_recover(self) -> Result<S, FatalError<S, E>> {
+    fn try_recover(self) -> Result<S, FatalError<V, E>> {
         self.or_else(|err| match err {
-            Error::Recoverable(s) => Ok(s.into_state()),
+            Error::Recoverable(s) => Ok(S::default()),
             Error::Fatal(error) => Err(error),
         })
+    }
+}
+
+impl<S, E> From<RecoverableError<S, E>> for Error<S, E> {
+    fn from(value: RecoverableError<S, E>) -> Self {
+        Self::Recoverable(value)
+    }
+}
+
+impl<S, E> From<FatalError<S, E>> for Error<S, E> {
+    fn from(value: FatalError<S, E>) -> Self {
+        Self::Fatal(value)
     }
 }
