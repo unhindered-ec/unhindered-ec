@@ -315,7 +315,6 @@ proptest! {
     }
 
     #[test]
-    #[ignore]
     fn int_ops_do_not_crash(
             instr in proptest::sample::select(all_instructions()),
             x in proptest::num::i64::ANY,
