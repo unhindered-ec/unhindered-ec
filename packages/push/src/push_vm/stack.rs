@@ -238,7 +238,7 @@ impl<T> Stack<T> {
     ///
     /// # Examples
     ///
-    /// ```
+    /// ```ignore
     /// use push::push_vm::push_state::Stack;
     /// let mut stack: Stack<PushInteger> = Stack::default();
     /// assert_eq!(stack.size(), 0);

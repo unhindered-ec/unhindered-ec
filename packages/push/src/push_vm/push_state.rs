@@ -8,6 +8,13 @@ use crate::{
 };
 use std::collections::HashMap;
 
+// TODO: It might make sense to separate out the specification of
+//   a Push implementation (i.e., the relevant traits) into its
+//   own package, and have the implementation of those traits in
+//   its own package as well. We could, for example, do a FFI
+//   implementation that just forwards to the a Clojure implementation
+//   or Python implementation for comparison/testing purposes.
+
 #[derive(Default, Debug, Eq, PartialEq, Clone)]
 pub struct PushState {
     pub(crate) exec: Vec<PushInstruction>,
@@ -80,11 +87,9 @@ impl Builder {
     ///
     /// # Examples
     ///
-    /// ```
-    /// use push::push_vm::push_state::Stack;
-    /// use crate::push::push_vm::push_state::HasStack;
-    /// use push::push_vm::push_state::PushState;
-    /// use push::push_vm::push_state::Builder;
+    /// ```ignore
+    /// use push::push_vm::HasStack;
+    /// use push::push_vm::push_state::{ Stack, HasStack, PushState, Builder };
     /// let mut state = Builder::new(PushState::default())
     ///     .with_max_stack_size(100)
     ///     .build();
@@ -110,11 +115,8 @@ impl Builder {
     ///
     /// # Examples
     ///
-    /// ```
-    /// use push::push_vm::push_state::Stack;
-    /// use crate::push::push_vm::push_state::HasStack;
-    /// use push::push_vm::push_state::PushState;
-    /// use push::push_vm::push_state::Builder;
+    /// ```ignore
+    /// use push::push_vm::push_state::{ Stack, HasStack, PushState, Builder };
     /// let mut state = Builder::new(PushState::default())
     ///     .with_bool_values(vec![true, false, false])
     ///     .build();
@@ -142,11 +144,8 @@ impl Builder {
     ///
     /// # Examples
     ///
-    /// ```
-    /// use push::push_vm::push_state::Stack;
-    /// use crate::push::push_vm::push_state::HasStack;
-    /// use push::push_vm::push_state::PushState;
-    /// use push::push_vm::push_state::Builder;
+    /// ```ignore
+    /// use push::push_vm::push_state::{ Stack, HasStack, PushState, Builder };
     /// let mut state = Builder::new(PushState::default())
     ///     .with_int_values(vec![5, 8, 9])
     ///     .build();

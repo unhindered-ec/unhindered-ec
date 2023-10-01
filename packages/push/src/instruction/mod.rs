@@ -5,7 +5,7 @@ use crate::{
 use std::{fmt::Debug, fmt::Display, sync::Arc};
 
 pub use self::{bool::BoolInstruction, int::IntInstruction};
-use self::{bool::BoolInstructionError, int::IntInstructionError};
+pub use self::{bool::BoolInstructionError, int::IntInstructionError};
 
 mod bool;
 mod int;
