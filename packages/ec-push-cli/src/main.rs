@@ -28,8 +28,11 @@ use ec_linear::mutator::umad::Umad;
 use push::{
     genome::plushy::Plushy,
     instruction::{IntInstruction, PushInstruction, VariableName},
-    push_vm::{state::PushState, State},
-    push_vm::{HasStackOld, PushInteger},
+    push_vm::{
+        stack::traits::{get::GetHead, has_stack::HasStack},
+        PushInteger,
+    },
+    push_vm::{state::PushStateUnmasked, Exec},
 };
 use rand::thread_rng;
 use std::ops::Not;
@@ -60,16 +63,16 @@ fn main() -> Result<()> {
     let scorer = |program: &Plushy| -> TestResults<test_results::Error> {
         let errors: TestResults<test_results::Error> = (0..10)
             .map(|input| {
-                let state = PushState::builder(program.get_instructions())
+                let state = &mut PushStateUnmasked::builder(program.get_instructions())
                     .with_int_input("x", input)
                     .build();
                 // This is the degree 3 problem in https://github.com/lspector/Clojush/blob/master/src/clojush/problems/demos/simple_regression.clj
                 let expected = input * input * input - 2 * input * input - input;
                 #[allow(clippy::option_if_let_else)]
                 match state.run_to_completion() {
-                    Ok(final_state) => final_state
+                    Ok(_) => state
                         .stack::<PushInteger>()
-                        .top()
+                        .head()
                         .map_or(PENALTY_VALUE, |answer| (answer - expected).abs()),
                     Err(_) => {
                         // Do some logging, perhaps?
