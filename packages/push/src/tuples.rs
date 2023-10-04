@@ -1,6 +1,6 @@
 // We maybe should put this module into it's own crate if all the macro magic ends up affecting compile times
 // significantly, as then it should be recompiled less often (hopefully)
-use std::marker::PhantomData;
+use std::{marker::PhantomData, ops::Div};
 
 /// # Safety
 /// It may be unsound to implement this trait with a wrong [`MonotonicTuple::LENGTH`] generic as code using this
@@ -342,3 +342,47 @@ tuple! {
 //         self
 //     }
 // }
+
+unsafe impl<T, const Size: usize> MonotonicTuple for [T; Size] {
+    type Item = T;
+
+    type Iterator = std::array::IntoIter<T, Size>;
+
+    const LENGTH: usize = Size;
+
+    fn from_init_fn(f: impl FnMut() -> Self::Item) -> Self {}
+
+    fn from_init_fn_option(f: impl FnMut() -> Option<Self::Item>) -> Option<Self>
+    where
+        Self: Sized,
+    {
+        todo!()
+    }
+
+    fn from_init_fn_result<E>(f: impl FnMut() -> Result<Self::Item, E>) -> Result<Self, E>
+    where
+        Self: Sized,
+    {
+        todo!()
+    }
+
+    fn into_vec(self) -> Vec<Self::Item> {
+        Vec::from(self)
+    }
+
+    fn into_boxed_slice(self) -> Box<[Self::Item]> {
+        Box::new(self)
+    }
+
+    fn into_iterator(self) -> Self::Iterator {
+        self.into_iter()
+    }
+
+    fn reverse(mut self) -> Self {
+        for i in 0..(Size / 2) {
+            self.swap(i, Size - i - 1);
+        }
+
+        self
+    }
+}
