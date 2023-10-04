@@ -1,6 +1,6 @@
 use crate::{
     error::InstructionResult,
-    push_vm::{push_state::PushState, stack::StackError, PushInteger},
+    push_vm::{stack::StackError, state::PushState, PushInteger},
 };
 use std::{fmt::Debug, fmt::Display, sync::Arc};
 

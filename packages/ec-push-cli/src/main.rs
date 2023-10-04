@@ -28,7 +28,7 @@ use ec_linear::mutator::umad::Umad;
 use push::{
     genome::plushy::Plushy,
     instruction::{IntInstruction, PushInstruction, VariableName},
-    push_vm::{push_state::PushState, State},
+    push_vm::{state::PushState, State},
     push_vm::{HasStack, PushInteger},
 };
 use rand::thread_rng;
@@ -60,7 +60,9 @@ fn main() -> Result<()> {
     let scorer = |program: &Plushy| -> TestResults<test_results::Error> {
         let errors: TestResults<test_results::Error> = (0..10)
             .map(|input| {
-                let state = PushState::builder(program.get_instructions())
+                let state = PushState::builder()
+                    .with_max_stack_size(1000)
+                    .with_program(program.get_instructions())
                     .with_int_input("x", input)
                     .build();
                 // This is the degree 3 problem in https://github.com/lspector/Clojush/blob/master/src/clojush/problems/demos/simple_regression.clj
