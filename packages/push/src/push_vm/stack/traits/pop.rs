@@ -4,7 +4,7 @@ use crate::{
         stack::StackError,
         state::with_state::{AddState, WithState},
     },
-    tuples::MonotonicTuple,
+    tuples::ArrayLike,
     type_eq::TypeEq,
 };
 
@@ -23,8 +23,7 @@ pub trait PopHead: GetHead {
 
     /// # Errors
     /// - [`StackError::Underflow`] is returned when there are not at least [`MonotonicTuple::Length`] items on the Stack to return.
-    fn pop_n_head<Tuple: MonotonicTuple<Item = Self::Item>>(&mut self)
-        -> Result<Tuple, StackError>;
+    fn pop_n_head<Tuple: ArrayLike<Item = Self::Item>>(&mut self) -> Result<Tuple, StackError>;
 }
 
 pub trait PopTail: GetTail {
@@ -36,8 +35,7 @@ pub trait PopTail: GetTail {
 
     /// # Errors
     /// - [`StackError::Underflow`] is returned when there are not at least [`MonotonicTuple::Length`] items on the Stack to return.
-    fn pop_n_tail<Tuple: MonotonicTuple<Item = Self::Item>>(&mut self)
-        -> Result<Tuple, StackError>;
+    fn pop_n_tail<Tuple: ArrayLike<Item = Self::Item>>(&mut self) -> Result<Tuple, StackError>;
 }
 
 pub trait PopHeadIn<Stack, State>: Sized
@@ -58,7 +56,7 @@ where
     /// - [`StackError::Underflow`] is returned when there are not at least [`MonotonicTuple::Length`] items on the Stack to return.
     fn pop_n_head_in<
         U: TypeEq<This = Stack>,
-        Tuple: MonotonicTuple<Item = <<State as HasStack<Stack>>::StackType as TypedStack>::Item>,
+        Tuple: ArrayLike<Item = <<State as HasStack<Stack>>::StackType as TypedStack>::Item>,
     >(
         self,
     ) -> Result<WithState<Tuple, Self>, StackError>;
@@ -82,7 +80,7 @@ where
     /// - [`StackError::Underflow`] is returned when there are not at least [`MonotonicTuple::Length`] items on the Stack to return.
     fn pop_n_tail_in<
         U: TypeEq<This = Stack>,
-        Tuple: MonotonicTuple<Item = <<State as HasStack<Stack>>::StackType as TypedStack>::Item>,
+        Tuple: ArrayLike<Item = <<State as HasStack<Stack>>::StackType as TypedStack>::Item>,
     >(
         self,
     ) -> Result<WithState<Tuple, Self>, StackError>;
@@ -109,9 +107,7 @@ where
 
     fn pop_n_head_in<
         U: TypeEq<This = Stack>,
-        Tuple: MonotonicTuple<
-            Item = <<<T as State>::State as HasStack<Stack>>::StackType as TypedStack>::Item,
-        >,
+        Tuple: ArrayLike<Item = <<<T as State>::State as HasStack<Stack>>::StackType as TypedStack>::Item>,
     >(
         mut self,
     ) -> Result<WithState<Tuple, Self>, StackError> {
@@ -144,9 +140,7 @@ where
 
     fn pop_n_tail_in<
         U: TypeEq<This = Stack>,
-        Tuple: MonotonicTuple<
-            Item = <<<T as State>::State as HasStack<Stack>>::StackType as TypedStack>::Item,
-        >,
+        Tuple: ArrayLike<Item = <<<T as State>::State as HasStack<Stack>>::StackType as TypedStack>::Item>,
     >(
         mut self,
     ) -> Result<WithState<Tuple, Self>, StackError> {

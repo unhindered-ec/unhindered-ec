@@ -5,7 +5,6 @@ use crate::{
 
 pub trait HasStack<T> {
     type StackType;
-
     fn stack<U: TypeEq<This = T>>(&self) -> &Self::StackType;
 }
 

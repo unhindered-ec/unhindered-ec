@@ -1,7 +1,7 @@
 use crate::{
     error::into_state::{State, StateMut},
     push_vm::{stack::StackError, state::with_state::WithState},
-    tuples::MonotonicTuple,
+    tuples::ArrayLike,
     type_eq::TypeEq,
 };
 
@@ -20,7 +20,7 @@ pub trait PushHead: TypedStack {
 
     /// # Errors
     /// - [`StackError::Overflow`] is returned when the stack has not enough capacity for n new values remaining.
-    fn push_n_head<Tuple: MonotonicTuple<Item = Self::Item>>(
+    fn push_n_head<Tuple: ArrayLike<Item = Self::Item>>(
         &mut self,
         value: Tuple,
     ) -> Result<(), StackError>;
@@ -35,7 +35,7 @@ pub trait PushTail: TypedStack {
 
     /// # Errors
     /// - [`StackError::Overflow`] is returned when the stack has not enough capacity for n new values remaining.
-    fn push_n_tail<Tuple: MonotonicTuple<Item = Self::Item>>(
+    fn push_n_tail<Tuple: ArrayLike<Item = Self::Item>>(
         &mut self,
         value: Tuple,
     ) -> Result<(), StackError>;
@@ -49,7 +49,7 @@ where
     T: ExtendHead,
 {
     #[inline]
-    fn push_n_head<Tuple: MonotonicTuple<Item = Self::Item>>(
+    fn push_n_head<Tuple: ArrayLike<Item = Self::Item>>(
         &mut self,
         value: Tuple,
     ) -> Result<(), StackError> {
@@ -62,7 +62,7 @@ where
     T: ExtendTail,
 {
     #[inline]
-    fn push_n_tail<Tuple: MonotonicTuple<Item = Self::Item>>(
+    fn push_n_tail<Tuple: ArrayLike<Item = Self::Item>>(
         &mut self,
         value: Tuple,
     ) -> Result<(), StackError> {
@@ -86,7 +86,7 @@ where
     /// - [`StackError::Overflow`] is returned when the stack has not enough capacity for n new values remaining.
     fn push_n_head_in<
         U: TypeEq<This = Stack>,
-        Tuple: MonotonicTuple<Item = <<State as HasStack<Stack>>::StackType as TypedStack>::Item>,
+        Tuple: ArrayLike<Item = <<State as HasStack<Stack>>::StackType as TypedStack>::Item>,
     >(
         self,
         value: Tuple,
@@ -109,7 +109,7 @@ where
     /// - [`StackError::Overflow`] is returned when the stack has not enough capacity for n new values remaining.
     fn push_n_tail_in<
         U: TypeEq<This = Stack>,
-        Tuple: MonotonicTuple<Item = <<State as HasStack<Stack>>::StackType as TypedStack>::Item>,
+        Tuple: ArrayLike<Item = <<State as HasStack<Stack>>::StackType as TypedStack>::Item>,
     >(
         self,
         value: Tuple,
@@ -133,9 +133,7 @@ where
 
     fn push_n_head_in<
         U: TypeEq<This = Stack>,
-        Tuple: MonotonicTuple<
-            Item = <<<T as State>::State as HasStack<Stack>>::StackType as TypedStack>::Item,
-        >,
+        Tuple: ArrayLike<Item = <<<T as State>::State as HasStack<Stack>>::StackType as TypedStack>::Item>,
     >(
         mut self,
         value: Tuple,
@@ -163,9 +161,7 @@ where
 
     fn push_n_tail_in<
         U: TypeEq<This = Stack>,
-        Tuple: MonotonicTuple<
-            Item = <<<T as State>::State as HasStack<Stack>>::StackType as TypedStack>::Item,
-        >,
+        Tuple: ArrayLike<Item = <<<T as State>::State as HasStack<Stack>>::StackType as TypedStack>::Item>,
     >(
         mut self,
         value: Tuple,
@@ -198,7 +194,7 @@ pub trait AttemptPushHeadN<Stack, State> {
 
 impl<Value, T> AttemptPushHeadN<Value, T> for WithState<Value, T>
 where
-    Value: MonotonicTuple,
+    Value: ArrayLike,
     T: StateMut,
     <T as State>::State: HasStackMut<Value::Item>,
     <<T as State>::State as HasStack<Value::Item>>::StackType:
@@ -232,7 +228,7 @@ pub trait AttemptPushTailN<Stack, State> {
 
 impl<Value, T> AttemptPushTailN<Value, T> for WithState<Value, T>
 where
-    Value: MonotonicTuple,
+    Value: ArrayLike,
     T: StateMut,
     <T as State>::State: HasStackMut<Value::Item>,
     <<T as State>::State as HasStack<Value::Item>>::StackType:

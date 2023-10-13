@@ -1,5 +1,5 @@
 use crate::{
-    error::into_state::State, push_vm::stack::StackError, tuples::MonotonicTuple, type_eq::TypeEq,
+    error::into_state::State, push_vm::stack::StackError, tuples::ArrayLike, type_eq::TypeEq,
 };
 
 use super::{has_stack::HasStack, TypedStack};
@@ -13,7 +13,7 @@ pub trait GetHead: TypedStack {
 
     /// # Errors
     /// - [`StackError::Underflow`] is returned when there are not at least [`MonotonicTuple::Length`] items on the Stack to return.
-    fn get_n_head<'a, Tuple: MonotonicTuple<Item = &'a Self::Item>>(
+    fn get_n_head<'a, Tuple: ArrayLike<Item = &'a Self::Item>>(
         &'a self,
     ) -> Result<Tuple, StackError>;
 }
@@ -27,7 +27,7 @@ pub trait GetTail: TypedStack {
 
     /// # Errors
     /// - [`StackError::Underflow`] is returned when there are not at least [`MonotonicTuple::Length`] items on the Stack to return.
-    fn get_n_tail<'a, Tuple: MonotonicTuple<Item = &'a Self::Item>>(
+    fn get_n_tail<'a, Tuple: ArrayLike<Item = &'a Self::Item>>(
         &'a self,
     ) -> Result<Tuple, StackError>;
 }
@@ -48,7 +48,7 @@ where
     /// - [`StackError::Underflow`] is returned when there are not at least [`MonotonicTuple::Length`] items on the Stack to return.
     fn get_n_head_in<
         U: TypeEq<This = Stack>,
-        Tuple: MonotonicTuple<Item = &'a <<State as HasStack<Stack>>::StackType as TypedStack>::Item>,
+        Tuple: ArrayLike<Item = &'a <<State as HasStack<Stack>>::StackType as TypedStack>::Item>,
     >(
         self,
     ) -> Result<Tuple, StackError>;
@@ -70,7 +70,7 @@ where
     /// - [`StackError::Underflow`] is returned when there are not at least [`MonotonicTuple::Length`] items on the Stack to return.
     fn get_n_tail_in<
         U: TypeEq<This = Stack>,
-        Tuple: MonotonicTuple<Item = &'a <<State as HasStack<Stack>>::StackType as TypedStack>::Item>,
+        Tuple: ArrayLike<Item = &'a <<State as HasStack<Stack>>::StackType as TypedStack>::Item>,
     >(
         self,
     ) -> Result<Tuple, StackError>;
@@ -89,12 +89,13 @@ where
         &'a <<<T as State>::State as HasStack<Stack>>::StackType as TypedStack>::Item,
         StackError,
     > {
-        self.state().stack::<U>().head()
+        let stack = self.state().stack::<U>();
+        stack.head()
     }
 
     fn get_n_head_in<
         U: TypeEq<This = Stack>,
-        Tuple: MonotonicTuple<
+        Tuple: ArrayLike<
             Item = &'a <<<T as State>::State as HasStack<Stack>>::StackType as TypedStack>::Item,
         >,
     >(
@@ -122,7 +123,7 @@ where
 
     fn get_n_tail_in<
         U: TypeEq<This = Stack>,
-        Tuple: MonotonicTuple<
+        Tuple: ArrayLike<
             Item = &'a <<<T as State>::State as HasStack<Stack>>::StackType as TypedStack>::Item,
         >,
     >(

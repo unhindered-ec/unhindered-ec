@@ -12,7 +12,7 @@ use crate::{
         },
         StackError,
     },
-    tuples::MonotonicTuple,
+    tuples::ArrayLike,
 };
 
 mod sealed {
@@ -118,7 +118,7 @@ impl<T, Type: SimpleStackType> StackSize for SimpleStack<T, Type> {
 }
 
 impl<T, Type: SimpleStackType> GetHead for SimpleStack<T, Type> {
-    fn get_n_head<'a, Tuple: MonotonicTuple<Item = &'a Self::Item>>(
+    fn get_n_head<'a, Tuple: ArrayLike<Item = &'a Self::Item>>(
         &'a self,
     ) -> Result<Tuple, StackError> {
         self.ensure_elements_remaining(Tuple::LENGTH)?;
@@ -129,7 +129,7 @@ impl<T, Type: SimpleStackType> GetHead for SimpleStack<T, Type> {
 }
 
 impl<T, Type: SimpleStackType> GetTail for SimpleStack<T, Type> {
-    fn get_n_tail<'a, Tuple: MonotonicTuple<Item = &'a Self::Item>>(
+    fn get_n_tail<'a, Tuple: ArrayLike<Item = &'a Self::Item>>(
         &'a self,
     ) -> Result<Tuple, StackError> {
         self.ensure_elements_remaining(Tuple::LENGTH)?;
@@ -140,9 +140,7 @@ impl<T, Type: SimpleStackType> GetTail for SimpleStack<T, Type> {
 }
 
 impl<T, Type: SimpleStackType> PopHead for SimpleStack<T, Type> {
-    fn pop_n_head<Tuple: MonotonicTuple<Item = Self::Item>>(
-        &mut self,
-    ) -> Result<Tuple, StackError> {
+    fn pop_n_head<Tuple: ArrayLike<Item = Self::Item>>(&mut self) -> Result<Tuple, StackError> {
         self.ensure_elements_remaining(Tuple::LENGTH)?;
 
         Ok(Tuple::from_init_fn_option(|| self.backend.pop())

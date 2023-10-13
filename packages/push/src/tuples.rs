@@ -1,11 +1,11 @@
 // We maybe should put this module into it's own crate if all the macro magic ends up affecting compile times
 // significantly, as then it should be recompiled less often (hopefully)
-use std::{marker::PhantomData, ops::Div};
+use std::{marker::PhantomData, mem::MaybeUninit, ops::Div};
 
 /// # Safety
 /// It may be unsound to implement this trait with a wrong [`MonotonicTuple::LENGTH`] generic as code using this
 /// trait may rely on it beeing correct.
-pub unsafe trait MonotonicTuple {
+pub unsafe trait ArrayLike {
     type Item;
     type Iterator: Iterator<Item = Self::Item> + DoubleEndedIterator + ExactSizeIterator;
     const LENGTH: usize;
@@ -37,20 +37,20 @@ pub unsafe trait MonotonicTuple {
     fn reverse(self) -> Self;
 }
 
-pub trait EnumIterBackend<T: MonotonicTuple>: Sized {
+pub trait EnumIterBackend<T: ArrayLike>: Sized {
     fn new(tuple: T) -> Self;
 
     fn split_of_head(self) -> (T::Item, Option<Self>);
     fn split_of_tail(self) -> (T::Item, Option<Self>);
 }
 
-pub struct EnumIter<T: MonotonicTuple, B: EnumIterBackend<T>> {
+pub struct EnumIter<T: ArrayLike, B: EnumIterBackend<T>> {
     current_state: Option<B>,
     current_length: usize,
     _t: PhantomData<T>,
 }
 
-impl<T: MonotonicTuple, B: EnumIterBackend<T>> EnumIter<T, B> {
+impl<T: ArrayLike, B: EnumIterBackend<T>> EnumIter<T, B> {
     fn new(tuple: T) -> Self {
         Self {
             current_state: Some(B::new(tuple)),
@@ -60,7 +60,7 @@ impl<T: MonotonicTuple, B: EnumIterBackend<T>> EnumIter<T, B> {
     }
 }
 
-impl<T: MonotonicTuple, B: EnumIterBackend<T>> Iterator for EnumIter<T, B> {
+impl<T: ArrayLike, B: EnumIterBackend<T>> Iterator for EnumIter<T, B> {
     type Item = T::Item;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -77,7 +77,7 @@ impl<T: MonotonicTuple, B: EnumIterBackend<T>> Iterator for EnumIter<T, B> {
     }
 }
 
-impl<T: MonotonicTuple, B: EnumIterBackend<T>> DoubleEndedIterator for EnumIter<T, B> {
+impl<T: ArrayLike, B: EnumIterBackend<T>> DoubleEndedIterator for EnumIter<T, B> {
     fn next_back(&mut self) -> Option<Self::Item> {
         let current_state = std::mem::take(&mut self.current_state);
         let (next, state) = current_state?.split_of_tail();
@@ -91,7 +91,7 @@ impl<T: MonotonicTuple, B: EnumIterBackend<T>> DoubleEndedIterator for EnumIter<
 // This impl does not strictly need a `len` method as it is implemented over [`Iterator::size_hint`] already
 // over the default impl, but just returning self.current_length in practice will require a few less instructions
 // as the default impl asserts for both values from size_hint to be the same.
-impl<T: MonotonicTuple, B: EnumIterBackend<T>> ExactSizeIterator for EnumIter<T, B> {
+impl<T: ArrayLike, B: EnumIterBackend<T>> ExactSizeIterator for EnumIter<T, B> {
     #[inline]
     fn len(&self) -> usize {
         self.current_length
@@ -343,27 +343,76 @@ tuple! {
 //     }
 // }
 
-unsafe impl<T, const Size: usize> MonotonicTuple for [T; Size] {
+unsafe impl<T, const SIZE: usize> ArrayLike for [T; SIZE] {
     type Item = T;
 
-    type Iterator = std::array::IntoIter<T, Size>;
+    type Iterator = std::array::IntoIter<T, SIZE>;
 
-    const LENGTH: usize = Size;
+    const LENGTH: usize = SIZE;
 
-    fn from_init_fn(f: impl FnMut() -> Self::Item) -> Self {}
+    fn from_init_fn(mut f: impl FnMut() -> Self::Item) -> Self {
+        let mut array: [MaybeUninit<T>; SIZE] = unsafe { MaybeUninit::uninit().assume_init() };
+        for elem in &mut array {
+            elem.write(f());
+        }
 
-    fn from_init_fn_option(f: impl FnMut() -> Option<Self::Item>) -> Option<Self>
-    where
-        Self: Sized,
-    {
-        todo!()
+        unsafe { array.as_ptr().cast::<[T; SIZE]>().read() }
     }
 
-    fn from_init_fn_result<E>(f: impl FnMut() -> Result<Self::Item, E>) -> Result<Self, E>
+    fn from_init_fn_option(mut f: impl FnMut() -> Option<Self::Item>) -> Option<Self>
     where
         Self: Sized,
     {
-        todo!()
+        let mut array: [MaybeUninit<T>; SIZE] = unsafe { MaybeUninit::uninit().assume_init() };
+
+        let mut len_init = 0;
+        for elem in &mut array {
+            let Some(value) = f() else {
+                break;
+            };
+            elem.write(value);
+            len_init += 1;
+        }
+
+        if len_init != SIZE {
+            for elem in array.iter_mut().take(len_init) {
+                unsafe { elem.assume_init_drop() };
+            }
+
+            return None;
+        }
+
+        Some(unsafe { array.as_ptr().cast::<[T; SIZE]>().read() })
+    }
+
+    fn from_init_fn_result<E>(mut f: impl FnMut() -> Result<Self::Item, E>) -> Result<Self, E>
+    where
+        Self: Sized,
+    {
+        let mut array: [MaybeUninit<T>; SIZE] = unsafe { MaybeUninit::uninit().assume_init() };
+
+        let mut len_init = 0;
+        let mut error = MaybeUninit::uninit();
+        for elem in &mut array {
+            elem.write(match f() {
+                Err(e) => {
+                    error.write(e);
+                    break;
+                }
+                Ok(v) => v,
+            });
+            len_init += 1;
+        }
+
+        if len_init < SIZE {
+            for elem in array.iter_mut().take(len_init) {
+                unsafe { elem.assume_init_drop() };
+            }
+
+            return Err(unsafe { error.assume_init() });
+        }
+
+        Ok(unsafe { array.as_ptr().cast::<[T; SIZE]>().read() })
     }
 
     fn into_vec(self) -> Vec<Self::Item> {
@@ -379,8 +428,8 @@ unsafe impl<T, const Size: usize> MonotonicTuple for [T; Size] {
     }
 
     fn reverse(mut self) -> Self {
-        for i in 0..(Size / 2) {
-            self.swap(i, Size - i - 1);
+        for i in 0..(SIZE / 2) {
+            self.swap(i, SIZE - i - 1);
         }
 
         self
