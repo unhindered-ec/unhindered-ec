@@ -10,8 +10,6 @@ use crate::{
 };
 use std::collections::HashMap;
 
-use self::builder::SizeUnset;
-
 // TODO: It might make sense to separate out the specification of
 //   a Push implementation (i.e., the relevant traits) into its
 //   own package, and have the implementation of those traits in
@@ -56,7 +54,7 @@ impl HasStack<PushInteger> for PushState {
 }
 
 impl PushState {
-    pub fn builder() -> builder::Builder<SizeUnset, SizeUnset, SizeUnset> {
+    pub fn builder() -> builder::Builder<(), (), ()> {
         builder::Builder::default()
     }
 

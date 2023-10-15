@@ -4,13 +4,32 @@ use crate::instruction::{PushInstruction, VariableName};
 
 use super::{HasStack, PushInteger, PushState};
 
+// We're using sealed traits for the traits that represent the states
+// in our typestate pattern. This prevents other people from implementing
+// new types with those traits and potentially messing with the logic
+// (in particular the invariants) in our builder/typestate pattern.
 mod sealed {
     pub trait SealedMarker {}
 }
 
+/// `StackState` is the state type used in our builder pattern.
+///
 /// The transition diagram for the builder is
 ///
 /// ![PushState builder transition diagram][PushState_transition]
+///
+/// - [`()`]: [`Dataless`] is when we haven't specified the maximum size of a particular
+///         stack. We also haven't pushed any data onto that stack ([`Dataless`]).
+///
+/// which then transitions to
+///
+/// - [`WithSize`]: [`Dataless`] + [`SizeSet`], where we've set a maximum size of a particular stack
+///         ([`SizeSet`]), but don't have any data on that state ([`Dataless`]).
+///
+/// which then transitions to
+///
+/// - [`WithSizeAndData`]: [`SizeSet`], where we've both set the maximum size ([`SizeSet`]) and inserted data
+///         into the stack ([`WithSizeAndData`]).
 #[embed_doc_image(
     "PushState_transition",
     "../../images/PushState_builder_state_diagram.svg"
@@ -19,21 +38,22 @@ pub trait StackState: sealed::SealedMarker {}
 pub trait Dataless: StackState {}
 pub trait SizeSet: StackState {}
 
-pub struct SizeUnset;
-impl sealed::SealedMarker for SizeUnset {}
-impl StackState for SizeUnset {}
-impl Dataless for SizeUnset {}
+// We use unit (`()`) to indicate that we haven't set
+// either the size or added any data.
+impl sealed::SealedMarker for () {}
+impl StackState for () {}
+impl Dataless for () {}
 
-pub struct WithoutData;
-impl sealed::SealedMarker for WithoutData {}
-impl StackState for WithoutData {}
-impl Dataless for WithoutData {}
-impl SizeSet for WithoutData {}
+pub struct WithSize;
+impl sealed::SealedMarker for WithSize {}
+impl StackState for WithSize {}
+impl Dataless for WithSize {}
+impl SizeSet for WithSize {}
 
-pub struct WithData;
-impl sealed::SealedMarker for WithData {}
-impl StackState for WithData {}
-impl SizeSet for WithData {}
+pub struct WithSizeAndData;
+impl sealed::SealedMarker for WithSizeAndData {}
+impl StackState for WithSizeAndData {}
+impl SizeSet for WithSizeAndData {}
 
 builder! {
     Bool {
@@ -59,6 +79,7 @@ macro_rules! replace {
         $tokens
     };
 }
+use embed_doc_image::embed_doc_image;
 // For properly scoping the macro
 use replace;
 
@@ -69,7 +90,7 @@ macro_rules! builder {
             _p: PhantomData<(Exec, $($id),+)>,
         }
 
-        impl Default for Builder<SizeUnset, $(replace!($id | SizeUnset)),+> {
+        impl Default for Builder<(), $(replace!($id | ())),+> {
             fn default() -> Self {
                 Builder {
                     partial_state: Default::default(),
@@ -116,7 +137,7 @@ macro_rules! builder {
             }
         }
 
-        impl<$($id: StackState),+> Builder<WithoutData, $($id),+> {
+        impl<$($id: StackState),+> Builder<WithSize, $($id),+> {
             /// Sets the program you wish to execute.
             /// Note that the program will be executed in ascending order.
             ///
@@ -138,7 +159,7 @@ macro_rules! builder {
             }
         }
 
-        impl<$($id: StackState),+> Builder<WithData, $($id),+> {
+        impl<$($id: StackState),+> Builder<WithSizeAndData, $($id),+> {
             /// Finalize the build process, returning the fully constructed `PushState`
             /// value. For this to successfully build, all the input variables has to
             /// have been given values. Thus every input variable provided
@@ -215,7 +236,7 @@ macro_rules! builder {
             /// assert_eq!(int_stack.top().unwrap(), &5);
             /// ```
             #[must_use]
-            pub fn $name(mut self, values: Vec<$value_type>) -> Builder<Exec, $($id_bef,)* WithData $(, $($id_aft),+)?> {
+            pub fn $name(mut self, values: Vec<$value_type>) -> Builder<Exec, $($id_bef,)* WithSizeAndData $(, $($id_aft),+)?> {
                 self.partial_state.stack_mut::<$value_type>().extend(values);
 
                 Builder {
@@ -235,7 +256,7 @@ macro_rules! builder {
             ///
             /// * `max_stack_size` - A `usize` specifying the maximum stack size
             #[must_use]
-            pub fn $name(mut self, max_stack_size: usize) -> Builder<Exec, $($id_bef,)* WithoutData $(, $($id_aft),+)?> {
+            pub fn $name(mut self, max_stack_size: usize) -> Builder<Exec, $($id_bef,)* WithSize $(, $($id_aft),+)?> {
                 self.partial_state.stack_mut::<$value_type>().set_max_stack_size(max_stack_size);
 
                 Builder {
