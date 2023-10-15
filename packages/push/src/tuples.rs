@@ -3,7 +3,7 @@
 use std::{marker::PhantomData, mem::MaybeUninit, ops::Div};
 
 /// # Safety
-/// It may be unsound to implement this trait with a wrong [`MonotonicTuple::LENGTH`] generic as code using this
+/// It may be unsound to implement this trait with a wrong [`ArrayLike::LENGTH`] generic as code using this
 /// trait may rely on it beeing correct.
 pub unsafe trait ArrayLike {
     type Item;
@@ -224,7 +224,7 @@ macro_rules! tuple {
     (@recursive $first:ident $(,$($name:ident),+)? | doc=$doc:literal) => (
         maybe_tuple_doc! {
             $first $($($name)+)? @
-            unsafe impl<T> MonotonicTuple for (T,$($(for_each_token!($name|T),)+)?)  {
+            unsafe impl<T> ArrayLike for (T,$($(for_each_token!($name|T),)+)?)  {
                 type Item = T;
                 type Iterator = EnumIter<Self,iter_enums::$first::<T>>;
                 const LENGTH: usize = 1usize  $($(+for_each_token!($name|1usize) )+)?;
@@ -303,7 +303,7 @@ tuple! {
 
 // TODO: Enable once specialization is stable, as then the need for a seperate top_n and top method vanishes.
 //
-// unsafe impl<T> MonotonicTuple for T {
+// unsafe impl<T> ArrayLike for T {
 //     type Item = T;
 //     type Iterator = std::iter::Once<T>;
 //     const LENGTH: usize = 1;
