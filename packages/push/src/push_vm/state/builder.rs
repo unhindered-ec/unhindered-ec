@@ -220,7 +220,7 @@ macro_rules! builder {
     };
     (@set_size $($id_bef:ident),* |) => {};
     (@set_size $($id_bef:ident),* | $id:ident # $name:ident # $value_type:ty $(,$($id_aft:ident # $name_aft:ident # $value_type_aft:ty),+)? ) => {
-        impl<Exec: StackState, $($id_bef: StackState,)* $($($id_aft: StackState),+)?> Builder<Exec, $($id_bef,)* SizeUnset $(, $($id_aft),+)?> {
+        impl<Exec: StackState, $($id_bef: StackState,)*$id: Dataless $(,$($id_aft: StackState),+)?> Builder<Exec, $($id_bef,)* $id $(, $($id_aft),+)?> {
             /// Sets the maximum stack size for the stack in this state.
             ///
             /// # Arguments
