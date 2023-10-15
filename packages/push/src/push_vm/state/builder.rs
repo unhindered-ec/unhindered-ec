@@ -63,7 +63,7 @@ macro_rules! replace {
 use replace;
 
 macro_rules! builder {
-    ($($id:ident {field=$field:ident, with_input_name=$with_input_name:ident, with_values_name=$with_values_name:ident, set_max_size=$set_max_size:ident, value_type=$value_type:ty, instruction_name=$instruction_name:ident }),+) => {
+    ($($id:ident {field=$field:ident, with_input_name=$with_input_name:ident, with_values_name=$with_values_name:ident, set_max_size=$set_max_size:ident, value_type=$value_type:ty, instruction_name=$instruction_name:ident }),+$(,)?) => {
         pub struct Builder<Exec: StackState, $($id: StackState),+> {
             partial_state: PushState,
             _p: PhantomData<(Exec, $($id),+)>,
