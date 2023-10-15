@@ -15,3 +15,11 @@ pub(crate) mod maybe_known;
 pub mod push_vm;
 pub(crate) mod tuples;
 pub(crate) mod type_eq;
+
+#[cfg(feature = "macros")]
+pub use push_macros::*;
+
+// This is to allow using the macros from push-macros inside this crate as push-macros
+// relies on the crate `push` beeing present in the root module and this provides that
+// (just an alias to self).
+extern crate self as push;

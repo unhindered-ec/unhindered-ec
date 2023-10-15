@@ -19,8 +19,10 @@ proptest = "1.2.0"
 strum = "0.25.0"
 strum_macros = "0.25.1"
 thiserror = "1.0.44"
+push_macros = { workspace = true, optional = true }
 
 [features]
-default = ["transactional_additive_stacks", "transactional_substractive_stacks"]
+default = ["transactional_additive_stacks", "transactional_substractive_stacks", "macros"]
+macros = ["dep:push_macros"]
 transactional_additive_stacks = []
 transactional_substractive_stacks = []

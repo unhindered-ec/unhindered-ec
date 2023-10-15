@@ -66,6 +66,24 @@ pub enum IntInstructionError {
     },
 }
 
+// Idea for how to simplify the following with macros
+//
+// #[with_state {
+//     generic = State,
+//     stacks = {
+//         typed PushInteger = {
+//             head = Get, Push, Discard,
+//             arbritary = ,
+//             tail = ,
+//         },
+//         typed, sized bool = {
+//             head = push,
+//             arbritary = ,
+//             tail = ,
+//         }
+//     }
+// }]
+// impl Instruction for IntInstruction
 impl<S> Instruction<S> for IntInstruction
 where
     S: StateMut,
@@ -77,8 +95,7 @@ where
 {
     type Error = PushInstructionError;
 
-    #[allow(clippy::too_many_lines, clippy::cognitive_complexity)]
-    #[allow(unreachable_code, clippy::let_unit_value)] // Remove this
+    #[allow(clippy::too_many_lines)]
     fn perform(&self, mut state: S) -> InstructionResult<Self::Error> {
         match self {
             Self::Push(_)
