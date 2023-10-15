@@ -8,6 +8,13 @@ mod sealed {
     pub trait SealedMarker {}
 }
 
+/// The transition diagram for the builder is
+///
+/// ![PushState builder transition diagram][PushState_transition]
+#[embed_doc_image(
+    "PushState_transition",
+    "../../images/PushState_builder_state_diagram.svg"
+)]
 pub trait StackState: sealed::SealedMarker {}
 pub trait Dataless: StackState {}
 pub trait SizeSet: StackState {}
