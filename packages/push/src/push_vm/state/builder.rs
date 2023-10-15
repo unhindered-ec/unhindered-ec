@@ -96,10 +96,11 @@ macro_rules! builder {
             /// let bool_stack: &Stack<bool> = state.stack();
             /// assert_eq!(bool_stack.max_stack_size, 100);
             /// ```
+            #[must_use]
             pub fn with_max_stack_size(
                 mut self,
                 max_size: usize,
-            ) -> Builder<WithoutData, WithoutData, WithoutData> {
+            ) -> Builder<WithSize, $(replace!($id | WithSize)),*> {
                 self.partial_state
                     .exec
                     .reserve(max_size - self.partial_state.exec().len());
@@ -122,7 +123,7 @@ macro_rules! builder {
             /// # Arguments
             /// - `program` - The program you wish to execute
             #[must_use]
-            pub fn with_program<P>(self, program: P) -> Builder<WithData, Int, Bool>
+            pub fn with_program<P>(self, program: P) -> Builder<WithSizeAndData, $($id),+>
             where
                 P: IntoIterator<Item = PushInstruction>,
                 P::IntoIter: DoubleEndedIterator,
