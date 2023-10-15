@@ -60,6 +60,24 @@ pub enum IntInstructionError {
     },
 }
 
+// Idea for how to simplify the following with macros
+//
+// #[with_state {
+//     generic = State,
+//     stacks = {
+//         typed PushInteger = {
+//             head = Get, Push, Discard,
+//             arbritary = ,
+//             tail = ,
+//         },
+//         typed, sized bool = {
+//             head = push,
+//             arbritary = ,
+//             tail = ,
+//         }
+//     }
+// }]
+// impl Instruction for IntInstruction
 impl<S> Instruction<S> for IntInstruction
 where
     S: Clone + HasStack<PushInteger> + HasStack<bool>,
