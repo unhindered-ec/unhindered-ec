@@ -1,12 +1,7 @@
-pub mod builder;
-
 use crate::{
     error::{stateful::FatalError, try_recover::TryRecover, InstructionResult},
     instruction::{Instruction, PushInstruction, PushInstructionError, VariableName},
-    push_vm::{
-        stack::{HasStack, Stack, TypeEq},
-        PushInteger, State,
-    },
+    push_vm::{stack::Stack, PushInteger, State},
 };
 use std::collections::HashMap;
 
@@ -18,9 +13,13 @@ use std::collections::HashMap;
 //   or Python implementation for comparison/testing purposes.
 
 #[derive(Default, Debug, Eq, PartialEq, Clone)]
+#[push_macros::push_state(builder)]
 pub struct PushState {
+    #[stack(exec)]
     pub(crate) exec: Vec<PushInstruction>,
+    #[stack]
     pub(crate) int: Stack<PushInteger>,
+    #[stack]
     pub(crate) bool: Stack<bool>,
     // The Internet suggests that when you have fewer than 15 entries,
     // linear search on `Vec` is faster than `HashMap`. I found that
@@ -30,34 +29,11 @@ pub struct PushState {
     // however, the difference pretty much disappeared, presumably
     // because the execution of long programs swamps the cost of
     // initialization of `PushState`.
+    #[input_instructions]
     pub(super) input_instructions: HashMap<VariableName, PushInstruction>,
 }
 
-impl HasStack<bool> for PushState {
-    fn stack<U: TypeEq<This = bool>>(&self) -> &Stack<bool> {
-        &self.bool
-    }
-
-    fn stack_mut<U: TypeEq<This = bool>>(&mut self) -> &mut Stack<bool> {
-        &mut self.bool
-    }
-}
-
-impl HasStack<PushInteger> for PushState {
-    fn stack<U: TypeEq<This = PushInteger>>(&self) -> &Stack<PushInteger> {
-        &self.int
-    }
-
-    fn stack_mut<U: TypeEq<This = PushInteger>>(&mut self) -> &mut Stack<PushInteger> {
-        &mut self.int
-    }
-}
-
 impl PushState {
-    pub fn builder() -> builder::Builder<(), (), ()> {
-        builder::Builder::default()
-    }
-
     #[must_use]
     pub const fn exec(&self) -> &Vec<PushInstruction> {
         &self.exec
@@ -123,7 +99,7 @@ impl State for PushState {
 mod simple_check {
     use crate::{
         instruction::{BoolInstruction, IntInstruction, PushInstruction, VariableName},
-        push_vm::state::{PushInteger, PushState},
+        push_vm::push_state::{PushInteger, PushState},
     };
 
     use super::State;

@@ -43,7 +43,7 @@ pub trait HasStack<T> {
         Self: Sized,
     {
         match self.stack_mut::<T>().push(value) {
-            Ok(_) => Ok(self),
+            Ok(()) => Ok(self),
             Err(error) => Err(Error::fatal(self, error)),
         }
     }
@@ -81,7 +81,7 @@ pub trait HasStack<T> {
     {
         let stack = self.stack_mut::<T>();
         match stack.pop_discard(num_to_replace) {
-            Ok(_) => self.with_push(value),
+            Ok(()) => self.with_push(value),
             Err(error) => Err(Error::fatal(self, error)),
         }
     }
@@ -102,6 +102,14 @@ pub enum StackError {
 pub struct Stack<T> {
     max_stack_size: usize,
     values: Vec<T>,
+}
+
+pub trait StackType {
+    type Type;
+}
+
+impl<T> StackType for Stack<T> {
+    type Type = T;
 }
 
 // We implemented this by hand instead of using `derive`
@@ -309,7 +317,7 @@ where
     {
         match self {
             Ok(mut state) => match state.stack_mut::<T>().pop_discard(num_to_discard) {
-                Ok(_) => Ok(state),
+                Ok(()) => Ok(state),
                 // TODO: any::type_name::<T>() to get the type name – put this in Stack
                 // If this fails it's because we tried to pop too many things from the stack.
                 // We _should_ have previously checked that there were that many things (using `top()` for example),

@@ -19,7 +19,7 @@ where
 {
     type Output = T;
 
-    fn apply(&self, _: (), _: &mut ThreadRng) -> Result<Self::Output> {
+    fn apply(&self, (): (), _: &mut ThreadRng) -> Result<Self::Output> {
         Ok(self.value.clone())
     }
 }

@@ -117,7 +117,7 @@ impl From<BoolInstruction> for PushInstruction {
 mod property_tests {
     use crate::{
         instruction::{BoolInstruction, Instruction},
-        push_vm::state::PushState,
+        push_vm::push_state::PushState,
     };
     use proptest::{prop_assert_eq, proptest};
     use strum::IntoEnumIterator;
