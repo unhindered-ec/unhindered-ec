@@ -6,6 +6,25 @@ use crate::push_state::{parsing::parse_fields, printing::derive_has_stack::deriv
 
 mod push_state;
 
+/// A macro for generating the corresponding code to create a new push state type
+///
+/// This macro supports several feature flags which may or may not be enabled by default.
+/// You can set feature flags like so:
+/// ```ignore
+/// #[push_state(!default_enabled_feature, default_disabled_feature)]
+/// ```
+/// This would set the default_enabled_feature to be disabled and the default_disabled_feature to enabled
+///
+/// # Features
+/// ## HasStack (enabled by default)
+/// This derives the HasStack trait for all stacks in the state. You need to indicate which fields are stacks
+/// using the `#[stack]` attribute on the corresponding field.
+///
+/// ## Builder (disabled by default)
+/// This creates a builder for this state. You need to indicate which fields are stacks using the `#[stack]`
+/// attribute, which field is the exec stack using the `#[stack(exec)]` attribute.
+///
+/// You may change the name of the builder functions using `#[stack(builder_name = <name>)]`.
 #[manyhow::manyhow(proc_macro_attribute)]
 pub fn push_state(
     attrs: proc_macro2::TokenStream,
