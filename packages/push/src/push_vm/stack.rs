@@ -1,3 +1,5 @@
+use collectable::TryExtend;
+
 use crate::{
     error::{Error, InstructionResult},
     instruction::MapInstructionError,
@@ -134,6 +136,23 @@ where
     }
 }
 
+impl<A> TryExtend<A> for Stack<A> {
+    type Error = StackError;
+
+    fn try_extend<T>(&mut self, iter: &mut T) -> Result<(), Self::Error>
+    where
+        T: Iterator<Item = A>,
+    {
+        // We need the call to `.collect()` to effectively convert the iterable into
+        // something that implements both `ExactSizeIterator` (needed so that `.len()`
+        // doesn't consume the iterator) and `DoubleEndedIterator` (so that `.rev()` works)
+        // in the `self.extend()` call. We can't add those constraints here because we're
+        // implementing their `TryExtend`, which doesn't include those constraints.
+        #[allow(clippy::needless_collect)]
+        self.try_extend(iter.into_iter().collect::<Vec<_>>())
+    }
+}
+
 /// Stack
 ///
 /// It's critical that all mutating stack operations be "transactional" in
@@ -259,8 +278,23 @@ impl<T> Stack<T> {
     /// assert_eq!(stack.size(), 5);
     /// assert_eq!(stack.top().unwrap(), &6);
     /// ```  
-    pub fn extend(&mut self, values: Vec<T>) {
-        self.values.extend(values.into_iter().rev());
+    pub fn try_extend<I>(&mut self, iter: I) -> Result<(), StackError>
+    where
+        I: IntoIterator<Item = T>,
+        // We need the iterator to implement `ExactSizeIterator` so that
+        // `.len()` doesn't consume the iterator, and `DoubleEndedIterator`
+        // so that `.rev()` works.
+        I::IntoIter: ExactSizeIterator + DoubleEndedIterator,
+    {
+        let iter = iter.into_iter();
+        // Check that adding these items won't overflow the stack.
+        if iter.len() + self.size() > self.max_stack_size {
+            return Err(StackError::Overflow {
+                stack_type: std::any::type_name::<T>(),
+            });
+        }
+        self.values.extend(iter.rev());
+        Ok(())
     }
 }
 
