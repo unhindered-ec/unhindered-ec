@@ -6,7 +6,7 @@ use syn::{Ident, ext::IdentExt, Visibility, Generics};
 use crate::push_state::parsing::{StacksInput, ExecStackInput, stack_attribute_args::StackMarkerFlags, InputInstructionsInput};
 
 pub fn generate_builder(macro_span: Span,struct_ident: &Ident,struct_visibility: &Visibility, struct_generics: &Generics, stacks: &StacksInput, exec_stack: &ExecStackInput, input_instructions: InputInstructionsInput) -> syn::Result<TokenStream> {
-            let Some((exec_stack_ident, _, _)) = exec_stack else {
+            let Some((exec_stack_ident, _, exec_stack_type)) = exec_stack else {
                 return Err(syn::Error::new(macro_span, "Need to declare exactly one exec stack using #[stack(exec)] to use the builder feature."))
             };
 
@@ -124,13 +124,14 @@ pub fn generate_builder(macro_span: Span,struct_ident: &Ident,struct_visibility:
                         /// assert_eq!(int_stack.top().unwrap(), &5);
                         /// ```
                         #[must_use]
-                        pub fn #fn_ident(mut self, values: Vec<<#ty as ::push::push_vm::stack::StackType>::Type>) -> #builder_name<__Exec, #(#stack_generics_or_type),*> {
-                            self.partial_state.#field.extend(values);
+                        pub fn #fn_ident(mut self, values: Vec<<#ty as ::push::push_vm::stack::StackType>::Type>) -> ::std::result::Result<#builder_name<__Exec, #(#stack_generics_or_type),*>, ::push::push_vm::stack::StackError>
+                        {
+                            self.partial_state.#field.try_extend(values)?;
 
-                            #builder_name {
+                            ::std::result::Result::Ok(#builder_name {
                                 partial_state: self.partial_state,
                                 _p: ::std::marker::PhantomData,
-                            }
+                            })
                         }
                     }
                 }
@@ -252,8 +253,8 @@ pub fn generate_builder(macro_span: Span,struct_ident: &Ident,struct_visibility:
                         max_size: usize,
                     ) -> #builder_name<#utilities_mod_ident::WithSize, #(#with_size_repeated),*> {
                         self.partial_state
-                            .exec
-                            .reserve(max_size - self.partial_state.exec().len());
+                            .#exec_stack_ident
+                            .set_max_stack_size(max_size);
 
                         #(
                             self.partial_state.#fields.set_max_stack_size(max_size);
@@ -273,16 +274,16 @@ pub fn generate_builder(macro_span: Span,struct_ident: &Ident,struct_visibility:
                     /// # Arguments
                     /// - `program` - The program you wish to execute
                     #[must_use]
-                    pub fn with_program<P>(mut self, program: P) -> #builder_name<#utilities_mod_ident::WithSizeAndData, #(#stack_generics),*>
+                    pub fn with_program<P>(mut self, program: P) -> ::std::result::Result<#builder_name<#utilities_mod_ident::WithSizeAndData, #(#stack_generics),*>, ::push::push_vm::stack::StackError>
                     where
                         P: ::std::iter::IntoIterator<Item = ::push::instruction::PushInstruction>,
-                        <P as ::std::iter::IntoIterator>::IntoIter: ::std::iter::DoubleEndedIterator,
+                        <P as ::std::iter::IntoIterator>::IntoIter: ::std::iter::DoubleEndedIterator + ::std::iter::ExactSizeIterator,
                     {
-                        self.partial_state.#exec_stack_ident =program.into_iter().rev().collect();
-                        #builder_name {
+                        self.partial_state.#exec_stack_ident.try_extend(&mut program.into_iter().rev())?;
+                        ::std::result::Result::Ok(#builder_name {
                             partial_state: self.partial_state,
                             _p: ::std::marker::PhantomData,
-                        }
+                        })
                     }
                 }
 
