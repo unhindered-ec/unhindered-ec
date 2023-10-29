@@ -21,3 +21,6 @@ pub use push_macros::*;
 // (just an alias to self).
 #[cfg(feature = "macros")]
 extern crate self as push;
+
+#[cfg(feature = "macros")]
+pub use collectable;
