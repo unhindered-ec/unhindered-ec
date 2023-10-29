@@ -120,7 +120,7 @@ pub fn parse_fields(
                     if !matches!(l.delimiter, syn::MacroDelimiter::Paren(_)) {
                         return Err(syn::Error::new_spanned(
                             l,
-                            "Only parenthecies supported in this position (#[stack(...)])",
+                            "Only parentheses supported in this position (#[stack(...)])",
                         ));
                     }
 
@@ -130,6 +130,7 @@ pub fn parse_fields(
                             return Err(syn::Error::new(attr_span, "Unknown flag exec. Maybe you meant to enable the builder or has_stack feature of the push_state macro?"));
                         }
                         if stack_marker_flags.is_exec {
+                            // This actually spans the `#` instead of `exec`, which should probably be fixed at some point.
                             return Err(syn::Error::new(attr_span, "Redundant exec flag"));
                         } else if stack_marker_flags.builder_name.is_some() {
                             return Err(syn::Error::new(
