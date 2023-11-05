@@ -89,6 +89,7 @@ impl State for PushState {
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used)]
 mod simple_check {
     use crate::{
         instruction::{BoolInstruction, IntInstruction, PushInstruction, VariableName},
@@ -108,19 +109,17 @@ mod simple_check {
         }
 
         let program = vec![
-            // push_int(5),
-            // push_int(8),
-            PushInstruction::InputVar(VariableName::from("x")),
-            PushInstruction::InputVar(VariableName::from("y")),
-            push_bool(true),
-            PushInstruction::InputVar(VariableName::from("a")),
-            push_int(9),
-            BoolInstruction::Or.into(),
-            IntInstruction::Add.into(),
-            push_int(6),
-            IntInstruction::IsEven.into(),
-            BoolInstruction::And.into(),
-            PushInstruction::InputVar(VariableName::from("b")),
+            PushInstruction::InputVar(VariableName::from("x")), // [5]
+            PushInstruction::InputVar(VariableName::from("y")), // [8, 5]
+            push_bool(true),                                    // [true]
+            PushInstruction::InputVar(VariableName::from("a")), // [true, true]
+            push_int(9),                                        // [9, 8, 5]
+            BoolInstruction::Or.into(),                         // [true]
+            IntInstruction::Add.into(),                         // [17, 5]
+            push_int(6),                                        // [6, 17, 5]
+            IntInstruction::IsEven.into(),                      // [17, 5], [true, true]
+            BoolInstruction::And.into(),                        // [true]
+            PushInstruction::InputVar(VariableName::from("b")), // [false, true]
         ];
         let state = PushState::builder()
             .with_max_stack_size(1000)
