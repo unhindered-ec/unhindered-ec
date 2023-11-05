@@ -25,6 +25,30 @@ mod push_state;
 /// attribute, which field is the exec stack using the `#[stack(exec)]` attribute.
 ///
 /// You may change the name of the builder functions using `#[stack(builder_name = <name>)]`.
+/// and the Instruction used for input values with `#[stack(instruction_name = <path>)]`.
+///
+/// # Example
+/// ```ignore
+/// #[push_state::push_state(builder)]
+/// struct SomeState {
+///     #[stack(exec)]
+///     exec: Vec<PushInstruction>,
+///     #[stack(builder_name = number, instruction_name = MyInput::int_input)]
+///     int: Stack<MyInteger>,
+///     
+///     #[input_instructions]
+///     input_instructions: HashMap<VariableName, MyInput>
+/// }
+///
+/// fn main() {
+///     let stack = SomeState::builder()
+///                   .with_max_stack_size(1000)
+///                   .with_programm(Default::default())
+///                   .with_max_number_stack_size(100)
+///                   .with_int_values([100, 10000, 10])
+///                   .build();   
+/// }
+/// ```
 #[manyhow::manyhow(proc_macro_attribute)]
 pub fn push_state(
     attrs: proc_macro2::TokenStream,

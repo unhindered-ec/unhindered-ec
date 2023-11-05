@@ -4,13 +4,13 @@ use proc_macro2::Span;
 use syn::{
     parse::{Parse, ParseStream},
     punctuated::Punctuated,
-    spanned::Spanned,
     Field, Ident, Token, Type,
 };
 
 use self::{macro_args::PushStateFlags, stack_attribute_args::StackMarkerFlags};
 
 pub mod macro_args;
+pub mod spanned_value;
 pub mod stack_attribute_args;
 
 pub enum FlagsValue<T> {
@@ -112,7 +112,6 @@ pub fn parse_fields(
         let mut stack_marker_flags = StackMarkerFlags::default();
 
         for attr in matching_attrs {
-            let attr_span = attr.span();
             match attr.meta {
                 syn::Meta::Path(_) => empty_attr = Some(attr),
                 syn::Meta::List(l) => {
@@ -125,38 +124,61 @@ pub fn parse_fields(
                     }
 
                     let marker_flags: StackMarkerFlags = syn::parse2(l.tokens)?;
-                    if marker_flags.is_exec {
+                    if *marker_flags.is_exec {
                         if !generate_builder && !derive_has_stack {
-                            return Err(syn::Error::new(attr_span, "Unknown flag exec. Maybe you meant to enable the builder or has_stack feature of the push_state macro?"));
+                            return Err(syn::Error::new(marker_flags.is_exec.span, "Unknown flag exec. Maybe you meant to enable the builder or has_stack feature of the push_state macro?"));
                         }
-                        if stack_marker_flags.is_exec {
+                        if *stack_marker_flags.is_exec {
                             // This actually spans the `#` instead of `exec`, which should probably be fixed at some point.
-                            return Err(syn::Error::new(attr_span, "Redundant exec flag"));
+                            return Err(syn::Error::new(
+                                marker_flags.is_exec.span,
+                                "Redundant exec flag",
+                            ));
                         } else if stack_marker_flags.builder_name.is_some() {
                             return Err(syn::Error::new(
-                                attr_span,
+                                marker_flags.builder_name.span,
                                 "Builder name cannot be set for exec stacks",
                             ));
                         } else {
-                            stack_marker_flags.is_exec = marker_flags.is_exec;
+                            stack_marker_flags.is_exec = marker_flags.is_exec.clone();
                         }
                     }
-                    if let Some(builder_name) = marker_flags.builder_name {
+                    if marker_flags.builder_name.is_some() {
                         if !generate_builder {
-                            return Err(syn::Error::new(attr_span, "Unknown flag generate_builder. Maybe you meant to enable the builder feature of the push_state macro?"));
+                            return Err(syn::Error::new(marker_flags.builder_name.span, "Unknown flag generate_builder. Maybe you meant to enable the builder feature of the push_state macro?"));
                         }
                         if stack_marker_flags.builder_name.is_some() {
                             return Err(syn::Error::new(
-                                attr_span,
+                                marker_flags.builder_name.span,
                                 "Builder name already set explicitly",
                             ));
-                        } else if stack_marker_flags.is_exec {
+                        } else if *stack_marker_flags.is_exec {
                             return Err(syn::Error::new(
-                                attr_span,
+                                marker_flags.builder_name.span,
                                 "Builder name cannot be set for exec stacks",
                             ));
                         } else {
-                            stack_marker_flags.builder_name = Some(builder_name);
+                            stack_marker_flags.builder_name = marker_flags.builder_name;
+                        }
+                    }
+
+                    if marker_flags.instruction_name.is_some() {
+                        if !generate_builder {
+                            return Err(syn::Error::new(marker_flags.instruction_name.span, "Unknown flag instruction_name. Maybe you meant to enable the builder feature of the push_state macro?"));
+                        }
+
+                        if stack_marker_flags.instruction_name.is_some() {
+                            return Err(syn::Error::new(
+                                marker_flags.instruction_name.span,
+                                "Instruction name already set explicitly",
+                            ));
+                        } else if *stack_marker_flags.is_exec {
+                            return Err(syn::Error::new(
+                                marker_flags.instruction_name.span,
+                                "Instruction name cannot be set for exec stacks",
+                            ));
+                        } else {
+                            stack_marker_flags.instruction_name = marker_flags.instruction_name
                         }
                     }
                 }
@@ -172,10 +194,10 @@ pub fn parse_fields(
             }
         }
 
-        if stack_marker_flags.is_exec {
+        if *stack_marker_flags.is_exec {
             if exec_stack.is_some() {
-                return Err(syn::Error::new_spanned(
-                    ident,
+                return Err(syn::Error::new(
+                    stack_marker_flags.is_exec.span,
                     "Only one exec stack supported",
                 ));
             } else {

@@ -259,7 +259,11 @@ impl<T> Stack<T> {
     /// assert_eq!(stack.size(), 5);
     /// assert_eq!(stack.top().unwrap(), &6);
     /// ```  
-    pub fn extend(&mut self, values: Vec<T>) {
+    pub fn extend<I>(&mut self, values: I)
+    where
+        I: IntoIterator<Item = T>,
+        I::IntoIter: DoubleEndedIterator,
+    {
         self.values.extend(values.into_iter().rev());
     }
 }
