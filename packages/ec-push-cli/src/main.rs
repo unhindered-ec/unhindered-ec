@@ -60,6 +60,7 @@ fn main() -> Result<()> {
     let scorer = |program: &Plushy| -> TestResults<test_results::Error> {
         let errors: TestResults<test_results::Error> = (0..10)
             .map(|input| {
+                #[allow(clippy::unwrap_used)]
                 let state = PushState::builder()
                     .with_max_stack_size(1000)
                     .with_program(program.get_instructions())
