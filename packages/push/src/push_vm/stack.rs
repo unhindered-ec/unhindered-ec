@@ -169,10 +169,12 @@ impl<T> Stack<T> {
         self.values.len()
     }
 
+    #[must_use]
     pub fn is_empty(&self) -> bool {
         self.values.is_empty()
     }
 
+    #[must_use]
     pub fn is_full(&self) -> bool {
         self.size() == self.max_stack_size
     }
