@@ -4,7 +4,7 @@ use crate::{
 };
 
 pub mod push_state;
-pub(crate) mod stack;
+pub mod stack;
 
 pub use self::stack::HasStack;
 

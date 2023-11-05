@@ -60,7 +60,7 @@ pub trait HasStack<T> {
     /// the stack in questions; if there aren't we'll generate a fatal
     /// error since that is probably a programming error where an instruction
     /// wasn't implemented properly.
-    ///  
+    ///
     /// # Errors
     ///
     /// Returns a fatal error if we can't actually pop off `num_to_replace`
@@ -261,23 +261,40 @@ impl<T> Stack<T> {
     ///
     /// # Arguments
     ///
-    /// * `values` - A `Vec` holding the values to add to the stack
+    /// * `values` - An implementation of [`IntoIterator`] which
+    /// must also implement both [`ExactSizeIterator`] and
+    /// [`DoubleEndedIterator`]. `values` can be, for example,
+    /// any collection of items of type `T` that can be converted
+    /// into an appropriate iterator, including both [`Vec`] and arrays.
+    ///
+    /// # Errors
+    ///
+    /// - [`StackError::Overflow`] is returned when adding the provided
+    /// elements would cause the stack size to exceed maximum stack size
+    /// for this stack, as set with [`Stack::set_max_stack_size`].
     ///
     /// # Examples
     ///
-    /// ```ignore
-    /// use push::push_vm::push_state::Stack;
+    /// ```
+    /// # use push::push_vm::stack::StackError;
+    /// # use push::push_vm::stack::Stack;
+    /// # use push::push_vm::PushInteger;
+    /// #
     /// let mut stack: Stack<PushInteger> = Stack::default();
     /// assert_eq!(stack.size(), 0);
-    /// stack.extend(vec![5, 8, 9]);
+    ///
+    /// stack.try_extend(vec![5, 8, 9])?;
     /// // Now the top of the stack is 5, followed by 8, then 9 at the bottom.
     /// assert_eq!(stack.size(), 3);
-    /// assert_eq!(stack.top().unwrap(), &5);
-    /// stack.extend(vec![6, 3]);
+    /// assert_eq!(stack.top()?, &5);
+    ///
+    /// stack.try_extend(vec![6, 3])?;
     /// // Now the top of the stack is 6 and the whole stack is 6, 3, 5, 8, 9.
     /// assert_eq!(stack.size(), 5);
-    /// assert_eq!(stack.top().unwrap(), &6);
-    /// ```  
+    /// assert_eq!(stack.top()?, &6);
+    ///
+    /// # Ok::<(), StackError>(())
+    /// ```
     pub fn try_extend<I>(&mut self, iter: I) -> Result<(), StackError>
     where
         I: IntoIterator<Item = T>,
