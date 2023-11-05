@@ -5,23 +5,39 @@ use syn::{Ident, ext::IdentExt, Visibility, Generics};
 
 use crate::push_state::parsing::{StacksInput, ExecStackInput, stack_attribute_args::StackMarkerFlags, InputInstructionsInput};
 
+
+macro_rules! derived_ident {
+    ($($tok: expr),*) => {
+        {
+            #[allow(unused_imports)]
+            use syn::ext::IdentExt;
+            syn::Ident::new_raw(&[$(format!("{}", derived_ident!(@handle_seprate $tok))),*].concat(), proc_macro2::Span::mixed_site())  
+        }
+    };
+    (@handle_seprate $lit: literal) => {
+        $lit
+    };
+    (@handle_seprate $lit: expr) => {
+        $lit.unraw()
+    }
+}
+
 pub fn generate_builder(macro_span: Span,struct_ident: &Ident,struct_visibility: &Visibility, struct_generics: &Generics, stacks: &StacksInput, exec_stack: &ExecStackInput, input_instructions: InputInstructionsInput) -> syn::Result<TokenStream> {
             let Some((exec_stack_ident, _, exec_stack_type)) = exec_stack else {
                 return Err(syn::Error::new(macro_span, "Need to declare exactly one exec stack using #[stack(exec)] to use the builder feature."))
             };
 
-            let struct_ident_unrawed = struct_ident.unraw();
-            let struct_ident_unrawed_snake_case = struct_ident_unrawed.to_snake_case().unraw();
-            let utilities_mod_ident = syn::Ident::new_raw(&format!("{struct_ident_unrawed_snake_case}_builder"), proc_macro2::Span::mixed_site());
+            let utilities_mod_ident = derived_ident!(struct_ident.unraw().to_snake_case(), "_builder");
+            let builder_name = derived_ident!(struct_ident, "Builder");
 
-            let builder_name = syn::Ident::new_raw(&format!("{struct_ident_unrawed}Builder"), proc_macro2::Span::mixed_site());
+            let fields = stacks.keys().collect::<Vec<_>>();
 
-            let stack_generics = stacks.keys().map(|i| i.unraw().to_pascal_case_spanned(proc_macro2::Span::mixed_site())).collect::<Vec<_>>();
-
+            // Generic bounds for stacks, like `Int: StackState, Bool: StackState`
+            let stack_generics = fields.iter().map(|i| i.unraw().to_pascal_case_spanned(proc_macro2::Span::mixed_site())).collect::<Vec<_>>();
             let stack_generics_with_state_bounds = stack_generics.iter().map(|g| quote!{#g: #utilities_mod_ident::StackState}).collect::<Vec<_>>();
-
             let stack_generics_with_dataless_bounds = stack_generics.iter().map(|g| quote!{#g: #utilities_mod_ident::Dataless}).collect::<Vec<_>>();
 
+            // List with length |stacks| of ()
             let default_states = stack_generics.iter().map(|_| quote!{()}).collect::<Vec<_>>();
 
             let with_size_repeated = stack_generics.iter().map(|_| quote!{
@@ -30,20 +46,16 @@ pub fn generate_builder(macro_span: Span,struct_ident: &Ident,struct_visibility:
 
             let (impl_generics, type_generics, where_clause) = struct_generics.split_for_impl();
 
-            let fields = stacks.keys().collect::<Vec<_>>();
 
             let with_inputs_impl = input_instructions.map(|input_instructions_field| {
-                let with_inputs = stacks.iter().map(|(field, (StackMarkerFlags{builder_name, instruction_name, ..}, ty))| {
-                    let stack_ident = builder_name.as_ref().unwrap_or(field).unraw().to_snake_case().unraw();
-                    let instruction_path = instruction_name.clone().unwrap_or_else(|| {
-                        let snake_case_field = field.unraw().to_snake_case().unraw();
-
-                        let instruction_fn_name = syn::Ident::new(&format!("push_{snake_case_field}"), proc_macro2::Span::mixed_site());
-
+               let with_inputs = stacks.iter().map(|(field, (StackMarkerFlags{builder_name, instruction_name, ..}, ty))| {
+                    let stack_ident = builder_name.as_ref().unwrap_or(field).unraw().to_snake_case();
+                    let instruction_path = instruction_name.as_ref().cloned().unwrap_or_else(|| {
+                        let instruction_fn_name = derived_ident!("push_", field.unraw().to_snake_case());
                         syn::parse_quote!(::push::instruction::PushInstruction::#instruction_fn_name)
                     });
 
-                    let fn_ident = syn::Ident::new(&format!("with_{stack_ident}_input"), proc_macro2::Span::mixed_site());
+                    let fn_ident = derived_ident!("with_", stack_ident, "_input");
 
                     quote!{
                         /// Adds a input instruction to the current current state's set
@@ -76,12 +88,12 @@ pub fn generate_builder(macro_span: Span,struct_ident: &Ident,struct_visibility:
             });
 
             let with_values_impl = stacks.iter().map(|(field, (StackMarkerFlags { builder_name: builder_methods_name, .. }, ty))| {
-                let stack_ident = builder_methods_name.as_ref().unwrap_or(field).unraw().to_snake_case().unraw();
+                let stack_ident = builder_methods_name.as_ref().unwrap_or(field).unraw().to_snake_case();
 
-                let fn_ident = syn::Ident::new(&format!("with_{stack_ident}_values"), proc_macro2::Span::mixed_site());
 
+                // Where bounds where the current stack is required to be SizeSet and every other stack can be in any state
                 let where_bounds = stacks.keys().map(|ident| {
-                    let generic_name = ident.unraw().to_pascal_case_spanned(proc_macro2::Span::mixed_site()).unraw();
+                    let generic_name = ident.unraw().to_pascal_case_spanned(proc_macro2::Span::mixed_site());
                     if ident == field {
                         quote!{#generic_name: #utilities_mod_ident::SizeSet}
                     } else {
@@ -89,16 +101,18 @@ pub fn generate_builder(macro_span: Span,struct_ident: &Ident,struct_visibility:
                     }
                 });
 
+                // Type list where the current stack is a certain value and all others are the corresponding generics
                 let stack_generics_or_type = stacks.keys().map(|ident| {
                     if ident == field {
                         quote!{#utilities_mod_ident::WithSizeAndData}
                     } else {
-                        let generic_name = ident.unraw().to_pascal_case_spanned(proc_macro2::Span::mixed_site()).unraw();
+                        let generic_name = ident.unraw().to_pascal_case_spanned(proc_macro2::Span::mixed_site());
                         quote!{#generic_name}
                     }
                     
                 });
 
+                let fn_ident = derived_ident!("with_", stack_ident, "_values");
                 quote!{
                     impl<__Exec: #utilities_mod_ident::StackState, #(#where_bounds),*> #builder_name<__Exec, #(#stack_generics),*> {
                         /// Adds the given sequence of values to the stack for the state you're building.
@@ -124,7 +138,9 @@ pub fn generate_builder(macro_span: Span,struct_ident: &Ident,struct_visibility:
                         /// assert_eq!(int_stack.top().unwrap(), &5);
                         /// ```
                         #[must_use]
-                        pub fn #fn_ident(mut self, values: Vec<<#ty as ::push::push_vm::stack::StackType>::Type>) -> ::std::result::Result<#builder_name<__Exec, #(#stack_generics_or_type),*>, ::push::push_vm::stack::StackError>
+                        pub fn #fn_ident<T>(mut self, values: T) -> ::std::result::Result<#builder_name<__Exec, #(#stack_generics_or_type),*>, ::push::push_vm::stack::StackError>
+                            where T: ::std::iter::IntoIterator<Item = <#ty as ::push::push_vm::stack::StackType>::Type>,
+                                <T as ::std::iter::IntoIterator>::IntoIter: ::std::iter::DoubleEndedIterator + ::std::iter::ExactSizeIterator,
                         {
                             self.partial_state.#field.try_extend(values)?;
 
@@ -138,12 +154,13 @@ pub fn generate_builder(macro_span: Span,struct_ident: &Ident,struct_visibility:
             }).collect::<proc_macro2::TokenStream>();
 
             let set_max_size_impl = stacks.iter().map(|(field, (StackMarkerFlags { builder_name: builder_methods_name, .. }, _))| {
-                let stack_ident = builder_methods_name.as_ref().unwrap_or(field).unraw().to_snake_case().unraw();
+                let stack_ident = builder_methods_name.as_ref().unwrap_or(field).unraw().to_snake_case();
 
-                let fn_ident = syn::Ident::new(&format!("with_{stack_ident}_max_size"), proc_macro2::Span::mixed_site());
+                let fn_ident = derived_ident!("with_", stack_ident, "_max_size");
 
+                // Where bounds where the current stack is required to be SizeSet and every other stack can be in any state
                 let where_bounds = stacks.keys().map(|ident| {
-                    let generic_name = ident.unraw().to_pascal_case_spanned(proc_macro2::Span::mixed_site()).unraw();
+                    let generic_name = ident.unraw().to_pascal_case_spanned(proc_macro2::Span::mixed_site());
                     if ident == field {
                         quote!{#generic_name: #utilities_mod_ident::Dataless}
                     } else {
@@ -151,11 +168,12 @@ pub fn generate_builder(macro_span: Span,struct_ident: &Ident,struct_visibility:
                     }
                 });
 
+                // Type list where the current stack is a certain value and all others are the corresponding generics
                 let stack_generics_or_type = stacks.keys().map(|ident| {
                     if ident == field {
                         quote!{#utilities_mod_ident::WithSize}
                     } else {
-                        let generic_name = ident.unraw().to_pascal_case_spanned(proc_macro2::Span::mixed_site()).unraw();
+                        let generic_name = ident.unraw().to_pascal_case_spanned(proc_macro2::Span::mixed_site());
                         quote!{#generic_name}
                     }
                     

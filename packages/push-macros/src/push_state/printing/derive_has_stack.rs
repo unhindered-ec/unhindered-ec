@@ -9,6 +9,9 @@ pub fn derive_has_stack(
     stacks: &StacksInput,
     _exec_stack: &ExecStackInput,
 ) -> TokenStream {
+    // This is commented out for now as the exec stack is currently a `Vec` and not a `Stack`.
+    // Once it is a Stack as well it is probably a good idea to uncomment this
+
     // let mut stacks_to_derive_for = stacks
     let stacks_to_derive_for = stacks
         .iter()
