@@ -10,7 +10,7 @@ mod push_state;
 ///
 /// This macro supports several feature flags which may or may not be enabled by default.
 /// You can set feature flags like so:
-/// ```ignore
+/// ```text
 /// #[push_state(!default_enabled_feature, default_disabled_feature)]
 /// ```
 /// This would set the default_enabled_feature to be disabled and the default_disabled_feature to enabled
@@ -32,21 +32,23 @@ mod push_state;
 /// #[push_state::push_state(builder)]
 /// struct SomeState {
 ///     #[stack(exec)]
-///     exec: Vec<PushInstruction>,
+///     exec: Stack<PushInstruction>,
 ///     #[stack(builder_name = number, instruction_name = MyInput::int_input)]
 ///     int: Stack<MyInteger>,
-///     
+///
 ///     #[input_instructions]
 ///     input_instructions: HashMap<VariableName, MyInput>
 /// }
 ///
-/// fn main() {
+/// fn main() -> Result<(), StackError> {
 ///     let stack = SomeState::builder()
-///                   .with_max_stack_size(1000)
-///                   .with_programm(Default::default())
-///                   .with_max_number_stack_size(100)
-///                   .with_int_values([100, 10000, 10])
-///                   .build();   
+///         .with_max_stack_size(1000)
+///         .with_program(Default::default())?
+///         .with_max_number_stack_size(100)
+///         .with_int_values([100, 10000, 10])?
+///         .build();
+///
+///     Ok(())
 /// }
 /// ```
 #[manyhow::manyhow(proc_macro_attribute)]
