@@ -160,30 +160,42 @@ impl<A> TryExtend<A> for Stack<A> {
 /// OR they perform none of them and return a `StackError`. If this isn't true,
 /// then we can end up with inconsistent states when performing instructions.
 impl<T> Stack<T> {
+    /// Sets the maximum size for this stack. Attempts to add elements that would
+    /// take the stack above this size should return `StackError::Overflow`.
     pub fn set_max_stack_size(&mut self, max_stack_size: usize) {
         self.max_stack_size = max_stack_size;
     }
 
+    /// Returns the maximum size for this stack.
     #[must_use]
     pub const fn max_stack_size(&self) -> usize {
         self.max_stack_size
     }
 
+    /// Returns the size of this stack.
     #[must_use]
     pub fn size(&self) -> usize {
         self.values.len()
     }
 
+    /// Returns `true` if the stack contains no elements.
     #[must_use]
     pub fn is_empty(&self) -> bool {
         self.values.is_empty()
     }
 
+    /// Returns `true` if the stack has `max_stack_size()` elements.
     #[must_use]
     pub fn is_full(&self) -> bool {
         self.size() == self.max_stack_size
     }
 
+    /// Returns a reference to the top value on this stack, or
+    /// an error if the stack is empty.
+    ///
+    /// # Errors
+    ///
+    /// Returns `StackError::Underflow` error if the stack is empty.
     pub fn top(&self) -> Result<&T, StackError> {
         self.values.last().ok_or(StackError::Underflow {
             num_requested: 1,
@@ -191,6 +203,14 @@ impl<T> Stack<T> {
         })
     }
 
+    /// Returns a pair of references to the top two elements of
+    /// the stack, or an error if the stack has less than two
+    /// elements.
+    ///
+    /// # Errors
+    ///
+    /// Returns `StackError::Underflow` error if the stack has less than
+    /// two elements.
     pub fn top2(&self) -> Result<(&T, &T), StackError> {
         if self.size() >= 2 {
             let x = self.top()?;
@@ -210,6 +230,12 @@ impl<T> Stack<T> {
         }
     }
 
+    /// Removes the top element from a stack and returns it, or `StackError::Underflow`
+    /// if it is empty.
+    ///
+    /// # Errors
+    ///
+    /// Returns `StackError::Underflow` if the stack is empty.
     pub fn pop(&mut self) -> Result<T, StackError> {
         self.values.pop().ok_or(StackError::Underflow {
             num_requested: 1,
@@ -217,6 +243,12 @@ impl<T> Stack<T> {
         })
     }
 
+    /// Removes the top two elements from a stack and returns them in a pair.
+    /// Returns `StackError::Underflow` if the stack has fewer than two elements.
+    ///
+    /// # Errors
+    ///
+    /// Returns `StackError::Underflow` if the stack has fewer than two elements.
     pub fn pop2(&mut self) -> Result<(T, T), StackError> {
         if self.size() >= 2 {
             let x = self.pop()?;
@@ -230,6 +262,16 @@ impl<T> Stack<T> {
         }
     }
 
+    // TODO: Rename `pop_discard` to just `discard`. There's a use of in a function called
+    //   `with_pop_discard` that should also be renamed.
+    /// Discards `num_to_discard` elements from the top of the stack, returning
+    /// `StackError::StackUnderflow` if there are fewer than `num_to_discard` elements
+    /// on the stack.
+    ///
+    /// # Errors
+    ///
+    /// Returns `StackError::Underflow` if the stack has fewer than `num_to_discard`
+    /// elements on it.
     pub fn pop_discard(&mut self, num_to_discard: usize) -> Result<(), StackError> {
         let stack_size = self.size();
         if num_to_discard > stack_size {
@@ -249,6 +291,13 @@ impl<T> Stack<T> {
         Ok(())
     }
 
+    /// Pushes `value` onto the top of the stack, returning `StackError::StackOverflow`
+    /// if doing so would exceed the `max_stack_size()` for this stack.
+    ///
+    /// # Errors
+    ///
+    /// Returns `StackError::Overflow` if the stack was already full, i.e., pushing
+    /// on `value` would cause the stack size to exceed `max_stack_size()`.
     pub fn push(&mut self, value: T) -> Result<(), StackError> {
         if self.size() == self.max_stack_size {
             Err(StackError::Overflow {
@@ -325,10 +374,23 @@ impl<T> Stack<T> {
 /// Helper trait to chain instruction operations.
 pub trait StackPush<T, E> {
     /// Updates the state with `T` pushed to the stack.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error of type `E` if pushing this value fails, e.g.,
+    /// if adding this element exceeded the maximum stack size.
     fn with_stack_push<S>(self, state: S) -> InstructionResult<S, E>
     where
         S: HasStack<T>;
 
+    /// Updates the state by replacing the top `num_to_replace` elements
+    /// with `T`.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error of type `E` if the replacement fails. This could
+    /// be, for example, because there aren't `num_to_replace` items on the
+    /// stack, or if adding the new element would exceed the maximum stack size.
     fn with_stack_replace<S>(self, num_to_replace: usize, state: S) -> InstructionResult<S, E>
     where
         S: HasStack<T>;
@@ -360,6 +422,14 @@ where
 }
 
 pub trait StackDiscard<S, E> {
+    // TODO: Drop `pop` from this name.
+    /// Discards the top `num_to_discard` elements from `S`, returning an error
+    /// of type `E` if that fails.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error of type `E` if this fails, e.g., if there are not
+    /// `num_to_discard` elements in the stack.
     fn with_stack_pop_discard<T>(self, num_to_discard: usize) -> InstructionResult<S, E>
     where
         S: HasStack<T>;
