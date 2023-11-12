@@ -82,7 +82,7 @@ pub trait HasStack<T> {
         Self: Sized,
     {
         let stack = self.stack_mut::<T>();
-        match stack.pop_discard(num_to_replace) {
+        match stack.discard(num_to_replace) {
             Ok(()) => self.with_push(value),
             Err(error) => Err(Error::fatal(self, error)),
         }
@@ -262,8 +262,6 @@ impl<T> Stack<T> {
         }
     }
 
-    // TODO: Rename `pop_discard` to just `discard`. There's a use of in a function called
-    //   `with_pop_discard` that should also be renamed.
     /// Discards `num_to_discard` elements from the top of the stack, returning
     /// `StackError::StackUnderflow` if there are fewer than `num_to_discard` elements
     /// on the stack.
@@ -272,7 +270,7 @@ impl<T> Stack<T> {
     ///
     /// Returns `StackError::Underflow` if the stack has fewer than `num_to_discard`
     /// elements on it.
-    pub fn pop_discard(&mut self, num_to_discard: usize) -> Result<(), StackError> {
+    pub fn discard(&mut self, num_to_discard: usize) -> Result<(), StackError> {
         let stack_size = self.size();
         if num_to_discard > stack_size {
             return Err(StackError::Underflow {
@@ -422,7 +420,6 @@ where
 }
 
 pub trait StackDiscard<S, E> {
-    // TODO: Drop `pop` from this name.
     /// Discards the top `num_to_discard` elements from `S`, returning an error
     /// of type `E` if that fails.
     ///
@@ -430,7 +427,7 @@ pub trait StackDiscard<S, E> {
     ///
     /// Returns an error of type `E` if this fails, e.g., if there are not
     /// `num_to_discard` elements in the stack.
-    fn with_stack_pop_discard<T>(self, num_to_discard: usize) -> InstructionResult<S, E>
+    fn with_stack_discard<T>(self, num_to_discard: usize) -> InstructionResult<S, E>
     where
         S: HasStack<T>;
 }
@@ -439,12 +436,12 @@ impl<S, E> StackDiscard<S, E> for InstructionResult<S, E>
 where
     E: From<StackError>,
 {
-    fn with_stack_pop_discard<T>(self, num_to_discard: usize) -> Self
+    fn with_stack_discard<T>(self, num_to_discard: usize) -> Self
     where
         S: HasStack<T>,
     {
         match self {
-            Ok(mut state) => match state.stack_mut::<T>().pop_discard(num_to_discard) {
+            Ok(mut state) => match state.stack_mut::<T>().discard(num_to_discard) {
                 Ok(()) => Ok(state),
                 // TODO: any::type_name::<T>() to get the type name – put this in Stack
                 // If this fails it's because we tried to pop too many things from the stack.

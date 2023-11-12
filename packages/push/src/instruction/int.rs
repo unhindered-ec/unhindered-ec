@@ -237,56 +237,56 @@ where
                         .map_err(Into::<PushInstructionError>::into)
                         .map(|&x| x % 2 == 0)
                         .with_stack_push(state)
-                        .with_stack_pop_discard::<PushInteger>(1),
+                        .with_stack_discard::<PushInteger>(1),
 
                     Self::IsOdd => int_stack
                         .top()
                         .map_err(Into::<PushInstructionError>::into)
                         .map(|&x| x % 2 == 1)
                         .with_stack_push(state)
-                        .with_stack_pop_discard::<PushInteger>(1),
+                        .with_stack_discard::<PushInteger>(1),
 
                     Self::Equal => int_stack
                         .top2()
                         .map_err(Into::<PushInstructionError>::into)
                         .map(|(&x, &y)| x == y)
                         .with_stack_push(state)
-                        .with_stack_pop_discard::<PushInteger>(1),
+                        .with_stack_discard::<PushInteger>(1),
 
                     Self::NotEqual => int_stack
                         .top2()
                         .map_err(Into::<PushInstructionError>::into)
                         .map(|(&x, &y)| x != y)
                         .with_stack_push(state)
-                        .with_stack_pop_discard::<PushInteger>(1),
+                        .with_stack_discard::<PushInteger>(1),
 
                     Self::LessThan => int_stack
                         .top2()
                         .map_err(Into::<PushInstructionError>::into)
                         .map(|(&x, &y)| x < y)
                         .with_stack_push(state)
-                        .with_stack_pop_discard::<PushInteger>(1),
+                        .with_stack_discard::<PushInteger>(1),
 
                     Self::LessThanEqual => int_stack
                         .top2()
                         .map_err(Into::<PushInstructionError>::into)
                         .map(|(&x, &y)| x <= y)
                         .with_stack_push(state)
-                        .with_stack_pop_discard::<PushInteger>(1),
+                        .with_stack_discard::<PushInteger>(1),
 
                     Self::GreaterThan => int_stack
                         .top2()
                         .map_err(Into::<PushInstructionError>::into)
                         .map(|(&x, &y)| x > y)
                         .with_stack_push(state)
-                        .with_stack_pop_discard::<PushInteger>(1),
+                        .with_stack_discard::<PushInteger>(1),
 
                     Self::GreaterThanEqual => int_stack
                         .top2()
                         .map_err(Into::<PushInstructionError>::into)
                         .map(|(&x, &y)| x >= y)
                         .with_stack_push(state)
-                        .with_stack_pop_discard::<PushInteger>(1),
+                        .with_stack_discard::<PushInteger>(1),
                     _ => unreachable!(
                         "We failed to implement a boolean-valued operation on integers: {self:?}"
                     ),
@@ -299,7 +299,7 @@ where
                     .map_err(Into::<PushInstructionError>::into)
                     .map(|&b| i64::from(b))
                     .with_stack_push(state)
-                    .with_stack_pop_discard::<bool>(1)
+                    .with_stack_discard::<bool>(1)
             }
         }
     }
