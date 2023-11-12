@@ -155,15 +155,24 @@ pub fn generate_builder(
                         ///
                         /// # Examples
                         ///
-                        /// ```ignore
-                        /// use push::push_vm::push_state::{ Stack, HasStack, PushState, Builder };
-                        /// let mut state = Builder::new(PushState::default())
-                        ///     .with_int_values(vec![5, 8, 9])
+                        /// ```
+                        /// # use push::push_vm::push_state::PushState;
+                        /// # use push::push_vm::stack::Stack;
+                        /// # use push::push_vm::stack::StackError;
+                        /// # use push::push_vm::HasStack;
+                        /// # use push::push_vm::PushInteger;
+                        ///
+                        /// let mut state = PushState::builder()
+                        ///     .with_max_stack_size(100)
+                        ///     .with_program([])?
+                        ///     .with_int_values(vec![5, 8, 9])?
                         ///     .build();
-                        /// let int_stack: &Stack<PushInteger> = state.stack();
+                        /// let int_stack: &Stack<PushInteger> = state.stack::<PushInteger>();
                         /// assert_eq!(int_stack.size(), 3);
                         /// // Now the top of the stack is 5, followed by 8, then 9 at the bottom.
-                        /// assert_eq!(int_stack.top().unwrap(), &5);
+                        /// assert_eq!(int_stack.top()?, &5);
+                        ///
+                        /// # Ok::<(), StackError>(())
                         /// ```
                         #[must_use]
                         pub fn #fn_ident<T>(mut self, values: T) -> ::std::result::Result<#builder_name<__Exec, #(#stack_generics_or_type),*>, ::push::push_vm::stack::StackError>
@@ -283,14 +292,20 @@ pub fn generate_builder(
             ///
             /// # Examples
             ///
-            /// ```ignore
-            /// use push::push_vm::HasStack;
-            /// use push::push_vm::push_state::{ Stack, HasStack, PushState, Builder };
-            /// let mut state = Builder::new(PushState::default())
+            /// ```
+            /// # use push::push_vm::push_state::PushState;
+            /// # use push::push_vm::stack::Stack;
+            /// # use push::push_vm::stack::StackError;
+            /// # use push::push_vm::HasStack;
+            ///
+            /// let mut state = PushState::builder()
             ///     .with_max_stack_size(100)
+            ///     .with_program([])?
             ///     .build();
-            /// let bool_stack: &Stack<bool> = state.stack();
-            /// assert_eq!(bool_stack.max_stack_size, 100);
+            /// let bool_stack: &Stack<bool> = state.stack::<bool>();
+            /// assert_eq!(bool_stack.max_stack_size(), 100);
+            ///
+            /// # Ok::<(), StackError>(())
             /// ```
             #[must_use]
             pub fn with_max_stack_size(

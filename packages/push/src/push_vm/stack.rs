@@ -165,6 +165,11 @@ impl<T> Stack<T> {
     }
 
     #[must_use]
+    pub const fn max_stack_size(&self) -> usize {
+        self.max_stack_size
+    }
+
+    #[must_use]
     pub fn size(&self) -> usize {
         self.values.len()
     }
