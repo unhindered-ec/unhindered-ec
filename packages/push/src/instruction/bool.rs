@@ -113,7 +113,7 @@ impl From<BoolInstruction> for PushInstruction {
 }
 
 #[cfg(test)]
-#[allow(clippy::unwrap_used)]
+#[allow(clippy::unwrap_used, clippy::ignored_unit_patterns)]
 mod property_tests {
     use crate::{
         instruction::{BoolInstruction, Instruction},
@@ -133,10 +133,13 @@ mod property_tests {
             let state = PushState::builder()
                 .with_max_stack_size(1000)
                 .with_program([])
-                .with_bool_values(vec![x, y])
-                .with_int_values(vec![i])
+                .unwrap()
+                .with_bool_values([x, y])
+                .unwrap()
+                .with_int_values([i])
+                .unwrap()
                 .build();
-            let _ = instr.perform(state).unwrap();
+            instr.perform(state).unwrap();
         }
 
         #[test]
@@ -144,7 +147,9 @@ mod property_tests {
             let state = PushState::builder()
                 .with_max_stack_size(1000)
                 .with_program([])
-                .with_bool_values(vec![x, y])
+                .unwrap()
+                .with_bool_values([x, y])
+                .unwrap()
                 .build();
             let result_state = BoolInstruction::And.perform(state).unwrap();
             prop_assert_eq!(result_state.bool.size(), 1);
@@ -156,7 +161,9 @@ mod property_tests {
             let state = PushState::builder()
                 .with_max_stack_size(1000)
                 .with_program([])
-                .with_bool_values(vec![x, y])
+                .unwrap()
+                .with_bool_values([x, y])
+                .unwrap()
                 .build();
             let result_state = BoolInstruction::Implies.perform(state).unwrap();
             prop_assert_eq!(result_state.bool.size(), 1);

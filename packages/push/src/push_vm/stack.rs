@@ -1,3 +1,5 @@
+use collectable::TryExtend;
+
 use crate::{
     error::{Error, InstructionResult},
     instruction::MapInstructionError,
@@ -58,7 +60,7 @@ pub trait HasStack<T> {
     /// the stack in questions; if there aren't we'll generate a fatal
     /// error since that is probably a programming error where an instruction
     /// wasn't implemented properly.
-    ///  
+    ///
     /// # Errors
     ///
     /// Returns a fatal error if we can't actually pop off `num_to_replace`
@@ -80,7 +82,7 @@ pub trait HasStack<T> {
         Self: Sized,
     {
         let stack = self.stack_mut::<T>();
-        match stack.pop_discard(num_to_replace) {
+        match stack.discard(num_to_replace) {
             Ok(()) => self.with_push(value),
             Err(error) => Err(Error::fatal(self, error)),
         }
@@ -134,6 +136,23 @@ where
     }
 }
 
+impl<A> TryExtend<A> for Stack<A> {
+    type Error = StackError;
+
+    fn try_extend<T>(&mut self, iter: &mut T) -> Result<(), Self::Error>
+    where
+        T: Iterator<Item = A>,
+    {
+        // We need the call to `.collect()` to effectively convert the iterable into
+        // something that implements both `ExactSizeIterator` (needed so that `.len()`
+        // doesn't consume the iterator) and `DoubleEndedIterator` (so that `.rev()` works)
+        // in the `self.extend()` call. We can't add those constraints here because we're
+        // implementing their `TryExtend`, which doesn't include those constraints.
+        #[allow(clippy::needless_collect)]
+        self.try_extend(iter.into_iter().collect::<Vec<_>>())
+    }
+}
+
 /// Stack
 ///
 /// It's critical that all mutating stack operations be "transactional" in
@@ -141,23 +160,42 @@ where
 /// OR they perform none of them and return a `StackError`. If this isn't true,
 /// then we can end up with inconsistent states when performing instructions.
 impl<T> Stack<T> {
+    /// Sets the maximum size for this stack. Attempts to add elements that would
+    /// take the stack above this size should return `StackError::Overflow`.
     pub fn set_max_stack_size(&mut self, max_stack_size: usize) {
         self.max_stack_size = max_stack_size;
     }
 
+    /// Returns the maximum size for this stack.
+    #[must_use]
+    pub const fn max_stack_size(&self) -> usize {
+        self.max_stack_size
+    }
+
+    /// Returns the size of this stack.
     #[must_use]
     pub fn size(&self) -> usize {
         self.values.len()
     }
 
+    /// Returns `true` if the stack contains no elements.
+    #[must_use]
     pub fn is_empty(&self) -> bool {
         self.values.is_empty()
     }
 
+    /// Returns `true` if the stack has `max_stack_size()` elements.
+    #[must_use]
     pub fn is_full(&self) -> bool {
         self.size() == self.max_stack_size
     }
 
+    /// Returns a reference to the top value on this stack, or
+    /// an error if the stack is empty.
+    ///
+    /// # Errors
+    ///
+    /// Returns `StackError::Underflow` error if the stack is empty.
     pub fn top(&self) -> Result<&T, StackError> {
         self.values.last().ok_or(StackError::Underflow {
             num_requested: 1,
@@ -165,6 +203,14 @@ impl<T> Stack<T> {
         })
     }
 
+    /// Returns a pair of references to the top two elements of
+    /// the stack, or an error if the stack has less than two
+    /// elements.
+    ///
+    /// # Errors
+    ///
+    /// Returns `StackError::Underflow` error if the stack has less than
+    /// two elements.
     pub fn top2(&self) -> Result<(&T, &T), StackError> {
         if self.size() >= 2 {
             let x = self.top()?;
@@ -184,6 +230,12 @@ impl<T> Stack<T> {
         }
     }
 
+    /// Removes the top element from a stack and returns it, or `StackError::Underflow`
+    /// if it is empty.
+    ///
+    /// # Errors
+    ///
+    /// Returns `StackError::Underflow` if the stack is empty.
     pub fn pop(&mut self) -> Result<T, StackError> {
         self.values.pop().ok_or(StackError::Underflow {
             num_requested: 1,
@@ -191,6 +243,12 @@ impl<T> Stack<T> {
         })
     }
 
+    /// Removes the top two elements from a stack and returns them in a pair.
+    /// Returns `StackError::Underflow` if the stack has fewer than two elements.
+    ///
+    /// # Errors
+    ///
+    /// Returns `StackError::Underflow` if the stack has fewer than two elements.
     pub fn pop2(&mut self) -> Result<(T, T), StackError> {
         if self.size() >= 2 {
             let x = self.pop()?;
@@ -204,7 +262,15 @@ impl<T> Stack<T> {
         }
     }
 
-    pub fn pop_discard(&mut self, num_to_discard: usize) -> Result<(), StackError> {
+    /// Discards `num_to_discard` elements from the top of the stack, returning
+    /// `StackError::StackUnderflow` if there are fewer than `num_to_discard` elements
+    /// on the stack.
+    ///
+    /// # Errors
+    ///
+    /// Returns `StackError::Underflow` if the stack has fewer than `num_to_discard`
+    /// elements on it.
+    pub fn discard(&mut self, num_to_discard: usize) -> Result<(), StackError> {
         let stack_size = self.size();
         if num_to_discard > stack_size {
             return Err(StackError::Underflow {
@@ -223,6 +289,13 @@ impl<T> Stack<T> {
         Ok(())
     }
 
+    /// Pushes `value` onto the top of the stack, returning `StackError::StackOverflow`
+    /// if doing so would exceed the `max_stack_size()` for this stack.
+    ///
+    /// # Errors
+    ///
+    /// Returns `StackError::Overflow` if the stack was already full, i.e., pushing
+    /// on `value` would cause the stack size to exceed `max_stack_size()`.
     pub fn push(&mut self, value: T) -> Result<(), StackError> {
         if self.size() == self.max_stack_size {
             Err(StackError::Overflow {
@@ -242,39 +315,80 @@ impl<T> Stack<T> {
     ///
     /// # Arguments
     ///
-    /// * `values` - A `Vec` holding the values to add to the stack
+    /// * `values` - An implementation of [`IntoIterator`] which
+    /// must also implement both [`ExactSizeIterator`] and
+    /// [`DoubleEndedIterator`]. `values` can be, for example,
+    /// any collection of items of type `T` that can be converted
+    /// into an appropriate iterator, including both [`Vec`] and arrays.
+    ///
+    /// # Errors
+    ///
+    /// - [`StackError::Overflow`] is returned when adding the provided
+    /// elements would cause the stack size to exceed maximum stack size
+    /// for this stack, as set with [`Stack::set_max_stack_size`].
     ///
     /// # Examples
     ///
-    /// ```ignore
-    /// use push::push_vm::push_state::Stack;
+    /// ```
+    /// # use push::push_vm::stack::StackError;
+    /// # use push::push_vm::stack::Stack;
+    /// # use push::push_vm::PushInteger;
+    /// #
     /// let mut stack: Stack<PushInteger> = Stack::default();
     /// assert_eq!(stack.size(), 0);
-    /// stack.extend(vec![5, 8, 9]);
+    ///
+    /// stack.try_extend(vec![5, 8, 9])?;
     /// // Now the top of the stack is 5, followed by 8, then 9 at the bottom.
     /// assert_eq!(stack.size(), 3);
-    /// assert_eq!(stack.top().unwrap(), &5);
-    /// stack.extend(vec![6, 3]);
+    /// assert_eq!(stack.top()?, &5);
+    ///
+    /// stack.try_extend(vec![6, 3])?;
     /// // Now the top of the stack is 6 and the whole stack is 6, 3, 5, 8, 9.
     /// assert_eq!(stack.size(), 5);
-    /// assert_eq!(stack.top().unwrap(), &6);
-    /// ```  
-    pub fn extend<I>(&mut self, values: I)
+    /// assert_eq!(stack.top()?, &6);
+    ///
+    /// # Ok::<(), StackError>(())
+    /// ```
+    pub fn try_extend<I>(&mut self, iter: I) -> Result<(), StackError>
     where
         I: IntoIterator<Item = T>,
-        I::IntoIter: DoubleEndedIterator,
+        // We need the iterator to implement `ExactSizeIterator` so that
+        // `.len()` doesn't consume the iterator, and `DoubleEndedIterator`
+        // so that `.rev()` works.
+        I::IntoIter: ExactSizeIterator + DoubleEndedIterator,
     {
-        self.values.extend(values.into_iter().rev());
+        let iter = iter.into_iter();
+        // Check that adding these items won't overflow the stack.
+        if iter.len() + self.size() > self.max_stack_size {
+            return Err(StackError::Overflow {
+                stack_type: std::any::type_name::<T>(),
+            });
+        }
+        self.values.extend(iter.rev());
+        Ok(())
     }
 }
 
 /// Helper trait to chain instruction operations.
 pub trait StackPush<T, E> {
     /// Updates the state with `T` pushed to the stack.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error of type `E` if pushing this value fails, e.g.,
+    /// if adding this element exceeded the maximum stack size.
     fn with_stack_push<S>(self, state: S) -> InstructionResult<S, E>
     where
         S: HasStack<T>;
 
+    /// Updates the state by replacing the top `num_to_replace` elements
+    /// with `T`.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error of type `E` if the replacement fails. This could
+    /// be, for example, because there aren't `num_to_replace` items on the
+    /// stack, or if adding the new element would exceed the maximum stack size.
     fn with_stack_replace<S>(self, num_to_replace: usize, state: S) -> InstructionResult<S, E>
     where
         S: HasStack<T>;
@@ -306,7 +420,14 @@ where
 }
 
 pub trait StackDiscard<S, E> {
-    fn with_stack_pop_discard<T>(self, num_to_discard: usize) -> InstructionResult<S, E>
+    /// Discards the top `num_to_discard` elements from `S`, returning an error
+    /// of type `E` if that fails.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error of type `E` if this fails, e.g., if there are not
+    /// `num_to_discard` elements in the stack.
+    fn with_stack_discard<T>(self, num_to_discard: usize) -> InstructionResult<S, E>
     where
         S: HasStack<T>;
 }
@@ -315,12 +436,12 @@ impl<S, E> StackDiscard<S, E> for InstructionResult<S, E>
 where
     E: From<StackError>,
 {
-    fn with_stack_pop_discard<T>(self, num_to_discard: usize) -> Self
+    fn with_stack_discard<T>(self, num_to_discard: usize) -> Self
     where
         S: HasStack<T>,
     {
         match self {
-            Ok(mut state) => match state.stack_mut::<T>().pop_discard(num_to_discard) {
+            Ok(mut state) => match state.stack_mut::<T>().discard(num_to_discard) {
                 Ok(()) => Ok(state),
                 // TODO: any::type_name::<T>() to get the type name – put this in Stack
                 // If this fails it's because we tried to pop too many things from the stack.

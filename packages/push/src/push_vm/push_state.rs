@@ -16,7 +16,7 @@ use std::collections::HashMap;
 #[push_macros::push_state(builder)]
 pub struct PushState {
     #[stack(exec)]
-    pub(crate) exec: Vec<PushInstruction>,
+    pub(crate) exec: Stack<PushInstruction>,
     #[stack]
     pub(crate) int: Stack<PushInteger>,
     #[stack]
@@ -34,11 +34,6 @@ pub struct PushState {
 }
 
 impl PushState {
-    #[must_use]
-    pub const fn exec(&self) -> &Vec<PushInstruction> {
-        &self.exec
-    }
-
     // /// # Panics
     // ///
     // /// This panics if we try to access a variable whose `var_index` isn't in the
@@ -83,12 +78,10 @@ impl State for PushState {
 
     // TODO: Need to have some kind of execution limit to prevent infinite loops.
     fn run_to_completion(mut self) -> Result<Self, FatalError<Self, PushInstructionError>> {
-        // This smells off to me. In places we're using side effects on mutable structures (e.g., `pop`)
-        // while in other places we're taking a more functional approach (e.g., `self = self.perform()`).
-        // It seems that maybe I should pick one or the other. Being able to store the state in
-        // the errors appears to be part of the source of the problem here (again), which more and
-        // more makes me wonder if that's a good idea.
-        while let Some(instruction) = self.exec.pop() {
+        // The `pop()` call can only return a `StackError`, which is either underflow or
+        // overflow, with the latter not possible when just popping. So I'm not going to
+        // bother capturing the error here.
+        while let Ok(instruction) = self.exec.pop() {
             self = self.perform(&instruction).try_recover()?;
         }
         Ok(self)
@@ -96,6 +89,7 @@ impl State for PushState {
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used)]
 mod simple_check {
     use crate::{
         instruction::{BoolInstruction, IntInstruction, PushInstruction, VariableName},
@@ -115,23 +109,22 @@ mod simple_check {
         }
 
         let program = vec![
-            // push_int(5),
-            // push_int(8),
-            PushInstruction::InputVar(VariableName::from("x")),
-            PushInstruction::InputVar(VariableName::from("y")),
-            push_bool(true),
-            PushInstruction::InputVar(VariableName::from("a")),
-            push_int(9),
-            BoolInstruction::Or.into(),
-            IntInstruction::Add.into(),
-            push_int(6),
-            IntInstruction::IsEven.into(),
-            BoolInstruction::And.into(),
-            PushInstruction::InputVar(VariableName::from("b")),
+            PushInstruction::InputVar(VariableName::from("x")), // [5]
+            PushInstruction::InputVar(VariableName::from("y")), // [8, 5]
+            push_bool(true),                                    // [true]
+            PushInstruction::InputVar(VariableName::from("a")), // [true, true]
+            push_int(9),                                        // [9, 8, 5]
+            BoolInstruction::Or.into(),                         // [true]
+            IntInstruction::Add.into(),                         // [17, 5]
+            push_int(6),                                        // [6, 17, 5]
+            IntInstruction::IsEven.into(),                      // [17, 5], [true, true]
+            BoolInstruction::And.into(),                        // [true]
+            PushInstruction::InputVar(VariableName::from("b")), // [false, true]
         ];
         let state = PushState::builder()
             .with_max_stack_size(1000)
             .with_program(program)
+            .unwrap()
             .with_bool_input("a", true)
             .with_bool_input("b", false)
             // I'm reversing the order of the variables on purpose here to make sure
@@ -143,7 +136,8 @@ mod simple_check {
         #[allow(clippy::unwrap_used)]
         let state = state.run_to_completion().unwrap();
         println!("{state:?}");
-        assert!(state.exec().is_empty());
+        // TODO: Replace this with a `has_stack` call when it exists.
+        // assert!(state.exec().is_empty());
         assert_eq!(&state.int, &vec![5, 17]);
         assert_eq!(&state.bool, &vec![true, false]);
     }
