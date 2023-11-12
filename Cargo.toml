@@ -16,3 +16,6 @@ edition = "2021"
 
 [profile.release]
 debug = true
+
+[workspace.dependencies]
+push_macros = { path = "packages/push-macros" }

@@ -60,7 +60,13 @@ fn main() -> Result<()> {
     let scorer = |program: &Plushy| -> TestResults<test_results::Error> {
         let errors: TestResults<test_results::Error> = (0..10)
             .map(|input| {
-                let state = PushState::builder(program.get_instructions())
+                #[allow(clippy::unwrap_used)]
+                let state = PushState::builder()
+                    .with_max_stack_size(1000)
+                    .with_program(program.get_instructions())
+                    // This will return an error if the program is longer than the allowed max stack size.
+                    // We arguably should check that and return an error here.
+                    .unwrap()
                     .with_int_input("x", input)
                     .build();
                 // This is the degree 3 problem in https://github.com/lspector/Clojush/blob/master/src/clojush/problems/demos/simple_regression.clj

@@ -9,7 +9,11 @@ use strum::IntoEnumIterator;
 fn add() {
     let x = 409;
     let y = 512;
-    let mut state = PushState::builder([]).build();
+    let mut state = PushState::builder()
+        .with_max_stack_size(100)
+        .with_program([])
+        .unwrap()
+        .build();
     state.stack_mut::<PushInteger>().push(y).unwrap();
     state.stack_mut::<PushInteger>().push(x).unwrap();
     let result = IntInstruction::Add.perform(state).unwrap();
@@ -21,7 +25,11 @@ fn add() {
 fn add_overflows() {
     let x = 4_098_586_571_925_584_936;
     let y = 5_124_785_464_929_190_872;
-    let mut state = PushState::builder([]).build();
+    let mut state = PushState::builder()
+        .with_max_stack_size(100)
+        .with_program([])
+        .unwrap()
+        .build();
     state.stack_mut::<PushInteger>().push(y).unwrap();
     state.stack_mut::<PushInteger>().push(x).unwrap();
     let result = IntInstruction::Add.perform(state).unwrap_err();
@@ -38,7 +46,11 @@ fn add_overflows() {
 #[test]
 fn inc_overflows() {
     let x = PushInteger::MAX;
-    let mut state = PushState::builder([]).build();
+    let mut state = PushState::builder()
+        .with_max_stack_size(100)
+        .with_program([])
+        .unwrap()
+        .build();
     state.stack_mut::<PushInteger>().push(x).unwrap();
     let result = IntInstruction::Inc.perform(state).unwrap_err();
     assert_eq!(result.state().stack::<PushInteger>().size(), 1);
@@ -59,7 +71,11 @@ fn inc_overflows() {
 #[test]
 fn dec_overflows() {
     let x = PushInteger::MIN;
-    let mut state = PushState::builder([]).build();
+    let mut state = PushState::builder()
+        .with_max_stack_size(100)
+        .with_program([])
+        .unwrap()
+        .build();
     state.stack_mut::<PushInteger>().push(x).unwrap();
     let result = IntInstruction::Dec.perform(state).unwrap_err();
     assert_eq!(result.state().stack::<PushInteger>().size(), 1);
@@ -86,7 +102,11 @@ proptest! {
 
     #[test]
     fn negate(x in proptest::num::i64::ANY) {
-        let mut state = PushState::builder([]).build();
+        let mut state = PushState::builder()
+            .with_max_stack_size(100)
+            .with_program([])
+            .unwrap()
+            .build();
         state.stack_mut::<PushInteger>().push(x).unwrap();
         let result = IntInstruction::Negate.perform(state).unwrap();
         prop_assert_eq!(result.stack::<PushInteger>().size(), 1);
@@ -95,7 +115,11 @@ proptest! {
 
     #[test]
     fn abs(x in proptest::num::i64::ANY) {
-        let mut state = PushState::builder([]).build();
+        let mut state = PushState::builder()
+            .with_max_stack_size(100)
+            .with_program([])
+            .unwrap()
+            .build();
         state.stack_mut::<PushInteger>().push(x).unwrap();
         let result = IntInstruction::Abs.perform(state).unwrap();
         prop_assert_eq!(result.stack::<PushInteger>().size(), 1);
@@ -104,7 +128,11 @@ proptest! {
 
     #[test]
     fn sqr(x in proptest::num::i64::ANY) {
-        let mut state = PushState::builder([]).build();
+        let mut state = PushState::builder()
+            .with_max_stack_size(100)
+            .with_program([])
+            .unwrap()
+            .build();
         state.stack_mut::<PushInteger>().push(x).unwrap();
         let result = IntInstruction::Square.perform(state);
         if let Some(x_squared) = x.checked_mul(x) {
@@ -128,7 +156,11 @@ proptest! {
 
     #[test]
     fn add_doesnt_crash(x in proptest::num::i64::ANY, y in proptest::num::i64::ANY) {
-        let mut state = PushState::builder([]).build();
+        let mut state = PushState::builder()
+            .with_max_stack_size(100)
+            .with_program([])
+            .unwrap()
+            .build();
         state.stack_mut::<PushInteger>().push(y).unwrap();
         state.stack_mut::<PushInteger>().push(x).unwrap();
         let _ = IntInstruction::Add.perform(state);
@@ -136,7 +168,11 @@ proptest! {
 
     #[test]
     fn add_adds_or_does_nothing(x in proptest::num::i64::ANY, y in proptest::num::i64::ANY) {
-        let mut state = PushState::builder([]).build();
+        let mut state = PushState::builder()
+            .with_max_stack_size(100)
+            .with_program([])
+            .unwrap()
+            .build();
         state.stack_mut::<PushInteger>().push(y).unwrap();
         state.stack_mut::<PushInteger>().push(x).unwrap();
         let result = IntInstruction::Add.perform(state);
@@ -165,7 +201,11 @@ proptest! {
 
     #[test]
     fn subtract_subs_or_does_nothing(x in proptest::num::i64::ANY, y in proptest::num::i64::ANY) {
-        let mut state = PushState::builder([]).build();
+        let mut state = PushState::builder()
+            .with_max_stack_size(100)
+            .with_program([])
+            .unwrap()
+            .build();
         state.stack_mut::<PushInteger>().push(y).unwrap();
         state.stack_mut::<PushInteger>().push(x).unwrap();
         let result = IntInstruction::Subtract.perform(state);
@@ -194,7 +234,11 @@ proptest! {
 
     #[test]
     fn multiply_muls_or_does_nothing(x in proptest::num::i64::ANY, y in proptest::num::i64::ANY) {
-        let mut state = PushState::builder([]).build();
+        let mut state = PushState::builder()
+            .with_max_stack_size(100)
+            .with_program([])
+            .unwrap()
+            .build();
         state.stack_mut::<PushInteger>().push(y).unwrap();
         state.stack_mut::<PushInteger>().push(x).unwrap();
         let result = IntInstruction::Multiply.perform(state);
@@ -223,7 +267,11 @@ proptest! {
 
     #[test]
     fn protected_divide_zero_denominator(x in proptest::num::i64::ANY) {
-        let mut state = PushState::builder([]).build();
+        let mut state = PushState::builder()
+            .with_max_stack_size(100)
+            .with_program([])
+            .unwrap()
+            .build();
         state.stack_mut::<PushInteger>().push(0).unwrap();
         state.stack_mut::<PushInteger>().push(x).unwrap();
         let result = IntInstruction::ProtectedDivide.perform(state);
@@ -235,7 +283,11 @@ proptest! {
 
     #[test]
     fn protected_divide_divs_or_does_nothing(x in proptest::num::i64::ANY, y in proptest::num::i64::ANY) {
-        let mut state = PushState::builder([]).build();
+        let mut state = PushState::builder()
+            .with_max_stack_size(100)
+            .with_program([])
+            .unwrap()
+            .build();
         state.stack_mut::<PushInteger>().push(y).unwrap();
         state.stack_mut::<PushInteger>().push(x).unwrap();
         let result = IntInstruction::ProtectedDivide.perform(state);
@@ -264,7 +316,11 @@ proptest! {
 
     #[test]
     fn mod_zero_denominator(x in proptest::num::i64::ANY) {
-        let mut state = PushState::builder([]).build();
+        let mut state =PushState::builder()
+            .with_max_stack_size(100)
+            .with_program([])
+            .unwrap()
+            .build();
         state.stack_mut::<PushInteger>().push(0).unwrap();
         state.stack_mut::<PushInteger>().push(x).unwrap();
         let result = IntInstruction::Mod.perform(state);
@@ -276,7 +332,11 @@ proptest! {
 
     #[test]
     fn mod_rems_or_does_nothing(x in proptest::num::i64::ANY, y in proptest::num::i64::ANY) {
-        let mut state = PushState::builder([]).build();
+        let mut state =PushState::builder()
+            .with_max_stack_size(100)
+            .with_program([])
+            .unwrap()
+            .build();
         state.stack_mut::<PushInteger>().push(y).unwrap();
         state.stack_mut::<PushInteger>().push(x).unwrap();
         let result = IntInstruction::Mod.perform(state);
@@ -309,7 +369,11 @@ proptest! {
 
     #[test]
     fn inc_does_not_crash(x in proptest::num::i64::ANY) {
-        let mut state = PushState::builder([]).build();
+        let mut state = PushState::builder()
+            .with_max_stack_size(100)
+            .with_program([])
+            .unwrap()
+            .build();
         state.stack_mut::<PushInteger>().push(x).unwrap();
         let _ = IntInstruction::Inc.perform(state);
     }
@@ -320,7 +384,11 @@ proptest! {
             x in proptest::num::i64::ANY,
             y in proptest::num::i64::ANY,
             b in proptest::bool::ANY) {
-        let mut state = PushState::builder([]).build();
+        let mut state = PushState::builder()
+            .with_max_stack_size(100)
+            .with_program([])
+            .unwrap()
+            .build();
         state.stack_mut::<PushInteger>().push(y).unwrap();
         state.stack_mut::<PushInteger>().push(x).unwrap();
         state.stack_mut::<bool>().push(b).unwrap();
