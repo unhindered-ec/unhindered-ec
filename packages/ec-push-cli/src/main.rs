@@ -5,6 +5,8 @@
 
 pub mod args;
 
+use std::ops::Not;
+
 use crate::args::{Args, RunModel};
 use anyhow::{ensure, Result};
 use clap::Parser;
@@ -32,13 +34,12 @@ use push::{
     push_vm::{HasStack, PushInteger},
 };
 use rand::thread_rng;
-use std::ops::Not;
 
 fn main() -> Result<()> {
     // Using `Error` in `TestResults<Error>` will have the run favor smaller
     // values, where using `Score` (e.g., `TestResults<Score>`) will have the run
     // favor larger values.
-    type Pop = Vec<EcIndividual<Plushy, TestResults<test_results::Error>>>;
+    type Pop = Vec<EcIndividual<Plushy, TestResults<test_results::Error<i64>>>>;
 
     // The penalty value to use when an evolved program doesn't have an expected
     // "return" value on the appropriate stack at the end of its execution.
@@ -57,8 +58,8 @@ fn main() -> Result<()> {
      *
      * The target polynomial is x^3 - 2x^2 - x
      */
-    let scorer = |program: &Plushy| -> TestResults<test_results::Error> {
-        let errors: TestResults<test_results::Error> = (0..10)
+    let scorer = |program: &Plushy| -> TestResults<test_results::Error<i64>> {
+        let errors: TestResults<test_results::Error<i64>> = (0..10)
             .map(|input| {
                 #[allow(clippy::unwrap_used)]
                 let state = PushState::builder()
@@ -139,8 +140,8 @@ fn main() -> Result<()> {
 
     let mut generation = Generation::new(make_new_individual, population);
 
-    // // TODO: It might be useful to insert some kind of logging system so we can
-    // //   make this less imperative in nature.
+    // TODO: It might be useful to insert some kind of logging system so we can
+    //   make this less imperative in nature.
 
     for generation_number in 0..args.num_generations {
         match args.run_model {
