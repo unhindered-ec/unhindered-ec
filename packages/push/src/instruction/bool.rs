@@ -10,6 +10,7 @@ use std::ops::Not;
 use strum_macros::EnumIter;
 
 #[derive(Debug, strum_macros::Display, Clone, PartialEq, Eq, EnumIter)]
+#[non_exhaustive]
 pub enum BoolInstruction {
     Push(bool),
     Not,
