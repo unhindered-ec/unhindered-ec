@@ -12,13 +12,17 @@ use std::collections::HashMap;
 //   implementation that just forwards to the a Clojure implementation
 //   or Python implementation for comparison/testing purposes.
 
-#[derive(Default, Debug, Eq, PartialEq, Clone)]
+// Because `f64` doesn't impl `Eq`, having a float stack means
+// that `PushState` also can't impl `Eq`.
+#[derive(Default, Debug, Clone)]
 #[push_macros::push_state(builder)]
 pub struct PushState {
     #[stack(exec)]
     pub(crate) exec: Stack<PushInstruction>,
     #[stack]
     pub(crate) int: Stack<PushInteger>,
+    #[stack]
+    pub(crate) float: Stack<f64>,
     #[stack]
     pub(crate) bool: Stack<bool>,
     // The Internet suggests that when you have fewer than 15 entries,
