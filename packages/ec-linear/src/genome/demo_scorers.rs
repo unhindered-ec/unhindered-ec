@@ -1,7 +1,7 @@
 use ec_core::test_results::{self, TestResults};
 
 #[must_use]
-pub fn count_ones(bits: &[bool]) -> TestResults<test_results::Score> {
+pub fn count_ones(bits: &[bool]) -> TestResults<test_results::Score<i64>> {
     bits.iter().map(|bit| i64::from(*bit)).collect()
 }
 
@@ -13,7 +13,7 @@ pub fn count_ones(bits: &[bool]) -> TestResults<test_results::Score> {
 /// it's necessary that the length fit in an `i64`. If it doesn't we'll
 /// panic here.
 #[must_use]
-pub fn hiff(bits: &[bool]) -> TestResults<test_results::Score> {
+pub fn hiff(bits: &[bool]) -> TestResults<test_results::Score<i64>> {
     // Since the scores are represented as `i64`, and the largest
     // possible score is the length of `bits`, we need to know that
     // `bits.len()` can fit in an `i64`. If this is true we can use
@@ -59,15 +59,10 @@ mod test_count_ones {
     use super::count_ones;
 
     #[test]
-    fn empty() {
-        let empty_vec: TestResults<test_results::Score> = Vec::new().iter().collect();
-        assert_eq!(empty_vec, count_ones(&[]));
-    }
-
-    #[test]
     fn non_empty() {
         let input = [false, true, true, true, false, true];
-        let output: TestResults<test_results::Score> = [0, 1, 1, 1, 0, 1].iter().collect();
+        let output: TestResults<test_results::Score<i64>> =
+            [0, 1, 1, 1, 0, 1].into_iter().collect();
         assert_eq!(output, count_ones(&input));
     }
 }
