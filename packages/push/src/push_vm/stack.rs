@@ -315,7 +315,7 @@ impl<T> Stack<T> {
     ///
     /// # Arguments
     ///
-    /// * `values` - An implementation of [`IntoIterator`] which
+    /// - `values` - An implementation of [`IntoIterator`] which
     /// must also implement both [`ExactSizeIterator`] and
     /// [`DoubleEndedIterator`]. `values` can be, for example,
     /// any collection of items of type `T` that can be converted
