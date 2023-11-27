@@ -153,8 +153,8 @@ impl Debug for PushInstruction {
         match self {
             Self::InputVar(instruction) => write!(f, "{instruction}"),
             Self::BoolInstruction(instruction) => write!(f, "Bool-{instruction}"),
-            Self::IntInstruction(instruction) => write!(f, "Int-{instruction}"),
-            Self::FloatInstruction(instruction) => write!(f, "Float-{instruction}"),
+            Self::IntInstruction(instruction) => write!(f, "Int-{instruction:?}"),
+            Self::FloatInstruction(instruction) => write!(f, "Float-{instruction:?}"),
         }
     }
 }
