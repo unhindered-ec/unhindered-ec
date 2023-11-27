@@ -1,3 +1,5 @@
+use ordered_float::OrderedFloat;
+
 use crate::{
     error::InstructionResult,
     push_vm::{push_state::PushState, stack::StackError, PushInteger},
@@ -171,7 +173,7 @@ impl PushInstruction {
     }
 
     #[must_use]
-    pub fn push_float(f: f64) -> Self {
+    pub fn push_float(f: OrderedFloat<f64>) -> Self {
         FloatInstruction::Push(f).into()
     }
 }

@@ -1,6 +1,5 @@
 use super::{Instruction, PushInstruction, PushInstructionError};
 use crate::{
-    error::Error,
     error::InstructionResult,
     instruction::MapInstructionError,
     push_vm::{stack::StackPush, HasStack},

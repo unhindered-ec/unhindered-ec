@@ -1,3 +1,5 @@
+use ordered_float::OrderedFloat;
+
 use crate::{
     error::{stateful::FatalError, try_recover::TryRecover, InstructionResult},
     instruction::{Instruction, PushInstruction, PushInstructionError, VariableName},
@@ -22,7 +24,7 @@ pub struct PushState {
     #[stack]
     pub(crate) int: Stack<PushInteger>,
     #[stack]
-    pub(crate) float: Stack<f64>,
+    pub(crate) float: Stack<OrderedFloat<f64>>,
     #[stack]
     pub(crate) bool: Stack<bool>,
     // The Internet suggests that when you have fewer than 15 entries,
