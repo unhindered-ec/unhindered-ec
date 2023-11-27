@@ -3,7 +3,7 @@ use crate::{instruction::MapInstructionError, push_vm::HasStack};
 use super::{Instruction, PushInstruction, PushInstructionError};
 use strum_macros::EnumIter;
 
-#[derive(Debug, strum_macros::Display, Copy, Clone, EnumIter)]
+#[derive(Debug, strum_macros::Display, Copy, Clone, EnumIter, Eq, PartialEq)]
 #[non_exhaustive]
 pub enum FloatInstruction {
     Push(f64),

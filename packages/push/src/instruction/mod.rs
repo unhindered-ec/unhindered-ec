@@ -139,7 +139,7 @@ mod variable_name_test {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Eq, PartialEq)]
 #[non_exhaustive]
 pub enum PushInstruction {
     InputVar(VariableName),

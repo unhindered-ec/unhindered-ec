@@ -6,7 +6,7 @@ use ec_core::{
 use ec_linear::genome::Linear;
 use rand::rngs::ThreadRng;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub struct Plushy {
     instructions: Vec<PushInstruction>,
 }
