@@ -3,9 +3,8 @@
 [workspace]
 resolver = "2"
 
-members = [
-    "packages/*",
-]
+members = ["packages/*"]
+exclude = ["packages/rust-lexicase"]
 
 [workspace.package]
 version = "0.1.0"
