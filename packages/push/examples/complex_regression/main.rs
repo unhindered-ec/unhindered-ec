@@ -25,9 +25,10 @@ use ec_core::{
     test_results::{self, TestResults},
 };
 use ec_linear::mutator::umad::Umad;
+use ordered_float::OrderedFloat;
 use push::{
     genome::plushy::Plushy,
-    instruction::{IntInstruction, PushInstruction, VariableName},
+    instruction::{FloatInstruction, IntInstruction, PushInstruction, VariableName},
     push_vm::{push_state::PushState, State},
     push_vm::{HasStack, PushInteger},
 };
@@ -43,11 +44,11 @@ fn main() -> Result<()> {
     // Using `Error` in `TestResults<Error>` will have the run favor smaller
     // values, where using `Score` (e.g., `TestResults<Score>`) will have the run
     // favor larger values.
-    type Pop = Vec<EcIndividual<Plushy, TestResults<test_results::Error>>>;
+    type Pop = Vec<EcIndividual<Plushy, TestResults<test_results::Error<f64>>>>;
 
     // The penalty value to use when an evolved program doesn't have an expected
     // "return" value on the appropriate stack at the end of its execution.
-    const PENALTY_VALUE: i64 = 1_000;
+    const PENALTY_VALUE: f64 = 1_000.0;
 
     let args = Args::parse();
 
@@ -63,8 +64,8 @@ fn main() -> Result<()> {
      *
      * The target polynomial is (x^3 + 1)^3 + 1
      */
-    let scorer = |program: &Plushy| -> TestResults<test_results::Error> {
-        let errors: TestResults<test_results::Error> = training_cases
+    let scorer = |program: &Plushy| -> TestResults<test_results::Error<OrderedFloat<f64>>> {
+        let errors: TestResults<test_results::Error<OrderedFloat<f64>>> = training_cases
             .iter()
             .map(|input| {
                 #[allow(clippy::unwrap_used)]
@@ -80,13 +81,15 @@ fn main() -> Result<()> {
                 let expected = sub_expr * sub_expr * sub_expr + 1.0;
                 #[allow(clippy::option_if_let_else)]
                 match state.run_to_completion() {
-                    Ok(final_state) => final_state
-                        .stack::<f64>()
-                        .top()
-                        .map_or(PENALTY_VALUE, |answer| (answer - expected).abs()),
+                    Ok(final_state) => OrderedFloat(
+                        final_state
+                            .stack::<f64>()
+                            .top()
+                            .map_or(PENALTY_VALUE, |answer| (answer - expected).abs()),
+                    ),
                     Err(_) => {
                         // Do some logging, perhaps?
-                        PENALTY_VALUE
+                        OrderedFloat(PENALTY_VALUE)
                     }
                 }
             })
@@ -99,10 +102,10 @@ fn main() -> Result<()> {
     let mut rng = thread_rng();
 
     let mut instruction_set = vec![
-        PushInstruction::IntInstruction(IntInstruction::Add),
-        PushInstruction::IntInstruction(IntInstruction::Subtract),
-        PushInstruction::IntInstruction(IntInstruction::Multiply),
-        PushInstruction::IntInstruction(IntInstruction::ProtectedDivide),
+        PushInstruction::FloatInstruction(FloatInstruction::Add),
+        PushInstruction::FloatInstruction(FloatInstruction::Subtract),
+        PushInstruction::FloatInstruction(FloatInstruction::Multiply),
+        PushInstruction::FloatInstruction(FloatInstruction::ProtectedDivide),
     ];
     instruction_set.push(PushInstruction::InputVar(VariableName::from("x")));
 
@@ -151,7 +154,7 @@ fn main() -> Result<()> {
         //  args.num_generations-1.
         println!("Generation {generation_number:2} best is {best:#?}");
 
-        if best.test_results.total_result.error == 0 {
+        if best.test_results.total_result.error == OrderedFloat(0.0) {
             break;
         }
     }

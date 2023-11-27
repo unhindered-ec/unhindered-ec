@@ -22,6 +22,7 @@ thiserror = "1.0.44"
 embed-doc-image = "0.1.4"
 push_macros = { workspace = true, optional = true }
 collectable = "0.0.2"
+ordered-float = "4.1.1"
 
 [dev-dependencies]
 clap = { version = "4.3.11", features = ["derive"] }

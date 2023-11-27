@@ -7,6 +7,10 @@ use strum_macros::EnumIter;
 #[non_exhaustive]
 pub enum FloatInstruction {
     Push(f64),
+    Add,
+    Subtract,
+    Multiply,
+    ProtectedDivide,
 }
 
 impl From<FloatInstruction> for PushInstruction {
@@ -24,6 +28,7 @@ where
     fn perform(&self, state: S) -> crate::error::InstructionResult<S, Self::Error> {
         match self {
             Self::Push(f) => state.with_push(*f).map_err_into(),
+            _ => todo!(),
         }
     }
 }
