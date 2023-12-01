@@ -1,6 +1,9 @@
-use proptest::{prop_assert_eq, proptest};
 use ordered_float::OrderedFloat;
-use push::{instruction::{FloatInstruction, Instruction}, push_vm::{push_state::PushState, HasStack}};
+use proptest::{prop_assert_eq, proptest};
+use push::{
+    instruction::{FloatInstruction, Instruction},
+    push_vm::{push_state::PushState, HasStack},
+};
 
 #[test]
 fn add() {
