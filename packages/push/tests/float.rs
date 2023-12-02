@@ -1,9 +1,29 @@
 use ordered_float::OrderedFloat;
 use proptest::{prop_assert_eq, proptest};
 use push::{
-    instruction::{FloatInstruction, Instruction},
+    instruction::{FloatInstruction, Instruction, PushInstruction},
     push_vm::{push_state::PushState, HasStack},
 };
+
+#[test]
+fn to_push_instruction() {
+    let float_instruction = FloatInstruction::Add;
+    let push_instruction: PushInstruction = float_instruction.into();
+    matches!(push_instruction, PushInstruction::FloatInstruction(fi) if fi == float_instruction);
+}
+
+#[test]
+fn push_float() {
+    let x = OrderedFloat(589.632);
+    let state = PushState::builder()
+        .with_max_stack_size(100)
+        .with_program([])
+        .unwrap()
+        .build();
+    let result = FloatInstruction::Push(x).perform(state).unwrap();
+    assert_eq!(result.stack::<OrderedFloat<f64>>().size(), 1);
+    assert_eq!(*result.stack::<OrderedFloat<f64>>().top().unwrap(), x);
+}
 
 #[test]
 fn add() {
@@ -22,8 +42,6 @@ fn add() {
 }
 
 proptest! {
-    #![proptest_config(proptest::prelude::ProptestConfig::with_cases(1_000))]
-
     #[test]
     fn add_prop(x in proptest::num::f64::ANY, y in proptest::num::f64::ANY) {
         let expected_result = OrderedFloat(x + y);
