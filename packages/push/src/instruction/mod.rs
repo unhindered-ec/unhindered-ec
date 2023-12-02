@@ -1,13 +1,16 @@
+use ordered_float::OrderedFloat;
+
 use crate::{
     error::InstructionResult,
     push_vm::{push_state::PushState, stack::StackError, PushInteger},
 };
 use std::{fmt::Debug, fmt::Display, sync::Arc};
 
-pub use self::{bool::BoolInstruction, int::IntInstruction};
+pub use self::{bool::BoolInstruction, float::FloatInstruction, int::IntInstruction};
 pub use self::{bool::BoolInstructionError, int::IntInstructionError};
 
 mod bool;
+mod float;
 mod int;
 
 /*
@@ -48,7 +51,7 @@ pub enum PushInstructionError {
 /// the inner error types of an `InstructionResult`, preserving
 /// the other fields in `Error`.
 pub trait MapInstructionError<S, E> {
-    ///  
+    ///
     /// # Errors
     ///
     /// This always returns an error type.
@@ -138,19 +141,22 @@ mod variable_name_test {
     }
 }
 
-#[derive(Clone, PartialEq, Eq)]
+#[derive(Clone, Eq, PartialEq)]
+#[non_exhaustive]
 pub enum PushInstruction {
     InputVar(VariableName),
     BoolInstruction(BoolInstruction),
     IntInstruction(IntInstruction),
+    FloatInstruction(FloatInstruction),
 }
 
 impl Debug for PushInstruction {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::InputVar(arg0) => write!(f, "{arg0}"),
-            Self::BoolInstruction(arg0) => write!(f, "Bool-{arg0}"),
-            Self::IntInstruction(arg0) => write!(f, "Int-{arg0}"),
+            Self::InputVar(instruction) => write!(f, "{instruction}"),
+            Self::BoolInstruction(instruction) => write!(f, "Bool-{instruction}"),
+            Self::IntInstruction(instruction) => write!(f, "Int-{instruction:?}"),
+            Self::FloatInstruction(instruction) => write!(f, "Float-{instruction:?}"),
         }
     }
 }
@@ -164,6 +170,11 @@ impl PushInstruction {
     #[must_use]
     pub fn push_int(i: PushInteger) -> Self {
         IntInstruction::Push(i).into()
+    }
+
+    #[must_use]
+    pub fn push_float(f: OrderedFloat<f64>) -> Self {
+        FloatInstruction::Push(f).into()
     }
 }
 
@@ -179,6 +190,7 @@ impl Instruction<PushState> for PushInstruction {
             }
             Self::BoolInstruction(i) => i.perform(state),
             Self::IntInstruction(i) => i.perform(state),
+            Self::FloatInstruction(i) => i.perform(state),
         }
     }
 }

@@ -10,6 +10,7 @@ use std::ops::Neg;
 use strum_macros::EnumIter;
 
 #[derive(Debug, strum_macros::Display, Copy, Clone, PartialEq, Eq, EnumIter)]
+#[non_exhaustive]
 pub enum IntInstruction {
     Push(PushInteger),
 

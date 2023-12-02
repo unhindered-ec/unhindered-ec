@@ -6,7 +6,7 @@ use ec_core::{
 use ec_linear::genome::Linear;
 use rand::rngs::ThreadRng;
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub struct Plushy {
     instructions: Vec<PushInstruction>,
 }
@@ -128,7 +128,7 @@ mod test {
             .unwrap()
             .instructions
             .iter()
-            .filter(|c| **c == PushInstruction::InputVar(VariableName::from("x")))
+            .filter(|c| matches!(c, PushInstruction::InputVar(v) if v == &VariableName::from("x")))
             .count();
         assert!(
             num_inputs > 0,

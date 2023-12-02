@@ -1,3 +1,5 @@
 /target
 
 packages/rust-lexicase/.env/
+
+tarpaulin-report.html
