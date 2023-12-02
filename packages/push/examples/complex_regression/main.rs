@@ -150,6 +150,7 @@ fn main() -> Result<()> {
         println!("Generation {generation_number:2} best is {best:#?}");
 
         if best.test_results.total_result.error == OrderedFloat(0.0) {
+            println!("SUCCESS");
             break;
         }
     }
