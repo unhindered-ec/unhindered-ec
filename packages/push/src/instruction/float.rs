@@ -20,6 +20,7 @@ pub enum FloatInstruction {
     ProtectedDivide,
     Equal,
     NotEqual,
+    Dup,
 }
 
 impl From<FloatInstruction> for PushInstruction {
@@ -107,6 +108,24 @@ where
                         "We failed to implement a boolean-valued operation on floats: {self:?}"
                     ),
                 }
+            }
+
+            Self::Dup => {
+                if state.stack::<OrderedFloat<f64>>().is_full() {
+                    return Err(Error::fatal(
+                        state,
+                        StackError::Overflow {
+                            stack_type: "float",
+                        },
+                    ));
+                }
+                let float_stack: &mut Stack<OrderedFloat<f64>> =
+                    state.stack_mut::<OrderedFloat<f64>>();
+                float_stack
+                    .top()
+                    .map_err(Into::<PushInstructionError>::into)
+                    .cloned()
+                    .with_stack_push(state)
             }
         }
     }
