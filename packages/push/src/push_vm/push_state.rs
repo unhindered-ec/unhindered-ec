@@ -97,8 +97,12 @@ impl State for PushState {
 #[cfg(test)]
 #[allow(clippy::unwrap_used)]
 mod simple_check {
+    use ordered_float::OrderedFloat;
+
     use crate::{
-        instruction::{BoolInstruction, IntInstruction, PushInstruction, VariableName},
+        instruction::{
+            BoolInstruction, FloatInstruction, IntInstruction, PushInstruction, VariableName,
+        },
         push_vm::push_state::{PushInteger, PushState},
     };
 
@@ -114,6 +118,10 @@ mod simple_check {
             PushInstruction::push_int(i)
         }
 
+        fn push_float(f: f64) -> PushInstruction {
+            PushInstruction::push_float(OrderedFloat(f))
+        }
+
         let program = vec![
             PushInstruction::InputVar(VariableName::from("x")), // [5]
             PushInstruction::InputVar(VariableName::from("y")), // [8, 5]
@@ -126,6 +134,11 @@ mod simple_check {
             IntInstruction::IsEven.into(),                      // [17, 5], [true, true]
             BoolInstruction::And.into(),                        // [true]
             PushInstruction::InputVar(VariableName::from("b")), // [false, true]
+            push_float(3.5),                                    // [3.5]
+            FloatInstruction::Dup.into(),                       // [3.5, 3.5]
+            FloatInstruction::Multiply.into(),                  // [12.25]
+            PushInstruction::InputVar(VariableName::from("f")), // [12.25, 0.75]
+            FloatInstruction::Add.into(),                       // [13.0]
         ];
         let state = PushState::builder()
             .with_max_stack_size(1000)
@@ -137,14 +150,15 @@ mod simple_check {
             // that order doesn't matter.
             .with_int_input("y", 8)
             .with_int_input("x", 5)
+            .with_float_input("f", OrderedFloat(0.75))
             .build();
         println!("{state:?}");
         #[allow(clippy::unwrap_used)]
         let state = state.run_to_completion().unwrap();
         println!("{state:?}");
-        // TODO: Replace this with a `has_stack` call when it exists.
-        // assert!(state.exec().is_empty());
+        assert!(state.exec.is_empty());
         assert_eq!(&state.int, &vec![5, 17]);
         assert_eq!(&state.bool, &vec![true, false]);
+        assert_eq!(&state.float, &vec![OrderedFloat(13.0)]);
     }
 }
