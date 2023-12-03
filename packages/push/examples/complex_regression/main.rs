@@ -99,6 +99,7 @@ fn main() -> Result<()> {
         PushInstruction::FloatInstruction(FloatInstruction::Subtract),
         PushInstruction::FloatInstruction(FloatInstruction::Multiply),
         PushInstruction::FloatInstruction(FloatInstruction::ProtectedDivide),
+        PushInstruction::FloatInstruction(FloatInstruction::Dup),
         PushInstruction::FloatInstruction(FloatInstruction::Push(OrderedFloat(0.0))),
         PushInstruction::FloatInstruction(FloatInstruction::Push(OrderedFloat(1.0))),
     ];
