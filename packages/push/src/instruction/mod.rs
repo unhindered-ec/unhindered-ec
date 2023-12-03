@@ -1,8 +1,8 @@
 use ordered_float::OrderedFloat;
 
 use crate::{
-    error::InstructionResult,
-    push_vm::{push_state::PushState, stack::StackError, PushInteger},
+    error::{Error, InstructionResult},
+    push_vm::{push_state::PushState, stack::StackError, HasStack, PushInteger},
 };
 use std::{fmt::Debug, fmt::Display, sync::Arc};
 
@@ -145,6 +145,7 @@ mod variable_name_test {
 #[non_exhaustive]
 pub enum PushInstruction {
     InputVar(VariableName),
+    Block(Vec<PushInstruction>),
     BoolInstruction(BoolInstruction),
     IntInstruction(IntInstruction),
     FloatInstruction(FloatInstruction),
@@ -154,6 +155,7 @@ impl Debug for PushInstruction {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::InputVar(instruction) => write!(f, "{instruction}"),
+            Self::Block(block) => write!(f, "{block:?}"),
             Self::BoolInstruction(instruction) => write!(f, "Bool-{instruction}"),
             Self::IntInstruction(instruction) => write!(f, "Int-{instruction:?}"),
             Self::FloatInstruction(instruction) => write!(f, "Float-{instruction:?}"),
@@ -188,9 +190,34 @@ impl Instruction<PushState> for PushInstruction {
                 //   Or add a `with_input` that returns the new state and keep `push_input`?
                 state.with_input(var_name)
             }
+            Self::Block(block) => block.perform(state),
             Self::BoolInstruction(i) => i.perform(state),
             Self::IntInstruction(i) => i.perform(state),
             Self::FloatInstruction(i) => i.perform(state),
         }
+    }
+}
+
+// This is for "performing" an instruction that is in
+// fact a block of instructions. To perform this instruction
+// we need to push all the instructions in the block onto
+// the stack in the correct order, i.e., the first instruction
+// in the block should be the top instruction on the exec
+// stack after all the pushing is done.
+impl<S, I> Instruction<S> for Vec<I>
+where
+    S: HasStack<I>,
+    I: Instruction<S> + Clone,
+    I::Error: From<StackError>,
+{
+    type Error = I::Error;
+
+    fn perform(&self, mut state: S) -> InstructionResult<S, Self::Error> {
+        // If the size of the block + the size of the exec stack exceed the max stack size
+        // then we generate a fatal error.
+        if let Err(err) = state.stack_mut::<I>().try_extend(self.iter().cloned()) {
+            return Err(Error::fatal(state, err));
+        }
+        Ok(state)
     }
 }
