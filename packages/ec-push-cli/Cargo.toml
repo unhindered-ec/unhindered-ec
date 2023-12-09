@@ -9,14 +9,13 @@ edition = { workspace = true }
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-anyhow = "1.0.71"
-clap = { version = "4.3.11", features = ["derive"] }
-rand = { version = "0.8.5", features = ["alloc"] }
+anyhow = { workspace = true }
+clap = { workspace = true, features = ["derive"] }
+rand = { workspace = true, features = ["alloc"] }
 
-# We could put this in the workspace and use ` = { workspace = true }` here.
-ec-core = { path = "../ec-core" }
-ec-linear = { path = "../ec-linear" }
-push = { path = "../push" }
+ec-core = { workspace = true }
+ec-linear = { workspace = true }
+push = { workspace = true }
 
 [[bin]]
 name = "pushgp"
