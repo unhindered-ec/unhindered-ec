@@ -44,7 +44,7 @@ fn add_overflows() {
 
 #[test]
 fn inc_overflows() {
-    let x = PushInteger::MAX;
+    let x = i64::MAX;
     let state = PushState::builder()
         .with_max_stack_size(100)
         .with_int_values(std::iter::once(x))
@@ -67,7 +67,7 @@ fn inc_overflows() {
 
 #[test]
 fn dec_overflows() {
-    let x = PushInteger::MIN;
+    let x = i64::MIN;
     let state = PushState::builder()
         .with_max_stack_size(100)
         .with_int_values(std::iter::once(x))
