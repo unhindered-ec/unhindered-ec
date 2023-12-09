@@ -8,9 +8,6 @@ pub mod stack;
 
 pub use self::stack::HasStack;
 
-// We'll use a 64-bit integer for our integer types.
-pub type PushInteger = i64;
-
 // Need an associated error trait
 pub trait State: Sized {
     type Instruction: Instruction<Self>;

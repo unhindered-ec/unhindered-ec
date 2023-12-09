@@ -86,7 +86,7 @@ where
 
         candidates.shuffle(rng);
         candidates
-            .get(0)
+            .first()
             .copied()
             .context("The pool of candidates was empty")
     }

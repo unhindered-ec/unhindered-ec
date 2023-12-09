@@ -3,7 +3,7 @@ use ordered_float::OrderedFloat;
 use crate::{
     error::{stateful::FatalError, try_recover::TryRecover, InstructionResult},
     instruction::{Instruction, PushInstruction, PushInstructionError, VariableName},
-    push_vm::{stack::Stack, PushInteger, State},
+    push_vm::{stack::Stack, State},
 };
 use std::collections::HashMap;
 
@@ -22,7 +22,7 @@ pub struct PushState {
     #[stack(exec)]
     pub(crate) exec: Stack<PushInstruction>,
     #[stack]
-    pub(crate) int: Stack<PushInteger>,
+    pub(crate) int: Stack<i64>,
     #[stack]
     pub(crate) float: Stack<OrderedFloat<f64>>,
     #[stack]
@@ -103,7 +103,7 @@ mod simple_check {
         instruction::{
             BoolInstruction, FloatInstruction, IntInstruction, PushInstruction, VariableName,
         },
-        push_vm::push_state::{PushInteger, PushState},
+        push_vm::push_state::PushState,
     };
 
     use super::State;
@@ -114,7 +114,7 @@ mod simple_check {
             PushInstruction::push_bool(b)
         }
 
-        fn push_int(i: PushInteger) -> PushInstruction {
+        fn push_int(i: i64) -> PushInstruction {
             PushInstruction::push_int(i)
         }
 

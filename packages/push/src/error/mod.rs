@@ -33,7 +33,7 @@ impl<S, E> Error<S, E> {
         matches!(self, Self::Fatal(_))
     }
 
-    pub fn state(&self) -> &S {
+    pub const fn state(&self) -> &S {
         match self {
             Self::Recoverable(StatefulError { state, .. })
             | Self::Fatal(StatefulError { state, .. }) => state,
