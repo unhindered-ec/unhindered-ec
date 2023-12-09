@@ -17,8 +17,7 @@ fn push_float() {
     let x = OrderedFloat(589.632);
     let state = PushState::builder()
         .with_max_stack_size(100)
-        .with_program([])
-        .unwrap()
+        .with_no_program()
         .build();
     let result = FloatInstruction::Push(x).perform(state).unwrap();
     assert_eq!(result.stack::<OrderedFloat<f64>>().size(), 1);
@@ -33,8 +32,7 @@ fn add() {
         .with_max_stack_size(100)
         .with_float_values(vec![x, y])
         .unwrap()
-        .with_program([])
-        .unwrap()
+        .with_no_program()
         .build();
     let result = FloatInstruction::Add.perform(state).unwrap();
     assert_eq!(result.stack::<OrderedFloat<f64>>().size(), 1);
@@ -53,8 +51,7 @@ fn overflow_bool_stack() {
         // Now fill the boolean stack so that it overflows when we check the floats for equality
         .with_bool_values(vec![false, false])
         .unwrap()
-        .with_program([])
-        .unwrap()
+        .with_no_program()
         .build();
     let result = FloatInstruction::Equal.perform(state).unwrap_err();
     assert_eq!(
@@ -70,8 +67,7 @@ fn dup() {
         .with_max_stack_size(100)
         .with_float_values(std::iter::once(x))
         .unwrap()
-        .with_program([])
-        .unwrap()
+        .with_no_program()
         .build();
     let mut result = FloatInstruction::Dup.perform(state).unwrap();
     assert_eq!(result.stack::<OrderedFloat<f64>>().size(), 2);
@@ -89,8 +85,7 @@ proptest! {
             .with_max_stack_size(100)
             .with_float_values([x, y].iter().map(|&f| OrderedFloat(f)))
             .unwrap()
-            .with_program([])
-            .unwrap()
+            .with_no_program()
             .build();
         let result = FloatInstruction::Add.perform(state).unwrap();
         let output = result.stack::<OrderedFloat<f64>>().top().unwrap();
@@ -104,8 +99,7 @@ proptest! {
             .with_max_stack_size(100)
             .with_float_values([x, y].iter().map(|&f| OrderedFloat(f)))
             .unwrap()
-            .with_program([])
-            .unwrap()
+            .with_no_program()
             .build();
         let result = FloatInstruction::Subtract.perform(state).unwrap();
         let output = result.stack::<OrderedFloat<f64>>().top().unwrap();
@@ -119,8 +113,7 @@ proptest! {
             .with_max_stack_size(100)
             .with_float_values([x, y].iter().map(|&f| OrderedFloat(f)))
             .unwrap()
-            .with_program([])
-            .unwrap()
+            .with_no_program()
             .build();
         let result = FloatInstruction::Multiply.perform(state).unwrap();
         let output = result.stack::<OrderedFloat<f64>>().top().unwrap();
@@ -134,8 +127,7 @@ proptest! {
             .with_max_stack_size(100)
             .with_float_values([x, y].iter().map(|&f| OrderedFloat(f)))
             .unwrap()
-            .with_program([])
-            .unwrap()
+            .with_no_program()
             .build();
         let result = FloatInstruction::ProtectedDivide.perform(state).unwrap();
         let output = result.stack::<OrderedFloat<f64>>().top().unwrap();
@@ -149,8 +141,7 @@ proptest! {
             .with_max_stack_size(100)
             .with_float_values([x, y].iter().map(|&f| OrderedFloat(f)))
             .unwrap()
-            .with_program([])
-            .unwrap()
+            .with_no_program()
             .build();
         let result = FloatInstruction::Equal.perform(state).unwrap();
         let output = result.stack::<bool>().top().unwrap();
@@ -164,8 +155,7 @@ proptest! {
             .with_max_stack_size(100)
             .with_float_values([x, y].iter().map(|&f| OrderedFloat(f)))
             .unwrap()
-            .with_program([])
-            .unwrap()
+            .with_no_program()
             .build();
         let result = FloatInstruction::NotEqual.perform(state).unwrap();
         let output = result.stack::<bool>().top().unwrap();

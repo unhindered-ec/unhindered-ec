@@ -332,9 +332,8 @@ impl<T> Stack<T> {
     /// ```
     /// # use push::push_vm::stack::StackError;
     /// # use push::push_vm::stack::Stack;
-    /// # use push::push_vm::PushInteger;
     /// #
-    /// let mut stack: Stack<PushInteger> = Stack::default();
+    /// let mut stack: Stack<i64> = Stack::default();
     /// assert_eq!(stack.size(), 0);
     ///
     /// stack.try_extend(vec![5, 8, 9])?;

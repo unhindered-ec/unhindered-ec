@@ -1,10 +1,7 @@
 use super::{Instruction, MapInstructionError, PushInstruction, PushInstructionError};
 use crate::{
     error::InstructionResult,
-    push_vm::{
-        stack::{HasStack, StackPush},
-        PushInteger,
-    },
+    push_vm::stack::{HasStack, StackPush},
 };
 use std::ops::Not;
 use strum_macros::EnumIter;
@@ -56,7 +53,7 @@ where
     let string = transaction.try_pop<String>()?; // This version has the transaction be mutable.
     let (string, transaction) = transaction.try_pop<String>()?; // This version returns a "new" transaction.
 
-    let (index, transaction) = transaction.try_pop<PushInteger>()?;
+    let (index, transaction) = transaction.try_pop<i64>()?;
     let c = string.chars.nth(index)?;
     let transaction = transaction.try_push<char>(c)?;
     let new_state = transaction.close()?; // Can closing actually fail?
@@ -98,7 +95,7 @@ where
             Self::FromInt => {
                 let mut state = state.not_full::<bool>().map_err_into()?;
                 state
-                    .stack_mut::<PushInteger>()
+                    .stack_mut::<i64>()
                     .pop()
                     .map(|i| i != 0)
                     .with_stack_push(state)
@@ -133,8 +130,7 @@ mod property_tests {
                 x in proptest::bool::ANY, y in proptest::bool::ANY, i in proptest::num::i64::ANY) {
             let state = PushState::builder()
                 .with_max_stack_size(1000)
-                .with_program([])
-                .unwrap()
+                .with_no_program()
                 .with_bool_values([x, y])
                 .unwrap()
                 .with_int_values([i])
@@ -147,8 +143,7 @@ mod property_tests {
         fn and_is_correct(x in proptest::bool::ANY, y in proptest::bool::ANY) {
             let state = PushState::builder()
                 .with_max_stack_size(1000)
-                .with_program([])
-                .unwrap()
+                .with_no_program()
                 .with_bool_values([x, y])
                 .unwrap()
                 .build();
@@ -161,8 +156,7 @@ mod property_tests {
         fn implies_is_correct(x in proptest::bool::ANY, y in proptest::bool::ANY) {
             let state = PushState::builder()
                 .with_max_stack_size(1000)
-                .with_program([])
-                .unwrap()
+                .with_no_program()
                 .with_bool_values([x, y])
                 .unwrap()
                 .build();

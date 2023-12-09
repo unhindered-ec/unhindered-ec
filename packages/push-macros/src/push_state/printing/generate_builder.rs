@@ -160,14 +160,13 @@ pub fn generate_builder(
                         /// # use push::push_vm::stack::Stack;
                         /// # use push::push_vm::stack::StackError;
                         /// # use push::push_vm::HasStack;
-                        /// # use push::push_vm::PushInteger;
                         ///
                         /// let mut state = PushState::builder()
                         ///     .with_max_stack_size(100)
                         ///     .with_program([])?
                         ///     .with_int_values(vec![5, 8, 9])?
                         ///     .build();
-                        /// let int_stack: &Stack<PushInteger> = state.stack::<PushInteger>();
+                        /// let int_stack: &Stack<i64> = state.stack::<i64>();
                         /// assert_eq!(int_stack.size(), 3);
                         /// // Now the top of the stack is 5, followed by 8, then 9 at the bottom.
                         /// assert_eq!(int_stack.top()?, &5);
@@ -346,6 +345,18 @@ pub fn generate_builder(
                     _p: ::std::marker::PhantomData,
                 })
             }
+
+            /// Explicitly sets this state as having no program.
+            #[must_use]
+            pub fn with_no_program(mut self)
+                -> #builder_name<#utilities_mod_ident::WithSizeAndData, #(#stack_generics),*>
+            {
+                #builder_name {
+                    partial_state: self.partial_state,
+                    _p: ::std::marker::PhantomData,
+                }
+            }
+
         }
 
         impl<#(#stack_generics_with_state_bounds),*> #builder_name<#utilities_mod_ident::WithSizeAndData, #(#stack_generics),*> {
