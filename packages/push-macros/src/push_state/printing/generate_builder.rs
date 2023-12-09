@@ -346,6 +346,18 @@ pub fn generate_builder(
                     _p: ::std::marker::PhantomData,
                 })
             }
+
+            /// Explicitly sets this state as having no program.
+            #[must_use]
+            pub fn with_no_program(mut self)
+                -> #builder_name<#utilities_mod_ident::WithSizeAndData, #(#stack_generics),*>
+            {
+                #builder_name {
+                    partial_state: self.partial_state,
+                    _p: ::std::marker::PhantomData,
+                }
+            }
+
         }
 
         impl<#(#stack_generics_with_state_bounds),*> #builder_name<#utilities_mod_ident::WithSizeAndData, #(#stack_generics),*> {
