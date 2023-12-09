@@ -3,9 +3,8 @@
 [workspace]
 resolver = "2"
 
-members = [
-    "packages/*",
-]
+members = ["packages/*"]
+exclude = ["packages/rust-lexicase"]
 
 [workspace.package]
 version = "0.1.0"
@@ -28,3 +27,4 @@ itertools = "0.11.0"
 ec-core = { path = "packages/ec-core" }
 ec-linear = { path = "packages/ec-linear" }
 push = { path = "packages/push" }
+push_macros = { path = "packages/push-macros" }

@@ -15,7 +15,7 @@ use rand::thread_rng;
 
 struct PyIndividual {
     individual: PyObject,
-    errors: TestResults<Error>,
+    errors: TestResults<Error<i64>>,
 }
 
 impl PyIndividual {
@@ -27,7 +27,7 @@ impl PyIndividual {
             .into_iter()
             .copied()
             .map(|v| Error { error: v })
-            .collect::<TestResults<Error>>();
+            .collect::<TestResults<Error<i64>>>();
         Ok(Self { individual, errors })
     }
 
@@ -39,7 +39,7 @@ impl PyIndividual {
 impl Individual for PyIndividual {
     type Genome = Self;
 
-    type TestResults = TestResults<Error>;
+    type TestResults = TestResults<Error<i64>>;
 
     fn genome(&self) -> &Self::Genome {
         unimplemented!()

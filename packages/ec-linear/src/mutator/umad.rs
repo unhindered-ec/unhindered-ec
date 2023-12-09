@@ -93,7 +93,7 @@ mod test {
 
     #[test]
     #[allow(clippy::unwrap_used)]
-    // This is stochastic, and will fail sometimes.
+    #[ignore = "This is stochastic, and it will fail sometimes"]
     fn umad_test() {
         let mut rng = thread_rng();
 

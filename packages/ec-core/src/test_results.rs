@@ -21,40 +21,34 @@ use std::{cmp::Ordering, fmt::Debug, iter::Sum};
 
 /// Score implicitly follows a "bigger is better" model.
 #[derive(Eq, PartialEq, Ord, PartialOrd)]
-pub struct Score {
-    pub score: i64,
+pub struct Score<T> {
+    pub score: T,
 }
 
-impl Debug for Score {
+impl<T: Debug> Debug for Score<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_fmt(format_args!("{}", self.score))
+        f.write_fmt(format_args!("{:?}", self.score))
     }
 }
 
 // TODO: Write tests for the `From` and `Sum` trait implementations.
 
-impl From<i64> for Score {
-    fn from(score: i64) -> Self {
+impl<T> From<T> for Score<T> {
+    fn from(score: T) -> Self {
         Self { score }
     }
 }
 
-impl From<&i64> for Score {
-    fn from(score: &i64) -> Self {
-        (*score).into()
-    }
-}
-
-impl Sum<i64> for Score {
+impl<T: Sum> Sum<T> for Score<T> {
     fn sum<I>(iter: I) -> Self
     where
-        I: Iterator<Item = i64>,
+        I: Iterator<Item = T>,
     {
         Self { score: iter.sum() }
     }
 }
 
-impl Sum for Score {
+impl<T: Sum> Sum for Score<T> {
     fn sum<I>(iter: I) -> Self
     where
         I: Iterator<Item = Self>,
@@ -63,64 +57,61 @@ impl Sum for Score {
     }
 }
 
-impl<'a> Sum<&'a Self> for Score {
+impl<'a, T> Sum<&'a Self> for Score<T>
+where
+    T: ToOwned,
+    Self: Sum<<T as ToOwned>::Owned>,
+{
     fn sum<I: Iterator<Item = &'a Self>>(iter: I) -> Self {
-        iter.map(|s| s.score).sum()
+        iter.map(|s| s.score.to_owned()).sum()
     }
 }
 
 // TODO: Rewrite `Error` using the std::cmp::Reverse type
 //   to convert `Score` to `Error`.
-// TODO: This (and score) should probably be generic so we can
-//   use `i64` or `i28` or unsigned values, etc.
-/// Error implicitly follows a "smaller is better" model
 #[derive(Eq, PartialEq)]
-pub struct Error {
-    pub error: i64,
+pub struct Error<T> {
+    pub error: T,
 }
 
-impl Debug for Error {
+impl<T: Debug> Debug for Error<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_fmt(format_args!("{}", self.error))
+        f.write_fmt(format_args!("{:?}", self.error))
     }
 }
 
-impl Ord for Error {
+impl<T: Ord> Ord for Error<T> {
     fn cmp(&self, other: &Self) -> Ordering {
         self.error.cmp(&other.error).reverse()
     }
 }
 
-impl PartialOrd for Error {
+impl<T: PartialOrd> PartialOrd for Error<T> {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.cmp(other))
+        self.error
+            .partial_cmp(&other.error)
+            .map(std::cmp::Ordering::reverse)
     }
 }
 
 // TODO: Write tests for the `From` and `Sum` trait implementations.
 
-impl From<i64> for Error {
-    fn from(error: i64) -> Self {
+impl<T> From<T> for Error<T> {
+    fn from(error: T) -> Self {
         Self { error }
     }
 }
 
-impl From<&i64> for Error {
-    fn from(error: &i64) -> Self {
-        (*error).into()
-    }
-}
-
-impl Sum<i64> for Error {
+impl<T: Sum> Sum<T> for Error<T> {
     fn sum<I>(iter: I) -> Self
     where
-        I: Iterator<Item = i64>,
+        I: Iterator<Item = T>,
     {
         Self { error: iter.sum() }
     }
 }
 
-impl Sum for Error {
+impl<T: Sum> Sum for Error<T> {
     fn sum<I>(iter: I) -> Self
     where
         I: Iterator<Item = Self>,
@@ -129,51 +120,63 @@ impl Sum for Error {
     }
 }
 
-impl<'a> Sum<&'a Self> for Error {
+impl<'a, T> Sum<&'a Self> for Error<T>
+where
+    T: ToOwned,
+    Self: Sum<<T as ToOwned>::Owned>,
+{
     fn sum<I: Iterator<Item = &'a Self>>(iter: I) -> Self {
-        iter.map(|s| s.error).sum()
+        iter.map(|s| s.error.to_owned()).sum()
     }
 }
 
 #[cfg(test)]
 mod score_error_tests {
-    use std::ops::Not;
-
     use super::*;
 
     #[test]
     fn score_bigger_is_better() {
         let first = Score { score: 37 };
         let second = Score { score: 82 };
-        assert!(first < second);
-        assert!(first != second);
-        assert!((first > second).not());
+        // These use `Ord`
+        assert_eq!(first.cmp(&second), Ordering::Less);
+        assert_eq!(second.cmp(&first), Ordering::Greater);
+        assert_eq!(first.cmp(&first), Ordering::Equal);
+        // Now use `PartialOrd`
+        assert_eq!(first.partial_cmp(&second), Some(Ordering::Less));
+        assert_eq!(second.partial_cmp(&first), Some(Ordering::Greater));
+        assert_eq!(first.partial_cmp(&first), Some(Ordering::Equal));
     }
 
     #[test]
     fn error_smaller_is_better() {
         let first = Error { error: 37 };
         let second = Error { error: 82 };
-        assert!(first > second);
-        assert!(first != second);
-        assert!((first < second).not());
+        // These use `Ord`
+        assert_eq!(first.cmp(&second), Ordering::Greater);
+        assert_eq!(second.cmp(&first), Ordering::Less);
+        assert_eq!(first.cmp(&first), Ordering::Equal);
+        // Now use `PartialOrd`
+        assert_eq!(first.partial_cmp(&second), Some(Ordering::Greater));
+        assert_eq!(second.partial_cmp(&first), Some(Ordering::Less));
+        assert_eq!(first.partial_cmp(&first), Some(Ordering::Equal));
     }
 }
 
 #[derive(Eq, PartialEq)]
-pub enum TestResult {
-    Score(Score),
-    Error(Error),
+pub enum TestResult<S, E> {
+    Score(Score<S>),
+    Error(Error<E>),
 }
 
-impl PartialOrd for TestResult {
+impl<S: PartialOrd, E: PartialOrd> PartialOrd for TestResult<S, E> {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         match (self, other) {
             (Self::Score(self_score), Self::Score(other_score)) => {
-                Some(self_score.cmp(other_score))
+                self_score.partial_cmp(other_score)
             }
             (Self::Error(self_error), Self::Error(other_error)) => {
-                Some(self_error.cmp(other_error))
+                self_error.partial_cmp(other_error)
             }
             _ => None,
         }
@@ -188,7 +191,7 @@ mod test_result_tests {
 
     #[test]
     fn score_compares_to_score() {
-        let first = TestResult::Score(Score { score: 32 });
+        let first: TestResult<i32, i32> = TestResult::Score(Score { score: 32 });
         let second = TestResult::Score(Score { score: 87 });
         assert!(first < second);
         assert!(first != second);
@@ -197,7 +200,7 @@ mod test_result_tests {
 
     #[test]
     fn error_compares_to_error() {
-        let first = TestResult::Error(Error { error: 32 });
+        let first: TestResult<i32, i32> = TestResult::Error(Error { error: 32 });
         let second = TestResult::Error(Error { error: 87 });
         assert!(first > second);
         assert!(first != second);
@@ -290,7 +293,7 @@ mod test_results_from_vec {
     #[test]
     fn create_test_results_from_errors() {
         let errors = vec![5, 8, 0, 9];
-        let test_results: TestResults<Error> = errors.clone().into();
+        let test_results: TestResults<Error<i32>> = errors.clone().into();
         assert_eq!(
             test_results
                 .results
@@ -305,7 +308,7 @@ mod test_results_from_vec {
     #[test]
     fn create_test_results_from_scores() {
         let scores = vec![5, 8, 0, 9];
-        let test_results: TestResults<Score> = scores.clone().into();
+        let test_results: TestResults<Score<i32>> = scores.clone().into();
         assert_eq!(
             test_results
                 .results
@@ -320,8 +323,8 @@ mod test_results_from_vec {
     #[test]
     fn create_test_results_from_iter_errors() {
         let errors = vec![5, 8, 0, 9];
-        let results = errors.iter().map(Into::<Error>::into);
-        let test_results: TestResults<Error> = results.clone().collect();
+        let results = errors.iter().copied().map(Error::from);
+        let test_results: TestResults<Error<i32>> = results.clone().collect();
         assert_eq!(test_results.results, results.collect::<Vec<_>>());
         assert_eq!(test_results.total_result, errors.into_iter().sum());
     }
@@ -329,8 +332,8 @@ mod test_results_from_vec {
     #[test]
     fn create_test_results_from_iter_scores() {
         let scores = vec![5, 8, 0, 9];
-        let results = scores.iter().map(Into::<Score>::into);
-        let test_results: TestResults<Score> = results.clone().collect();
+        let results = scores.iter().copied().map(Score::from);
+        let test_results: TestResults<Score<i32>> = results.clone().collect();
         assert_eq!(test_results.results, results.collect::<Vec<_>>());
         assert_eq!(test_results.total_result, scores.into_iter().sum());
     }

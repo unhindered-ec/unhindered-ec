@@ -40,7 +40,7 @@ fn main() -> Result<()> {
     // Using `Error` in `TestResults<Error>` will have the run favor smaller
     // values, where using `Score` (e.g., `TestResults<Score>`) will have the run
     // favor larger values.
-    type Pop = Vec<EcIndividual<Bitstring, TestResults<test_results::Score>>>;
+    type Pop = Vec<EcIndividual<Bitstring, TestResults<test_results::Score<i64>>>>;
 
     let args = Args::parse();
 

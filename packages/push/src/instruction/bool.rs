@@ -10,6 +10,7 @@ use std::ops::Not;
 use strum_macros::EnumIter;
 
 #[derive(Debug, strum_macros::Display, Clone, PartialEq, Eq, EnumIter)]
+#[non_exhaustive]
 pub enum BoolInstruction {
     Push(bool),
     Not,
@@ -113,7 +114,7 @@ impl From<BoolInstruction> for PushInstruction {
 }
 
 #[cfg(test)]
-#[allow(clippy::unwrap_used)]
+#[allow(clippy::unwrap_used, clippy::ignored_unit_patterns)]
 mod property_tests {
     use crate::{
         instruction::{BoolInstruction, Instruction},
@@ -130,17 +131,26 @@ mod property_tests {
         #[test]
         fn ops_do_not_crash(instr in proptest::sample::select(all_instructions()),
                 x in proptest::bool::ANY, y in proptest::bool::ANY, i in proptest::num::i64::ANY) {
-            let state = PushState::builder([])
-                .with_bool_values(vec![x, y])
-                .with_int_values(vec![i])
+            let state = PushState::builder()
+                .with_max_stack_size(1000)
+                .with_program([])
+                .unwrap()
+                .with_bool_values([x, y])
+                .unwrap()
+                .with_int_values([i])
+                .unwrap()
                 .build();
-            let _ = instr.perform(state).unwrap();
+            instr.perform(state).unwrap();
         }
 
         #[test]
         fn and_is_correct(x in proptest::bool::ANY, y in proptest::bool::ANY) {
-            let state = PushState::builder([])
-                .with_bool_values(vec![x, y])
+            let state = PushState::builder()
+                .with_max_stack_size(1000)
+                .with_program([])
+                .unwrap()
+                .with_bool_values([x, y])
+                .unwrap()
                 .build();
             let result_state = BoolInstruction::And.perform(state).unwrap();
             prop_assert_eq!(result_state.bool.size(), 1);
@@ -149,8 +159,12 @@ mod property_tests {
 
         #[test]
         fn implies_is_correct(x in proptest::bool::ANY, y in proptest::bool::ANY) {
-            let state = PushState::builder([])
-                .with_bool_values(vec![x, y])
+            let state = PushState::builder()
+                .with_max_stack_size(1000)
+                .with_program([])
+                .unwrap()
+                .with_bool_values([x, y])
+                .unwrap()
                 .build();
             let result_state = BoolInstruction::Implies.perform(state).unwrap();
             prop_assert_eq!(result_state.bool.size(), 1);

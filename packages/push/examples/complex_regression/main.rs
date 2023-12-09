@@ -5,61 +5,61 @@
 
 pub mod args;
 
-use std::ops::Not;
-
 use crate::args::{Args, RunModel};
 use anyhow::{ensure, Result};
 use clap::Parser;
 use ec_core::{
     generation::Generation,
     generator::{collection::CollectionGenerator, Generator},
-    individual::ec::{self, EcIndividual},
+    individual::ec::{self},
     operator::{
         genome_extractor::GenomeExtractor,
         genome_scorer::GenomeScorer,
         mutator::Mutate,
-        selector::{
-            best::Best, lexicase::Lexicase, tournament::Tournament, weighted::Weighted, Select,
-            Selector,
-        },
+        selector::{best::Best, lexicase::Lexicase, Select, Selector},
         Composable,
     },
     test_results::{self, TestResults},
 };
 use ec_linear::mutator::umad::Umad;
+use ordered_float::OrderedFloat;
 use push::{
     genome::plushy::Plushy,
-    instruction::{IntInstruction, PushInstruction, VariableName},
+    instruction::{FloatInstruction, PushInstruction, VariableName},
+    push_vm::HasStack,
     push_vm::{push_state::PushState, State},
-    push_vm::{HasStack, PushInteger},
 };
 use rand::thread_rng;
+use std::ops::Not;
+
+/*
+ * This is an implementation of the "complex regression" problem from the Propeller implementation
+ * of PushGP: https://github.com/lspector/propeller/blob/master/src/propeller/problems/complex_regression.cljc
+ */
 
 fn main() -> Result<()> {
-    // Using `Error` in `TestResults<Error>` will have the run favor smaller
-    // values, where using `Score` (e.g., `TestResults<Score>`) will have the run
-    // favor larger values.
-    type Pop = Vec<EcIndividual<Plushy, TestResults<test_results::Error<i64>>>>;
-
     // The penalty value to use when an evolved program doesn't have an expected
     // "return" value on the appropriate stack at the end of its execution.
-    const PENALTY_VALUE: i64 = 1_000;
+    const PENALTY_VALUE: f64 = 1_000.0;
 
     let args = Args::parse();
 
-    // let base_scorer = match args.target_problem {
-    //     TargetProblem::DegreeThree => todo!(),
-    // };
+    // Inputs from -4 (inclusive) to 4 (exclusive) in increments of 0.25.
+    let training_cases = (-4 * 4..4 * 4)
+        .map(|n| OrderedFloat(f64::from(n) / 4.0))
+        .collect::<Vec<_>>();
 
     /*
      * The `scorer` will need to take an evolved program (sequence of instructions) and run it
-     * 10 times on each of the 10 test inputs (0 through 9), collecting together the 10 errors,
-     * i.e., the absolute difference between the returned value and the expected value.
+     * on all the inputs from -4 (inclusive) to 4 (exclusive) in increments of 0.25, collecting
+     * together the errors, i.e., the absolute difference between the returned value and the
+     * expected value.
      *
-     * The target polynomial is x^3 - 2x^2 - x
+     * The target polynomial is (x^3 + 1)^3 + 1
      */
-    let scorer = |program: &Plushy| -> TestResults<test_results::Error<i64>> {
-        let errors: TestResults<test_results::Error<i64>> = (0..10)
+    let scorer = |program: &Plushy| -> TestResults<test_results::Error<OrderedFloat<f64>>> {
+        let errors: TestResults<test_results::Error<OrderedFloat<f64>>> = training_cases
+            .iter()
             .map(|input| {
                 #[allow(clippy::unwrap_used)]
                 let state = PushState::builder()
@@ -68,19 +68,21 @@ fn main() -> Result<()> {
                     // This will return an error if the program is longer than the allowed max stack size.
                     // We arguably should check that and return an error here.
                     .unwrap()
-                    .with_int_input("x", input)
+                    .with_float_input("x", *input)
                     .build();
-                // This is the degree 3 problem in https://github.com/lspector/Clojush/blob/master/src/clojush/problems/demos/simple_regression.clj
-                let expected = input * input * input - 2 * input * input - input;
+                let sub_expr = *input * *input * *input + 1.0;
+                let expected = sub_expr * sub_expr * sub_expr + 1.0;
                 #[allow(clippy::option_if_let_else)]
                 match state.run_to_completion() {
-                    Ok(final_state) => final_state
-                        .stack::<PushInteger>()
-                        .top()
-                        .map_or(PENALTY_VALUE, |answer| (answer - expected).abs()),
+                    Ok(final_state) => OrderedFloat(
+                        final_state
+                            .stack::<OrderedFloat<f64>>()
+                            .top()
+                            .map_or(PENALTY_VALUE, |answer| (answer - expected).abs()),
+                    ),
                     Err(_) => {
                         // Do some logging, perhaps?
-                        PENALTY_VALUE
+                        OrderedFloat(PENALTY_VALUE)
                     }
                 }
             })
@@ -88,24 +90,18 @@ fn main() -> Result<()> {
         errors
     };
 
-    // The degree 3 problem in https://github.com/lspector/Clojush/blob/master/src/clojush/problems/demos/simple_regression.clj
-    // just uses 10 test cases, 0 to 9 (inclusive).
-    let num_test_cases = 10;
-
-    let lexicase = Lexicase::new(num_test_cases);
-    let binary_tournament = Tournament::new(2);
-
-    let selector: Weighted<Pop> = Weighted::new(Best, 1)
-        .with_selector(lexicase, 5)
-        .with_selector(binary_tournament, args.population_size - 1);
+    let selector = Lexicase::new(training_cases.len());
 
     let mut rng = thread_rng();
 
     let mut instruction_set = vec![
-        PushInstruction::IntInstruction(IntInstruction::Add),
-        PushInstruction::IntInstruction(IntInstruction::Subtract),
-        PushInstruction::IntInstruction(IntInstruction::Multiply),
-        PushInstruction::IntInstruction(IntInstruction::ProtectedDivide),
+        PushInstruction::FloatInstruction(FloatInstruction::Add),
+        PushInstruction::FloatInstruction(FloatInstruction::Subtract),
+        PushInstruction::FloatInstruction(FloatInstruction::Multiply),
+        PushInstruction::FloatInstruction(FloatInstruction::ProtectedDivide),
+        PushInstruction::FloatInstruction(FloatInstruction::Dup),
+        PushInstruction::FloatInstruction(FloatInstruction::Push(OrderedFloat(0.0))),
+        PushInstruction::FloatInstruction(FloatInstruction::Push(OrderedFloat(1.0))),
     ];
     instruction_set.push(PushInstruction::InputVar(VariableName::from("x")));
 
@@ -140,8 +136,8 @@ fn main() -> Result<()> {
 
     let mut generation = Generation::new(make_new_individual, population);
 
-    // TODO: It might be useful to insert some kind of logging system so we can
-    //   make this less imperative in nature.
+    // // TODO: It might be useful to insert some kind of logging system so we can
+    // //   make this less imperative in nature.
 
     for generation_number in 0..args.num_generations {
         match args.run_model {
@@ -154,7 +150,8 @@ fn main() -> Result<()> {
         //  args.num_generations-1.
         println!("Generation {generation_number:2} best is {best:#?}");
 
-        if best.test_results.total_result.error == 0 {
+        if best.test_results.total_result.error == OrderedFloat(0.0) {
+            println!("SUCCESS");
             break;
         }
     }
