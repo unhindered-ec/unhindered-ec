@@ -2,7 +2,7 @@ use ordered_float::OrderedFloat;
 
 use crate::{
     error::{Error, InstructionResult},
-    push_vm::{push_state::PushState, stack::StackError, HasStack, PushInteger},
+    push_vm::{push_state::PushState, stack::StackError, HasStack},
 };
 use std::{fmt::Debug, fmt::Display, sync::Arc};
 
@@ -170,7 +170,7 @@ impl PushInstruction {
     }
 
     #[must_use]
-    pub fn push_int(i: PushInteger) -> Self {
+    pub fn push_int(i: i64) -> Self {
         IntInstruction::Push(i).into()
     }
 

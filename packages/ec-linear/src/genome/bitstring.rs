@@ -66,6 +66,14 @@ impl Bitstring {
         }
         .generate(rng)
     }
+
+    pub fn iter(&self) -> std::slice::Iter<bool> {
+        self.bits.iter()
+    }
+
+    pub fn iter_mut(&mut self) -> std::slice::IterMut<bool> {
+        self.bits.iter_mut()
+    }
 }
 
 impl Display for Bitstring {

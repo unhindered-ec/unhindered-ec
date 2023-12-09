@@ -30,8 +30,8 @@ use ec_linear::mutator::umad::Umad;
 use push::{
     genome::plushy::Plushy,
     instruction::{IntInstruction, PushInstruction, VariableName},
+    push_vm::HasStack,
     push_vm::{push_state::PushState, State},
-    push_vm::{HasStack, PushInteger},
 };
 use rand::thread_rng;
 
@@ -75,7 +75,7 @@ fn main() -> Result<()> {
                 #[allow(clippy::option_if_let_else)]
                 match state.run_to_completion() {
                     Ok(final_state) => final_state
-                        .stack::<PushInteger>()
+                        .stack::<i64>()
                         .top()
                         .map_or(PENALTY_VALUE, |answer| (answer - expected).abs()),
                     Err(_) => {

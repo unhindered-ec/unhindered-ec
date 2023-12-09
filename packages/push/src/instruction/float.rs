@@ -78,7 +78,7 @@ where
                     state.stack_mut::<OrderedFloat<f64>>();
                 float_stack
                     .top()
-                    .map_err(Into::<PushInstructionError>::into)
+                    .map_err(PushInstructionError::from)
                     .cloned()
                     .with_stack_push(state)
             }
@@ -97,7 +97,7 @@ impl FloatInstruction {
         let float_stack = state.stack_mut::<OrderedFloat<f64>>();
         float_stack
             .top2()
-            .map_err(Into::<PushInstructionError>::into)
+            .map_err(PushInstructionError::from)
             .map(|(&x, &y)| op(x, y))
             .with_stack_replace(2, state)
     }
@@ -118,7 +118,7 @@ impl FloatInstruction {
         let float_stack: &mut Stack<OrderedFloat<f64>> = state.stack_mut::<OrderedFloat<f64>>();
         float_stack
             .top2()
-            .map_err(Into::<PushInstructionError>::into)
+            .map_err(PushInstructionError::from)
             .map(|(x, y)| op(x, y))
             .with_stack_push(state)
             .with_stack_discard::<OrderedFloat<f64>>(1)
