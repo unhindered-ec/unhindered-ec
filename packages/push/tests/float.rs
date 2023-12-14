@@ -63,11 +63,12 @@ fn overflow_bool_stack() {
 #[test]
 fn dup() {
     let x = OrderedFloat(409.37);
-    let mut state = PushState::builder()
+    let state = PushState::builder()
         .with_max_stack_size(100)
+        .with_float_values(std::iter::once(x))
+        .unwrap()
         .with_no_program()
         .build();
-    state.stack_mut::<OrderedFloat<f64>>().push(x).unwrap();
     let mut result = FloatInstruction::Dup.perform(state).unwrap();
     assert_eq!(result.stack::<OrderedFloat<f64>>().size(), 2);
     let float_stack = result.stack_mut::<OrderedFloat<f64>>();
