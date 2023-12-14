@@ -160,4 +160,61 @@ proptest! {
         let output = result.stack::<bool>().top().unwrap();
         prop_assert_eq!(*output, expected_result);
     }
+
+    #[test]
+    fn greater_than_prop(x in proptest::num::f64::ANY, y in proptest::num::f64::ANY) {
+        let expected_result = OrderedFloat(x) > OrderedFloat(y);
+        let state = PushState::builder()
+            .with_max_stack_size(100)
+            .with_float_values([x, y].iter().map(|&f| OrderedFloat(f)))
+            .unwrap()
+            .with_no_program()
+            .build();
+        let result = FloatInstruction::GreaterThan.perform(state).unwrap();
+        let output = result.stack::<bool>().top().unwrap();
+        prop_assert_eq!(*output, expected_result);
+    }
+
+    #[test]
+    fn less_than_prop(x in proptest::num::f64::ANY, y in proptest::num::f64::ANY) {
+        let expected_result = OrderedFloat(x) < OrderedFloat(y);
+        let state = PushState::builder()
+            .with_max_stack_size(100)
+            .with_float_values([x, y].iter().map(|&f| OrderedFloat(f)))
+            .unwrap()
+            .with_no_program()
+            .build();
+        let result = FloatInstruction::LessThan.perform(state).unwrap();
+        let output = result.stack::<bool>().top().unwrap();
+        prop_assert_eq!(*output, expected_result);
+    }
+
+    #[test]
+    fn greater_than_or_equal_prop(x in proptest::num::f64::ANY, y in proptest::num::f64::ANY) {
+        let expected_result = OrderedFloat(x) >= OrderedFloat(y);
+        let state = PushState::builder()
+            .with_max_stack_size(100)
+            .with_float_values([x, y].iter().map(|&f| OrderedFloat(f)))
+            .unwrap()
+            .with_no_program()
+            .build();
+        let result =
+            FloatInstruction::GreaterThanOrEqual.perform(state).unwrap();
+        let output = result.stack::<bool>().top().unwrap();
+        prop_assert_eq!(*output, expected_result);
+    }
+
+    #[test]
+    fn less_than_or_equal_prop(x in proptest::num::f64::ANY, y in proptest::num::f64::ANY) {
+        let expected_result = OrderedFloat(x) <= OrderedFloat(y);
+        let state = PushState::builder()
+            .with_max_stack_size(100)
+            .with_float_values([x, y].iter().map(|&f| OrderedFloat(f)))
+            .unwrap()
+            .with_no_program()
+            .build();
+        let result = FloatInstruction::LessThanOrEqual.perform(state).unwrap();
+        let output = result.stack::<bool>().top().unwrap();
+        prop_assert_eq!(*output, expected_result);
+    }
 }
