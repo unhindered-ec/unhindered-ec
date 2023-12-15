@@ -1,5 +1,3 @@
-#![allow(clippy::missing_panics_doc)]
-
 pub trait Population {
     type Individual;
 

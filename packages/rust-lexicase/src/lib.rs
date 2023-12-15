@@ -1,9 +1,3 @@
-#![warn(clippy::pedantic)]
-#![warn(clippy::nursery)]
-#![warn(clippy::unwrap_used)]
-#![warn(clippy::expect_used)]
-#![allow(clippy::redundant_pub_crate)]
-
 use ec_core::{
     individual::Individual,
     operator::selector::{lexicase::Lexicase, Selector},

@@ -28,3 +28,12 @@ ec-core = { path = "packages/ec-core" }
 ec-linear = { path = "packages/ec-linear" }
 push = { path = "packages/push" }
 push_macros = { path = "packages/push-macros" }
+
+
+[workspace.lints.clippy]
+pedantic = "warn"
+nursery = "warn"
+unwrap_used = "warn"
+expect_used = "warn"
+module_name_repetitions = "allow"
+as_conversions = "deny"

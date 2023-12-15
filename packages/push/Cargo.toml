@@ -31,3 +31,6 @@ clap = { version = "4.3.11", features = ["derive"] }
 [features]
 default = ["macros"]
 macros = ["dep:push_macros"]
+
+[lints]
+workspace = true
