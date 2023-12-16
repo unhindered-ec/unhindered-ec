@@ -216,6 +216,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "easy-cast"
+version = "0.5.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "10936778145f3bea71fd9bf61332cce28c28e96a380714f7ab34838b80733fd6"
+
+[[package]]
 name = "ec-core"
 version = "0.1.0"
 dependencies = [
@@ -501,6 +507,7 @@ dependencies = [
  "anyhow",
  "clap",
  "collectable",
+ "easy-cast",
  "ec-core",
  "ec-linear",
  "embed-doc-image",
