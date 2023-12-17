@@ -53,18 +53,6 @@ pub enum PushInstruction {
     FloatInstruction(FloatInstruction),
 }
 
-impl Debug for PushInstruction {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::InputVar(instruction) => write!(f, "{instruction}"),
-            Self::Block(block) => write!(f, "{block:?}"),
-            Self::BoolInstruction(instruction) => write!(f, "Bool-{instruction}"),
-            Self::IntInstruction(instruction) => write!(f, "Int-{instruction:?}"),
-            Self::FloatInstruction(instruction) => write!(f, "Float-{instruction:?}"),
-        }
-    }
-}
-
 impl PushInstruction {
     #[must_use]
     pub fn push_bool(b: bool) -> Self {
@@ -100,26 +88,29 @@ impl Instruction<PushState> for PushInstruction {
     }
 }
 
-// This is for "performing" an instruction that is in
-// fact a block of instructions. To perform this instruction
-// we need to push all the instructions in the block onto
-// the stack in the correct order, i.e., the first instruction
-// in the block should be the top instruction on the exec
-// stack after all the pushing is done.
-impl<S, I> Instruction<S> for Vec<I>
-where
-    S: HasStack<I>,
-    I: Instruction<S> + Clone,
-    I::Error: From<StackError>,
-{
-    type Error = I::Error;
+pub trait NumOpens {
+    fn num_opens(&self) -> usize {
+        0
+    }
+}
 
-    fn perform(&self, mut state: S) -> InstructionResult<S, Self::Error> {
-        // If the size of the block + the size of the exec stack exceed the max stack size
-        // then we generate a fatal error.
-        if let Err(err) = state.stack_mut::<I>().try_extend(self.iter().cloned()) {
-            return Err(Error::fatal(state, err));
+impl NumOpens for PushInstruction {
+    fn num_opens(&self) -> usize {
+        match self {
+            Self::Exec(i) => i.num_opens(),
+            _ => 0,
         }
-        Ok(state)
+    }
+}
+
+impl std::fmt::Debug for PushInstruction {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::InputVar(instruction) => write!(f, "{instruction}"),
+            Self::Exec(instruction) => write!(f, "Exec-{instruction:?}"),
+            Self::BoolInstruction(instruction) => write!(f, "Bool-{instruction}"),
+            Self::IntInstruction(instruction) => write!(f, "Int-{instruction:?}"),
+            Self::FloatInstruction(instruction) => write!(f, "Float-{instruction:?}"),
+        }
     }
 }
