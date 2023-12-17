@@ -7,7 +7,7 @@ use ec_core::{
 use ec_linear::genome::Linear;
 use rand::{rngs::ThreadRng, Rng};
 
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Clone, Eq, PartialEq)]
 pub enum PushGene {
     Close,
     Instruction(PushInstruction),
@@ -19,6 +19,15 @@ where
 {
     fn from(instruction: T) -> Self {
         Self::Instruction(instruction.into())
+    }
+}
+
+impl std::fmt::Debug for PushGene {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Close => write!(f, "Close"),
+            Self::Instruction(instruction) => instruction.fmt(f),
+        }
     }
 }
 
@@ -119,7 +128,7 @@ impl FromIterator<PushGene> for Plushy {
 
 #[cfg(test)]
 mod test {
-    use crate::instruction::{BoolInstruction, IntInstruction, VariableName};
+    use crate::instruction::{variable_name::VariableName, BoolInstruction, IntInstruction};
     use ec_core::operator::mutator::Mutator;
     use ec_linear::mutator::umad::Umad;
     use rand::thread_rng;
