@@ -24,9 +24,9 @@ use ec_core::{
 use ec_linear::mutator::umad::Umad;
 use ordered_float::OrderedFloat;
 use push::{
-    genome::plushy::Plushy,
-    instruction::{FloatInstruction, PushInstruction, VariableName},
-    push_vm::HasStack,
+    genome::plushy::{GeneGenerator, Plushy},
+    instruction::{variable_name::VariableName, FloatInstruction, PushInstruction},
+    push_vm::{program::PushProgram, HasStack},
     push_vm::{push_state::PushState, State},
 };
 use rand::thread_rng;
@@ -57,14 +57,15 @@ fn main() -> Result<()> {
      *
      * The target polynomial is (x^3 + 1)^3 + 1
      */
-    let scorer = |program: &Plushy| -> TestResults<test_results::Error<OrderedFloat<f64>>> {
+    let scorer = |genome: &Plushy| -> TestResults<test_results::Error<OrderedFloat<f64>>> {
+        let program = Vec::<PushProgram>::from(genome.clone());
         let errors: TestResults<test_results::Error<OrderedFloat<f64>>> = training_cases
             .iter()
             .map(|input| {
                 #[allow(clippy::unwrap_used)]
                 let state = PushState::builder()
                     .with_max_stack_size(1000)
-                    .with_program(program.get_instructions())
+                    .with_program(program.clone())
                     // This will return an error if the program is longer than the allowed max stack size.
                     // We arguably should check that and return an error here.
                     .unwrap()
@@ -105,9 +106,11 @@ fn main() -> Result<()> {
     ];
     instruction_set.push(PushInstruction::InputVar(VariableName::from("x")));
 
+    let gene_generator = GeneGenerator::with_uniform_close_probability(instruction_set.clone());
+
     let plushy_generator = CollectionGenerator {
         size: args.max_initial_instructions,
-        element_generator: instruction_set.clone(),
+        element_generator: gene_generator.clone(),
     };
 
     let individual_generator = ec::IndividualGenerator {
@@ -127,7 +130,7 @@ fn main() -> Result<()> {
     let best = Best.select(&population, &mut rng)?;
     println!("Best initial individual is {best:?}");
 
-    let umad = Umad::new(0.1, 0.1, instruction_set);
+    let umad = Umad::new(0.1, 0.1, gene_generator);
 
     let make_new_individual = Select::new(selector)
         .then(GenomeExtractor)
@@ -136,8 +139,8 @@ fn main() -> Result<()> {
 
     let mut generation = Generation::new(make_new_individual, population);
 
-    // // TODO: It might be useful to insert some kind of logging system so we can
-    // //   make this less imperative in nature.
+    // TODO: It might be useful to insert some kind of logging system so we can
+    //   make this less imperative in nature.
 
     for generation_number in 0..args.num_generations {
         match args.run_model {
