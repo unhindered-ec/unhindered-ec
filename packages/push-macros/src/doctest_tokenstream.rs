@@ -2,33 +2,6 @@ use proc_macro2::{Span, TokenStream};
 use quote::{quote, ToTokens};
 use syn::{LitStr, Token};
 
-// pub(crate) fn doctest(doctest: &str, attr: Option<&str>) -> TokenStream {
-//     let mut doctest_tokenstream = TokenStream::new();
-
-//     if let Some(attr) = attr {
-//         let doc_line = format!(" ```{attr}");
-//         let lit = LitStr::new(&doc_line, Span::mixed_site());
-//         doctest_tokenstream.extend(quote! {
-//             #[doc = #lit]
-//         });
-//     } else {
-//         doctest_tokenstream.extend(quote! {
-//             /// ```
-//         });
-//     }
-//     for line in doctest.lines() {
-//         let line = format!(" {line}");
-//         let line_lit = LitStr::new(&line, Span::mixed_site());
-//         doctest_tokenstream.extend(quote! {
-//             #[doc = #line_lit]
-//         })
-//     }
-//     doctest_tokenstream.extend(quote! {
-//         /// ```
-//     });
-//     doctest_tokenstream
-// }
-
 #[derive(Debug, Clone)]
 pub(crate) enum Import {
     Path(Option<Token![::]>, syn::UseTree),
