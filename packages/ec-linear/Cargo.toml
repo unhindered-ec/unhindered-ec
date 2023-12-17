@@ -17,3 +17,6 @@ ec-core = { workspace = true }
 
 quickcheck = "1.0.3"
 quickcheck_macros = "1.0.0"
+
+[lints]
+workspace = true

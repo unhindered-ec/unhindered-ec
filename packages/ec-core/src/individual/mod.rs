@@ -13,7 +13,6 @@ pub mod scorer;
 //     * A method in `Generate`
 //     * A method in `Individual`
 #[deprecated(note = "Use `Generator` trait instead")]
-
 pub trait Generate: Individual {
     fn generate<H>(
         make_genome: impl Fn(&mut ThreadRng) -> Self::Genome,
