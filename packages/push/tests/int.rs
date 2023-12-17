@@ -1,6 +1,8 @@
 use proptest::{prop_assert_eq, proptest};
 use push::{
-    instruction::{Instruction, IntInstruction, IntInstructionError, PushInstructionError},
+    instruction::{
+        instruction_error::PushInstructionError, Instruction, IntInstruction, IntInstructionError,
+    },
     push_vm::{push_state::PushState, HasStack},
 };
 use strum::IntoEnumIterator;

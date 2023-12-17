@@ -1,6 +1,6 @@
-use super::{Instruction, MapInstructionError, PushInstruction, PushInstructionError};
+use super::{Instruction, PushInstruction, PushInstructionError};
 use crate::{
-    error::InstructionResult,
+    error::{InstructionResult, MapInstructionError},
     push_vm::stack::{HasStack, StackPush},
 };
 use std::ops::Not;
@@ -21,9 +21,6 @@ pub enum BoolInstruction {
     FromInt,
     // BoolFromFloat,
 }
-
-#[derive(thiserror::Error, Debug, Eq, PartialEq)]
-pub enum BoolInstructionError {}
 
 impl<S> Instruction<S> for BoolInstruction
 where

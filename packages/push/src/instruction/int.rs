@@ -1,6 +1,6 @@
-use super::{Instruction, MapInstructionError, PushInstruction, PushInstructionError};
+use super::{Instruction, PushInstruction, PushInstructionError};
 use crate::{
-    error::{Error, InstructionResult},
+    error::{Error, InstructionResult, MapInstructionError},
     push_vm::stack::{HasStack, Stack, StackDiscard, StackError, StackPush},
 };
 use std::ops::Neg;

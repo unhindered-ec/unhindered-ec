@@ -11,6 +11,7 @@ pub use self::{bool::BoolInstructionError, int::IntInstructionError};
 
 mod bool;
 mod float;
+pub mod instruction_error;
 mod int;
 
 /*
@@ -32,45 +33,6 @@ mod int;
  * - pop
  * - dup (int_dup, exec_dup, bool_dup, ...)
  */
-
-#[derive(thiserror::Error, Debug, Eq, PartialEq)]
-pub enum PushInstructionError {
-    #[error(transparent)]
-    StackError(#[from] StackError),
-    #[error("Exceeded the maximum step limit {step_limit}")]
-    StepLimitExceeded { step_limit: usize },
-    #[error(transparent)]
-    Int(#[from] IntInstructionError),
-    #[error(transparent)]
-    Bool(#[from] BoolInstructionError),
-}
-
-/// Maps a (presumably error) type into an `InstructionResult`.
-/// This is in fact used to convert `InstructionResult<S, E1>`
-/// into `InstructionResult<S, E2>`, i.e. do `map_err()` on
-/// the inner error types of an `InstructionResult`, preserving
-/// the other fields in `Error`.
-pub trait MapInstructionError<S, E> {
-    ///
-    /// # Errors
-    ///
-    /// This always returns an error type.
-    fn map_err_into(self) -> InstructionResult<S, E>;
-}
-
-// MizardX@Twitch's initial suggestion here had `E2` as a generic on the
-// _function_ `map_err_into()` instead of at the `impl` level. That provided
-// some additional flexibility, although it wasn't that we would use it.
-// The current approach (suggested by esitsu@Twitch) simplified the
-// `MapInstructionError` trait in a nice way, so I went with that.
-impl<S, E1, E2> MapInstructionError<S, E2> for InstructionResult<S, E1>
-where
-    E1: Into<E2>,
-{
-    fn map_err_into(self) -> InstructionResult<S, E2> {
-        self.map_err(|e| e.map_inner_err(Into::into))
-    }
-}
 
 pub trait Instruction<S> {
     type Error;
