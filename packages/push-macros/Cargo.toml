@@ -16,4 +16,6 @@ manyhow = "0.8.1"
 proc-macro-assertions = "0.1.5"
 proc-macro2 = "1.0.69"
 quote = "1.0.33"
-syn = { version = "2.0.38", features = ["full"] }
+syn = { version = "2.0.38", features = ["full", "printing"] }
+itertools = { workspace = true }
+prettyplease = "0.2.15"

@@ -148,6 +148,27 @@ pub fn parse_fields(
                             stack_marker_flags.is_exec = marker_flags.is_exec.clone();
                         }
                     }
+                    if *marker_flags.ignore_doctests {
+                        if !generate_builder {
+                            return Err(syn::Error::new(
+                                marker_flags.ignore_doctests.span,
+                                "Unknown flag exec. Maybe you meant to enable the builder feature \
+                                 of the push_state macro?",
+                            ));
+                        }
+                        if *stack_marker_flags.ignore_doctests {
+                            // This actually spans the `#` instead of `exec`, which should probably
+                            // be fixed at some point.
+                            return Err(syn::Error::new(
+                                marker_flags.ignore_doctests.span,
+                                "Redundant ignore_doctests flag",
+                            ));
+                        } else {
+                            stack_marker_flags.ignore_doctests =
+                                marker_flags.ignore_doctests.clone();
+                        }
+                    }
+
                     if marker_flags.builder_name.is_some() {
                         if !generate_builder {
                             return Err(syn::Error::new(
@@ -192,6 +213,25 @@ pub fn parse_fields(
                             ));
                         } else {
                             stack_marker_flags.instruction_name = marker_flags.instruction_name
+                        }
+                    }
+
+                    if marker_flags.sample_values.is_some() {
+                        if !generate_builder {
+                            return Err(syn::Error::new(
+                                marker_flags.sample_values.span,
+                                "Unknown flag sample_values. Maybe you meant to enable the \
+                                 builder feature of the push_state macro?",
+                            ));
+                        }
+
+                        if stack_marker_flags.sample_values.is_some() {
+                            return Err(syn::Error::new(
+                                marker_flags.sample_values.span,
+                                "Sample values already set explicitly",
+                            ));
+                        } else {
+                            stack_marker_flags.sample_values = marker_flags.sample_values
                         }
                     }
                 }
