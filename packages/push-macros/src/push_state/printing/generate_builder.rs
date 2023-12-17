@@ -163,7 +163,7 @@ pub fn generate_builder(
                         ///
                         /// let mut state = PushState::builder()
                         ///     .with_max_stack_size(100)
-                        ///     .with_program([])?
+                        ///     .with_no_program()
                         ///     .with_int_values(vec![5, 8, 9])?
                         ///     .build();
                         /// let int_stack: &Stack<i64> = state.stack::<i64>();
@@ -299,7 +299,7 @@ pub fn generate_builder(
             ///
             /// let mut state = PushState::builder()
             ///     .with_max_stack_size(100)
-            ///     .with_program([])?
+            ///     .with_no_program()
             ///     .build();
             /// let bool_stack: &Stack<bool> = state.stack::<bool>();
             /// assert_eq!(bool_stack.max_stack_size(), 100);
@@ -333,13 +333,14 @@ pub fn generate_builder(
             /// # Arguments
             /// - `program` - The program you wish to execute
             #[must_use]
-            pub fn with_program<P>(mut self, program: P)
+            pub fn with_program<P, I>(mut self, program: P)
                 -> ::std::result::Result<#builder_name<#utilities_mod_ident::WithSizeAndData, #(#stack_generics),*>, ::push::push_vm::stack::StackError>
             where
-                P: ::std::iter::IntoIterator<Item = ::push::instruction::PushInstruction>,
+                P: ::std::iter::IntoIterator<Item = I>,
                 <P as ::std::iter::IntoIterator>::IntoIter: ::std::iter::DoubleEndedIterator + ::std::iter::ExactSizeIterator,
+                I: ::std::convert::Into<::push::push_vm::program::PushProgram>
             {
-                self.partial_state.#exec_stack_ident.try_extend(program)?;
+                self.partial_state.#exec_stack_ident.try_extend(::std::iter::IntoIterator::into_iter(program).map(::std::convert::Into::into))?;
                 ::std::result::Result::Ok(#builder_name {
                     partial_state: self.partial_state,
                     _p: ::std::marker::PhantomData,

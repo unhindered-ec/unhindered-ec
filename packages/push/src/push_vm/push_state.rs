@@ -1,9 +1,10 @@
 use ordered_float::OrderedFloat;
 
+use crate::push::instruction::instruction_error::PushInstructionError;
 use crate::{
     error::{stateful::FatalError, try_recover::TryRecover, InstructionResult},
-    instruction::{Instruction, PushInstruction, PushInstructionError, VariableName},
-    push_vm::{stack::Stack, State},
+    instruction::{variable_name::VariableName, Instruction, PushInstruction},
+    push_vm::{program::PushProgram, stack::Stack, State},
 };
 use std::collections::HashMap;
 
@@ -20,7 +21,7 @@ use std::collections::HashMap;
 #[push_macros::push_state(builder)]
 pub struct PushState {
     #[stack(exec)]
-    pub(crate) exec: Stack<PushInstruction>,
+    pub(crate) exec: Stack<PushProgram>,
     #[stack]
     pub(crate) int: Stack<i64>,
     #[stack]
@@ -80,15 +81,15 @@ impl PushState {
 }
 
 impl State for PushState {
-    type Instruction = PushInstruction;
+    type Instruction = PushProgram;
 
     // TODO: Need to have some kind of execution limit to prevent infinite loops.
     fn run_to_completion(mut self) -> Result<Self, FatalError<Self, PushInstructionError>> {
         // The `pop()` call can only return a `StackError`, which is either underflow or
         // overflow, with the latter not possible when just popping. So I'm not going to
         // bother capturing the error here.
-        while let Ok(instruction) = self.exec.pop() {
-            self = self.perform(&instruction).try_recover()?;
+        while let Ok(program) = self.exec.pop() {
+            self = self.perform(&program).try_recover()?;
         }
         Ok(self)
     }
@@ -100,10 +101,12 @@ mod simple_check {
     use ordered_float::OrderedFloat;
 
     use crate::{
+        genome::plushy::{Plushy, PushGene},
         instruction::{
-            BoolInstruction, FloatInstruction, IntInstruction, PushInstruction, VariableName,
+            variable_name::VariableName, BoolInstruction, FloatInstruction, IntInstruction,
+            PushInstruction,
         },
-        push_vm::push_state::PushState,
+        push_vm::{program::PushProgram, push_state::PushState},
     };
 
     use super::State;
@@ -122,27 +125,28 @@ mod simple_check {
             PushInstruction::push_float(OrderedFloat(f))
         }
 
-        let program = vec![
-            PushInstruction::InputVar(VariableName::from("x")), // [5]
-            PushInstruction::InputVar(VariableName::from("y")), // [8, 5]
-            push_bool(true),                                    // [true]
-            PushInstruction::InputVar(VariableName::from("a")), // [true, true]
-            push_int(9),                                        // [9, 8, 5]
-            BoolInstruction::Or.into(),                         // [true]
-            IntInstruction::Add.into(),                         // [17, 5]
-            push_int(6),                                        // [6, 17, 5]
-            IntInstruction::IsEven.into(),                      // [17, 5], [true, true]
-            BoolInstruction::And.into(),                        // [true]
-            PushInstruction::InputVar(VariableName::from("b")), // [false, true]
-            push_float(3.5),                                    // [3.5]
-            FloatInstruction::Dup.into(),                       // [3.5, 3.5]
-            FloatInstruction::Multiply.into(),                  // [12.25]
-            PushInstruction::InputVar(VariableName::from("f")), // [12.25, 0.75]
-            FloatInstruction::Add.into(),                       // [13.0]
+        let genes: Vec<PushGene> = vec![
+            PushInstruction::InputVar(VariableName::from("x")).into(), // [5]
+            PushInstruction::InputVar(VariableName::from("y")).into(), // [8, 5]
+            push_bool(true).into(),                                    // [true]
+            PushInstruction::InputVar(VariableName::from("a")).into(), // [true, true]
+            push_int(9).into(),                                        // [9, 8, 5]
+            BoolInstruction::Or.into(),                                // [true]
+            IntInstruction::Add.into(),                                // [17, 5]
+            push_int(6).into(),                                        // [6, 17, 5]
+            IntInstruction::IsEven.into(),                             // [17, 5], [true, true]
+            BoolInstruction::And.into(),                               // [true]
+            PushInstruction::InputVar(VariableName::from("b")).into(), // [false, true]
+            push_float(3.5).into(),                                    // [3.5]
+            FloatInstruction::Dup.into(),                              // [3.5, 3.5]
+            FloatInstruction::Multiply.into(),                         // [12.25]
+            PushInstruction::InputVar(VariableName::from("f")).into(), // [12.25, 0.75]
+            FloatInstruction::Add.into(),                              // [13.0]
         ];
+        let plushy = Plushy::new(genes);
         let state = PushState::builder()
             .with_max_stack_size(1000)
-            .with_program(program)
+            .with_program(Vec::<PushProgram>::from(plushy))
             .unwrap()
             .with_bool_input("a", true)
             .with_bool_input("b", false)

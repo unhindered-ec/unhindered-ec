@@ -3,6 +3,7 @@ use crate::{
     instruction::Instruction,
 };
 
+pub mod program;
 pub mod push_state;
 pub mod stack;
 
