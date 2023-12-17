@@ -1,9 +1,6 @@
 use collectable::TryExtend;
 
-use crate::{
-    error::{Error, InstructionResult},
-    instruction::MapInstructionError,
-};
+use crate::error::{Error, InstructionResult, MapInstructionError};
 
 pub trait TypeEq {
     type This: ?Sized;

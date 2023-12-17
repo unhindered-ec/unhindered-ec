@@ -100,7 +100,7 @@ pub fn generate_builder(
                         #[must_use]
                         pub fn #fn_ident(mut self, input_name: &str, input_value: <#ty as ::push::push_vm::stack::StackType>::Type) -> Self {
                             self.partial_state.#input_instructions_field.insert(
-                                ::push::instruction::VariableName::from(input_name),
+                                ::push::instruction::variable_name::VariableName::from(input_name),
                                 #instruction_path(input_value),
                             );
                             self
