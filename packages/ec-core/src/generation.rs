@@ -33,8 +33,8 @@ where
     /// Make the next generation using a Rayon parallel iterator.
     /// # Errors
     ///
-    /// This can return errors if any aspect of creating the next generation fail. That can include constructing
-    /// or scoring the genomes.
+    /// This can return errors if any aspect of creating the next generation fail.
+    /// That can include constructing or scoring the genomes.
     pub fn par_next(&mut self) -> anyhow::Result<()> {
         let pop_size = self.population.size();
         let population = (0..pop_size)
@@ -58,8 +58,8 @@ where
     /// Make the next generation serially.
     /// # Errors
     ///
-    /// This can return errors if any aspect of creating the next generation fail. That can include constructing
-    /// or scoring the genomes.
+    /// This can return errors if any aspect of creating the next generation fail.
+    /// That can include constructing or scoring the genomes.
     pub fn serial_next(&mut self) -> anyhow::Result<()> {
         let pop_size = self.population.size();
         let mut rng = rand::thread_rng();

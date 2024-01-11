@@ -34,7 +34,10 @@ use std::ops::Not;
 
 /*
  * This is an implementation of the "complex regression" problem from the Propeller implementation
- * of PushGP: https://github.com/lspector/propeller/blob/master/src/propeller/problems/complex_regression.cljc
+ * of PushGP:
+ * https://github.com/lspector/propeller/blob/
+ * 71d378f49fdf88c14dda88387291c9c7be0f1277/
+ * src/propeller/problems/complex_regression.cljc
  */
 
 fn main() -> Result<()> {
@@ -65,7 +68,8 @@ fn main() -> Result<()> {
                 let state = PushState::builder()
                     .with_max_stack_size(1000)
                     .with_program(program.get_instructions())
-                    // This will return an error if the program is longer than the allowed max stack size.
+                    // This will return an error if the program is longer than the allowed
+                    //  max stack size.
                     // We arguably should check that and return an error here.
                     .unwrap()
                     .with_float_input("x", *input)

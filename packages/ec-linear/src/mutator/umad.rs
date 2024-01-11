@@ -44,7 +44,8 @@ where
         genome
             .into_iter()
             .flat_map(|gene| {
-                // The body of this closure is due to MizardX@Twitch; much nicer than my original approach.
+                // The body of this closure is due to MizardX@Twitch;
+                // much nicer than my original approach.
                 let add_gene = rng.gen_bool(self.addition_rate);
                 let delete_gene = rng.gen_bool(self.deletion_rate);
                 // only called when `add_gene` is true
@@ -124,7 +125,8 @@ mod test {
         let num_missing = count_missing(&remaining_chars, &parent_chars);
         assert!(
             num_missing.is_some(),
-            "The remaining chars {remaining_chars:?} should have been an ordered subsequence of the parent chars {parent_chars:?}."
+            "The remaining chars {remaining_chars:?} should have been\
+            an ordered subsequence of the parent chars {parent_chars:?}."
         );
         assert!(
             num_missing.unwrap() > 0,

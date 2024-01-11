@@ -20,8 +20,8 @@ where
     //
     /// # Errors
     ///
-    /// This can return errors if any aspect of creating this child fail. That can include constructing
-    /// or scoring the genome.
+    /// This can return errors if any aspect of creating this child fail.
+    /// That can include constructing or scoring the genome.
     fn make_child(
         &self,
         rng: &mut ThreadRng,

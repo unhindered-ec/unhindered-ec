@@ -444,7 +444,8 @@ where
                 Ok(()) => Ok(state),
                 // TODO: any::type_name::<T>() to get the type name – put this in Stack
                 // If this fails it's because we tried to pop too many things from the stack.
-                // We _should_ have previously checked that there were that many things (using `top()` for example),
+                // We _should_ have previously checked that there were
+                // that many things (using `top()` for example),
                 // so really this should never happen.
                 Err(error) => Err(Error::fatal(state, error)),
             },

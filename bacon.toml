@@ -1,0 +1,5 @@
+[jobs.fmt-check]
+command = ["cargo", "fmt", "--check", "--", "--config", "error_on_unformatted=true,error_on_line_overflow=true"]
+
+[jobs.check]
+command = ["cargo", "clippy"]

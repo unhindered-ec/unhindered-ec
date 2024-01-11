@@ -22,20 +22,32 @@ pub fn derive_has_stack(
     }
 
     stacks_to_derive_for
-            .into_iter()
-            .map(|(ident, ty)| {
-                quote! {
-                    #[automatically_derived]
-                    impl ::push::push_vm::stack::HasStack<<#ty as ::push::push_vm::stack::StackType>::Type> for #struct_ident {
-                        fn stack<U: ::push::push_vm::stack::TypeEq<This = <#ty as ::push::push_vm::stack::StackType>::Type>>(&self) -> &#ty {
-                            &self.#ident
-                        }
+        .into_iter()
+        .map(|(ident, ty)| {
+            quote! {
+                #[automatically_derived]
+                impl
+                    ::push::push_vm::stack::HasStack<
+                        <#ty as ::push::push_vm::stack::StackType>::Type
+                    >
+                for
+                    #struct_ident
+                {
+                    fn stack<
+                        U: ::push::push_vm::stack::TypeEq<
+                            This = <#ty as ::push::push_vm::stack::StackType>::Type>
+                    >(&self) -> &#ty {
+                        &self.#ident
+                    }
 
-                        fn stack_mut<U: ::push::push_vm::stack::TypeEq<This = <#ty as ::push::push_vm::stack::StackType>::Type>>(&mut self) -> &mut #ty {
-                            &mut self.#ident
-                        }
+                    fn stack_mut<
+                        U: ::push::push_vm::stack::TypeEq<
+                            This = <#ty as ::push::push_vm::stack::StackType>::Type>
+                    >(&mut self) -> &mut #ty {
+                        &mut self.#ident
                     }
                 }
-            })
-            .collect::<proc_macro2::TokenStream>()
+            }
+        })
+        .collect::<proc_macro2::TokenStream>()
 }

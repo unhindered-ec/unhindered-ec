@@ -65,12 +65,16 @@ fn main() -> Result<()> {
                 let state = PushState::builder()
                     .with_max_stack_size(1000)
                     .with_program(program.get_instructions())
-                    // This will return an error if the program is longer than the allowed max stack size.
+                    // This will return an error if the program is longer than
+                    //  the allowed max stack size.
                     // We arguably should check that and return an error here.
                     .unwrap()
                     .with_int_input("x", input)
                     .build();
-                // This is the degree 3 problem in https://github.com/lspector/Clojush/blob/master/src/clojush/problems/demos/simple_regression.clj
+                // This is the degree 3 problem in
+                // https://github.com/lspector/Clojush/blob/
+                // e2c9d8c830715f7d1e644f6205c192b9e5ceead2/src/
+                // clojush/problems/demos/simple_regression.clj
                 let expected = input * input * input - 2 * input * input - input;
                 #[allow(clippy::option_if_let_else)]
                 match state.run_to_completion() {
@@ -88,7 +92,10 @@ fn main() -> Result<()> {
         errors
     };
 
-    // The degree 3 problem in https://github.com/lspector/Clojush/blob/master/src/clojush/problems/demos/simple_regression.clj
+    // The degree 3 problem in
+    // https://github.com/lspector/Clojush/blob/
+    // e2c9d8c830715f7d1e644f6205c192b9e5ceead2/src/
+    // clojush/problems/demos/simple_regression.clj
     // just uses 10 test cases, 0 to 9 (inclusive).
     let num_test_cases = 10;
 

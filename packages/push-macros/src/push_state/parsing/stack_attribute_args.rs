@@ -25,11 +25,14 @@ syn::custom_keyword!(instruction_name);
 pub enum StackFieldOption {
     /// `exec` option, this determines which stack is the exec stack
     Exec(exec),
-    /// `builder_name = name` option, this can be used to change the name of the stack as it is used inside
-    /// the builder, like the `int` in `with_int_values` (or if you set the builder name to `number` then
+    /// `builder_name = name` option,
+    /// this can be used to change the name of the stack as it is used inside
+    /// the builder, like the `int` in `with_int_values`
+    /// (or if you set the builder name to `number` then
     /// it would be `with_number_values`)
     BuilderName(builder_name, Token![=], Ident),
-    /// `instruction_name = some::path` option, this can be used to change the instruction that is used
+    /// `instruction_name = some::path` option,
+    /// this can be used to change the instruction that is used
     /// to set input values, for example in the `with_int_input` method
     InstructionName(instruction_name, Token![=], Path),
 }

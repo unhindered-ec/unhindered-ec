@@ -271,7 +271,10 @@ proptest! {
     }
 
     #[test]
-    fn protected_divide_divs_or_does_nothing(x in proptest::num::i64::ANY, y in proptest::num::i64::ANY) {
+    fn protected_divide_divs_or_does_nothing(
+        x in proptest::num::i64::ANY,
+        y in proptest::num::i64::ANY
+    ) {
         let state = PushState::builder()
             .with_max_stack_size(100)
             .with_int_values([x, y])

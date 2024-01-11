@@ -11,7 +11,7 @@ pub trait Generator<T> {
     ///
     /// This returns an `anyhow::Error` if the implementation of `generate`
     /// returns some sort of error. An example would be choosing a random
-    /// item from a collection; this fails if the collection is empty.  
+    /// item from a collection; this fails if the collection is empty.
     fn generate(&self, rng: &mut ThreadRng) -> anyhow::Result<T>;
 }
 

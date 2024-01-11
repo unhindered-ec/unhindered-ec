@@ -50,8 +50,10 @@ where
     //   - result goes on the char stack
     let transaction: Transaction<PushState> = state.transaction();
 
-    let string = transaction.try_pop<String>()?; // This version has the transaction be mutable.
-    let (string, transaction) = transaction.try_pop<String>()?; // This version returns a "new" transaction.
+    let string = transaction.try_pop<String>()?;
+    // This version has the transaction be mutable.
+    let (string, transaction) = transaction.try_pop<String>()?;
+    // This version returns a "new" transaction.
 
     let (index, transaction) = transaction.try_pop<i64>()?;
     let c = string.chars.nth(index)?;
@@ -61,10 +63,14 @@ where
 
     // [pop string] then [pop integer] contains a closure with a tuple of (string, int)
 
-    // state.transaction().pop::<String>().with_min_length(1).and_pop::<Integer>().then_push::<Char>(|(s, i)| s.chars.nth(i))
-    // state.transaction().pop::<String>().with_min_length(1).and_pop::<Integer>().charAt().then_push::<Char>()
-    // state.transaction().pop::<String>().with_min_length(1).and_pop::<Integer>().map::<Char>(|(s, i)| s.chars.nth(i)).then_push::<Char>()
-    // Then you wouldn't be able to chain on that and query what you would push onto the stack so maybe not ideal.
+    // state.transaction().pop::<String>().with_min_length(1)
+    //     .and_pop::<Integer>().then_push::<Char>(|(s, i)| s.chars.nth(i))
+    // state.transaction().pop::<String>().with_min_length(1)
+    //     .and_pop::<Integer>().charAt().then_push::<Char>()
+    // state.transaction().pop::<String>().with_min_length(1)
+    //     .and_pop::<Integer>().map::<Char>(|(s, i)| s.chars.nth(i)).then_push::<Char>()
+    // Then you wouldn't be able to chain on that and
+    // query what you would push onto the stack so maybe not ideal.
 
     // Options:
     //   - Make operations reversible (undo/redo)

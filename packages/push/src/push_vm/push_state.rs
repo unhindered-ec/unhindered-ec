@@ -49,14 +49,18 @@ impl PushState {
     //         .input_instructions
     //         .iter()
     //         .find_map(|(n, v)| if n == var_name { Some(v) } else { None })
-    //         .unwrap_or_else(|| panic!("Failed to get an instruction for the input variable '{var_name}' that hadn't been defined"))
+    //         .unwrap_or_else(|| panic!(
+    //              "Failed to get an instruction for the input \
+    //               variable '{var_name}' that hadn't been defined"
+    //         ))
     //         .clone();
     //     instruction.perform(self);
     // }
 
     /// # Errors
     ///
-    /// This returns an error if the `PushInstruction` returns an error, which really shouldn't happen.
+    /// This returns an error if the `PushInstruction` returns an error,
+    /// which really shouldn't happen.
     ///
     /// # Panics
     ///
@@ -73,7 +77,13 @@ impl PushState {
             .input_instructions
             .iter()
             .find_map(|(n, v)| if n == var_name { Some(v) } else { None })
-            .unwrap_or_else(|| panic!("Failed to get an instruction for the input variable '{var_name}' that hadn't been defined"))
+            .unwrap_or_else(|| {
+                panic!(
+                    "Failed to get an instruction for \
+                 the input variable '{var_name}' that hadn't \
+                 been defined"
+                )
+            })
             .clone();
         instruction.perform(self)
     }

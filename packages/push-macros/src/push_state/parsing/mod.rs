@@ -126,10 +126,16 @@ pub fn parse_fields(
                     let marker_flags: StackMarkerFlags = syn::parse2(l.tokens)?;
                     if *marker_flags.is_exec {
                         if !generate_builder && !derive_has_stack {
-                            return Err(syn::Error::new(marker_flags.is_exec.span, "Unknown flag exec. Maybe you meant to enable the builder or has_stack feature of the push_state macro?"));
+                            return Err(syn::Error::new(
+                                marker_flags.is_exec.span,
+                                "Unknown flag exec. \
+                                Maybe you meant to enable the builder or \
+                                has_stack feature of the push_state macro?",
+                            ));
                         }
                         if *stack_marker_flags.is_exec {
-                            // This actually spans the `#` instead of `exec`, which should probably be fixed at some point.
+                            // This actually spans the `#` instead of `exec`,
+                            // which should probably be fixed at some point.
                             return Err(syn::Error::new(
                                 marker_flags.is_exec.span,
                                 "Redundant exec flag",
@@ -145,7 +151,12 @@ pub fn parse_fields(
                     }
                     if marker_flags.builder_name.is_some() {
                         if !generate_builder {
-                            return Err(syn::Error::new(marker_flags.builder_name.span, "Unknown flag generate_builder. Maybe you meant to enable the builder feature of the push_state macro?"));
+                            return Err(syn::Error::new(
+                                marker_flags.builder_name.span,
+                                "Unknown flag generate_builder.\
+                                 Maybe you meant to enable the builder feature of \
+                                the push_state macro?",
+                            ));
                         }
                         if stack_marker_flags.builder_name.is_some() {
                             return Err(syn::Error::new(
@@ -164,7 +175,12 @@ pub fn parse_fields(
 
                     if marker_flags.instruction_name.is_some() {
                         if !generate_builder {
-                            return Err(syn::Error::new(marker_flags.instruction_name.span, "Unknown flag instruction_name. Maybe you meant to enable the builder feature of the push_state macro?"));
+                            return Err(syn::Error::new(
+                                marker_flags.instruction_name.span,
+                                "Unknown flag instruction_name.\
+                                 Maybe you meant to enable the builder feature of \
+                                the push_state macro?",
+                            ));
                         }
 
                         if stack_marker_flags.instruction_name.is_some() {
@@ -183,7 +199,11 @@ pub fn parse_fields(
                     }
                 }
                 syn::Meta::NameValue(n) => {
-                    return Err(syn::Error::new_spanned(n, "This kind of attribute meta is not supported, did you mean to use a list? (#[stack(builder_name = ...)])"));
+                    return Err(syn::Error::new_spanned(
+                        n,
+                        "This kind of attribute meta is not supported, did you mean to use a list? \
+                        (#[stack(builder_name = ...)])",
+                    ));
                 }
             }
         }
