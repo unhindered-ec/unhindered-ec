@@ -232,12 +232,17 @@ pub fn generate_builder(
                             .with_no_program()
                             .#fn_ident([#sample_values])?
                             .build();
-                        let int_stack: &Stack<<#ty as StackType>::Type> = state.stack::<<#ty as StackType>::Type>();
+                        let int_stack: &Stack<<#ty as StackType>::Type> =
+                            state.stack::<<#ty as StackType>::Type>();
                         assert_eq!(int_stack.size(), #number_values);
                         assert_eq!(int_stack.top()?, &#first_value);
                     };
 
-                    let ignore_attr = ((!matches!(struct_visibility, syn::Visibility::Public(_))) || **ignore_doctests).then_some("ignore");
+                    let ignore_attr = (
+                        (!matches!(struct_visibility, syn::Visibility::Public(_)))
+                            || **ignore_doctests
+                    )
+                        .then_some("ignore");
 
                     doctest(Some(&imports), None::<&str>, doctest_code, Some(outtro), ignore_attr)
                 });
@@ -250,8 +255,14 @@ pub fn generate_builder(
                 });
 
                 quote! {
-                    impl<__Exec: #utilities_mod_ident::StackState, #(#where_bounds),*> #builder_name<__Exec, #(#stack_generics),*> {
-                        /// Adds the given sequence of values to the stack for the state you're building.
+                    impl<
+                        __Exec: #utilities_mod_ident::StackState,
+                         #(#where_bounds),*
+                    >
+                        #builder_name<__Exec, #(#stack_generics),*>
+                    {
+                        /// Adds the given sequence of values to the
+                        /// stack for the state you're building.
                         ///
                         /// The first value in `values` will be the new top of the
                         /// stack. If the stack was initially empty, the last value
@@ -370,11 +381,21 @@ pub fn generate_builder(
 
     let with_max_stack_size_examples = stacks
         .iter()
-        .filter_map(|(_, (StackMarkerFlags { ignore_doctests, .. }, ty))| (!**ignore_doctests).then_some(ty))
-        .chain(exec_stack.iter().filter_map(|(_, StackMarkerFlags { ignore_doctests, .. }, ty)| (!**ignore_doctests).then_some(ty)))
+        .filter_map(|(_, (StackMarkerFlags { ignore_doctests, .. }, ty))|
+            (!**ignore_doctests).then_some(ty)
+        )
+        .chain(exec_stack.iter().filter_map(|(_, StackMarkerFlags { ignore_doctests, .. }, ty)|
+            (!**ignore_doctests).then_some(ty)
+        ))
         .next()
         .map(|ty| (false, ty))
-        .or_else(|| stacks.iter().map(|(_, (_, ty))| ty).chain(exec_stack.iter().map(|(_, _, ty)| ty)).next().map(|ty| (true, ty)))
+        .or_else(|| stacks
+            .iter()
+            .map(|(_, (_, ty))| ty)
+            .chain(exec_stack.iter()
+            .map(|(_, _, ty)| ty))
+            .next()
+            .map(|ty| (true, ty)))
         .map(|(ignore, ty)| {
             let imports = [
                 Import::Path(
@@ -391,13 +412,23 @@ pub fn generate_builder(
                     .with_max_stack_size(100)
                     .with_no_program()
                     .build();
-                let stack: &Stack<<#ty as StackType>::Type> = state.stack::<<#ty as StackType>::Type>();
+                let stack: &Stack<<#ty as StackType>::Type> =
+                    state.stack::<<#ty as StackType>::Type>();
                 assert_eq!(stack.max_stack_size(), 100);
             };
 
-            let ignore_attr = ((!matches!(struct_visibility, syn::Visibility::Public(_))) || ignore).then_some("ignore");
+            let ignore_attr = (
+                (!matches!(struct_visibility, syn::Visibility::Public(_)))
+                || ignore
+            ).then_some("ignore");
 
-            let doctest_tokenstream = doctest(Some(&imports), None::<&str>, doctest_code, Some(outtro), ignore_attr);
+            let doctest_tokenstream = doctest(
+                Some(&imports),
+                None::<&str>,
+                doctest_code,
+                Some(outtro),
+                ignore_attr
+            );
 
             quote! {
                     ///

@@ -37,6 +37,7 @@ pub enum StackFieldOption {
     /// this can be used to change the name of the stack as it is used inside
     /// the builder, like the `int` in `with_int_values`
     /// (or if you set the builder name to `number` then
+    /// it would be `with_number_values`)
     BuilderName(builder_name, Token![=], Ident),
     /// `instruction_name = some::path` option,
     /// this can be used to change the instruction that is used
