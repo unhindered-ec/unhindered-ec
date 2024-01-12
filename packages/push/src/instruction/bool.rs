@@ -50,10 +50,10 @@ where
     //   - result goes on the char stack
     let transaction: Transaction<PushState> = state.transaction();
 
-    let string = transaction.try_pop<String>()?;
     // This version has the transaction be mutable.
-    let (string, transaction) = transaction.try_pop<String>()?;
+    let string = transaction.try_pop<String>()?;
     // This version returns a "new" transaction.
+    let (string, transaction) = transaction.try_pop<String>()?;
 
     let (index, transaction) = transaction.try_pop<i64>()?;
     let c = string.chars.nth(index)?;
