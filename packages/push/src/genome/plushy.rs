@@ -164,7 +164,7 @@ mod test {
         ))];
         let umad = Umad::new(0.3, 0.3, instruction_options);
 
-        let parent_genes: Vec<PushGene> = vec![
+        let genes: Vec<PushGene> = vec![
             IntInstruction::Add.into(),
             BoolInstruction::And.into(),
             BoolInstruction::Or.into(),
