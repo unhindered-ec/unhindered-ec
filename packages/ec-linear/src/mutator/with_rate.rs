@@ -119,7 +119,6 @@ mod tests {
         let mut rng = rand::thread_rng();
         let num_bits = 100;
         let parent_bits = Bitstring::random(num_bits, &mut rng).unwrap();
-        //  make_random(num_bits, &mut rng);
         let child_bits = mutator.mutate(parent_bits.clone(), &mut rng).unwrap();
 
         let num_differences = zip(parent_bits, child_bits)
