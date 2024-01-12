@@ -74,7 +74,7 @@ pub struct Plushy {
 //   trait instead of just having a getter. Having something
 //   like `to_instructions()` since we're cloning?
 impl Plushy {
-    pub fn new<T: IntoIterator<Item = PushGene>>(iterable: T) -> Self {
+    pub fn new(iterable: impl IntoIterator<Item = PushGene>) -> Self {
         Self {
             genes: iterable.into_iter().collect(),
         }
