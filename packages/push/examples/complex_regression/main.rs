@@ -36,9 +36,7 @@ use crate::args::{Args, RunModel};
 /*
  * This is an implementation of the "complex regression" problem from the
  * Propeller implementation of PushGP:
- * https://github.com/lspector/propeller/blob/
- * 71d378f49fdf88c14dda88387291c9c7be0f1277/
- * src/propeller/problems/complex_regression.cljc
+ * https://github.com/lspector/propeller/blob/71d378f49fdf88c14dda88387291c9c7be0f1277/src/propeller/problems/complex_regression.cljc
  */
 
 fn main() -> Result<()> {
@@ -142,8 +140,8 @@ fn main() -> Result<()> {
 
     let mut generation = Generation::new(make_new_individual, population);
 
-    // // TODO: It might be useful to insert some kind of logging system so we can
-    // //   make this less imperative in nature.
+    // TODO: It might be useful to insert some kind of logging system so we can
+    //   make this less imperative in nature.
 
     for generation_number in 0..args.num_generations {
         match args.run_model {
