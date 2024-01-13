@@ -187,7 +187,7 @@ mod test {
             IntInstruction::Multiply.into(),
         ];
         let parent = Plushy {
-            genes: parent_genes,
+            genes,
         };
 
         let child = umad.mutate(parent, &mut rng);
