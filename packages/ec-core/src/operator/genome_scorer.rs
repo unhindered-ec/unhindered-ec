@@ -1,8 +1,7 @@
 use anyhow::Result;
 
-use crate::{individual::ec::EcIndividual, population::Population, test_results::TestResults};
-
 use super::{composable::Wrappable, Composable, Operator};
+use crate::{individual::ec::EcIndividual, population::Population, test_results::TestResults};
 
 pub struct GenomeScorer<GM, S> {
     genome_maker: GM,

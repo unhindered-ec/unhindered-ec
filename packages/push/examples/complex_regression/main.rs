@@ -5,7 +5,8 @@
 
 pub mod args;
 
-use crate::args::{Args, RunModel};
+use std::ops::Not;
+
 use anyhow::{ensure, Result};
 use clap::Parser;
 use ec_core::{
@@ -26,15 +27,15 @@ use ordered_float::OrderedFloat;
 use push::{
     genome::plushy::Plushy,
     instruction::{FloatInstruction, PushInstruction, VariableName},
-    push_vm::HasStack,
-    push_vm::{push_state::PushState, State},
+    push_vm::{push_state::PushState, HasStack, State},
 };
 use rand::thread_rng;
-use std::ops::Not;
+
+use crate::args::{Args, RunModel};
 
 /*
- * This is an implementation of the "complex regression" problem from the Propeller implementation
- * of PushGP:
+ * This is an implementation of the "complex regression" problem from the
+ * Propeller implementation of PushGP:
  * https://github.com/lspector/propeller/blob/
  * 71d378f49fdf88c14dda88387291c9c7be0f1277/
  * src/propeller/problems/complex_regression.cljc
@@ -53,9 +54,10 @@ fn main() -> Result<()> {
         .collect::<Vec<_>>();
 
     /*
-     * The `scorer` will need to take an evolved program (sequence of instructions) and run it
-     * on all the inputs from -4 (inclusive) to 4 (exclusive) in increments of 0.25, collecting
-     * together the errors, i.e., the absolute difference between the returned value and the
+     * The `scorer` will need to take an evolved program (sequence of
+     * instructions) and run it on all the inputs from -4 (inclusive) to 4
+     * (exclusive) in increments of 0.25, collecting together the errors,
+     * i.e., the absolute difference between the returned value and the
      * expected value.
      *
      * The target polynomial is (x^3 + 1)^3 + 1

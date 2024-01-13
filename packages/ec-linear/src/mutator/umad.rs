@@ -73,9 +73,8 @@ where
 mod test {
     use rand::thread_rng;
 
-    use crate::genome::vector::Vector;
-
     use super::*;
+    use crate::genome::vector::Vector;
 
     fn count_missing(short: &Vec<char>, long: &Vec<char>) -> Option<usize> {
         let mut short_index = 0;
@@ -125,8 +124,8 @@ mod test {
         let num_missing = count_missing(&remaining_chars, &parent_chars);
         assert!(
             num_missing.is_some(),
-            "The remaining chars {remaining_chars:?} should have been\
-            an ordered subsequence of the parent chars {parent_chars:?}."
+            "The remaining chars {remaining_chars:?} should have beenan ordered subsequence of \
+             the parent chars {parent_chars:?}."
         );
         assert!(
             num_missing.unwrap() > 0,

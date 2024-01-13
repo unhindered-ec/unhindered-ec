@@ -1,7 +1,7 @@
-use crate::operator::Operator;
 use anyhow::{Context, Result};
 
 use super::Composable;
+use crate::operator::Operator;
 
 pub struct Map<F> {
     f: F,

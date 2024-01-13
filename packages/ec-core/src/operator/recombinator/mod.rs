@@ -17,7 +17,8 @@ pub trait Recombinator<GS> {
     type Output;
 
     /// # Errors
-    /// This will return an error if there's some problem with the recombination.
+    /// This will return an error if there's some problem with the
+    /// recombination.
     fn recombine(&self, genomes: GS, rng: &mut ThreadRng) -> Result<Self::Output>;
 }
 

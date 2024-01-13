@@ -1,7 +1,7 @@
-use crate::individual::Individual;
 use anyhow::Result;
 
 use super::{Composable, Operator};
+use crate::individual::Individual;
 
 pub struct GenomeExtractor;
 

@@ -7,7 +7,6 @@ pub mod args;
 
 use std::ops::Not;
 
-use crate::args::{Args, RunModel};
 use anyhow::{ensure, Result};
 use clap::Parser;
 use ec_core::{
@@ -30,10 +29,11 @@ use ec_linear::mutator::umad::Umad;
 use push::{
     genome::plushy::Plushy,
     instruction::{IntInstruction, PushInstruction, VariableName},
-    push_vm::HasStack,
-    push_vm::{push_state::PushState, State},
+    push_vm::{push_state::PushState, HasStack, State},
 };
 use rand::thread_rng;
+
+use crate::args::{Args, RunModel};
 
 fn main() -> Result<()> {
     // Using `Error` in `TestResults<Error>` will have the run favor smaller
@@ -52,9 +52,10 @@ fn main() -> Result<()> {
     // };
 
     /*
-     * The `scorer` will need to take an evolved program (sequence of instructions) and run it
-     * 10 times on each of the 10 test inputs (0 through 9), collecting together the 10 errors,
-     * i.e., the absolute difference between the returned value and the expected value.
+     * The `scorer` will need to take an evolved program (sequence of
+     * instructions) and run it 10 times on each of the 10 test inputs (0
+     * through 9), collecting together the 10 errors, i.e., the absolute
+     * difference between the returned value and the expected value.
      *
      * The target polynomial is x^3 - 2x^2 - x
      */

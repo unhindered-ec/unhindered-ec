@@ -1,13 +1,12 @@
-use anyhow::{Context, Result};
-use ec_core::operator::mutator::Mutator;
 use std::ops::Not;
 
+use anyhow::{Context, Result};
+use ec_core::operator::mutator::Mutator;
 use num_traits::ToPrimitive;
 use rand::rngs::ThreadRng;
 
-use crate::genome::Linear;
-
 use super::with_rate::WithRate;
+use crate::genome::Linear;
 
 pub struct WithOneOverLength;
 

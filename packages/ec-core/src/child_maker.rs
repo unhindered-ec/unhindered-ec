@@ -13,10 +13,10 @@ where
     P: Population,
     S: Selector<P>,
 {
-    // TODO: Instead of passing 2/3 of  Generation` to this function, is there a trait
-    //  we can have `Generation` implement, and pass in a reference to something implementing
-    //  that trait instead? The trait would presumably implement the `get_parent()` method
-    //  or similar.
+    // TODO: Instead of passing 2/3 of  Generation` to this function, is there a
+    // trait  we can have `Generation` implement, and pass in a reference to
+    // something implementing  that trait instead? The trait would presumably
+    // implement the `get_parent()` method  or similar.
     //
     /// # Errors
     ///

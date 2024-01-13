@@ -1,10 +1,8 @@
 use anyhow::{Context, Result};
-
 use rand::rngs::ThreadRng;
 
-use crate::population::Population;
-
 use super::Selector;
+use crate::population::Population;
 
 pub struct Best;
 

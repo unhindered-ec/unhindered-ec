@@ -7,9 +7,8 @@ use ec_core::{
 };
 use rand::{rngs::ThreadRng, Rng};
 
-use crate::recombinator::crossover::Crossover;
-
 use super::Linear;
+use crate::recombinator::crossover::Crossover;
 
 // TODO: Ought to have `LinearGenome<T>` so that `Bitstring` is just
 //   `LinearGenome<bool>`.
@@ -39,22 +38,22 @@ impl Generator<Bitstring> for CollectionGenerator<BoolGenerator> {
 impl Bitstring {
     /// # Errors
     ///
-    /// This returns an `anyhow::Result<>` as required by the `Generate` trait. I shouldn't actually
-    ///   ever return an error in this setting, as we should always be able to generate a vector of
-    ///   booleans.
-    // TODO: I think that the `!` type could be used here to indicate that this can't fail,
-    //but that's still nightly.
+    /// This returns an `anyhow::Result<>` as required by the `Generate` trait.
+    /// I shouldn't actually   ever return an error in this setting, as we
+    /// should always be able to generate a vector of   booleans.
+    // TODO: I think that the `!` type could be used here to indicate that this
+    // can't fail, but that's still nightly.
     pub fn random(num_bits: usize, rng: &mut ThreadRng) -> anyhow::Result<Self> {
         Self::random_with_probability(num_bits, 0.5, rng)
     }
 
     /// # Errors
     ///
-    /// This returns an `anyhow::Result<>` as required by the `Generate` trait. I shouldn't actually
-    ///   ever return an error in this setting, as we should always be able to generate a vector of
-    ///   booleans.
-    // TODO: I think that the `!` type could be used here to indicate that this can't fail,
-    // but that's still nightly
+    /// This returns an `anyhow::Result<>` as required by the `Generate` trait.
+    /// I shouldn't actually   ever return an error in this setting, as we
+    /// should always be able to generate a vector of   booleans.
+    // TODO: I think that the `!` type could be used here to indicate that this
+    // can't fail, but that's still nightly
     pub fn random_with_probability(
         num_bits: usize,
         probability: f64,

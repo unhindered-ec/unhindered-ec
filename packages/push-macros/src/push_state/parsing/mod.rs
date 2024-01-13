@@ -128,9 +128,8 @@ pub fn parse_fields(
                         if !generate_builder && !derive_has_stack {
                             return Err(syn::Error::new(
                                 marker_flags.is_exec.span,
-                                "Unknown flag exec. \
-                                Maybe you meant to enable the builder or \
-                                has_stack feature of the push_state macro?",
+                                "Unknown flag exec. Maybe you meant to enable the builder or \
+                                 has_stack feature of the push_state macro?",
                             ));
                         }
                         if *stack_marker_flags.is_exec {
@@ -153,9 +152,8 @@ pub fn parse_fields(
                         if !generate_builder {
                             return Err(syn::Error::new(
                                 marker_flags.builder_name.span,
-                                "Unknown flag generate_builder.\
-                                 Maybe you meant to enable the builder feature of \
-                                the push_state macro?",
+                                "Unknown flag generate_builder.Maybe you meant to enable the \
+                                 builder feature of the push_state macro?",
                             ));
                         }
                         if stack_marker_flags.builder_name.is_some() {
@@ -177,9 +175,8 @@ pub fn parse_fields(
                         if !generate_builder {
                             return Err(syn::Error::new(
                                 marker_flags.instruction_name.span,
-                                "Unknown flag instruction_name.\
-                                 Maybe you meant to enable the builder feature of \
-                                the push_state macro?",
+                                "Unknown flag instruction_name.Maybe you meant to enable the \
+                                 builder feature of the push_state macro?",
                             ));
                         }
 
@@ -201,8 +198,8 @@ pub fn parse_fields(
                 syn::Meta::NameValue(n) => {
                     return Err(syn::Error::new_spanned(
                         n,
-                        "This kind of attribute meta is not supported, did you mean to use a list? \
-                        (#[stack(builder_name = ...)])",
+                        "This kind of attribute meta is not supported, did you mean to use a \
+                         list? (#[stack(builder_name = ...)])",
                     ));
                 }
             }

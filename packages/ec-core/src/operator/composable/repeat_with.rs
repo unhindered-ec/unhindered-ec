@@ -1,11 +1,10 @@
-use itertools::Itertools;
-
 use std::iter;
 
-use crate::operator::Operator;
 use anyhow::{anyhow, Result};
+use itertools::Itertools;
 
 use super::Composable;
+use crate::operator::Operator;
 
 /// An `Operator` that applies the encapsulated `Operator`
 /// `N` times on the given input, returning an array of

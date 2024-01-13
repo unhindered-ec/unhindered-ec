@@ -24,9 +24,8 @@ mod generator_trait_tests {
 
     use rand::{rngs::ThreadRng, thread_rng, Rng};
 
-    use crate::generator::{collection::CollectionGenerator, Generator};
-
     use super::*;
+    use crate::generator::{collection::CollectionGenerator, Generator};
 
     struct RandValue {
         val: i32,

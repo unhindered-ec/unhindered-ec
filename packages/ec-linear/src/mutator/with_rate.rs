@@ -1,7 +1,7 @@
-use anyhow::Result;
-use ec_core::operator::mutator::Mutator;
 use std::ops::Not;
 
+use anyhow::Result;
+use ec_core::operator::mutator::Mutator;
 use rand::{rngs::ThreadRng, Rng};
 
 use crate::genome::Linear;
@@ -21,11 +21,7 @@ where
             .into_iter()
             .map(|bit| {
                 let r: f32 = rng.gen();
-                if r < self.mutation_rate {
-                    !bit
-                } else {
-                    bit
-                }
+                if r < self.mutation_rate { !bit } else { bit }
             })
             .collect())
     }
@@ -44,11 +40,7 @@ where
             .into_iter()
             .map(|bit| {
                 let r: f32 = rng.gen();
-                if r < self.mutation_rate {
-                    !bit
-                } else {
-                    bit
-                }
+                if r < self.mutation_rate { !bit } else { bit }
             })
             .collect())
     }

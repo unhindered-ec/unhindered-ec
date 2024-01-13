@@ -41,8 +41,8 @@ pub fn generate_builder(
     let Some((exec_stack_ident, _, _)) = exec_stack else {
         return Err(syn::Error::new(
             macro_span,
-            "Need to declare exactly one exec stack using \
-            #[stack(exec)] to use the builder feature.",
+            "Need to declare exactly one exec stack using #[stack(exec)] to use the builder \
+             feature.",
         ));
     };
 

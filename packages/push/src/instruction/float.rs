@@ -1,3 +1,6 @@
+use ordered_float::OrderedFloat;
+use strum_macros::EnumIter;
+
 use super::{Instruction, PushInstruction, PushInstructionError};
 use crate::{
     error::{Error, InstructionResult},
@@ -7,8 +10,6 @@ use crate::{
         HasStack,
     },
 };
-use ordered_float::OrderedFloat;
-use strum_macros::EnumIter;
 
 #[derive(Debug, strum_macros::Display, Copy, Clone, EnumIter, Eq, PartialEq)]
 #[non_exhaustive]
@@ -53,11 +54,7 @@ where
                 Self::binary_arithmetic(
                     state,
                     |x, y| {
-                        if y == 0.0 {
-                            OrderedFloat(1.0)
-                        } else {
-                            x / y
-                        }
+                        if y == 0.0 { OrderedFloat(1.0) } else { x / y }
                     },
                 )
             }

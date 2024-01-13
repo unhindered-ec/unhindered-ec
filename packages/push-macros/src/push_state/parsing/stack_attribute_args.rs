@@ -20,8 +20,8 @@ syn::custom_keyword!(exec);
 syn::custom_keyword!(builder_name);
 syn::custom_keyword!(instruction_name);
 
-/// Any option passed to a field inside a struct to be used inside the macro, for example
-/// the `exec` in #[stack(exec)]
+/// Any option passed to a field inside a struct to be used inside the macro,
+/// for example the `exec` in #[stack(exec)]
 pub enum StackFieldOption {
     /// `exec` option, this determines which stack is the exec stack
     Exec(exec),

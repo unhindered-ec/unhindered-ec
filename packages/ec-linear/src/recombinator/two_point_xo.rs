@@ -1,7 +1,6 @@
 use anyhow::{ensure, Result};
-use rand::{rngs::ThreadRng, Rng};
-
 use ec_core::operator::recombinator::Recombinator;
+use rand::{rngs::ThreadRng, Rng};
 
 use super::crossover::Crossover;
 
