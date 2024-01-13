@@ -23,4 +23,9 @@ jobs:
       - run: cargo build --verbose
       - run: cargo test --verbose
       - run: cargo clippy
-      - run: cargo fmt --check -- --config error_on_unformatted=true,error_on_line_overflow=true
+      - run: cargo install rustfmt-unstable
+      # Currently (v1.x) rustfmt accepts unstable features as
+      # arguments only, this wrapper reads the file and passes
+      # them as arguments. Rustfmt v2.x won't have this limitation
+      # anymore and then this wrapper can be removed.
+      - run: rustfmt-unstable --config-file rustfmt.toml -- cargo fmt --check -- --config error_on_line_overflow=true
