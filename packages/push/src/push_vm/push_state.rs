@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use ordered_float::OrderedFloat;
+pub use ordered_float::OrderedFloat;
 
 use crate::{
     error::{stateful::FatalError, try_recover::TryRecover, InstructionResult},
