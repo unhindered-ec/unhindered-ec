@@ -12,11 +12,11 @@ use crate::{
 };
 
 // TODO: It might make sense to separate out the specification of
-//   a Push implementation (i.e., the relevant traits) into its
-//   own package, and have the implementation of those traits in
-//   its own package as well. We could, for example, do a FFI
-//   implementation that just forwards to the a Clojure implementation
-//   or Python implementation for comparison/testing purposes.
+// a Push implementation (i.e., the relevant traits) into its
+// own package, and have the implementation of those traits in
+// its own package as well. We could, for example, do a FFI
+// implementation that just forwards to the a Clojure implementation
+// or Python implementation for comparison/testing purposes.
 
 // Because `f64` doesn't impl `Eq`, having a float stack means
 // that `PushState` also can't impl `Eq`.
@@ -76,8 +76,8 @@ impl PushState {
         var_name: &VariableName,
     ) -> InstructionResult<Self, <PushInstruction as Instruction<Self>>::Error> {
         // TODO: This `panic` here is icky, and we really should deal with it better.
-        //   I wonder if the fact that this index might not be there should be telling
-        //   us something...
+        // I wonder if the fact that this index might not be there should be telling
+        // us something...
         let instruction = self
             .input_instructions
             .iter()

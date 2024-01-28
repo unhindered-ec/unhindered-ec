@@ -65,7 +65,7 @@ pub trait HasStack<T> {
     /// instruction wasn't implemented properly.
     ///
     /// TODO: Maybe we should `panic` here instead of returning a fatal
-    ///   error?
+    /// error?
     ///
     /// This also returns a fatal error if pushing onto the specified stack
     /// overflows, which should really never happen assuming we pop at least
@@ -459,7 +459,7 @@ where
 }
 
 // TODO: Add a test to the `Stack` code that confirms that we return the
-//   correct `Underflow` and `Overflow` errors.
+// correct `Underflow` and `Overflow` errors.
 
 #[cfg(test)]
 mod test {

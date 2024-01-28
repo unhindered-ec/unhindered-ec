@@ -72,8 +72,8 @@ pub struct Plushy {
 }
 
 // TODO: We might want to implement some sort of `Into`
-//   trait instead of just having a getter. Having something
-//   like `to_instructions()` since we're cloning?
+// trait instead of just having a getter. Having something
+// like `to_instructions()` since we're cloning?
 impl Plushy {
     pub fn new(iterable: impl IntoIterator<Item = PushGene>) -> Self {
         Self {
