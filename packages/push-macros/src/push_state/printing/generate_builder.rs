@@ -223,6 +223,7 @@ pub fn generate_builder(
                         ),
                         Import::SuperRelativePath(import_utilities_path.clone()),
                     ];
+                    let var_name = derived_ident!(stack_ident, "_stack").unraw();
 
                     let outtro = "# Ok::<(), StackError>(())";
 
@@ -232,10 +233,10 @@ pub fn generate_builder(
                             .with_no_program()
                             .#fn_ident([#sample_values])?
                             .build();
-                        let int_stack: &Stack<<#ty as StackType>::Type> =
+                        let #var_name: &Stack<<#ty as StackType>::Type> =
                             state.stack::<<#ty as StackType>::Type>();
-                        assert_eq!(int_stack.size(), #number_values);
-                        assert_eq!(int_stack.top()?, &#first_value);
+                        assert_eq!(#var_name.size(), #number_values);
+                        assert_eq!(#var_name.top()?, &#first_value);
                     };
 
                     let ignore_attr = (
