@@ -138,22 +138,22 @@ mod simple_check {
         }
 
         let genes: Vec<PushGene> = vec![
-            PushInstruction::InputVar(VariableName::from("x")).into(), // [5]
-            PushInstruction::InputVar(VariableName::from("y")).into(), // [8, 5]
-            push_bool(true).into(),                                    // [true]
-            PushInstruction::InputVar(VariableName::from("a")).into(), // [true, true]
-            push_int(9).into(),                                        // [9, 8, 5]
-            BoolInstruction::Or.into(),                                // [true]
-            IntInstruction::Add.into(),                                // [17, 5]
-            push_int(6).into(),                                        // [6, 17, 5]
-            IntInstruction::IsEven.into(),                             // [17, 5], [true, true]
-            BoolInstruction::And.into(),                               // [true]
-            PushInstruction::InputVar(VariableName::from("b")).into(), // [false, true]
-            push_float(3.5).into(),                                    // [3.5]
-            FloatInstruction::Dup.into(),                              // [3.5, 3.5]
-            FloatInstruction::Multiply.into(),                         // [12.25]
-            PushInstruction::InputVar(VariableName::from("f")).into(), // [12.25, 0.75]
-            FloatInstruction::Add.into(),                              // [13.0]
+            VariableName::from("x").into(),    // [5]
+            VariableName::from("y").into(),    // [8, 5]
+            push_bool(true).into(),            // [true]
+            VariableName::from("a").into(),    // [true, true]
+            push_int(9).into(),                // [9, 8, 5]
+            BoolInstruction::Or.into(),        // [true]
+            IntInstruction::Add.into(),        // [17, 5]
+            push_int(6).into(),                // [6, 17, 5]
+            IntInstruction::IsEven.into(),     // [17, 5], [true, true]
+            BoolInstruction::And.into(),       // [true]
+            VariableName::from("b").into(),    // [false, true]
+            push_float(3.5).into(),            // [3.5]
+            FloatInstruction::Dup.into(),      // [3.5, 3.5]
+            FloatInstruction::Multiply.into(), // [12.25]
+            VariableName::from("f").into(),    // [12.25, 0.75]
+            FloatInstruction::Add.into(),      // [13.0]
         ];
         let plushy = Plushy::new(genes);
         let state = PushState::builder()

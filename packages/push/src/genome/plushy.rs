@@ -160,9 +160,7 @@ mod test {
     fn umad() {
         let mut rng = thread_rng();
 
-        let instruction_options = [PushGene::Instruction(PushInstruction::InputVar(
-            VariableName::from("x"),
-        ))];
+        let instruction_options: [PushGene; 1] = [VariableName::from("x").into()];
         let umad = Umad::new(0.3, 0.3, instruction_options);
 
         let genes: Vec<PushGene> = vec![
