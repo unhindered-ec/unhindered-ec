@@ -536,8 +536,10 @@ pub fn generate_builder(
             /// - `program` - The program you wish to execute
             #[must_use]
             pub fn with_program<P, I>(mut self, program: P)
-                -> ::std::result::Result<#builder_name<#utilities_mod_ident::WithSizeAndData, #(#stack_generics),*>,
-                                            ::push::push_vm::stack::StackError>
+                -> ::std::result::Result<
+                    #builder_name<#utilities_mod_ident::WithSizeAndData, #(#stack_generics),*>,
+                    ::push::push_vm::stack::StackError
+                >
             where
                 P: ::std::iter::IntoIterator<Item = I>,
                 <P as ::std::iter::IntoIterator>::IntoIter: ::std::iter::DoubleEndedIterator
