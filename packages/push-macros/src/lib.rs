@@ -4,6 +4,7 @@ use syn::{spanned::Spanned, DeriveInput};
 
 use crate::push_state::{parsing::parse_fields, printing::derive_has_stack::derive_has_stack};
 
+mod doctest_tokenstream;
 mod push_state;
 
 /// A macro for generating the corresponding code to create a new push state
@@ -30,8 +31,15 @@ mod push_state;
 /// attribute.
 ///
 /// You may change the name of the builder functions using `#[stack(builder_name
-/// = <name>)]`. and the Instruction used for input values with
-/// `#[stack(instruction_name = <path>)]`.
+/// = <name>)]` and the Instruction used for input values with
+/// `#[stack(instruction_name = <path>)]` and you can add sample values to stack
+/// with `#[stack(sample_values = [val1, val2, val3])]`. Note that for this to
+/// work, every foreign type used in the stack type as well as to define the
+/// sample values (eg. `sample_values = [OrderedFloat(0.3)]`) need to be `pub
+/// use`'d inside the module where state is defined. This is currently required
+/// as doctests are complied as their own seperate module. Alternatively, you
+/// can use the `ignore_doctests` flag to annotate every code example of the
+/// stack with the `ignore` attribute.
 ///
 /// # Example
 /// ```ignore

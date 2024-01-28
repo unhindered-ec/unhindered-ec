@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use ordered_float::OrderedFloat;
+pub use ordered_float::OrderedFloat;
 
 use crate::{
     error::{stateful::FatalError, try_recover::TryRecover, InstructionResult},
@@ -22,11 +22,11 @@ use crate::{
 pub struct PushState {
     #[stack(exec)]
     pub(crate) exec: Stack<PushInstruction>,
-    #[stack]
+    #[stack(sample_values = [4, 5, 7])]
     pub(crate) int: Stack<i64>,
-    #[stack]
+    #[stack(sample_values = [OrderedFloat(4.3), OrderedFloat(5.1), OrderedFloat(2.1)])]
     pub(crate) float: Stack<OrderedFloat<f64>>,
-    #[stack]
+    #[stack(sample_values = [true, false, true, true])]
     pub(crate) bool: Stack<bool>,
     // The Internet suggests that when you have fewer than 15 entries,
     // linear search on `Vec` is faster than `HashMap`. I found that

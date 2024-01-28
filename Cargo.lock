@@ -442,6 +442,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5b40af805b3121feab8a3c29f04d8ad262fa8e0561883e7653e024ae4479e6de"
 
 [[package]]
+name = "prettyplease"
+version = "0.2.15"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ae005bd773ab59b4725093fd7df83fd7892f7d8eafb48dbd7de6e024e4215f9d"
+dependencies = [
+ "proc-macro2",
+ "syn 2.0.39",
+]
+
+[[package]]
 name = "proc-macro-assertions"
 version = "0.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -519,7 +529,9 @@ name = "push_macros"
 version = "0.1.0"
 dependencies = [
  "ident_case_conversions",
+ "itertools",
  "manyhow",
+ "prettyplease",
  "proc-macro-assertions",
  "proc-macro2",
  "quote",

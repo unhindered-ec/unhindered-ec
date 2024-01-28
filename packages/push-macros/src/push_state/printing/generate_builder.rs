@@ -3,8 +3,11 @@ use proc_macro2::{Span, TokenStream};
 use quote::quote;
 use syn::{ext::IdentExt, Generics, Ident, Visibility};
 
-use crate::push_state::parsing::{
-    stack_attribute_args::StackMarkerFlags, ExecStackInput, InputInstructionsInput, StacksInput,
+use crate::{
+    doctest_tokenstream::{doctest, Import},
+    push_state::parsing::{
+        stack_attribute_args::StackMarkerFlags, ExecStackInput, InputInstructionsInput, StacksInput,
+    },
 };
 
 macro_rules! derived_ident {
@@ -46,7 +49,19 @@ pub fn generate_builder(
         ));
     };
 
-    let utilities_mod_ident = derived_ident!(struct_ident.unraw().to_snake_case(), "_builder");
+    let utilities_mod_ident = struct_ident.unraw().to_snake_case();
+    let import_utilities_path = syn::UseTree::Path(syn::UsePath {
+        ident: utilities_mod_ident.clone(),
+        colon2_token: syn::token::PathSep::default(),
+        tree: Box::new(syn::UseTree::Path(syn::UsePath {
+            ident: syn::parse_quote!(imports),
+            colon2_token: syn::token::PathSep::default(),
+            tree: Box::new(syn::UseTree::Glob(syn::UseGlob {
+                star_token: syn::token::Star::default(),
+            })),
+        })),
+    });
+
     let builder_name = derived_ident!(struct_ident, "Builder");
 
     let fields = stacks.keys().collect::<Vec<_>>();
@@ -156,6 +171,8 @@ pub fn generate_builder(
                 (
                     StackMarkerFlags {
                         builder_name: builder_methods_name,
+                        sample_values,
+                        ignore_doctests,
                         ..
                     },
                     ty,
@@ -195,6 +212,47 @@ pub fn generate_builder(
                 });
 
                 let fn_ident = derived_ident!("with_", stack_ident, "_values").unraw();
+                let doctest_tokenstream = sample_values.as_ref().map(|sample_values| {
+                    let max_stack_size = ((sample_values.len() / 100) + 1) * 100;
+                    let number_values = sample_values.len();
+                    let first_value = sample_values.iter().next().unwrap();
+                    let imports = [
+                        Import::Path(
+                            Some(syn::token::PathSep::default()),
+                            syn::parse_quote!(push::push_vm::{stack::{Stack, StackError, StackType}, HasStack}),
+                        ),
+                        Import::SuperRelativePath(import_utilities_path.clone()),
+                    ];
+
+                    let outtro = "# Ok::<(), StackError>(())";
+
+                    let doctest_code = quote! {
+                        let mut state = #struct_ident::builder()
+                            .with_max_stack_size(#max_stack_size)
+                            .with_no_program()
+                            .#fn_ident([#sample_values])?
+                            .build();
+                        let int_stack: &Stack<<#ty as StackType>::Type> =
+                            state.stack::<<#ty as StackType>::Type>();
+                        assert_eq!(int_stack.size(), #number_values);
+                        assert_eq!(int_stack.top()?, &#first_value);
+                    };
+
+                    let ignore_attr = (
+                        (!matches!(struct_visibility, syn::Visibility::Public(_)))
+                            || **ignore_doctests
+                    )
+                        .then_some("ignore");
+
+                    doctest(Some(&imports), None::<&str>, doctest_code, Some(outtro), ignore_attr)
+                });
+
+                let example_section = sample_values.is_some().then_some(quote! {
+                        ///
+                        /// # Examples
+                        ///
+                        #doctest_tokenstream
+                });
 
                 quote! {
                     impl<
@@ -213,27 +271,7 @@ pub fn generate_builder(
                         /// # Arguments
                         ///
                         /// * `values` - A `Vec` holding the values to add to the stack
-                        ///
-                        /// # Examples
-                        ///
-                        /// ```
-                        /// # use push::push_vm::push_state::PushState;
-                        /// # use push::push_vm::stack::Stack;
-                        /// # use push::push_vm::stack::StackError;
-                        /// # use push::push_vm::HasStack;
-                        ///
-                        /// let mut state = PushState::builder()
-                        ///     .with_max_stack_size(100)
-                        ///     .with_program([])?
-                        ///     .with_int_values(vec![5, 8, 9])?
-                        ///     .build();
-                        /// let int_stack: &Stack<i64> = state.stack::<i64>();
-                        /// assert_eq!(int_stack.size(), 3);
-                        /// // Now the top of the stack is 5, followed by 8, then 9 at the bottom.
-                        /// assert_eq!(int_stack.top()?, &5);
-                        ///
-                        /// # Ok::<(), StackError>(())
-                        /// ```
+                        #example_section
                         #[must_use]
                         pub fn #fn_ident<T>(
                             mut self,
@@ -341,6 +379,65 @@ pub fn generate_builder(
         )
         .collect::<proc_macro2::TokenStream>();
 
+    let with_max_stack_size_examples = stacks
+        .iter()
+        .filter_map(|(_, (StackMarkerFlags { ignore_doctests, .. }, ty))|
+            (!**ignore_doctests).then_some(ty)
+        )
+        .chain(exec_stack.iter().filter_map(|(_, StackMarkerFlags { ignore_doctests, .. }, ty)|
+            (!**ignore_doctests).then_some(ty)
+        ))
+        .next()
+        .map(|ty| (false, ty))
+        .or_else(|| stacks
+            .iter()
+            .map(|(_, (_, ty))| ty)
+            .chain(exec_stack.iter()
+            .map(|(_, _, ty)| ty))
+            .next()
+            .map(|ty| (true, ty)))
+        .map(|(ignore, ty)| {
+            let imports = [
+                Import::Path(
+                    Some(syn::token::PathSep::default()),
+                    syn::parse_quote!(push::push_vm::{stack::{Stack, StackError, StackType}, HasStack}),
+                ),
+                Import::SuperRelativePath(import_utilities_path.clone()),
+            ];
+
+            let outtro = "# Ok::<(), StackError>(())";
+
+            let doctest_code = quote! {
+                let mut state = #struct_ident::builder()
+                    .with_max_stack_size(100)
+                    .with_no_program()
+                    .build();
+                let stack: &Stack<<#ty as StackType>::Type> =
+                    state.stack::<<#ty as StackType>::Type>();
+                assert_eq!(stack.max_stack_size(), 100);
+            };
+
+            let ignore_attr = (
+                (!matches!(struct_visibility, syn::Visibility::Public(_)))
+                || ignore
+            ).then_some("ignore");
+
+            let doctest_tokenstream = doctest(
+                Some(&imports),
+                None::<&str>,
+                doctest_code,
+                Some(outtro),
+                ignore_attr
+            );
+
+            quote! {
+                    ///
+                    /// # Examples
+                    ///
+                    #doctest_tokenstream
+            }
+        });
+
     Ok(quote! {
         impl #impl_generics #struct_ident #type_generics #where_clause {
             #[must_use]
@@ -349,7 +446,12 @@ pub fn generate_builder(
             }
         }
 
+        #[doc(hidden)]
         #struct_visibility mod #utilities_mod_ident {
+            #struct_visibility mod imports {
+                pub use super::super::*;
+            }
+
             mod sealed {
                 pub trait SealedMarker {}
             }
@@ -400,24 +502,7 @@ pub fn generate_builder(
             /// # Arguments
             ///
             /// * `max_stack_size` - A `usize` specifying the maximum stack size
-            ///
-            /// # Examples
-            ///
-            /// ```
-            /// # use push::push_vm::push_state::PushState;
-            /// # use push::push_vm::stack::Stack;
-            /// # use push::push_vm::stack::StackError;
-            /// # use push::push_vm::HasStack;
-            ///
-            /// let mut state = PushState::builder()
-            ///     .with_max_stack_size(100)
-            ///     .with_program([])?
-            ///     .build();
-            /// let bool_stack: &Stack<bool> = state.stack::<bool>();
-            /// assert_eq!(bool_stack.max_stack_size(), 100);
-            ///
-            /// # Ok::<(), StackError>(())
-            /// ```
+            #with_max_stack_size_examples
             #[must_use]
             pub fn with_max_stack_size(
                 mut self,
