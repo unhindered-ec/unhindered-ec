@@ -194,7 +194,10 @@ proptest! {
     }
 
     #[test]
-    fn greater_than_or_equal_prop(x in any::<OrderedFloat<f64>>(), y in any::<OrderedFloat<f64>>()) {
+    fn greater_than_or_equal_prop(
+        x in any::<OrderedFloat<f64>>(),
+        y in any::<OrderedFloat<f64>>()
+    ) {
         let expected_result = x >= y;
         let state = PushState::builder()
             .with_max_stack_size(100)
