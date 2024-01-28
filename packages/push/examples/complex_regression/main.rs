@@ -21,8 +21,9 @@ use ec_linear::mutator::umad::Umad;
 use ordered_float::OrderedFloat;
 use push::{
     genome::plushy::{GeneGenerator, Plushy},
-    instruction::{variable_name::VariableName, FloatInstruction, PushInstruction},
+    instruction::{variable_name::VariableName, FloatInstruction},
     push_vm::{program::PushProgram, push_state::PushState, HasStack, State},
+    vec_into,
 };
 use rand::thread_rng;
 
@@ -94,18 +95,18 @@ fn main() -> Result<()> {
 
     let mut rng = thread_rng();
 
-    let mut instruction_set = vec![
-        PushInstruction::FloatInstruction(FloatInstruction::Add),
-        PushInstruction::FloatInstruction(FloatInstruction::Subtract),
-        PushInstruction::FloatInstruction(FloatInstruction::Multiply),
-        PushInstruction::FloatInstruction(FloatInstruction::ProtectedDivide),
-        PushInstruction::FloatInstruction(FloatInstruction::Dup),
-        PushInstruction::FloatInstruction(FloatInstruction::Push(OrderedFloat(0.0))),
-        PushInstruction::FloatInstruction(FloatInstruction::Push(OrderedFloat(1.0))),
+    let instruction_set = vec_into![
+        FloatInstruction::Add,
+        FloatInstruction::Subtract,
+        FloatInstruction::Multiply,
+        FloatInstruction::ProtectedDivide,
+        FloatInstruction::Dup,
+        FloatInstruction::Push(OrderedFloat(0.0)),
+        FloatInstruction::Push(OrderedFloat(1.0)),
+        VariableName::from("x")
     ];
-    instruction_set.push(VariableName::from("x").into());
 
-    let gene_generator = GeneGenerator::with_uniform_close_probability(instruction_set.clone());
+    let gene_generator = GeneGenerator::with_uniform_close_probability(instruction_set);
 
     let plushy_generator = CollectionGenerator {
         size: args.max_initial_instructions,

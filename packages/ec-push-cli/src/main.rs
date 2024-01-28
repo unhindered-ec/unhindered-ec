@@ -23,8 +23,9 @@ use ec_core::{
 use ec_linear::mutator::umad::Umad;
 use push::{
     genome::plushy::{GeneGenerator, Plushy},
-    instruction::{variable_name::VariableName, IntInstruction, PushInstruction},
+    instruction::{variable_name::VariableName, IntInstruction},
     push_vm::{program::PushProgram, push_state::PushState, HasStack, State},
+    vec_into,
 };
 use rand::thread_rng;
 
@@ -103,15 +104,15 @@ fn main() -> Result<()> {
 
     let mut rng = thread_rng();
 
-    let mut instruction_set = vec![
-        PushInstruction::IntInstruction(IntInstruction::Add),
-        PushInstruction::IntInstruction(IntInstruction::Subtract),
-        PushInstruction::IntInstruction(IntInstruction::Multiply),
-        PushInstruction::IntInstruction(IntInstruction::ProtectedDivide),
+    let instruction_set = vec_into![
+        IntInstruction::Add,
+        IntInstruction::Subtract,
+        IntInstruction::Multiply,
+        IntInstruction::ProtectedDivide,
+        VariableName::from("x")
     ];
-    instruction_set.push(VariableName::from("x").into());
 
-    let gene_generator = GeneGenerator::with_uniform_close_probability(instruction_set.clone());
+    let gene_generator = GeneGenerator::with_uniform_close_probability(instruction_set);
 
     let plushy_generator = CollectionGenerator {
         size: args.max_initial_instructions,

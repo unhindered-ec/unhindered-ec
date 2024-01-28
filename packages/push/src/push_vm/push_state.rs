@@ -121,6 +121,7 @@ mod simple_check {
             PushInstruction,
         },
         push_vm::{program::PushProgram, push_state::PushState},
+        vec_into,
     };
 
     #[test]
@@ -137,24 +138,25 @@ mod simple_check {
             PushInstruction::push_float(OrderedFloat(f))
         }
 
-        let genes: Vec<PushGene> = vec![
-            VariableName::from("x").into(),    // [5]
-            VariableName::from("y").into(),    // [8, 5]
-            push_bool(true).into(),            // [true]
-            VariableName::from("a").into(),    // [true, true]
-            push_int(9).into(),                // [9, 8, 5]
-            BoolInstruction::Or.into(),        // [true]
-            IntInstruction::Add.into(),        // [17, 5]
-            push_int(6).into(),                // [6, 17, 5]
-            IntInstruction::IsEven.into(),     // [17, 5], [true, true]
-            BoolInstruction::And.into(),       // [true]
-            VariableName::from("b").into(),    // [false, true]
-            push_float(3.5).into(),            // [3.5]
-            FloatInstruction::Dup.into(),      // [3.5, 3.5]
-            FloatInstruction::Multiply.into(), // [12.25]
-            VariableName::from("f").into(),    // [12.25, 0.75]
-            FloatInstruction::Add.into(),      // [13.0]
+        let genes: Vec<PushGene> = vec_into![
+            VariableName::from("x"),    // [5]
+            VariableName::from("y"),    // [8, 5]
+            push_bool(true),            // [true]
+            VariableName::from("a"),    // [true, true]
+            push_int(9),                // [9, 8, 5]
+            BoolInstruction::Or,        // [true]
+            IntInstruction::Add,        // [17, 5]
+            push_int(6),                // [6, 17, 5]
+            IntInstruction::IsEven,     // [17, 5], [true, true]
+            BoolInstruction::And,       // [true]
+            VariableName::from("b"),    // [false, true]
+            push_float(3.5),            // [3.5]
+            FloatInstruction::Dup,      // [3.5, 3.5]
+            FloatInstruction::Multiply, // [12.25]
+            VariableName::from("f"),    // [12.25, 0.75]
+            FloatInstruction::Add,      // [13.0]
         ];
+
         let plushy = Plushy::new(genes);
         let state = PushState::builder()
             .with_max_stack_size(1000)

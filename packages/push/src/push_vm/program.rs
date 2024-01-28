@@ -101,23 +101,25 @@ impl Instruction<PushState> for PushProgram {
 mod test {
     use super::PushProgram;
     use crate::{
+        arr_into,
         error::Error,
         genome::plushy::{Plushy, PushGene},
         instruction::{
             BoolInstruction, ExecInstruction, FloatInstruction, Instruction, IntInstruction,
         },
         push_vm::{push_state::PushState, HasStack},
+        vec_into,
     };
 
     #[test]
     fn conversion() {
-        let genes = [
-            IntInstruction::Add.into(),
-            ExecInstruction::IfElse.into(),
-            IntInstruction::Multiply.into(),
+        let genes = arr_into![
+            IntInstruction::Add,
+            ExecInstruction::IfElse,
+            IntInstruction::Multiply,
             PushGene::Close,
-            ExecInstruction::Dup.into(),
-            IntInstruction::Subtract.into(),
+            ExecInstruction::Dup,
+            IntInstruction::Subtract,
         ];
         let plushy: Plushy = genes.into_iter().collect();
         let program: Vec<PushProgram> = plushy.into();
@@ -126,13 +128,13 @@ mod test {
         // Block([Instruction(Int-Subtract)])])]
         assert_eq!(
             program,
-            vec![
-                IntInstruction::Add.into(),
-                ExecInstruction::IfElse.into(),
-                PushProgram::Block(vec![IntInstruction::Multiply.into()]),
-                PushProgram::Block(vec![
-                    ExecInstruction::Dup.into(),
-                    PushProgram::Block(vec![IntInstruction::Subtract.into()])
+            vec_into![
+                IntInstruction::Add,
+                ExecInstruction::IfElse,
+                PushProgram::Block(vec_into![IntInstruction::Multiply]),
+                PushProgram::Block(vec_into![
+                    ExecInstruction::Dup,
+                    PushProgram::Block(vec_into![IntInstruction::Subtract])
                 ])
             ]
         );
@@ -140,10 +142,10 @@ mod test {
 
     #[test]
     fn block() {
-        let instructions = vec![
-            IntInstruction::Add.into(),
-            FloatInstruction::Multiply.into(),
-            BoolInstruction::And.into(),
+        let instructions = vec_into![
+            IntInstruction::Add,
+            FloatInstruction::Multiply,
+            BoolInstruction::And,
         ];
         let block = dbg!(PushProgram::Block(instructions));
         let state = PushState::builder()
@@ -161,12 +163,12 @@ mod test {
 
     #[test]
     fn block_overflows() {
-        let instructions = vec![
-            IntInstruction::Add.into(),
-            FloatInstruction::Multiply.into(),
-            BoolInstruction::And.into(),
+        let instructions = vec_into![
+            IntInstruction::Add,
+            FloatInstruction::Multiply,
+            BoolInstruction::And,
         ];
-        let block = dbg!(PushProgram::Block(instructions));
+        let block = PushProgram::Block(instructions);
         let state = PushState::builder()
             // Set the max stack size to 2, so when we execute the block it overflows
             .with_max_stack_size(2)
