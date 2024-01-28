@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use ordered_float::OrderedFloat;
 
 use crate::{
@@ -5,7 +7,6 @@ use crate::{
     instruction::{Instruction, PushInstruction, PushInstructionError, VariableName},
     push_vm::{stack::Stack, State},
 };
-use std::collections::HashMap;
 
 // TODO: It might make sense to separate out the specification of
 //   a Push implementation (i.e., the relevant traits) into its
@@ -49,19 +50,24 @@ impl PushState {
     //         .input_instructions
     //         .iter()
     //         .find_map(|(n, v)| if n == var_name { Some(v) } else { None })
-    //         .unwrap_or_else(|| panic!("Failed to get an instruction for the input variable '{var_name}' that hadn't been defined"))
+    //         .unwrap_or_else(|| panic!(
+    //              "Failed to get an instruction for the input \
+    //               variable '{var_name}' that hadn't been defined"
+    //         ))
     //         .clone();
     //     instruction.perform(self);
     // }
 
     /// # Errors
     ///
-    /// This returns an error if the `PushInstruction` returns an error, which really shouldn't happen.
+    /// This returns an error if the `PushInstruction` returns an error,
+    /// which really shouldn't happen.
     ///
     /// # Panics
     ///
     /// This panics if there is no instruction associated with `var_name`, i.e.,
-    /// we have not yet added that variable name to the map of names to instructions.
+    /// we have not yet added that variable name to the map of names to
+    /// instructions.
     pub fn with_input(
         self,
         var_name: &VariableName,
@@ -73,7 +79,12 @@ impl PushState {
             .input_instructions
             .iter()
             .find_map(|(n, v)| if n == var_name { Some(v) } else { None })
-            .unwrap_or_else(|| panic!("Failed to get an instruction for the input variable '{var_name}' that hadn't been defined"))
+            .unwrap_or_else(|| {
+                panic!(
+                    "Failed to get an instruction for the input variable '{var_name}' that hadn't \
+                     been defined"
+                )
+            })
             .clone();
         instruction.perform(self)
     }
@@ -99,14 +110,13 @@ impl State for PushState {
 mod simple_check {
     use ordered_float::OrderedFloat;
 
+    use super::State;
     use crate::{
         instruction::{
             BoolInstruction, FloatInstruction, IntInstruction, PushInstruction, VariableName,
         },
         push_vm::push_state::PushState,
     };
-
-    use super::State;
 
     #[test]
     fn run_simple_program() {

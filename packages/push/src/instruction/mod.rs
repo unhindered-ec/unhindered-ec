@@ -1,13 +1,19 @@
+use std::{
+    fmt::{Debug, Display},
+    sync::Arc,
+};
+
 use ordered_float::OrderedFloat;
 
+pub use self::{
+    bool::{BoolInstruction, BoolInstructionError},
+    float::FloatInstruction,
+    int::{IntInstruction, IntInstructionError},
+};
 use crate::{
     error::{Error, InstructionResult},
     push_vm::{push_state::PushState, stack::StackError, HasStack},
 };
-use std::{fmt::Debug, fmt::Display, sync::Arc};
-
-pub use self::{bool::BoolInstruction, float::FloatInstruction, int::IntInstruction};
-pub use self::{bool::BoolInstructionError, int::IntInstructionError};
 
 mod bool;
 mod float;
@@ -21,8 +27,8 @@ mod int;
 
 /*
  * exec_while requires a boolean and one additional value on the exec stack.
- * If the bool is true, then you push a copy of the "body" onto the exec, followed
- * by another copy of exec_while.
+ * If the bool is true, then you push a copy of the "body" onto the exec,
+ * followed by another copy of exec_while.
  */
 
 /*
@@ -213,8 +219,8 @@ where
     type Error = I::Error;
 
     fn perform(&self, mut state: S) -> InstructionResult<S, Self::Error> {
-        // If the size of the block + the size of the exec stack exceed the max stack size
-        // then we generate a fatal error.
+        // If the size of the block + the size of the exec stack exceed the max stack
+        // size then we generate a fatal error.
         if let Err(err) = state.stack_mut::<I>().try_extend(self.iter().cloned()) {
             return Err(Error::fatal(state, err));
         }

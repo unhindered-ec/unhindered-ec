@@ -1,7 +1,7 @@
-use anyhow::Result;
-use ec_core::operator::mutator::Mutator;
 use std::ops::Not;
 
+use anyhow::Result;
+use ec_core::operator::mutator::Mutator;
 use rand::{rngs::ThreadRng, Rng};
 
 use crate::genome::Linear;
@@ -21,11 +21,7 @@ where
             .into_iter()
             .map(|bit| {
                 let r: f32 = rng.gen();
-                if r < self.mutation_rate {
-                    !bit
-                } else {
-                    bit
-                }
+                if r < self.mutation_rate { !bit } else { bit }
             })
             .collect())
     }
@@ -44,11 +40,7 @@ where
             .into_iter()
             .map(|bit| {
                 let r: f32 = rng.gen();
-                if r < self.mutation_rate {
-                    !bit
-                } else {
-                    bit
-                }
+                if r < self.mutation_rate { !bit } else { bit }
             })
             .collect())
     }
@@ -118,7 +110,7 @@ mod tests {
 
         let mut rng = rand::thread_rng();
         let num_bits = 100;
-        let parent_bits = Bitstring::random(num_bits, &mut rng).unwrap(); //  make_random(num_bits, &mut rng);
+        let parent_bits = Bitstring::random(num_bits, &mut rng).unwrap();
         let child_bits = mutator.mutate(parent_bits.clone(), &mut rng).unwrap();
 
         let num_differences = zip(parent_bits, child_bits)

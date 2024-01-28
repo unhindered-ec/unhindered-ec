@@ -1,10 +1,8 @@
 use anyhow::{Context, Result};
-
 use rand::{rngs::ThreadRng, seq::SliceRandom};
 
-use crate::population::Population;
-
 use super::Selector;
+use crate::population::Population;
 
 pub struct Weighted<P: Population> {
     selectors: Vec<(Box<dyn Selector<P> + Send + Sync>, usize)>,

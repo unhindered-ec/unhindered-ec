@@ -1,9 +1,7 @@
 use anyhow::{Context, Result};
 use rand::rngs::ThreadRng;
 
-use super::super::Operator;
-
-use super::Composable;
+use super::{super::Operator, Composable};
 
 // TODO: May a `apply_n_times(usize)` operator
 //   to use in cases where, e.g., we need to select

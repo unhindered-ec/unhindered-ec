@@ -1,10 +1,12 @@
+use std::ops::Neg;
+
+use strum_macros::EnumIter;
+
 use super::{Instruction, MapInstructionError, PushInstruction, PushInstructionError};
 use crate::{
     error::{Error, InstructionResult},
     push_vm::stack::{HasStack, Stack, StackDiscard, StackError, StackPush},
 };
-use std::ops::Neg;
-use strum_macros::EnumIter;
 
 #[derive(Debug, strum_macros::Display, Copy, Clone, PartialEq, Eq, EnumIter)]
 #[non_exhaustive]
@@ -82,8 +84,9 @@ where
             | Self::Power
             | Self::Min
             | Self::Max => {
-                // All these instructions pop at least one value from the integer stack, so we're
-                // guaranteed that there will be space for the result. So we don't have to check that
+                // All these instructions pop at least one value from the integer stack, so
+                // we're guaranteed that there will be space for the result.
+                // So we don't have to check that
                 // any stacks are full before we start.
                 let int_stack = state.stack_mut::<i64>();
                 match self {
@@ -228,7 +231,8 @@ where
                 }
                 let int_stack: &mut Stack<i64> = state.stack_mut::<i64>();
                 match self {
-                    // TODO: Write a test for IsEven that makes sure all the stack manipulation is correct.
+                    // TODO: Write a test for IsEven that makes sure
+                    // all the stack manipulation is correct.
                     Self::IsEven => int_stack
                         .top()
                         .map_err(PushInstructionError::from)

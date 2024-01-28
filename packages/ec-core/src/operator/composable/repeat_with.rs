@@ -1,11 +1,10 @@
-use itertools::Itertools;
-
 use std::iter;
 
-use crate::operator::Operator;
 use anyhow::{anyhow, Result};
+use itertools::Itertools;
 
 use super::Composable;
+use crate::operator::Operator;
 
 /// An `Operator` that applies the encapsulated `Operator`
 /// `N` times on the given input, returning an array of
@@ -30,7 +29,7 @@ where
     fn apply(&self, input: Input, rng: &mut rand::rngs::ThreadRng) -> Result<Self::Output> {
         iter::repeat_with(|| self.f.apply(input.clone(), rng))
             .take(N)
-            .try_collect::<<F as Operator<Input>>::Output, Vec<<F as Operator<Input>>::Output>, anyhow::Error>()?
+            .try_collect::<_, Vec<<F as Operator<Input>>::Output>, anyhow::Error>()?
             .try_into()
             .map_err(|v: Vec<<F as Operator<Input>>::Output>| {
                 anyhow!(

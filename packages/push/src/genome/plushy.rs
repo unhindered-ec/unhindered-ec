@@ -1,10 +1,11 @@
-use crate::instruction::PushInstruction;
 use ec_core::{
     generator::{collection::CollectionGenerator, Generator},
     genome::Genome,
 };
 use ec_linear::genome::Linear;
 use rand::rngs::ThreadRng;
+
+use crate::instruction::PushInstruction;
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct Plushy {
@@ -62,12 +63,12 @@ impl FromIterator<PushInstruction> for Plushy {
 
 #[cfg(test)]
 mod test {
-    use crate::instruction::{BoolInstruction, IntInstruction, VariableName};
     use ec_core::operator::mutator::Mutator;
     use ec_linear::mutator::umad::Umad;
     use rand::thread_rng;
 
     use super::*;
+    use crate::instruction::{BoolInstruction, IntInstruction, VariableName};
 
     #[test]
     #[allow(clippy::unwrap_used)]

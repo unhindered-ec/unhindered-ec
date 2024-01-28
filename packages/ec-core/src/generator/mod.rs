@@ -11,7 +11,7 @@ pub trait Generator<T> {
     ///
     /// This returns an `anyhow::Error` if the implementation of `generate`
     /// returns some sort of error. An example would be choosing a random
-    /// item from a collection; this fails if the collection is empty.  
+    /// item from a collection; this fails if the collection is empty.
     fn generate(&self, rng: &mut ThreadRng) -> anyhow::Result<T>;
 }
 
@@ -34,13 +34,14 @@ where
     }
 }
 
-// TODO: The implementation of `generate` here is essentially identical to the implementation
-//   in `from_array`, which annoys me slightly. I thought about implementing `Generator` for
-//   anything that can be turned into an iterator of `T`, but esitsu@Twitch pointed out that this
-//   will be less efficient since we would have to sequentially process the elements of the iterator
-//   instead of using random access. Since this is called _many_ times over a run, that seems bad.
-//   I also thought have have a reference to a slice, but that would create lifetime issues in
-//   the operators.
+// TODO: The implementation of `generate` here is essentially identical to the
+// implementation   in `from_array`, which annoys me slightly. I thought about
+// implementing `Generator` for   anything that can be turned into an iterator
+// of `T`, but esitsu@Twitch pointed out that this   will be less efficient
+// since we would have to sequentially process the elements of the iterator
+//   instead of using random access. Since this is called _many_ times over a
+// run, that seems bad.   I also thought have have a reference to a slice, but
+// that would create lifetime issues in   the operators.
 
 /// Generate a random element from a `Vec` of options.
 ///
