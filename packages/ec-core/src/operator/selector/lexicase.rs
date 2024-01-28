@@ -1,12 +1,10 @@
-use anyhow::{Context, Result};
 use std::{mem::swap, ops::Not};
 
-use rand::prelude::SliceRandom;
-use rand::rngs::ThreadRng;
-
-use crate::{individual::Individual, population::Population, test_results::TestResults};
+use anyhow::{Context, Result};
+use rand::{prelude::SliceRandom, rngs::ThreadRng};
 
 use super::Selector;
+use crate::{individual::Individual, population::Population, test_results::TestResults};
 
 pub struct Lexicase {
     num_test_cases: usize,
@@ -44,10 +42,10 @@ where
         // Candidate set is initially the whole population.
         // Shuffle the (indices of the) test cases.
         // For each test in turn:
-        //   * Find the best score of any individual still in
-        //     in the candidate set on that test case.
-        //   * Remove any individual from the candidate set that
-        //     is worse than that best score on that test case.
+        //   * Find the best score of any individual still in in the candidate set on
+        //     that test case.
+        //   * Remove any individual from the candidate set that is worse than that best
+        //     score on that test case.
         // Go until you get to a single individual or you run
         // out of test cases.
         let mut case_indices: Vec<usize> = (0..self.num_test_cases).collect();

@@ -1,5 +1,8 @@
+#![allow(clippy::unwrap_used)]
+#![allow(clippy::tuple_array_conversions)]
+
 use ordered_float::OrderedFloat;
-use proptest::{prop_assert_eq, proptest};
+use proptest::{arbitrary::any, prop_assert_eq, proptest};
 use push::{
     instruction::{FloatInstruction, Instruction, PushInstruction},
     push_vm::{push_state::PushState, stack::StackError, HasStack},
@@ -63,11 +66,12 @@ fn overflow_bool_stack() {
 #[test]
 fn dup() {
     let x = OrderedFloat(409.37);
-    let mut state = PushState::builder()
+    let state = PushState::builder()
         .with_max_stack_size(100)
+        .with_float_values(std::iter::once(x))
+        .unwrap()
         .with_no_program()
         .build();
-    state.stack_mut::<OrderedFloat<f64>>().push(x).unwrap();
     let mut result = FloatInstruction::Dup.perform(state).unwrap();
     assert_eq!(result.stack::<OrderedFloat<f64>>().size(), 2);
     let float_stack = result.stack_mut::<OrderedFloat<f64>>();
@@ -78,11 +82,11 @@ fn dup() {
 
 proptest! {
     #[test]
-    fn add_prop(x in proptest::num::f64::ANY, y in proptest::num::f64::ANY) {
-        let expected_result = OrderedFloat(x + y);
+    fn add_prop(x in any::<OrderedFloat<f64>>(), y in any::<OrderedFloat<f64>>()) {
+        let expected_result = x + y;
         let state = PushState::builder()
             .with_max_stack_size(100)
-            .with_float_values([x, y].iter().map(|&f| OrderedFloat(f)))
+            .with_float_values([x, y])
             .unwrap()
             .with_no_program()
             .build();
@@ -92,11 +96,11 @@ proptest! {
     }
 
     #[test]
-    fn subtract_prop(x in proptest::num::f64::ANY, y in proptest::num::f64::ANY) {
-        let expected_result = OrderedFloat(x - y);
+    fn subtract_prop(x in any::<OrderedFloat<f64>>(), y in any::<OrderedFloat<f64>>()) {
+        let expected_result = x - y;
         let state = PushState::builder()
             .with_max_stack_size(100)
-            .with_float_values([x, y].iter().map(|&f| OrderedFloat(f)))
+            .with_float_values([x, y])
             .unwrap()
             .with_no_program()
             .build();
@@ -106,11 +110,11 @@ proptest! {
     }
 
     #[test]
-    fn multiply_prop(x in proptest::num::f64::ANY, y in proptest::num::f64::ANY) {
-        let expected_result = OrderedFloat(x * y);
+    fn multiply_prop(x in any::<OrderedFloat<f64>>(), y in any::<OrderedFloat<f64>>()) {
+        let expected_result = x * y;
         let state = PushState::builder()
             .with_max_stack_size(100)
-            .with_float_values([x, y].iter().map(|&f| OrderedFloat(f)))
+            .with_float_values([x, y])
             .unwrap()
             .with_no_program()
             .build();
@@ -120,11 +124,11 @@ proptest! {
     }
 
     #[test]
-    fn protected_divide_prop(x in proptest::num::f64::ANY, y in proptest::num::f64::ANY) {
-        let expected_result = if y == 0.0 { OrderedFloat(1.0) } else { OrderedFloat(x / y) };
+    fn protected_divide_prop(x in any::<OrderedFloat<f64>>(), y in any::<OrderedFloat<f64>>()) {
+        let expected_result = if y == 0.0 { OrderedFloat(1.0) } else { x / y };
         let state = PushState::builder()
             .with_max_stack_size(100)
-            .with_float_values([x, y].iter().map(|&f| OrderedFloat(f)))
+            .with_float_values([x, y])
             .unwrap()
             .with_no_program()
             .build();
@@ -134,11 +138,11 @@ proptest! {
     }
 
     #[test]
-    fn equal_prop(x in proptest::num::f64::ANY, y in proptest::num::f64::ANY) {
-        let expected_result = OrderedFloat(x) == OrderedFloat(y);
+    fn equal_prop(x in any::<OrderedFloat<f64>>(), y in any::<OrderedFloat<f64>>()) {
+        let expected_result = x == y;
         let state = PushState::builder()
             .with_max_stack_size(100)
-            .with_float_values([x, y].iter().map(|&f| OrderedFloat(f)))
+            .with_float_values([x, y])
             .unwrap()
             .with_no_program()
             .build();
@@ -148,15 +152,72 @@ proptest! {
     }
 
     #[test]
-    fn not_equal_prop(x in proptest::num::f64::ANY, y in proptest::num::f64::ANY) {
-        let expected_result = OrderedFloat(x) != OrderedFloat(y);
+    fn not_equal_prop(x in any::<OrderedFloat<f64>>(), y in any::<OrderedFloat<f64>>()) {
+        let expected_result = x != y;
         let state = PushState::builder()
             .with_max_stack_size(100)
-            .with_float_values([x, y].iter().map(|&f| OrderedFloat(f)))
+            .with_float_values([x, y])
             .unwrap()
             .with_no_program()
             .build();
         let result = FloatInstruction::NotEqual.perform(state).unwrap();
+        let output = result.stack::<bool>().top().unwrap();
+        prop_assert_eq!(*output, expected_result);
+    }
+
+    #[test]
+    fn greater_than_prop(x in any::<OrderedFloat<f64>>(), y in any::<OrderedFloat<f64>>()) {
+        let expected_result = x > y;
+        let state = PushState::builder()
+            .with_max_stack_size(100)
+            .with_float_values([x, y])
+            .unwrap()
+            .with_no_program()
+            .build();
+        let result = FloatInstruction::GreaterThan.perform(state).unwrap();
+        let output = result.stack::<bool>().top().unwrap();
+        prop_assert_eq!(*output, expected_result);
+    }
+
+    #[test]
+    fn less_than_prop(x in any::<OrderedFloat<f64>>(), y in any::<OrderedFloat<f64>>()) {
+        let expected_result = x < y;
+        let state = PushState::builder()
+            .with_max_stack_size(100)
+            .with_float_values([x, y])
+            .unwrap()
+            .with_no_program()
+            .build();
+        let result = FloatInstruction::LessThan.perform(state).unwrap();
+        let output = result.stack::<bool>().top().unwrap();
+        prop_assert_eq!(*output, expected_result);
+    }
+
+    #[test]
+    fn greater_than_or_equal_prop(x in any::<OrderedFloat<f64>>(), y in any::<OrderedFloat<f64>>()) {
+        let expected_result = x >= y;
+        let state = PushState::builder()
+            .with_max_stack_size(100)
+            .with_float_values([x, y])
+            .unwrap()
+            .with_no_program()
+            .build();
+        let result =
+            FloatInstruction::GreaterThanOrEqual.perform(state).unwrap();
+        let output = result.stack::<bool>().top().unwrap();
+        prop_assert_eq!(*output, expected_result);
+    }
+
+    #[test]
+    fn less_than_or_equal_prop(x in any::<OrderedFloat<f64>>(), y in any::<OrderedFloat<f64>>()) {
+        let expected_result = x <= y;
+        let state = PushState::builder()
+            .with_max_stack_size(100)
+            .with_float_values([x, y])
+            .unwrap()
+            .with_no_program()
+            .build();
+        let result = FloatInstruction::LessThanOrEqual.perform(state).unwrap();
         let output = result.stack::<bool>().top().unwrap();
         prop_assert_eq!(*output, expected_result);
     }

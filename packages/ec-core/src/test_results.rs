@@ -11,8 +11,8 @@ use std::{cmp::Ordering, fmt::Debug, iter::Sum};
 //   trait that has all those as super-traits so we have one name
 //   that pulls them all together.
 
-// TODO: Should there just be one struct (e.g., `Result<T>` with a `result: T` field)
-//   and then `Error` and `Score` should be traits that these structs can
+// TODO: Should there just be one struct (e.g., `Result<T>` with a `result: T`
+// field)   and then `Error` and `Score` should be traits that these structs can
 //   implement? I feel like that might avoid some duplication here.
 
 // TODO: I'm not convinced that `Score` & `Error` need `Clone` and `Copy`
@@ -238,14 +238,15 @@ impl<R: PartialOrd> PartialOrd for TestResults<R> {
 }
 
 /*
- * I can't implement `From` for both a `Vec` and an `Iterator` because there are
- * potentially conflicting implementations then. (The reasons are a bit complex,
- * but essentially [I think] someone could implement `Iterator` for `Vec` upstream,
- * and then we wouldn't know which implementation to use here.) I _think_ it makes
- * more sense to keep the `Iterator` one since it's cheap to go from `Vec` to `Iterator`,
- * but "expensive" (we have to do an allocation) to go the other way around. Also, we'll
- * often build our list of values with an iterator, and then we just have to add
- * `.into()` at the end instead of converting into a `Vec` first.
+ * I can't implement `From` for both a `Vec` and an `Iterator` because there
+ * are potentially conflicting implementations then. (The reasons are a bit
+ * complex, but essentially [I think] someone could implement `Iterator` for
+ * `Vec` upstream, and then we wouldn't know which implementation to use
+ * here.) I _think_ it makes more sense to keep the `Iterator` one since it's
+ * cheap to go from `Vec` to `Iterator`, but "expensive" (we have to do an
+ * allocation) to go the other way around. Also, we'll often build our list
+ * of values with an iterator, and then we just have to add `.into()` at the
+ * end instead of converting into a `Vec` first.
  */
 
 // impl<V, R> From<Vec<V>> for TestResults<R>

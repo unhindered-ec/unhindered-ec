@@ -1,9 +1,7 @@
 use anyhow::{Context, Result};
 use rand::rngs::ThreadRng;
 
-use super::super::Operator;
-
-use super::Composable;
+use super::{super::Operator, Composable};
 
 pub struct Then<F, G> {
     f: F,

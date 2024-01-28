@@ -1,3 +1,4 @@
+use super::{push_state::PushState, stack::StackError, HasStack};
 use crate::{
     error::{Error, InstructionResult},
     genome::plushy::{Plushy, PushGene},
@@ -5,8 +6,6 @@ use crate::{
         instruction_error::PushInstructionError, Instruction, NumOpens, PushInstruction,
     },
 };
-
-use super::{push_state::PushState, stack::StackError, HasStack};
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub enum PushProgram {
@@ -77,8 +76,8 @@ where
     type Error = I::Error;
 
     fn perform(&self, mut state: S) -> InstructionResult<S, Self::Error> {
-        // If the size of the block + the size of the exec stack exceed the max stack size
-        // then we generate a fatal error.
+        // If the size of the block + the size of the exec stack exceed the max stack
+        // size then we generate a fatal error.
         if let Err(err) = state.stack_mut::<I>().try_extend(self.iter().cloned()) {
             return Err(Error::fatal(state, err));
         }
@@ -100,6 +99,7 @@ impl Instruction<PushState> for PushProgram {
 #[cfg(test)]
 #[allow(clippy::unwrap_used)]
 mod test {
+    use super::PushProgram;
     use crate::{
         error::Error,
         genome::plushy::{Plushy, PushGene},
@@ -108,8 +108,6 @@ mod test {
         },
         push_vm::{push_state::PushState, HasStack},
     };
-
-    use super::PushProgram;
 
     #[test]
     fn conversion() {
@@ -123,7 +121,9 @@ mod test {
         ];
         let plushy: Plushy = genes.into_iter().collect();
         let program: Vec<PushProgram> = plushy.into();
-        // [Instruction(Int-Add), Instruction(Exec-IfElse), Block([Instruction(Int-Multiply)]), Block([Instruction(Exec-Dup), Block([Instruction(Int-Subtract)])])]
+        // [Instruction(Int-Add), Instruction(Exec-IfElse),
+        // Block([Instruction(Int-Multiply)]), Block([Instruction(Exec-Dup),
+        // Block([Instruction(Int-Subtract)])])]
         assert_eq!(
             program,
             vec![

@@ -2,6 +2,7 @@
     "cSpell.words": [
         "Bitstring",
         "Bitstrings",
+        "Conv",
         "Dataless",
         "esitsu",
         "hiff",
@@ -17,6 +18,7 @@
         "thiserror",
         "typestate",
         "UMAD",
+        "underflows",
         "Wrappable"
     ],
     "todo-tree.tree.showCountsInTree": true

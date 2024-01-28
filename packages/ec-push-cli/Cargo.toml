@@ -20,3 +20,7 @@ push = { workspace = true }
 [[bin]]
 name = "pushgp"
 path = "src/main.rs"
+
+
+[lints]
+workspace = true

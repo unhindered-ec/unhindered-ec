@@ -1,13 +1,7 @@
-#![warn(clippy::pedantic)]
-#![warn(clippy::nursery)]
-#![warn(clippy::unwrap_used)]
-#![warn(clippy::expect_used)]
-
 pub mod args;
 
 use std::ops::Not;
 
-use crate::args::{Args, RunModel};
 use anyhow::{ensure, Result};
 use clap::Parser;
 use ec_core::{
@@ -30,10 +24,11 @@ use ec_linear::mutator::umad::Umad;
 use push::{
     genome::plushy::{GeneGenerator, Plushy},
     instruction::{variable_name::VariableName, IntInstruction, PushInstruction},
-    push_vm::{program::PushProgram, HasStack},
-    push_vm::{push_state::PushState, State},
+    push_vm::{program::PushProgram, push_state::PushState, HasStack, State},
 };
 use rand::thread_rng;
+
+use crate::args::{Args, RunModel};
 
 fn main() -> Result<()> {
     // Using `Error` in `TestResults<Error>` will have the run favor smaller
@@ -52,9 +47,10 @@ fn main() -> Result<()> {
     // };
 
     /*
-     * The `scorer` will need to take an evolved program (sequence of instructions) and run it
-     * 10 times on each of the 10 test inputs (0 through 9), collecting together the 10 errors,
-     * i.e., the absolute difference between the returned value and the expected value.
+     * The `scorer` will need to take an evolved program (sequence of
+     * instructions) and run it 10 times on each of the 10 test inputs (0
+     * through 9), collecting together the 10 errors, i.e., the absolute
+     * difference between the returned value and the expected value.
      *
      * The target polynomial is x^3 - 2x^2 - x
      */
@@ -66,12 +62,14 @@ fn main() -> Result<()> {
                 let state: PushState = PushState::builder()
                     .with_max_stack_size(1000)
                     .with_program(program.clone())
-                    // This will return an error if the program is longer than the allowed max stack size.
+                    // This will return an error if the program is longer than
+                    //  the allowed max stack size.
                     // We arguably should check that and return an error here.
                     .unwrap()
                     .with_int_input("x", input)
                     .build();
-                // This is the degree 3 problem in https://github.com/lspector/Clojush/blob/master/src/clojush/problems/demos/simple_regression.clj
+                // This is the degree 3 problem in
+                // https://github.com/lspector/Clojush/blob/e2c9d8c830715f7d1e644f6205c192b9e5ceead2/src/clojush/problems/demos/simple_regression.clj
                 let expected = input * input * input - 2 * input * input - input;
                 #[allow(clippy::option_if_let_else)]
                 match state.run_to_completion() {
@@ -89,7 +87,10 @@ fn main() -> Result<()> {
         errors
     };
 
-    // The degree 3 problem in https://github.com/lspector/Clojush/blob/master/src/clojush/problems/demos/simple_regression.clj
+    // The degree 3 problem in
+    // https://github.com/lspector/Clojush/blob/
+    // e2c9d8c830715f7d1e644f6205c192b9e5ceead2/src/
+    // clojush/problems/demos/simple_regression.clj
     // just uses 10 test cases, 0 to 9 (inclusive).
     let num_test_cases = 10;
 

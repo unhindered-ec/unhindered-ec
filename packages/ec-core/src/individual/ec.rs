@@ -5,9 +5,8 @@ use std::{
 
 use rand::rngs::ThreadRng;
 
-use crate::generator::Generator;
-
 use super::{scorer::Scorer, Individual};
+use crate::generator::Generator;
 
 #[derive(Debug, Eq, PartialEq, Clone)]
 #[allow(clippy::module_name_repetitions)]

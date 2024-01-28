@@ -1,3 +1,6 @@
+use ordered_float::OrderedFloat;
+use strum_macros::EnumIter;
+
 use super::{Instruction, PushInstruction, PushInstructionError};
 use crate::{
     error::{Error, InstructionResult, MapInstructionError},
@@ -6,8 +9,6 @@ use crate::{
         HasStack,
     },
 };
-use ordered_float::OrderedFloat;
-use strum_macros::EnumIter;
 
 #[derive(Debug, strum_macros::Display, Copy, Clone, EnumIter, Eq, PartialEq)]
 #[non_exhaustive]
@@ -19,6 +20,10 @@ pub enum FloatInstruction {
     ProtectedDivide,
     Equal,
     NotEqual,
+    GreaterThan,
+    LessThan,
+    GreaterThanOrEqual,
+    LessThanOrEqual,
     Dup,
 }
 
@@ -48,11 +53,7 @@ where
                 Self::binary_arithmetic(
                     state,
                     |x, y| {
-                        if y == 0.0 {
-                            OrderedFloat(1.0)
-                        } else {
-                            x / y
-                        }
+                        if y == 0.0 { OrderedFloat(1.0) } else { x / y }
                     },
                 )
             }
@@ -63,6 +64,10 @@ where
             // already full, and return an `Overflow` error if it is.
             Self::Equal => Self::binary_predicate(state, std::cmp::PartialEq::eq),
             Self::NotEqual => Self::binary_predicate(state, std::cmp::PartialEq::ne),
+            Self::GreaterThan => Self::binary_predicate(state, std::cmp::PartialOrd::gt),
+            Self::LessThan => Self::binary_predicate(state, std::cmp::PartialOrd::lt),
+            Self::GreaterThanOrEqual => Self::binary_predicate(state, std::cmp::PartialOrd::ge),
+            Self::LessThanOrEqual => Self::binary_predicate(state, std::cmp::PartialOrd::le),
 
             Self::Dup => {
                 if state.stack::<OrderedFloat<f64>>().is_full() {

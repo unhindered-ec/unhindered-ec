@@ -1,12 +1,15 @@
-use ordered_float::OrderedFloat;
+use std::collections::HashMap;
 
-use crate::push::instruction::instruction_error::PushInstructionError;
+pub use ordered_float::OrderedFloat;
+
 use crate::{
     error::{stateful::FatalError, try_recover::TryRecover, InstructionResult},
-    instruction::{variable_name::VariableName, Instruction, PushInstruction},
+    instruction::{
+        instruction_error::PushInstructionError, variable_name::VariableName, Instruction,
+        PushInstruction,
+    },
     push_vm::{program::PushProgram, stack::Stack, State},
 };
-use std::collections::HashMap;
 
 // TODO: It might make sense to separate out the specification of
 //   a Push implementation (i.e., the relevant traits) into its
@@ -22,11 +25,11 @@ use std::collections::HashMap;
 pub struct PushState {
     #[stack(exec)]
     pub(crate) exec: Stack<PushProgram>,
-    #[stack]
+    #[stack(sample_values = [4, 5, 7])]
     pub(crate) int: Stack<i64>,
-    #[stack]
+    #[stack(sample_values = [OrderedFloat(4.3), OrderedFloat(5.1), OrderedFloat(2.1)])]
     pub(crate) float: Stack<OrderedFloat<f64>>,
-    #[stack]
+    #[stack(sample_values = [true, false, true, true])]
     pub(crate) bool: Stack<bool>,
     // The Internet suggests that when you have fewer than 15 entries,
     // linear search on `Vec` is faster than `HashMap`. I found that
@@ -50,19 +53,24 @@ impl PushState {
     //         .input_instructions
     //         .iter()
     //         .find_map(|(n, v)| if n == var_name { Some(v) } else { None })
-    //         .unwrap_or_else(|| panic!("Failed to get an instruction for the input variable '{var_name}' that hadn't been defined"))
+    //         .unwrap_or_else(|| panic!(
+    //              "Failed to get an instruction for the input \
+    //               variable '{var_name}' that hadn't been defined"
+    //         ))
     //         .clone();
     //     instruction.perform(self);
     // }
 
     /// # Errors
     ///
-    /// This returns an error if the `PushInstruction` returns an error, which really shouldn't happen.
+    /// This returns an error if the `PushInstruction` returns an error,
+    /// which really shouldn't happen.
     ///
     /// # Panics
     ///
     /// This panics if there is no instruction associated with `var_name`, i.e.,
-    /// we have not yet added that variable name to the map of names to instructions.
+    /// we have not yet added that variable name to the map of names to
+    /// instructions.
     pub fn with_input(
         self,
         var_name: &VariableName,
@@ -74,7 +82,12 @@ impl PushState {
             .input_instructions
             .iter()
             .find_map(|(n, v)| if n == var_name { Some(v) } else { None })
-            .unwrap_or_else(|| panic!("Failed to get an instruction for the input variable '{var_name}' that hadn't been defined"))
+            .unwrap_or_else(|| {
+                panic!(
+                    "Failed to get an instruction for the input variable '{var_name}' that hadn't \
+                     been defined"
+                )
+            })
             .clone();
         instruction.perform(self)
     }
@@ -100,6 +113,7 @@ impl State for PushState {
 mod simple_check {
     use ordered_float::OrderedFloat;
 
+    use super::State;
     use crate::{
         genome::plushy::{Plushy, PushGene},
         instruction::{
@@ -108,8 +122,6 @@ mod simple_check {
         },
         push_vm::{program::PushProgram, push_state::PushState},
     };
-
-    use super::State;
 
     #[test]
     fn run_simple_program() {

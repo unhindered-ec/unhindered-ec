@@ -1,4 +1,3 @@
-use crate::instruction::PushInstruction;
 use easy_cast::ConvApprox;
 use ec_core::{
     generator::{collection::CollectionGenerator, Generator},
@@ -6,6 +5,8 @@ use ec_core::{
 };
 use ec_linear::genome::Linear;
 use rand::{rngs::ThreadRng, Rng};
+
+use crate::instruction::PushInstruction;
 
 #[derive(Clone, Eq, PartialEq)]
 pub enum PushGene {
@@ -128,12 +129,12 @@ impl FromIterator<PushGene> for Plushy {
 
 #[cfg(test)]
 mod test {
-    use crate::instruction::{variable_name::VariableName, BoolInstruction, IntInstruction};
     use ec_core::operator::mutator::Mutator;
     use ec_linear::mutator::umad::Umad;
     use rand::thread_rng;
 
     use super::*;
+    use crate::instruction::{variable_name::VariableName, BoolInstruction, IntInstruction};
 
     #[test]
     #[allow(clippy::unwrap_used)]
@@ -186,9 +187,7 @@ mod test {
             BoolInstruction::Or.into(),
             IntInstruction::Multiply.into(),
         ];
-        let parent = Plushy {
-            genes,
-        };
+        let parent = Plushy { genes };
 
         let child = umad.mutate(parent, &mut rng);
 

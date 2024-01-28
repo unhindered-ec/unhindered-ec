@@ -1,6 +1,5 @@
-use crate::instruction::PushInstruction;
-
 use super::NumOpens;
+use crate::instruction::PushInstruction;
 
 /*
  * exec_if requires a boolean and two (additional) values on the exec stack.
@@ -10,8 +9,8 @@ use super::NumOpens;
 
 /*
  * exec_while requires a boolean and one additional value on the exec stack.
- * If the bool is true, then you push a copy of the "body" onto the exec, followed
- * by another copy of exec_while.
+ * If the bool is true, then you push a copy of the "body" onto the exec,
+ * followed by another copy of exec_while.
  */
 
 #[derive(Debug, Clone, Eq, PartialEq)]

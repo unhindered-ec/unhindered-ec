@@ -1,9 +1,8 @@
 use anyhow::Result;
 use rand::rngs::ThreadRng;
 
-use crate::population::Population;
-
 use super::{Composable, Operator};
+use crate::population::Population;
 
 pub mod best;
 pub mod lexicase;
@@ -16,10 +15,11 @@ where
     P: Population,
 {
     /// # Errors
-    /// This will return an error if there's some problem selecting. That will usually
-    /// be because the population is empty or not large enough for the desired selector.
+    /// This will return an error if there's some problem selecting. That will
+    /// usually be because the population is empty or not large enough for
+    /// the desired selector.
     fn select<'pop>(&self, population: &'pop P, rng: &mut ThreadRng)
-        -> Result<&'pop P::Individual>;
+    -> Result<&'pop P::Individual>;
 }
 
 #[derive(Clone)]

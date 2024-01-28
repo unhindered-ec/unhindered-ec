@@ -1,12 +1,13 @@
 use ordered_float::OrderedFloat;
 
-use crate::{push::instruction::instruction_error::PushInstructionError,error::InstructionResult, push_vm::push_state::PushState};
-
-pub use self::int::IntInstructionError;
-use self::variable_name::VariableName;
 pub use self::{
-    bool::BoolInstruction, exec::ExecInstruction, float::FloatInstruction, int::IntInstruction,
+    bool::BoolInstruction,
+    exec::ExecInstruction,
+    float::FloatInstruction,
+    int::{IntInstruction, IntInstructionError},
 };
+use self::{instruction_error::PushInstructionError, variable_name::VariableName};
+use crate::{error::InstructionResult, push_vm::push_state::PushState};
 
 mod bool;
 mod exec;
@@ -14,6 +15,18 @@ mod float;
 pub mod instruction_error;
 mod int;
 pub mod variable_name;
+
+/*
+ * exec_if requires a boolean and two (additional) values on the exec stack.
+ * If the bool is true, we remove the second of the two exec stack values,
+ * and if it's false, we remove the first.
+ */
+
+/*
+ * exec_while requires a boolean and one additional value on the exec stack.
+ * If the bool is true, then you push a copy of the "body" onto the exec,
+ * followed by another copy of exec_while.
+ */
 
 /*
  * Instructions that are generic over stacks:

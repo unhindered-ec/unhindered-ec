@@ -3,6 +3,7 @@ pub trait TryRecover<T> {
 
     /// # Errors
     ///
-    /// `x.try_recover()` returns an error if `x` is not a `Recoverable` error type.
+    /// `x.try_recover()` returns an error if `x` is not a `Recoverable` error
+    /// type.
     fn try_recover(self) -> Result<T, Self::Error>;
 }

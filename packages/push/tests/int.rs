@@ -1,4 +1,7 @@
-use proptest::{prop_assert_eq, proptest};
+#![allow(clippy::unwrap_used)]
+#![allow(clippy::tuple_array_conversions)]
+
+use proptest::{arbitrary::any, prop_assert_eq, proptest};
 use push::{
     instruction::{
         instruction_error::PushInstructionError, Instruction, IntInstruction, IntInstructionError,
@@ -11,12 +14,12 @@ use strum::IntoEnumIterator;
 fn add() {
     let x = 409;
     let y = 512;
-    let mut state = PushState::builder()
+    let state = PushState::builder()
         .with_max_stack_size(100)
+        .with_int_values([x, y])
+        .unwrap()
         .with_no_program()
         .build();
-    state.stack_mut::<i64>().push(y).unwrap();
-    state.stack_mut::<i64>().push(x).unwrap();
     let result = IntInstruction::Add.perform(state).unwrap();
     assert_eq!(result.stack::<i64>().size(), 1);
     assert_eq!(*result.stack::<i64>().top().unwrap(), x + y);
@@ -26,12 +29,13 @@ fn add() {
 fn add_overflows() {
     let x = 4_098_586_571_925_584_936;
     let y = 5_124_785_464_929_190_872;
-    let mut state = PushState::builder()
+    let state = PushState::builder()
         .with_max_stack_size(100)
+        .with_int_values([x, y])
+        .unwrap()
         .with_no_program()
         .build();
-    state.stack_mut::<i64>().push(y).unwrap();
-    state.stack_mut::<i64>().push(x).unwrap();
+
     let result = IntInstruction::Add.perform(state).unwrap_err();
     assert_eq!(result.state().stack::<i64>().size(), 2);
     assert_eq!(
@@ -46,11 +50,13 @@ fn add_overflows() {
 #[test]
 fn inc_overflows() {
     let x = i64::MAX;
-    let mut state = PushState::builder()
+    let state = PushState::builder()
         .with_max_stack_size(100)
+        .with_int_values(std::iter::once(x))
+        .unwrap()
         .with_no_program()
         .build();
-    state.stack_mut::<i64>().push(x).unwrap();
+
     let result = IntInstruction::Inc.perform(state).unwrap_err();
     assert_eq!(result.state().stack::<i64>().size(), 1);
     assert_eq!(result.state().stack::<i64>().top().unwrap(), &i64::MAX);
@@ -67,11 +73,12 @@ fn inc_overflows() {
 #[test]
 fn dec_overflows() {
     let x = i64::MIN;
-    let mut state = PushState::builder()
+    let state = PushState::builder()
         .with_max_stack_size(100)
+        .with_int_values(std::iter::once(x))
+        .unwrap()
         .with_no_program()
         .build();
-    state.stack_mut::<i64>().push(x).unwrap();
     let result = IntInstruction::Dec.perform(state).unwrap_err();
     assert_eq!(result.state().stack::<i64>().size(), 1);
     assert_eq!(result.state().stack::<i64>().top().unwrap(), &i64::MIN);
@@ -93,36 +100,39 @@ proptest! {
     #![proptest_config(proptest::prelude::ProptestConfig::with_cases(1_000))]
 
     #[test]
-    fn negate(x in proptest::num::i64::ANY) {
-        let mut state = PushState::builder()
+    fn negate(x in any::<i64>()) {
+        let state = PushState::builder()
             .with_max_stack_size(100)
+            .with_int_values(std::iter::once(x))
+            .unwrap()
             .with_no_program()
             .build();
-        state.stack_mut::<i64>().push(x).unwrap();
         let result = IntInstruction::Negate.perform(state).unwrap();
         prop_assert_eq!(result.stack::<i64>().size(), 1);
         prop_assert_eq!(*result.stack::<i64>().top().unwrap(), -x);
     }
 
     #[test]
-    fn abs(x in proptest::num::i64::ANY) {
-        let mut state = PushState::builder()
+    fn abs(x in any::<i64>()) {
+        let state = PushState::builder()
             .with_max_stack_size(100)
+            .with_int_values(std::iter::once(x))
+            .unwrap()
             .with_no_program()
             .build();
-        state.stack_mut::<i64>().push(x).unwrap();
         let result = IntInstruction::Abs.perform(state).unwrap();
         prop_assert_eq!(result.stack::<i64>().size(), 1);
         prop_assert_eq!(*result.stack::<i64>().top().unwrap(), x.abs());
     }
 
     #[test]
-    fn sqr(x in proptest::num::i64::ANY) {
-        let mut state = PushState::builder()
+    fn sqr(x in any::<i64>()) {
+        let state = PushState::builder()
             .with_max_stack_size(100)
+            .with_int_values(std::iter::once(x))
+            .unwrap()
             .with_no_program()
             .build();
-        state.stack_mut::<i64>().push(x).unwrap();
         let result = IntInstruction::Square.perform(state);
         if let Some(x_squared) = x.checked_mul(x) {
             let result = result.unwrap();
@@ -144,24 +154,24 @@ proptest! {
     }
 
     #[test]
-    fn add_doesnt_crash(x in proptest::num::i64::ANY, y in proptest::num::i64::ANY) {
-        let mut state = PushState::builder()
+    fn add_does_not_crash(x in any::<i64>(), y in any::<i64>()) {
+        let state = PushState::builder()
             .with_max_stack_size(100)
+            .with_int_values([x,y])
+            .unwrap()
             .with_no_program()
             .build();
-        state.stack_mut::<i64>().push(y).unwrap();
-        state.stack_mut::<i64>().push(x).unwrap();
         let _ = IntInstruction::Add.perform(state);
     }
 
     #[test]
-    fn add_adds_or_does_nothing(x in proptest::num::i64::ANY, y in proptest::num::i64::ANY) {
-        let mut state = PushState::builder()
+    fn add_adds_or_does_nothing(x in any::<i64>(), y in any::<i64>()) {
+        let state = PushState::builder()
             .with_max_stack_size(100)
+            .with_int_values([x, y])
+            .unwrap()
             .with_no_program()
             .build();
-        state.stack_mut::<i64>().push(y).unwrap();
-        state.stack_mut::<i64>().push(x).unwrap();
         let result = IntInstruction::Add.perform(state);
         #[allow(clippy::unwrap_used)]
         if let Some(expected_result) = x.checked_add(y) {
@@ -187,13 +197,13 @@ proptest! {
     }
 
     #[test]
-    fn subtract_subs_or_does_nothing(x in proptest::num::i64::ANY, y in proptest::num::i64::ANY) {
-        let mut state = PushState::builder()
+    fn subtract_subs_or_does_nothing(x in any::<i64>(), y in any::<i64>()) {
+        let state = PushState::builder()
             .with_max_stack_size(100)
+            .with_int_values([x, y])
+            .unwrap()
             .with_no_program()
             .build();
-        state.stack_mut::<i64>().push(y).unwrap();
-        state.stack_mut::<i64>().push(x).unwrap();
         let result = IntInstruction::Subtract.perform(state);
         #[allow(clippy::unwrap_used)]
         if let Some(expected_result) = x.checked_sub(y) {
@@ -219,13 +229,13 @@ proptest! {
     }
 
     #[test]
-    fn multiply_muls_or_does_nothing(x in proptest::num::i64::ANY, y in proptest::num::i64::ANY) {
-        let mut state = PushState::builder()
+    fn multiply_works_or_does_nothing(x in any::<i64>(), y in any::<i64>()) {
+        let state = PushState::builder()
             .with_max_stack_size(100)
+            .with_int_values([x, y])
+            .unwrap()
             .with_no_program()
             .build();
-        state.stack_mut::<i64>().push(y).unwrap();
-        state.stack_mut::<i64>().push(x).unwrap();
         let result = IntInstruction::Multiply.perform(state);
         #[allow(clippy::unwrap_used)]
         if let Some(expected_result) = x.checked_mul(y) {
@@ -251,13 +261,13 @@ proptest! {
     }
 
     #[test]
-    fn protected_divide_zero_denominator(x in proptest::num::i64::ANY) {
-        let mut state = PushState::builder()
+    fn protected_divide_zero_denominator(x in any::<i64>()) {
+        let state = PushState::builder()
             .with_max_stack_size(100)
+            .with_int_values([x, 0])
+            .unwrap()
             .with_no_program()
             .build();
-        state.stack_mut::<i64>().push(0).unwrap();
-        state.stack_mut::<i64>().push(x).unwrap();
         let result = IntInstruction::ProtectedDivide.perform(state);
         #[allow(clippy::unwrap_used)]
         let output = result.unwrap().stack_mut::<i64>().pop().unwrap();
@@ -266,13 +276,16 @@ proptest! {
     }
 
     #[test]
-    fn protected_divide_divs_or_does_nothing(x in proptest::num::i64::ANY, y in proptest::num::i64::ANY) {
-        let mut state = PushState::builder()
+    fn protected_divide_works_or_does_nothing(
+        x in any::<i64>(),
+        y in any::<i64>()
+    ) {
+        let state = PushState::builder()
             .with_max_stack_size(100)
+            .with_int_values([x, y])
+            .unwrap()
             .with_no_program()
             .build();
-        state.stack_mut::<i64>().push(y).unwrap();
-        state.stack_mut::<i64>().push(x).unwrap();
         let result = IntInstruction::ProtectedDivide.perform(state);
         #[allow(clippy::unwrap_used)]
         if let Some(expected_result) = x.checked_div(y) {
@@ -298,13 +311,13 @@ proptest! {
     }
 
     #[test]
-    fn mod_zero_denominator(x in proptest::num::i64::ANY) {
-        let mut state =PushState::builder()
+    fn mod_zero_denominator(x in any::<i64>()) {
+        let state =PushState::builder()
             .with_max_stack_size(100)
+            .with_int_values([0,x])
+            .unwrap()
             .with_no_program()
             .build();
-        state.stack_mut::<i64>().push(0).unwrap();
-        state.stack_mut::<i64>().push(x).unwrap();
         let result = IntInstruction::Mod.perform(state);
         #[allow(clippy::unwrap_used)]
         let output = result.unwrap().stack_mut::<i64>().pop().unwrap();
@@ -313,13 +326,13 @@ proptest! {
     }
 
     #[test]
-    fn mod_rems_or_does_nothing(x in proptest::num::i64::ANY, y in proptest::num::i64::ANY) {
-        let mut state =PushState::builder()
+    fn mod_rems_or_does_nothing(x in any::<i64>(), y in any::<i64>()) {
+        let state =PushState::builder()
             .with_max_stack_size(100)
+            .with_int_values([x, y])
+            .unwrap()
             .with_no_program()
             .build();
-        state.stack_mut::<i64>().push(y).unwrap();
-        state.stack_mut::<i64>().push(x).unwrap();
         let result = IntInstruction::Mod.perform(state);
         #[allow(clippy::unwrap_used)]
         if let Some(expected_result) = x.checked_rem(y) {
@@ -349,28 +362,30 @@ proptest! {
     }
 
     #[test]
-    fn inc_does_not_crash(x in proptest::num::i64::ANY) {
-        let mut state = PushState::builder()
+    fn inc_does_not_crash(x in any::<i64>()) {
+        let state = PushState::builder()
             .with_max_stack_size(100)
+            .with_int_values(std::iter::once(x))
+            .unwrap()
             .with_no_program()
             .build();
-        state.stack_mut::<i64>().push(x).unwrap();
         let _ = IntInstruction::Inc.perform(state);
     }
 
     #[test]
     fn int_ops_do_not_crash(
             instr in proptest::sample::select(all_instructions()),
-            x in proptest::num::i64::ANY,
-            y in proptest::num::i64::ANY,
+            x in any::<i64>(),
+            y in any::<i64>(),
             b in proptest::bool::ANY) {
-        let mut state = PushState::builder()
+        let state = PushState::builder()
             .with_max_stack_size(100)
+            .with_int_values([x, y])
+            .unwrap()
+            .with_bool_values(std::iter::once(b))
+            .unwrap()
             .with_no_program()
             .build();
-        state.stack_mut::<i64>().push(y).unwrap();
-        state.stack_mut::<i64>().push(x).unwrap();
-        state.stack_mut::<bool>().push(b).unwrap();
         let _ = instr.perform(state);
     }
 }

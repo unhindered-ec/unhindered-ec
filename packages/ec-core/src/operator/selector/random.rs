@@ -1,11 +1,8 @@
 use anyhow::{Context, Result};
-
-use rand::prelude::SliceRandom;
-use rand::rngs::ThreadRng;
-
-use crate::population::Population;
+use rand::{prelude::SliceRandom, rngs::ThreadRng};
 
 use super::Selector;
+use crate::population::Population;
 
 pub struct Random;
 

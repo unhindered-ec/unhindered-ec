@@ -1,11 +1,7 @@
-#![warn(clippy::pedantic)]
-#![warn(clippy::nursery)]
-#![warn(clippy::unwrap_used)]
-#![warn(clippy::expect_used)]
-
 pub mod args;
 
-use crate::args::{Args, RunModel, TargetProblem};
+use std::ops::Not;
+
 use anyhow::{ensure, Result};
 use clap::Parser;
 use ec_core::{
@@ -34,7 +30,8 @@ use ec_linear::{
     recombinator::two_point_xo::TwoPointXo,
 };
 use rand::thread_rng;
-use std::ops::Not;
+
+use crate::args::{Args, RunModel, TargetProblem};
 
 fn main() -> Result<()> {
     // Using `Error` in `TestResults<Error>` will have the run favor smaller

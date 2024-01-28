@@ -60,7 +60,11 @@ impl Parse for PushStateFlags {
 
             match flag {
                 PushStateFlagsKw::Builder(_) if default_flags.builder == set_to => {
-                    return Err(syn::Error::new_spanned(flag, "Redundant flag, this is set by default. Maybe you meant to use !flag to disable it?"));
+                    return Err(syn::Error::new_spanned(
+                        flag,
+                        "Redundant flag, this is set by default. Maybe you meant to use !flag to \
+                         disable it?",
+                    ));
                 }
                 PushStateFlagsKw::Builder(_) if builder_flag_set => {
                     return Err(syn::Error::new_spanned(flag, "Flag already set."));
@@ -70,7 +74,11 @@ impl Parse for PushStateFlags {
                     current_flags.builder = set_to;
                 }
                 PushStateFlagsKw::HasStack(_) if default_flags.has_stack == set_to => {
-                    return Err(syn::Error::new_spanned(flag, "Redundant flag, this is set by default. Maybe you meant to use !flag to disable it?"));
+                    return Err(syn::Error::new_spanned(
+                        flag,
+                        "Redundant flag, this is set by default. Maybe you meant to use !flag to \
+                         disable it?",
+                    ));
                 }
                 PushStateFlagsKw::HasStack(_) if has_stack_flag_set => {
                     return Err(syn::Error::new_spanned(flag, "Flag already set."));

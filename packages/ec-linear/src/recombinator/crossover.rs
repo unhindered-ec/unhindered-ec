@@ -9,8 +9,8 @@ pub trait Crossover: Linear {
     /// modifying both this genome and `other`.
     ///
     /// # Errors
-    /// This can fail if an attempt is made to crossover a gene at an index that is out
-    /// of bounds for either this genome or `other`.
+    /// This can fail if an attempt is made to crossover a gene at an index that
+    /// is out of bounds for either this genome or `other`.
     fn crossover_gene(&mut self, other: &mut Self, index: usize) -> anyhow::Result<()>;
 
     /// Swaps a segment of this and the `other` genome that starts and
@@ -18,8 +18,8 @@ pub trait Crossover: Linear {
     /// both this genome and `other`.
     ///
     /// # Errors
-    /// This can fail if an attempt is made to crossover a segments whose start and end
-    /// are out of bounds for either this genome or `other`.
+    /// This can fail if an attempt is made to crossover a segments whose start
+    /// and end are out of bounds for either this genome or `other`.
     fn crossover_segment(&mut self, other: &mut Self, range: Range<usize>) -> anyhow::Result<()> {
         for index in range {
             self.crossover_gene(other, index)?;

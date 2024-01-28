@@ -29,13 +29,15 @@ where
     C: Generator<T>,
 {
     fn generate(&self, rng: &mut ThreadRng) -> anyhow::Result<Vec<T>> {
-        // Doing some reading, I _think_ this will properly pre-allocate an appropriately sized
-        // `Vec` to collect into. https://users.rust-lang.org/t/collect-for-exactsizediterator/54367/2
-        // says, for example, that collecting into a `Vec` will pre-allocate to the minimum returned
-        // by `type_hints`. Looking at the code, it seems that `repeat_with` returns "infinity" for the
-        // minimum size, and `take` returns the `min` of `self.size` and the minimum size from the
-        // preceding iterator (infinity). This will always be `self.size`, which is just what we'd
-        // want the size allocation to be.
+        // Doing some reading, I _think_ this will properly pre-allocate an
+        // appropriately sized `Vec` to collect into.
+        // https://users.rust-lang.org/t/collect-for-exactsizediterator/54367/2
+        // says, for example, that collecting into a `Vec` will pre-allocate to the
+        // minimum returned by `type_hints`. Looking at the code,
+        // it seems that `repeat_with` returns "infinity" for the
+        // minimum size, and `take` returns the `min` of `self.size` and the minimum
+        // size from the preceding iterator (infinity). This will always be
+        // `self.size`, which is just what we'd want the size allocation to be.
         repeat_with(|| self.element_generator.generate(rng))
             .take(self.size)
             .collect()
