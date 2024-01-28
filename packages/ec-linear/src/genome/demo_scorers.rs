@@ -33,7 +33,7 @@ pub fn hiff(bits: &[bool]) -> TestResults<test_results::Score<i64>> {
 fn do_hiff(bits: &[bool], scores: &mut Vec<i64>) -> bool {
     let len = bits.len();
     // This should be safe because of the `assert!` above in `hiff()`.
-    #[allow(clippy::cast_possible_wrap)]
+    #[allow(clippy::unwrap_used)]
     // FIXME: Use some better score or result here
     let len_as_score = i64::try_from(len).unwrap();
     if len < 2 {

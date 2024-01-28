@@ -1,6 +1,11 @@
-use proptest::{prop_assert_eq, proptest};
+#![allow(clippy::unwrap_used)]
+#![allow(clippy::tuple_array_conversions)]
+
+use proptest::{arbitrary::any, prop_assert_eq, proptest};
 use push::{
-    instruction::{Instruction, IntInstruction, IntInstructionError, PushInstructionError},
+    instruction::{
+        instruction_error::PushInstructionError, Instruction, IntInstruction, IntInstructionError,
+    },
     push_vm::{push_state::PushState, HasStack},
 };
 use strum::IntoEnumIterator;
@@ -95,7 +100,7 @@ proptest! {
     #![proptest_config(proptest::prelude::ProptestConfig::with_cases(1_000))]
 
     #[test]
-    fn negate(x in proptest::num::i64::ANY) {
+    fn negate(x in any::<i64>()) {
         let state = PushState::builder()
             .with_max_stack_size(100)
             .with_int_values(std::iter::once(x))
@@ -108,7 +113,7 @@ proptest! {
     }
 
     #[test]
-    fn abs(x in proptest::num::i64::ANY) {
+    fn abs(x in any::<i64>()) {
         let state = PushState::builder()
             .with_max_stack_size(100)
             .with_int_values(std::iter::once(x))
@@ -121,7 +126,7 @@ proptest! {
     }
 
     #[test]
-    fn sqr(x in proptest::num::i64::ANY) {
+    fn sqr(x in any::<i64>()) {
         let state = PushState::builder()
             .with_max_stack_size(100)
             .with_int_values(std::iter::once(x))
@@ -149,7 +154,7 @@ proptest! {
     }
 
     #[test]
-    fn add_doesnt_crash(x in proptest::num::i64::ANY, y in proptest::num::i64::ANY) {
+    fn add_does_not_crash(x in any::<i64>(), y in any::<i64>()) {
         let state = PushState::builder()
             .with_max_stack_size(100)
             .with_int_values([x,y])
@@ -160,7 +165,7 @@ proptest! {
     }
 
     #[test]
-    fn add_adds_or_does_nothing(x in proptest::num::i64::ANY, y in proptest::num::i64::ANY) {
+    fn add_adds_or_does_nothing(x in any::<i64>(), y in any::<i64>()) {
         let state = PushState::builder()
             .with_max_stack_size(100)
             .with_int_values([x, y])
@@ -192,7 +197,7 @@ proptest! {
     }
 
     #[test]
-    fn subtract_subs_or_does_nothing(x in proptest::num::i64::ANY, y in proptest::num::i64::ANY) {
+    fn subtract_subs_or_does_nothing(x in any::<i64>(), y in any::<i64>()) {
         let state = PushState::builder()
             .with_max_stack_size(100)
             .with_int_values([x, y])
@@ -224,7 +229,7 @@ proptest! {
     }
 
     #[test]
-    fn multiply_muls_or_does_nothing(x in proptest::num::i64::ANY, y in proptest::num::i64::ANY) {
+    fn multiply_works_or_does_nothing(x in any::<i64>(), y in any::<i64>()) {
         let state = PushState::builder()
             .with_max_stack_size(100)
             .with_int_values([x, y])
@@ -256,7 +261,7 @@ proptest! {
     }
 
     #[test]
-    fn protected_divide_zero_denominator(x in proptest::num::i64::ANY) {
+    fn protected_divide_zero_denominator(x in any::<i64>()) {
         let state = PushState::builder()
             .with_max_stack_size(100)
             .with_int_values([x, 0])
@@ -271,9 +276,9 @@ proptest! {
     }
 
     #[test]
-    fn protected_divide_divs_or_does_nothing(
-        x in proptest::num::i64::ANY,
-        y in proptest::num::i64::ANY
+    fn protected_divide_works_or_does_nothing(
+        x in any::<i64>(),
+        y in any::<i64>()
     ) {
         let state = PushState::builder()
             .with_max_stack_size(100)
@@ -306,7 +311,7 @@ proptest! {
     }
 
     #[test]
-    fn mod_zero_denominator(x in proptest::num::i64::ANY) {
+    fn mod_zero_denominator(x in any::<i64>()) {
         let state =PushState::builder()
             .with_max_stack_size(100)
             .with_int_values([0,x])
@@ -321,7 +326,7 @@ proptest! {
     }
 
     #[test]
-    fn mod_rems_or_does_nothing(x in proptest::num::i64::ANY, y in proptest::num::i64::ANY) {
+    fn mod_rems_or_does_nothing(x in any::<i64>(), y in any::<i64>()) {
         let state =PushState::builder()
             .with_max_stack_size(100)
             .with_int_values([x, y])
@@ -357,7 +362,7 @@ proptest! {
     }
 
     #[test]
-    fn inc_does_not_crash(x in proptest::num::i64::ANY) {
+    fn inc_does_not_crash(x in any::<i64>()) {
         let state = PushState::builder()
             .with_max_stack_size(100)
             .with_int_values(std::iter::once(x))
@@ -370,8 +375,8 @@ proptest! {
     #[test]
     fn int_ops_do_not_crash(
             instr in proptest::sample::select(all_instructions()),
-            x in proptest::num::i64::ANY,
-            y in proptest::num::i64::ANY,
+            x in any::<i64>(),
+            y in any::<i64>(),
             b in proptest::bool::ANY) {
         let state = PushState::builder()
             .with_max_stack_size(100)

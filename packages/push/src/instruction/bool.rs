@@ -2,9 +2,9 @@ use std::ops::Not;
 
 use strum_macros::EnumIter;
 
-use super::{Instruction, MapInstructionError, PushInstruction, PushInstructionError};
+use super::{Instruction, PushInstruction, PushInstructionError};
 use crate::{
-    error::InstructionResult,
+    error::{InstructionResult, MapInstructionError},
     push_vm::stack::{HasStack, StackPush},
 };
 
@@ -23,9 +23,6 @@ pub enum BoolInstruction {
     FromInt,
     // BoolFromFloat,
 }
-
-#[derive(thiserror::Error, Debug, Eq, PartialEq)]
-pub enum BoolInstructionError {}
 
 impl<S> Instruction<S> for BoolInstruction
 where
@@ -124,7 +121,7 @@ impl From<BoolInstruction> for PushInstruction {
 #[cfg(test)]
 #[allow(clippy::unwrap_used, clippy::ignored_unit_patterns)]
 mod property_tests {
-    use proptest::{prop_assert_eq, proptest};
+    use proptest::{arbitrary::any, prop_assert_eq, proptest};
     use strum::IntoEnumIterator;
 
     use crate::{
@@ -139,7 +136,7 @@ mod property_tests {
     proptest! {
         #[test]
         fn ops_do_not_crash(instr in proptest::sample::select(all_instructions()),
-                x in proptest::bool::ANY, y in proptest::bool::ANY, i in proptest::num::i64::ANY) {
+                x in any::<bool>(), y in any::<bool>(), i in any::<i64>()) {
             let state = PushState::builder()
                 .with_max_stack_size(1000)
                 .with_no_program()
@@ -152,7 +149,7 @@ mod property_tests {
         }
 
         #[test]
-        fn and_is_correct(x in proptest::bool::ANY, y in proptest::bool::ANY) {
+        fn and_is_correct(x in any::<bool>(), y in any::<bool>()) {
             let state = PushState::builder()
                 .with_max_stack_size(1000)
                 .with_no_program()
@@ -165,7 +162,7 @@ mod property_tests {
         }
 
         #[test]
-        fn implies_is_correct(x in proptest::bool::ANY, y in proptest::bool::ANY) {
+        fn implies_is_correct(x in any::<bool>(), y in any::<bool>()) {
             let state = PushState::builder()
                 .with_max_stack_size(1000)
                 .with_no_program()

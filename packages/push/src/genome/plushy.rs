@@ -1,62 +1,128 @@
+use easy_cast::ConvApprox;
 use ec_core::{
     generator::{collection::CollectionGenerator, Generator},
     genome::Genome,
 };
 use ec_linear::genome::Linear;
-use rand::rngs::ThreadRng;
+use rand::{rngs::ThreadRng, Rng};
 
 use crate::instruction::PushInstruction;
 
+#[derive(Clone, Eq, PartialEq)]
+pub enum PushGene {
+    Close,
+    Instruction(PushInstruction),
+}
+
+impl<T> From<T> for PushGene
+where
+    T: Into<PushInstruction>,
+{
+    fn from(instruction: T) -> Self {
+        Self::Instruction(instruction.into())
+    }
+}
+
+impl std::fmt::Debug for PushGene {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Close => write!(f, "Close"),
+            Self::Instruction(instruction) => instruction.fmt(f),
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct GeneGenerator {
+    close_probability: f32,
+    instructions: Vec<PushInstruction>,
+}
+
+impl GeneGenerator {
+    #[must_use]
+    pub fn new(close_probability: f32, instructions: Vec<PushInstruction>) -> Self {
+        Self {
+            close_probability,
+            instructions,
+        }
+    }
+
+    #[must_use]
+    pub fn with_uniform_close_probability(instructions: Vec<PushInstruction>) -> Self {
+        Self {
+            close_probability: 1.0 / f32::conv_approx(instructions.len() + 1),
+            instructions,
+        }
+    }
+}
+
+impl Generator<PushGene> for GeneGenerator {
+    fn generate(&self, rng: &mut ThreadRng) -> anyhow::Result<PushGene> {
+        if rng.gen::<f32>() < self.close_probability {
+            Ok(PushGene::Close)
+        } else {
+            self.instructions.generate(rng).map(PushGene::Instruction)
+        }
+    }
+}
+
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct Plushy {
-    instructions: Vec<PushInstruction>,
+    genes: Vec<PushGene>,
 }
 
 // TODO: We might want to implement some sort of `Into`
 //   trait instead of just having a getter. Having something
 //   like `to_instructions()` since we're cloning?
 impl Plushy {
+    pub fn new(iterable: impl IntoIterator<Item = PushGene>) -> Self {
+        Self {
+            genes: iterable.into_iter().collect(),
+        }
+    }
+
     #[must_use]
-    pub fn get_instructions(&self) -> Vec<PushInstruction> {
-        self.instructions.clone()
+    pub fn get_genes(&self) -> Vec<PushGene> {
+        self.genes.clone()
     }
 }
 
 impl Genome for Plushy {
-    type Gene = PushInstruction;
+    type Gene = PushGene;
 }
 
 impl Linear for Plushy {
     fn size(&self) -> usize {
-        self.instructions.len()
+        self.genes.len()
     }
 
     fn gene_mut(&mut self, index: usize) -> Option<&mut Self::Gene> {
-        self.instructions.get_mut(index)
+        self.genes.get_mut(index)
     }
 }
 
-impl Generator<Plushy> for CollectionGenerator<Vec<PushInstruction>> {
+impl Generator<Plushy> for CollectionGenerator<GeneGenerator> {
     fn generate(&self, rng: &mut ThreadRng) -> anyhow::Result<Plushy> {
-        let instructions: Vec<PushInstruction> = self.generate(rng)?;
-        Ok(Plushy { instructions })
+        Ok(Plushy {
+            genes: self.generate(rng)?,
+        })
     }
 }
 
 impl IntoIterator for Plushy {
-    type Item = PushInstruction;
+    type Item = PushGene;
 
-    type IntoIter = std::vec::IntoIter<PushInstruction>;
+    type IntoIter = std::vec::IntoIter<PushGene>;
 
     fn into_iter(self) -> Self::IntoIter {
-        self.instructions.into_iter()
+        self.genes.into_iter()
     }
 }
 
-impl FromIterator<PushInstruction> for Plushy {
-    fn from_iter<T: IntoIterator<Item = PushInstruction>>(iterable: T) -> Self {
+impl FromIterator<PushGene> for Plushy {
+    fn from_iter<T: IntoIterator<Item = PushGene>>(iterable: T) -> Self {
         Self {
-            instructions: iterable.into_iter().collect(),
+            genes: iterable.into_iter().collect(),
         }
     }
 }
@@ -68,68 +134,69 @@ mod test {
     use rand::thread_rng;
 
     use super::*;
-    use crate::instruction::{BoolInstruction, IntInstruction, VariableName};
+    use crate::instruction::{variable_name::VariableName, BoolInstruction, IntInstruction};
 
     #[test]
     #[allow(clippy::unwrap_used)]
     fn generator() {
-        let instructions = vec![
-            PushInstruction::IntInstruction(IntInstruction::Add),
-            PushInstruction::IntInstruction(IntInstruction::Subtract),
-            PushInstruction::IntInstruction(IntInstruction::Multiply),
-            PushInstruction::IntInstruction(IntInstruction::ProtectedDivide),
+        let instructions: Vec<PushInstruction> = vec![
+            IntInstruction::Add.into(),
+            IntInstruction::Subtract.into(),
+            IntInstruction::Multiply.into(),
+            IntInstruction::ProtectedDivide.into(),
         ];
+        let gene_generator = GeneGenerator::with_uniform_close_probability(instructions);
         let mut rng = thread_rng();
         let plushy: Plushy = CollectionGenerator {
             size: 10,
-            element_generator: instructions,
+            element_generator: gene_generator,
         }
         .generate(&mut rng)
         .unwrap();
-        assert_eq!(10, plushy.instructions.len());
+        assert_eq!(10, plushy.genes.len());
     }
 
     #[test]
     fn umad() {
         let mut rng = thread_rng();
 
-        let instruction_options = [PushInstruction::InputVar(VariableName::from("x"))];
+        let instruction_options = [PushGene::Instruction(PushInstruction::InputVar(
+            VariableName::from("x"),
+        ))];
         let umad = Umad::new(0.3, 0.3, instruction_options);
 
-        let parent_instructions = vec![
-            PushInstruction::IntInstruction(IntInstruction::Add),
-            PushInstruction::BoolInstruction(BoolInstruction::And),
-            PushInstruction::BoolInstruction(BoolInstruction::Or),
-            PushInstruction::IntInstruction(IntInstruction::Multiply),
-            PushInstruction::IntInstruction(IntInstruction::Add),
-            PushInstruction::BoolInstruction(BoolInstruction::And),
-            PushInstruction::BoolInstruction(BoolInstruction::Or),
-            PushInstruction::IntInstruction(IntInstruction::Multiply),
-            PushInstruction::IntInstruction(IntInstruction::Add),
-            PushInstruction::BoolInstruction(BoolInstruction::And),
-            PushInstruction::BoolInstruction(BoolInstruction::Or),
-            PushInstruction::IntInstruction(IntInstruction::Multiply),
-            PushInstruction::IntInstruction(IntInstruction::Add),
-            PushInstruction::BoolInstruction(BoolInstruction::And),
-            PushInstruction::BoolInstruction(BoolInstruction::Or),
-            PushInstruction::IntInstruction(IntInstruction::Multiply),
-            PushInstruction::IntInstruction(IntInstruction::Add),
-            PushInstruction::BoolInstruction(BoolInstruction::And),
-            PushInstruction::BoolInstruction(BoolInstruction::Or),
-            PushInstruction::IntInstruction(IntInstruction::Multiply),
+        let genes: Vec<PushGene> = vec![
+            IntInstruction::Add.into(),
+            BoolInstruction::And.into(),
+            BoolInstruction::Or.into(),
+            IntInstruction::Multiply.into(),
+            IntInstruction::Add.into(),
+            BoolInstruction::And.into(),
+            BoolInstruction::Or.into(),
+            IntInstruction::Multiply.into(),
+            IntInstruction::Add.into(),
+            BoolInstruction::And.into(),
+            BoolInstruction::Or.into(),
+            IntInstruction::Multiply.into(),
+            IntInstruction::Add.into(),
+            BoolInstruction::And.into(),
+            BoolInstruction::Or.into(),
+            IntInstruction::Multiply.into(),
+            IntInstruction::Add.into(),
+            BoolInstruction::And.into(),
+            BoolInstruction::Or.into(),
+            IntInstruction::Multiply.into(),
         ];
-        let parent = Plushy {
-            instructions: parent_instructions,
-        };
+        let parent = Plushy { genes };
 
         let child = umad.mutate(parent, &mut rng);
 
         #[allow(clippy::unwrap_used)]
         let num_inputs = child
             .unwrap()
-            .instructions
+            .genes
             .iter()
-            .filter(|c| matches!(c, PushInstruction::InputVar(v) if v == &VariableName::from("x")))
+            .filter(|c| matches!(c, PushGene::Instruction(PushInstruction::InputVar(v)) if v == &VariableName::from("x")))
             .count();
         assert!(
             num_inputs > 0,

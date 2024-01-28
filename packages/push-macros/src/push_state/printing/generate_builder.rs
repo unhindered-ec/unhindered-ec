@@ -145,7 +145,7 @@ pub fn generate_builder(
                             input_value: <#ty as ::push::push_vm::stack::StackType>::Type
                     ) -> Self {
                         self.partial_state.#input_instructions_field.insert(
-                            ::push::instruction::VariableName::from(input_name),
+                            ::push::instruction::variable_name::VariableName::from(input_name),
                             #instruction_path(input_value),
                         );
                         self
@@ -535,20 +535,22 @@ pub fn generate_builder(
             /// # Arguments
             /// - `program` - The program you wish to execute
             #[must_use]
-            pub fn with_program<P>(mut self, program: P)
+            pub fn with_program<P, I>(mut self, program: P)
                 -> ::std::result::Result<
                     #builder_name<#utilities_mod_ident::WithSizeAndData, #(#stack_generics),*>,
                     ::push::push_vm::stack::StackError
                 >
             where
-                P: ::std::iter::IntoIterator<
-                    Item = ::push::instruction::PushInstruction
-                >,
-                <P as ::std::iter::IntoIterator>::IntoIter:
-                    ::std::iter::DoubleEndedIterator +
-                    ::std::iter::ExactSizeIterator,
+                P: ::std::iter::IntoIterator<Item = I>,
+                <P as ::std::iter::IntoIterator>::IntoIter: ::std::iter::DoubleEndedIterator
+                    + ::std::iter::ExactSizeIterator,
+                I: ::std::convert::Into<::push::push_vm::program::PushProgram>
             {
-                self.partial_state.#exec_stack_ident.try_extend(program)?;
+                self
+                    .partial_state
+                    .#exec_stack_ident
+                    .try_extend(::std::iter::IntoIterator::into_iter(program)
+                    .map(::std::convert::Into::into))?;
                 ::std::result::Result::Ok(#builder_name {
                     partial_state: self.partial_state,
                     _p: ::std::marker::PhantomData,

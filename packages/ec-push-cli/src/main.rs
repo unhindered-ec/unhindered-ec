@@ -22,9 +22,9 @@ use ec_core::{
 };
 use ec_linear::mutator::umad::Umad;
 use push::{
-    genome::plushy::Plushy,
-    instruction::{IntInstruction, PushInstruction, VariableName},
-    push_vm::{push_state::PushState, HasStack, State},
+    genome::plushy::{GeneGenerator, Plushy},
+    instruction::{variable_name::VariableName, IntInstruction, PushInstruction},
+    push_vm::{program::PushProgram, push_state::PushState, HasStack, State},
 };
 use rand::thread_rng;
 
@@ -54,13 +54,14 @@ fn main() -> Result<()> {
      *
      * The target polynomial is x^3 - 2x^2 - x
      */
-    let scorer = |program: &Plushy| -> TestResults<test_results::Error<i64>> {
+    let scorer = |genome: &Plushy| -> TestResults<test_results::Error<i64>> {
+        let program = Vec::<PushProgram>::from(genome.clone());
         let errors: TestResults<test_results::Error<i64>> = (0..10)
             .map(|input| {
                 #[allow(clippy::unwrap_used)]
-                let state = PushState::builder()
+                let state: PushState = PushState::builder()
                     .with_max_stack_size(1000)
-                    .with_program(program.get_instructions())
+                    .with_program(program.clone())
                     // This will return an error if the program is longer than
                     //  the allowed max stack size.
                     // We arguably should check that and return an error here.
@@ -110,9 +111,11 @@ fn main() -> Result<()> {
     ];
     instruction_set.push(PushInstruction::InputVar(VariableName::from("x")));
 
+    let gene_generator = GeneGenerator::with_uniform_close_probability(instruction_set.clone());
+
     let plushy_generator = CollectionGenerator {
         size: args.max_initial_instructions,
-        element_generator: instruction_set.clone(),
+        element_generator: gene_generator.clone(),
     };
 
     let individual_generator = ec::IndividualGenerator {
@@ -132,7 +135,7 @@ fn main() -> Result<()> {
     let best = Best.select(&population, &mut rng)?;
     println!("Best initial individual is {best:?}");
 
-    let umad = Umad::new(0.1, 0.1, instruction_set);
+    let umad = Umad::new(0.1, 0.1, gene_generator);
 
     let make_new_individual = Select::new(selector)
         .then(GenomeExtractor)
