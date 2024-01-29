@@ -109,7 +109,7 @@ fn main() -> Result<()> {
         PushInstruction::IntInstruction(IntInstruction::Multiply),
         PushInstruction::IntInstruction(IntInstruction::ProtectedDivide),
     ];
-    instruction_set.push(PushInstruction::InputVar(VariableName::from("x")));
+    instruction_set.push(VariableName::from("x").into());
 
     let gene_generator = GeneGenerator::with_uniform_close_probability(instruction_set.clone());
 
