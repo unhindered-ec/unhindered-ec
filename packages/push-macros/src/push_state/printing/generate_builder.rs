@@ -10,6 +10,14 @@ use crate::{
     },
 };
 
+/// This macro creates a new [`syn::Ident`] out of multiple parts, consisting of
+/// either string literals or variables
+#[macro_railroad_annotation::generate_railroad]
+/// # Examples
+/// ```ignore
+/// let some_ident: syn::Ident = todo!();
+/// let derived_ident = derived_ident!("prefix_", some_ident, "_postfix", "_foo");
+/// ```
 macro_rules! derived_ident {
     ($($tok: expr),*) => {
         {
