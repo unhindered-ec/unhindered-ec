@@ -391,6 +391,8 @@ checksum = "b5e6163cb8c49088c2c36f57875e58ccd8c87c7427f7fbd50ea6710b2f3f2e8f"
 [[package]]
 name = "macro_railroad"
 version = "0.1.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9f265a449ea0f49d18453db0daa0f81d6859ffa5f92f6788ee4d9653532fc67c"
 dependencies = [
  "proc-macro2",
  "railroad",
@@ -400,6 +402,8 @@ dependencies = [
 [[package]]
 name = "macro_railroad_annotation"
 version = "1.0.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bcd8a65caa3109e5230a98c68ac304d50c390912606995478f6d0f8155ef2de7"
 dependencies = [
  "base64 0.21.7",
  "macro_railroad",

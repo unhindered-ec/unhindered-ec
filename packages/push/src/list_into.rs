@@ -14,12 +14,24 @@
 /// ```
 #[macro_export]
 macro_rules! vec_into {
-    (<$output_type:ty>) => { Vec::<$output_type>::new() };
-    (<$output_type:ty>$item:expr; $repeat_times:expr) => { vec![<$output_type>::from($item); $repeat_times] };
-    (<$output_type:ty>$($items:expr),+ $(,)?) => { vec![$(<$output_type>::from($items)),+] };
-    () => { Vec::new() };
-    ($item:expr; $repeat_times:expr) => { vec![($item).into(); $repeat_times] };
-    ($($items:expr),+ $(,)?) => { vec![$(($items).into()),+] };
+    (<$output_type:ty>) => {
+        Vec::<$output_type>::new()
+    };
+    (<$output_type:ty>$item:expr; $repeat_times:expr) => {
+         vec![<$output_type>::from($item); $repeat_times]
+    };
+    (<$output_type:ty>$($items:expr),+ $(,)?) => {
+         vec![$(<$output_type>::from($items)),+]
+    };
+    () => {
+         Vec::new()
+    };
+    ($item:expr; $repeat_times:expr) => {
+         vec![($item).into(); $repeat_times]
+    };
+    ($($items:expr),+ $(,)?) => {
+         vec![$(($items).into()),+]
+    };
 }
 
 pub use vec_into;
@@ -40,12 +52,27 @@ pub use vec_into;
 /// ```
 #[macro_export]
 macro_rules! arr_into {
-    (<$output_type:ty>) => { {let a: [$output_type; 1] = []; a} };
-    (<$output_type:ty>$item:expr; $repeat_times:expr) => { [<$output_type>::from($item); $repeat_times] };
-    (<$output_type:ty>$($items:expr),+ $(,)?) => { [$(<$output_type>::from($items)),+] };
-    () => { Vec::new() };
-    ($item:expr; $repeat_times:expr) => { [($item).into(); $repeat_times] };
-    ($($items:expr),+ $(,)?) => { [$(($items).into()),+] };
+     (<$output_type:ty>) => {
+          {
+               let a: [$output_type; 1] = [];
+               a
+          }
+     };
+     (<$output_type:ty>$item:expr; $repeat_times:expr) => {
+          [<$output_type>::from($item); $repeat_times]
+     };
+     (<$output_type:ty>$($items:expr),+ $(,)?) => {
+          [$(<$output_type>::from($items)),+]
+     };
+     () => {
+          Vec::new()
+     };
+     ($item:expr; $repeat_times:expr) => {
+          [($item).into(); $repeat_times]
+     };
+     ($($items:expr),+ $(,)?) => {
+          [$(($items).into()),+]
+     };
 }
 
 pub use arr_into;
