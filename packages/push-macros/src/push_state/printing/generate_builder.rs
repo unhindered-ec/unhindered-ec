@@ -19,14 +19,14 @@ use crate::{
 /// let derived_ident = derived_ident!("prefix_", some_ident, "_postfix", "_foo");
 /// ```
 macro_rules! derived_ident {
-    ($($tok: expr),*) => {
+    ($($literal_part: expr),*) => {
         {
             #[allow(unused_imports)]
             use syn::ext::IdentExt;
             syn::Ident::new_raw(
                 &[$(format!(
                     "{}",
-                    derived_ident!(@handle_seprate $tok)
+                    derived_ident!(@handle_seprate $literal_part)
                 )),*].concat(),
                 proc_macro2::Span::mixed_site()
             )

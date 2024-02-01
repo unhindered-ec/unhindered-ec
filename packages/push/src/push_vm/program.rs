@@ -101,14 +101,13 @@ impl Instruction<PushState> for PushProgram {
 mod test {
     use super::PushProgram;
     use crate::{
-        arr_into,
         error::Error,
         genome::plushy::{Plushy, PushGene},
         instruction::{
             BoolInstruction, ExecInstruction, FloatInstruction, Instruction, IntInstruction,
         },
+        list_into::{arr_into, vec_into},
         push_vm::{push_state::PushState, HasStack},
-        vec_into,
     };
 
     #[test]
