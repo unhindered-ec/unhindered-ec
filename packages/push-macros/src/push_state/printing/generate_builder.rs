@@ -543,9 +543,11 @@ pub fn generate_builder(
                 >
             where
                 P: ::std::iter::IntoIterator,
-                <P as ::std::iter::IntoIterator>::IntoIter: ::std::iter::DoubleEndedIterator
-                    + ::std::iter::ExactSizeIterator,
-                <P as ::std::iter::IntoIterator>::Item: ::std::convert::Into<::push::push_vm::program::PushProgram>
+                <P as ::std::iter::IntoIterator>::IntoIter:
+                    ::std::iter::DoubleEndedIterator +
+                    ::std::iter::ExactSizeIterator,
+                <P as ::std::iter::IntoIterator>::Item:
+                    ::std::convert::Into<::push::push_vm::program::PushProgram>
             {
                 self
                     .partial_state
