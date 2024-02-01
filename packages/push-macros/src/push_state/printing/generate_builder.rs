@@ -41,7 +41,7 @@ pub fn generate_builder(
     exec_stack: &ExecStackInput,
     input_instructions: InputInstructionsInput,
 ) -> syn::Result<TokenStream> {
-    let Some((exec_stack_ident, _, _)) = exec_stack else {
+    let Some((exec_stack_ident, _, exec_stack_ty)) = exec_stack else {
         return Err(syn::Error::new(
             macro_span,
             "Need to declare exactly one exec stack using #[stack(exec)] to use the builder \
@@ -545,7 +545,7 @@ pub fn generate_builder(
                 P: ::std::iter::IntoIterator<Item = I>,
                 <P as ::std::iter::IntoIterator>::IntoIter: ::std::iter::DoubleEndedIterator
                     + ::std::iter::ExactSizeIterator,
-                I: ::std::convert::Into<::push::push_vm::program::PushProgram>
+                I: ::std::convert::Into<<#exec_stack_ty as ::push::push_vm::stack::StackType>::Type>
             {
                 self
                     .partial_state
