@@ -401,9 +401,9 @@ dependencies = [
 
 [[package]]
 name = "macro_railroad_annotation"
-version = "1.0.2"
+version = "1.0.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bcd8a65caa3109e5230a98c68ac304d50c390912606995478f6d0f8155ef2de7"
+checksum = "b7057808dda4762c0f93a7bbc654deac7be3975490e1815ba93fd5d0f5320066"
 dependencies = [
  "base64 0.21.7",
  "macro_railroad",
