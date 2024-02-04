@@ -15,6 +15,26 @@ pub trait Generator<T> {
     fn generate(&self, rng: &mut ThreadRng) -> anyhow::Result<T>;
 }
 
+/// Implement `Generator` for any reference to a `Generator`.
+impl<'a, T, U> Generator<T> for &'a U
+where
+    U: Generator<T>,
+{
+    fn generate(&self, rng: &mut ThreadRng) -> anyhow::Result<T> {
+        (**self).generate(rng)
+    }
+}
+
+/// Implement `Generator` for any mutable reference to a `Generator`.
+impl<'a, T, U> Generator<T> for &'a mut U
+where
+    U: Generator<T>,
+{
+    fn generate(&self, rng: &mut ThreadRng) -> anyhow::Result<T> {
+        (**self).generate(rng)
+    }
+}
+
 /// Generate a random element from an array of options.
 ///
 /// # Errors
