@@ -407,22 +407,10 @@ checksum = "bcd8a65caa3109e5230a98c68ac304d50c390912606995478f6d0f8155ef2de7"
 dependencies = [
  "base64 0.21.7",
  "macro_railroad",
- "manyhow 0.11.0",
+ "manyhow",
  "proc-macro2",
  "quote",
  "rand",
- "syn 2.0.48",
-]
-
-[[package]]
-name = "manyhow"
-version = "0.8.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "516b76546495d933baa165075b95c0a15e8f7ef75e53f56b19b7144d80fd52bd"
-dependencies = [
- "manyhow-macros 0.8.1",
- "proc-macro2",
- "quote",
  "syn 2.0.48",
 ]
 
@@ -432,21 +420,10 @@ version = "0.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c8cd8783b626890c6e8124a894135b3bebca18af66a00f8e246dc378084d56e8"
 dependencies = [
- "manyhow-macros 0.11.0",
+ "manyhow-macros",
  "proc-macro2",
  "quote",
  "syn 2.0.48",
-]
-
-[[package]]
-name = "manyhow-macros"
-version = "0.8.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8ba072c0eadade3160232e70893311f1f8903974488096e2eb8e48caba2f0cf1"
-dependencies = [
- "proc-macro-utils",
- "proc-macro2",
- "quote",
 ]
 
 [[package]]
@@ -584,7 +561,7 @@ dependencies = [
  "ident_case_conversions",
  "itertools",
  "macro_railroad_annotation",
- "manyhow 0.8.1",
+ "manyhow",
  "prettyplease",
  "proc-macro-assertions",
  "proc-macro2",
