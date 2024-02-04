@@ -10,15 +10,25 @@ use crate::{
     },
 };
 
+/// This macro creates a new [`syn::Ident`] out of multiple parts, consisting of
+/// either string literals or variables
+///
+/// ![Railroad diagram for the `derived_ident` macro][ref_text]
+/// # Examples
+/// ```ignore
+/// let some_ident: syn::Ident = todo!();
+/// let derived_ident = derived_ident!("prefix_", some_ident, "_postfix", "_foo");
+/// ```
+#[macro_railroad_annotation::generate_railroad("ref_text")]
 macro_rules! derived_ident {
-    ($($tok: expr),*) => {
+    ($($literal_part: expr),*) => {
         {
             #[allow(unused_imports)]
             use syn::ext::IdentExt;
             syn::Ident::new_raw(
                 &[$(format!(
                     "{}",
-                    derived_ident!(@handle_seprate $tok)
+                    derived_ident!(@handle_seprate $literal_part)
                 )),*].concat(),
                 proc_macro2::Span::mixed_site()
             )
@@ -536,16 +546,18 @@ pub fn generate_builder(
             /// # Arguments
             /// - `program` - The program you wish to execute
             #[must_use]
-            pub fn with_program<P, I>(mut self, program: P)
+            pub fn with_program<P>(mut self, program: P)
                 -> ::std::result::Result<
                     #builder_name<#utilities_mod_ident::WithSizeAndData, #(#stack_generics),*>,
                     ::push::push_vm::stack::StackError
                 >
             where
-                P: ::std::iter::IntoIterator<Item = I>,
-                <P as ::std::iter::IntoIterator>::IntoIter: ::std::iter::DoubleEndedIterator
-                    + ::std::iter::ExactSizeIterator,
-                I: ::std::convert::Into<<#exec_stack_ty as ::push::push_vm::stack::StackType>::Type>
+                P: ::std::iter::IntoIterator,
+                <P as ::std::iter::IntoIterator>::IntoIter:
+                    ::std::iter::DoubleEndedIterator +
+                    ::std::iter::ExactSizeIterator,
+                <P as ::std::iter::IntoIterator>::Item:
+                    ::std::convert::Into<<#exec_stack_ty as ::push::push_vm::stack::StackType>::Type>
             {
                 self
                     .partial_state

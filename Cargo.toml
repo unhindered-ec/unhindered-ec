@@ -23,6 +23,7 @@ rand = "0.8.5"
 num-traits = "0.2.15"
 thiserror = "1.0.44"
 itertools = "0.11.0"
+macro_railroad_annotation = "1.0.0"
 
 ec-core = { path = "packages/ec-core" }
 ec-linear = { path = "packages/ec-linear" }

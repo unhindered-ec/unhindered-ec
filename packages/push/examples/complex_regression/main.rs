@@ -21,8 +21,9 @@ use ec_linear::mutator::umad::Umad;
 use ordered_float::OrderedFloat;
 use push::{
     genome::plushy::{GeneGenerator, Plushy},
-    instruction::{variable_name::VariableName, FloatInstruction, PushInstruction},
+    instruction::{variable_name::VariableName, FloatInstruction},
     push_vm::{program::PushProgram, push_state::PushState, HasStack, State},
+    vec_into,
 };
 use rand::thread_rng;
 
@@ -65,7 +66,7 @@ fn main() -> Result<()> {
                     .with_max_stack_size(1000)
                     .with_program(program.clone())
                     // This will return an error if the program is longer than the allowed
-                    //  max stack size.
+                    // max stack size.
                     // We arguably should check that and return an error here.
                     .unwrap()
                     .with_float_input("x", *input)
@@ -94,18 +95,18 @@ fn main() -> Result<()> {
 
     let mut rng = thread_rng();
 
-    let mut instruction_set = vec![
-        PushInstruction::FloatInstruction(FloatInstruction::Add),
-        PushInstruction::FloatInstruction(FloatInstruction::Subtract),
-        PushInstruction::FloatInstruction(FloatInstruction::Multiply),
-        PushInstruction::FloatInstruction(FloatInstruction::ProtectedDivide),
-        PushInstruction::FloatInstruction(FloatInstruction::Dup),
-        PushInstruction::FloatInstruction(FloatInstruction::Push(OrderedFloat(0.0))),
-        PushInstruction::FloatInstruction(FloatInstruction::Push(OrderedFloat(1.0))),
+    let instruction_set = vec_into![
+        FloatInstruction::Add,
+        FloatInstruction::Subtract,
+        FloatInstruction::Multiply,
+        FloatInstruction::ProtectedDivide,
+        FloatInstruction::Dup,
+        FloatInstruction::Push(OrderedFloat(0.0)),
+        FloatInstruction::Push(OrderedFloat(1.0)),
+        VariableName::from("x")
     ];
-    instruction_set.push(PushInstruction::InputVar(VariableName::from("x")));
 
-    let gene_generator = GeneGenerator::with_uniform_close_probability(instruction_set.clone());
+    let gene_generator = GeneGenerator::with_uniform_close_probability(instruction_set);
 
     let plushy_generator = CollectionGenerator {
         size: args.max_initial_instructions,
@@ -139,7 +140,7 @@ fn main() -> Result<()> {
     let mut generation = Generation::new(make_new_individual, population);
 
     // TODO: It might be useful to insert some kind of logging system so we can
-    //   make this less imperative in nature.
+    // make this less imperative in nature.
 
     for generation_number in 0..args.num_generations {
         match args.run_model {
@@ -149,7 +150,7 @@ fn main() -> Result<()> {
 
         let best = Best.select(generation.population(), &mut rng)?;
         // TODO: Change 2 to be the smallest number of digits needed for
-        //  args.num_generations-1.
+        // args.num_generations-1.
         println!("Generation {generation_number:2} best is {best:#?}");
 
         if best.test_results.total_result.error == OrderedFloat(0.0) {
