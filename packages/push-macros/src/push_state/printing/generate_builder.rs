@@ -536,16 +536,18 @@ pub fn generate_builder(
             /// # Arguments
             /// - `program` - The program you wish to execute
             #[must_use]
-            pub fn with_program<P, I>(mut self, program: P)
+            pub fn with_program<P>(mut self, program: P)
                 -> ::std::result::Result<
                     #builder_name<#utilities_mod_ident::WithSizeAndData, #(#stack_generics),*>,
                     ::push::push_vm::stack::StackError
                 >
             where
-                P: ::std::iter::IntoIterator<Item = I>,
-                <P as ::std::iter::IntoIterator>::IntoIter: ::std::iter::DoubleEndedIterator
-                    + ::std::iter::ExactSizeIterator,
-                I: ::std::convert::Into<::push::push_vm::program::PushProgram>
+                P: ::std::iter::IntoIterator,
+                <P as ::std::iter::IntoIterator>::IntoIter:
+                    ::std::iter::DoubleEndedIterator +
+                    ::std::iter::ExactSizeIterator,
+                <P as ::std::iter::IntoIterator>::Item:
+                    ::std::convert::Into<::push::push_vm::program::PushProgram>
             {
                 self
                     .partial_state
