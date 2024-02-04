@@ -89,7 +89,7 @@ impl Instruction<PushState> for PushInstruction {
         match self {
             Self::InputVar(var_name) => {
                 // TODO: Should `push_input` return the new state?
-                //   Or add a `with_input` that returns the new state and keep `push_input`?
+                // Or add a `with_input` that returns the new state and keep `push_input`?
                 state.with_input(var_name)
             }
             Self::Exec(_) => todo!(),

@@ -66,7 +66,7 @@ fn main() -> Result<()> {
                     .with_max_stack_size(1000)
                     .with_program(program.clone())
                     // This will return an error if the program is longer than the allowed
-                    //  max stack size.
+                    // max stack size.
                     // We arguably should check that and return an error here.
                     .unwrap()
                     .with_float_input("x", *input)
@@ -140,7 +140,7 @@ fn main() -> Result<()> {
     let mut generation = Generation::new(make_new_individual, population);
 
     // TODO: It might be useful to insert some kind of logging system so we can
-    //   make this less imperative in nature.
+    // make this less imperative in nature.
 
     for generation_number in 0..args.num_generations {
         match args.run_model {
@@ -150,7 +150,7 @@ fn main() -> Result<()> {
 
         let best = Best.select(generation.population(), &mut rng)?;
         // TODO: Change 2 to be the smallest number of digits needed for
-        //  args.num_generations-1.
+        // args.num_generations-1.
         println!("Generation {generation_number:2} best is {best:#?}");
 
         if best.test_results.total_result.error == OrderedFloat(0.0) {
