@@ -557,7 +557,9 @@ pub fn generate_builder(
                     ::std::iter::DoubleEndedIterator +
                     ::std::iter::ExactSizeIterator,
                 <P as ::std::iter::IntoIterator>::Item:
-                    ::std::convert::Into<::push::push_vm::program::PushProgram>
+                    ::std::convert::Into<
+                        <#exec_stack_ty as ::push::push_vm::stack::StackType>::Type
+                    >
             {
                 self
                     .partial_state
