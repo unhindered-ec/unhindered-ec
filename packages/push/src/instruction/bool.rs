@@ -31,17 +31,17 @@ where
     type Error = PushInstructionError;
 
     // TODO: This only "works" because all the stack operations are "transactional",
-    //   i.e., things like `pop2()` either completely succeed or return an error
-    // without   modifying the (mutable) state. (This is done by checking that
-    // the size of the   relevant stack is big enough before removing any
-    // elements.) If any stack operations   were _not_ "transactional" then we
-    // could end up passing an inconsistent state   to the call to
-    // `Error::recoverable_error()`, which would be bad. Because the `pop`   and
+    // i.e., things like `pop2()` either completely succeed or return an error
+    // without modifying the (mutable) state. (This is done by checking that
+    // the size of the relevant stack is big enough before removing any
+    // elements.) If any stack operations were _not_ "transactional" then we
+    // could end up passing an inconsistent state to the call to
+    // `Error::recoverable_error()`, which would be bad. Because the `pop` and
     // `push` calls aren't together, we can still have inconsistent states in the
-    //   call to `Error::fatal_error()`. For example, if the boolean is full and the
-    //   instruction is `BoolFromInt`, we could pop off an integer before we realize
-    // there's   no room to push on the new boolean. We can special case that,
-    // but the burden lies   on the programmer, with no help from the type
+    // call to `Error::fatal_error()`. For example, if the boolean is full and the
+    // instruction is `BoolFromInt`, we could pop off an integer before we realize
+    // there's no room to push on the new boolean. We can special case that,
+    // but the burden lies on the programmer, with no help from the type
     // system.
 
     /*

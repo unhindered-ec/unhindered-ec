@@ -72,8 +72,8 @@ pub struct Plushy {
 }
 
 // TODO: We might want to implement some sort of `Into`
-//   trait instead of just having a getter. Having something
-//   like `to_instructions()` since we're cloning?
+// trait instead of just having a getter. Having something
+// like `to_instructions()` since we're cloning?
 impl Plushy {
     pub fn new(iterable: impl IntoIterator<Item = PushGene>) -> Self {
         Self {
@@ -134,16 +134,22 @@ mod test {
     use rand::thread_rng;
 
     use super::*;
-    use crate::instruction::{variable_name::VariableName, BoolInstruction, IntInstruction};
+    use crate::{
+        arr_into,
+        instruction::{variable_name::VariableName, BoolInstruction, IntInstruction},
+        vec_into,
+    };
 
+    #[ignore = "this has about a 2.665% chance on failing at least once across the three test \
+                runners in ci"]
     #[test]
     #[allow(clippy::unwrap_used)]
     fn generator() {
-        let instructions: Vec<PushInstruction> = vec![
-            IntInstruction::Add.into(),
-            IntInstruction::Subtract.into(),
-            IntInstruction::Multiply.into(),
-            IntInstruction::ProtectedDivide.into(),
+        let instructions: Vec<PushInstruction> = vec_into![
+            IntInstruction::Add,
+            IntInstruction::Subtract,
+            IntInstruction::Multiply,
+            IntInstruction::ProtectedDivide,
         ];
         let gene_generator = GeneGenerator::with_uniform_close_probability(instructions);
         let mut rng = thread_rng();
@@ -160,34 +166,33 @@ mod test {
     fn umad() {
         let mut rng = thread_rng();
 
-        let instruction_options = [PushGene::Instruction(PushInstruction::InputVar(
-            VariableName::from("x"),
-        ))];
+        let instruction_options = arr_into![<PushGene> VariableName::from("x")];
         let umad = Umad::new(0.3, 0.3, instruction_options);
 
-        let genes: Vec<PushGene> = vec![
-            IntInstruction::Add.into(),
-            BoolInstruction::And.into(),
-            BoolInstruction::Or.into(),
-            IntInstruction::Multiply.into(),
-            IntInstruction::Add.into(),
-            BoolInstruction::And.into(),
-            BoolInstruction::Or.into(),
-            IntInstruction::Multiply.into(),
-            IntInstruction::Add.into(),
-            BoolInstruction::And.into(),
-            BoolInstruction::Or.into(),
-            IntInstruction::Multiply.into(),
-            IntInstruction::Add.into(),
-            BoolInstruction::And.into(),
-            BoolInstruction::Or.into(),
-            IntInstruction::Multiply.into(),
-            IntInstruction::Add.into(),
-            BoolInstruction::And.into(),
-            BoolInstruction::Or.into(),
-            IntInstruction::Multiply.into(),
-        ];
-        let parent = Plushy { genes };
+        let parent = Plushy {
+            genes: vec_into![
+                IntInstruction::Add,
+                BoolInstruction::And,
+                BoolInstruction::Or,
+                IntInstruction::Multiply,
+                IntInstruction::Add,
+                BoolInstruction::And,
+                BoolInstruction::Or,
+                IntInstruction::Multiply,
+                IntInstruction::Add,
+                BoolInstruction::And,
+                BoolInstruction::Or,
+                IntInstruction::Multiply,
+                IntInstruction::Add,
+                BoolInstruction::And,
+                BoolInstruction::Or,
+                IntInstruction::Multiply,
+                IntInstruction::Add,
+                BoolInstruction::And,
+                BoolInstruction::Or,
+                IntInstruction::Multiply,
+            ],
+        };
 
         let child = umad.mutate(parent, &mut rng);
 
