@@ -41,7 +41,7 @@ pub fn generate_builder(
     exec_stack: &ExecStackInput,
     input_instructions: InputInstructionsInput,
 ) -> syn::Result<TokenStream> {
-    let Some((exec_stack_ident, _, _)) = exec_stack else {
+    let Some((exec_stack_ident, _, exec_stack_ty)) = exec_stack else {
         return Err(syn::Error::new(
             macro_span,
             "Need to declare exactly one exec stack using #[stack(exec)] to use the builder \
