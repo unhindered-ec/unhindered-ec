@@ -12,12 +12,14 @@ use crate::{
 
 /// This macro creates a new [`syn::Ident`] out of multiple parts, consisting of
 /// either string literals or variables
-#[macro_railroad_annotation::generate_railroad]
+///
+/// ![Railroad diagram for the `derived_ident` macro][ref_text]
 /// # Examples
 /// ```ignore
 /// let some_ident: syn::Ident = todo!();
 /// let derived_ident = derived_ident!("prefix_", some_ident, "_postfix", "_foo");
 /// ```
+#[macro_railroad_annotation::generate_railroad("ref_text")]
 macro_rules! derived_ident {
     ($($literal_part: expr),*) => {
         {

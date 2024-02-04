@@ -1,7 +1,8 @@
 /// Create a new vector of a specified type, calling `.into()` on all elements.
 /// Similar to the [`vec![...]`](vec) macro in [`std`], optionally allowing to
 /// specify the type using `vec_into![<T> ...]`.
-#[macro_railroad_annotation::generate_railroad]
+///
+/// ![Railroad diagram for the `vec_into` macro][ref_text]
 ///
 /// # Examples
 /// ```rs
@@ -12,6 +13,7 @@
 /// let vec_5 = vec_into![<i64> 3i32;5];
 /// let vec_6 = vec_into![<i64> 3i32,10i32,500i32];
 /// ```
+#[macro_railroad_annotation::generate_railroad("ref_text")]
 #[macro_export]
 macro_rules! vec_into {
     (<$output_type:ty>) => {
@@ -39,7 +41,8 @@ pub use vec_into;
 /// Create a new array of a specified type, calling `.into()` on all elements.
 /// Similar to the `[...]` syntax of rust optionally allowing to specify the
 /// type using `arr_into![<T> ...]`.
-#[macro_railroad_annotation::generate_railroad]
+///
+/// ![Railroad diagram for the `arr_into` macro][ref_text]
 ///
 /// # Examples
 /// ```rs
@@ -50,6 +53,7 @@ pub use vec_into;
 /// let arr_5 = arr_into![<i64> 3i32;5];
 /// let arr_6 = arr_into![<i64> 3i32,10i32,500i32];
 /// ```
+#[macro_railroad_annotation::generate_railroad("ref_text")]
 #[macro_export]
 macro_rules! arr_into {
      (<$output_type:ty>) => {
