@@ -224,7 +224,7 @@ name = "ec-core"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "itertools",
+ "itertools 0.12.1",
  "num-traits",
  "rand",
  "rayon",
@@ -344,7 +344,7 @@ version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6adcc45088fbcbe7963bdca7bda19ab4214ffd794c6ef88813a3cb983ba7d881"
 dependencies = [
- "itertools",
+ "itertools 0.11.0",
  "proc-macro2",
  "syn 2.0.48",
 ]
@@ -354,6 +354,15 @@ name = "itertools"
 version = "0.11.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b1c173a5686ce8bfa551b3563d0c2170bf24ca44da99c7ca4bfdab5418c3fe57"
+dependencies = [
+ "either",
+]
+
+[[package]]
+name = "itertools"
+version = "0.12.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ba291022dbbd398a455acf126c1e341954079855bc60dfdda641363bd6922569"
 dependencies = [
  "either",
 ]
@@ -559,7 +568,7 @@ name = "push_macros"
 version = "0.1.0"
 dependencies = [
  "ident_case_conversions",
- "itertools",
+ "itertools 0.12.1",
  "macro_railroad_annotation",
  "manyhow",
  "prettyplease",
