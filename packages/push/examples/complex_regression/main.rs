@@ -6,8 +6,8 @@ use anyhow::{ensure, Result};
 use clap::Parser;
 use ec_core::{
     generation::Generation,
-    generator::{collection::CollectionGenerator, Generator},
-    individual::ec::{self},
+    generator::{collection::ConvertToCollectionGenerator, Generator},
+    individual::ec::WithScorer,
     operator::{
         genome_extractor::GenomeExtractor,
         genome_scorer::GenomeScorer,
@@ -108,29 +108,18 @@ fn main() -> Result<()> {
 
     let gene_generator = GeneGenerator::with_uniform_close_probability(instruction_set);
 
-    let plushy_generator = CollectionGenerator {
-        size: args.max_initial_instructions,
-        element_generator: gene_generator.clone(),
-    };
-
-    let individual_generator = ec::IndividualGenerator {
-        genome_generator: plushy_generator,
-        scorer,
-    };
-
-    let population_generator = CollectionGenerator {
-        size: args.population_size,
-        element_generator: individual_generator,
-    };
-
-    let population = population_generator.generate(&mut rng)?;
+    let population = gene_generator
+        .to_collection_generator(args.max_initial_instructions)
+        .with_scorer(&scorer)
+        .into_collection_generator(args.population_size)
+        .generate(&mut rng)?;
 
     ensure!(population.is_empty().not());
 
     let best = Best.select(&population, &mut rng)?;
     println!("Best initial individual is {best:?}");
 
-    let umad = Umad::new(0.1, 0.1, gene_generator);
+    let umad = Umad::new(0.1, 0.1, &gene_generator);
 
     let make_new_individual = Select::new(selector)
         .then(GenomeExtractor)
