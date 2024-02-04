@@ -1,23 +1,82 @@
+/// Create a new vector of a specified type, calling `.into()` on all elements.
+/// Similar to the [`vec![...]`](vec) macro in [`std`], optionally allowing to
+/// specify the type using `vec_into![<T> ...]`.
+///
+/// ![Railroad diagram for the `vec_into` macro][ref_text]
+///
+/// # Examples
+/// ```rs
+/// let vec = vec_into![];
+/// let vec_2 = vec_into![<i64>];
+/// let vec_3: Vec<i64> = vec_into![3i32;5];
+/// let vec_4: Vec<i64> = vec_into![3i32,10i32,500i32];
+/// let vec_5 = vec_into![<i64> 3i32;5];
+/// let vec_6 = vec_into![<i64> 3i32,10i32,500i32];
+/// ```
+#[macro_railroad_annotation::generate_railroad("ref_text")]
 #[macro_export]
 macro_rules! vec_into {
-    (<$t:ty>) => { Vec::<$t>::new() };
-    (<$t:ty>$elem:expr; $n:expr) => { vec![<$t>::from($elem); $n] };
-    (<$t:ty>$($x:expr),+ $(,)?) => { vec![$(<$t>::from($x)),+] };
-    () => { Vec::new() };
-    ($elem:expr; $n:expr) => { vec![($elem).into(); $n] };
-    ($($x:expr),+ $(,)?) => { vec![$(($x).into()),+] };
+    (<$output_type:ty>) => {
+        Vec::<$output_type>::new()
+    };
+    (<$output_type:ty>$item:expr; $repeat_times:expr) => {
+         vec![<$output_type>::from($item); $repeat_times]
+    };
+    (<$output_type:ty>$($items:expr),+ $(,)?) => {
+         vec![$(<$output_type>::from($items)),+]
+    };
+    () => {
+         Vec::new()
+    };
+    ($item:expr; $repeat_times:expr) => {
+         vec![($item).into(); $repeat_times]
+    };
+    ($($items:expr),+ $(,)?) => {
+         vec![$(($items).into()),+]
+    };
 }
 
 pub use vec_into;
 
+/// Create a new array of a specified type, calling `.into()` on all elements.
+/// Similar to the `[...]` syntax of rust optionally allowing to specify the
+/// type using `arr_into![<T> ...]`.
+///
+/// ![Railroad diagram for the `arr_into` macro][ref_text]
+///
+/// # Examples
+/// ```rs
+/// let arr = arr_into![];
+/// let arr_2 = arr_into![<i64>];
+/// let arr_3: [i64;5] = arr_into![3i32;5];
+/// let arr_4: [i64;3] = arr_into![3i32,10i32,500i32];
+/// let arr_5 = arr_into![<i64> 3i32;5];
+/// let arr_6 = arr_into![<i64> 3i32,10i32,500i32];
+/// ```
+#[macro_railroad_annotation::generate_railroad("ref_text")]
 #[macro_export]
 macro_rules! arr_into {
-    (<$t:ty>) => { {let a: [$t; 1] = []; a} };
-    (<$t:ty>$elem:expr; $n:expr) => { [<$t>::from($elem); $n] };
-    (<$t:ty>$($x:expr),+ $(,)?) => { [$(<$t>::from($x)),+] };
-    () => { Vec::new() };
-    ($elem:expr; $n:expr) => { [($elem).into(); $n] };
-    ($($x:expr),+ $(,)?) => { [$(($x).into()),+] };
+     (<$output_type:ty>) => {
+          {
+               let a: [$output_type; 1] = [];
+               a
+          }
+     };
+     (<$output_type:ty>$item:expr; $repeat_times:expr) => {
+          [<$output_type>::from($item); $repeat_times]
+     };
+     (<$output_type:ty>$($items:expr),+ $(,)?) => {
+          [$(<$output_type>::from($items)),+]
+     };
+     () => {
+          Vec::new()
+     };
+     ($item:expr; $repeat_times:expr) => {
+          [($item).into(); $repeat_times]
+     };
+     ($($items:expr),+ $(,)?) => {
+          [$(($items).into()),+]
+     };
 }
 
 pub use arr_into;

@@ -135,9 +135,8 @@ mod test {
 
     use super::*;
     use crate::{
-        arr_into,
         instruction::{variable_name::VariableName, BoolInstruction, IntInstruction},
-        vec_into,
+        list_into::{arr_into, vec_into},
     };
 
     #[ignore = "this has about a 2.665% chance on failing at least once across the three test \

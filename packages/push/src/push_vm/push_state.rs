@@ -120,8 +120,8 @@ mod simple_check {
             variable_name::VariableName, BoolInstruction, FloatInstruction, IntInstruction,
             PushInstruction,
         },
+        list_into::vec_into,
         push_vm::{program::PushProgram, push_state::PushState},
-        vec_into,
     };
 
     #[test]
