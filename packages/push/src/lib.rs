@@ -1,6 +1,7 @@
 pub mod error;
 pub mod genome;
 pub mod instruction;
+pub mod list_into;
 pub mod push_vm;
 
 #[cfg(feature = "macros")]
