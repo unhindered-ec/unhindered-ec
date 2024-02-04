@@ -101,7 +101,10 @@ impl Linear for Plushy {
     }
 }
 
-impl Generator<Plushy> for CollectionGenerator<GeneGenerator> {
+impl<GG> Generator<Plushy> for CollectionGenerator<GG>
+where
+    GG: Generator<PushGene>,
+{
     fn generate(&self, rng: &mut ThreadRng) -> anyhow::Result<Plushy> {
         Ok(Plushy {
             genes: self.generate(rng)?,

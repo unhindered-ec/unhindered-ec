@@ -28,7 +28,10 @@ pub struct Bitstring {
     pub bits: Vec<bool>,
 }
 
-impl Generator<Bitstring> for CollectionGenerator<BoolGenerator> {
+impl<BG> Generator<Bitstring> for CollectionGenerator<BG>
+where
+    BG: Generator<bool>,
+{
     fn generate(&self, rng: &mut ThreadRng) -> anyhow::Result<Bitstring> {
         let bits = self.generate(rng)?;
         Ok(Bitstring { bits })
