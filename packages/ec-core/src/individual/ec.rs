@@ -1,6 +1,7 @@
-/// This module contains the implementation of the `Ec` struct and related functionality.
-/// The `Ec` struct represents an individual in an evolutionary computation system.
-/// It provides methods for comparing individuals and displaying their contents.
+/// This module contains the implementation of the `Ec` struct and related
+/// functionality. The `Ec` struct represents an individual in an evolutionary
+/// computation system. It provides methods for comparing individuals and
+/// displaying their contents.
 use std::{
     cmp::Ordering,
     fmt::{Debug, Display},
@@ -12,7 +13,8 @@ use super::{scorer::Scorer, Individual};
 use crate::generator::Generator;
 
 /// `EcIndividual` is a struct that represents an individual in an evolutionary
-/// computation system. It contains a genome and the results of scoring the genome.
+/// computation system. It contains a genome and the results of scoring the
+/// genome.
 #[derive(Debug, Eq, PartialEq, Clone)]
 #[allow(clippy::module_name_repetitions)]
 pub struct EcIndividual<G, R> {
@@ -68,8 +70,8 @@ impl<G: Display, R: Debug> Display for EcIndividual<G, R> {
     }
 }
 
-/// A generator for creating individuals, which requires a genome generator and a
-/// scorer.
+/// A generator for creating individuals, which requires a genome generator and
+/// a scorer.
 ///
 /// The genome generator is used to create the genome of the individual, and the
 /// scorer is used to score the genome.

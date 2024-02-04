@@ -1,16 +1,18 @@
-/// This module contains the implementation of the `CollectionGenerator` struct and
-/// related traits and functions.
+/// This module contains the implementation of the `CollectionGenerator` struct
+/// and related traits and functions.
 ///
-/// The `CollectionGenerator` struct is used to generate a collection of random elements.
-/// It takes an element generator and a size as input, and generates a `Vec` of random elements
-/// based on the specified size and the mechanism for generating random elements.
+/// The `CollectionGenerator` struct is used to generate a collection of random
+/// elements. It takes an element generator and a size as input, and generates a
+/// `Vec` of random elements based on the specified size and the mechanism for
+/// generating random elements.
 ///
-/// The module also defines the `ConvertToCollectionGenerator` trait, which provides methods
-/// for converting a type into a `CollectionGenerator`. This trait is implemented for any
-/// type that implements the `Generator` trait.
+/// The module also defines the `ConvertToCollectionGenerator` trait, which
+/// provides methods for converting a type into a `CollectionGenerator`. This
+/// trait is implemented for any type that implements the `Generator` trait.
 ///
-/// Finally, the module implements the `Generator` trait for the `CollectionGenerator`
-/// struct, allowing it to generate a `Vec` of random elements using the `generate` method.
+/// Finally, the module implements the `Generator` trait for the
+/// `CollectionGenerator` struct, allowing it to generate a `Vec` of random
+/// elements using the `generate` method.
 use std::iter::repeat_with;
 
 use rand::rngs::ThreadRng;
@@ -28,7 +30,8 @@ pub struct CollectionGenerator<C> {
 }
 
 impl<C> CollectionGenerator<C> {
-    /// Create a new `CollectionGenerator` with the given element generator and size.
+    /// Create a new `CollectionGenerator` with the given element generator and
+    /// size.
     pub const fn new(element_generator: C, size: usize) -> Self {
         Self {
             element_generator,
@@ -48,10 +51,10 @@ pub trait ConvertToCollectionGenerator {
     where
         Self: Sized;
 
-    /// Convert a reference to the type into a `CollectionGenerator` that generates
-    /// collections of the specified size, using `self` to generate the individual elements.
-    /// This takes a reference to the type so the type can be used elsewhere when
-    /// necessary.
+    /// Convert a reference to the type into a `CollectionGenerator` that
+    /// generates collections of the specified size, using `self` to
+    /// generate the individual elements. This takes a reference to the type
+    /// so the type can be used elsewhere when necessary.
     fn to_collection_generator(&self, size: usize) -> CollectionGenerator<&Self>
     where
         Self: Sized;
@@ -64,8 +67,9 @@ impl<C> ConvertToCollectionGenerator for C {
         CollectionGenerator::new(self, size)
     }
 
-    /// Convert a reference to the type into a `CollectionGenerator` that generates
-    /// collections of the specified size, using `&self` to generate the individual elements.
+    /// Convert a reference to the type into a `CollectionGenerator` that
+    /// generates collections of the specified size, using `&self` to
+    /// generate the individual elements.
     fn to_collection_generator(&self, size: usize) -> CollectionGenerator<&Self>
     where
         Self: Sized,
