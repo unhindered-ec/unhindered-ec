@@ -38,3 +38,40 @@ unwrap_used = "warn"
 expect_used = "warn"
 module_name_repetitions = "allow"
 as_conversions = "deny"
+
+
+[[workspace.metadata.example_runner.default]]
+template = "balanced"
+
+[[workspace.metadata.example_runner.default]]
+template = "big_population"
+
+[[workspace.metadata.example_runner.default]]
+template = "many_generations"
+
+[workspace.metadata.example_runner.templates.balanced]
+type = "ignore"
+arguments = [
+  "--num-generations",
+  "10",
+  "--population-size",
+  "200"
+]
+
+[workspace.metadata.example_runner.templates.big_population]
+type = "ignore"
+arguments = [
+  "--num-generations",
+  "1",
+  "--population-size",
+  "2000"
+]
+
+[workspace.metadata.example_runner.templates.many_generations]
+type = "ignore"
+arguments = [
+  "--num-generations",
+  "200",
+  "--population-size",
+  "10"
+]
