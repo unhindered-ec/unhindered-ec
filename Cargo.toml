@@ -50,7 +50,6 @@ template = "big_population"
 template = "many_generations"
 
 [workspace.metadata.example_runner.templates.balanced]
-type = "ignore"
 arguments = [
   "--num-generations",
   "10",
@@ -59,7 +58,6 @@ arguments = [
 ]
 
 [workspace.metadata.example_runner.templates.big_population]
-type = "ignore"
 arguments = [
   "--num-generations",
   "1",
@@ -68,7 +66,6 @@ arguments = [
 ]
 
 [workspace.metadata.example_runner.templates.many_generations]
-type = "ignore"
 arguments = [
   "--num-generations",
   "200",
