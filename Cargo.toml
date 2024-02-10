@@ -48,27 +48,21 @@ default = [
 ]
 
 [workspace.metadata.example_runner.templates]
-balanced = {
-  arguments = [
-    "--num-generations",
-    "10",
-    "--population-size",
-    "200"
-  ]
-}
-big_population = {
-  arguments = [
-    "--num-generations",
-    "1",
-    "--population-size",
-    "2000"
-  ]
-}
-many_generations = {
-  arguments = [
-    "--num-generations",
-    "200",
-    "--population-size",
-    "10"
-  ]
-}
+balanced.arguments = [
+  "--num-generations",
+  "10",
+  "--population-size",
+  "200"
+]
+big_population.arguments = [
+  "--num-generations",
+  "1",
+  "--population-size",
+  "2000"
+]
+many_generations.arguments = [
+  "--num-generations",
+  "200",
+  "--population-size",
+  "10"
+]
