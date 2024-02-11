@@ -17,22 +17,22 @@
 #[macro_export]
 macro_rules! vec_into {
     (<$output_type:ty>) => {
-        Vec::<$output_type>::new()
+        ::std::vec::Vec::<$output_type>::new()
     };
     (<$output_type:ty>$item:expr; $repeat_times:expr) => {
-         vec![<$output_type>::from($item); $repeat_times]
+         ::std::vec![::std::convert::Into::<$output_type>::into($item); $repeat_times]
     };
     (<$output_type:ty>$($items:expr),+ $(,)?) => {
-         vec![$(<$output_type>::from($items)),+]
+         ::std::vec![$(::std::convert::Into::<$output_type>::into($items)),+]
     };
     () => {
-         Vec::new()
+         ::std::vec::Vec::new()
     };
     ($item:expr; $repeat_times:expr) => {
-         vec![($item).into(); $repeat_times]
+         ::std::vec![::std::convert::Into::into($item); $repeat_times]
     };
     ($($items:expr),+ $(,)?) => {
-         vec![$(($items).into()),+]
+         ::std::vec![$(::std::convert::Into::into($items)),+]
     };
 }
 
@@ -58,25 +58,94 @@ pub use vec_into;
 macro_rules! arr_into {
      (<$output_type:ty>) => {
           {
-               let a: [$output_type; 1] = [];
+               let a: [$output_type; 0] = [];
                a
           }
      };
      (<$output_type:ty>$item:expr; $repeat_times:expr) => {
-          [<$output_type>::from($item); $repeat_times]
+          [::std::convert::Into::<$output_type>::into($item); $repeat_times]
      };
      (<$output_type:ty>$($items:expr),+ $(,)?) => {
-          [$(<$output_type>::from($items)),+]
+          [$(::std::convert::Into::<$output_type>::into($items)),+]
      };
      () => {
-          Vec::new()
+          []
      };
      ($item:expr; $repeat_times:expr) => {
-          [($item).into(); $repeat_times]
+          [::std::convert::Into::into($item); $repeat_times]
      };
      ($($items:expr),+ $(,)?) => {
-          [$(($items).into()),+]
+          [$(::std::convert::Into::into($items)),+]
      };
 }
 
 pub use arr_into;
+
+#[cfg(test)]
+mod test {
+    #[test]
+    fn vec_empty_given_type() {
+        assert_eq!(vec_into![<bool>], Vec::<bool>::new());
+    }
+
+    #[test]
+    fn vec_repeat_given_type() {
+        assert_eq!(vec_into![<u64> 4u32;2], vec![4u64, 4u64]);
+    }
+
+    #[test]
+    fn vec_explicit_given_type() {
+        assert_eq!(vec_into![<u64> 4u32, 3u32], vec![4u64, 3u64]);
+    }
+
+    #[test]
+    fn vec_empty_inferred_type() {
+        let vec: Vec<bool> = vec_into![];
+        assert_eq!(vec, Vec::<bool>::new());
+    }
+
+    #[test]
+    fn vec_repeat_inferred_type() {
+        let vec: Vec<u64> = vec_into![4u32;2];
+        assert_eq!(vec, vec![4u64, 4u64]);
+    }
+
+    #[test]
+    fn vec_explicit_inferred_type() {
+        let vec: Vec<u64> = vec_into![4u32, 3u32];
+        assert_eq!(vec, vec![4u64, 3u64]);
+    }
+
+    #[test]
+    fn arr_empty_given_type() {
+        assert_eq!(arr_into![<bool>], [true; 0]);
+    }
+
+    #[test]
+    fn arr_repeat_given_type() {
+        assert_eq!(arr_into![<u64> 4u32;2], [4u64, 4u64]);
+    }
+
+    #[test]
+    fn arr_explicit_given_type() {
+        assert_eq!(arr_into![<u64> 4u32, 3u32], [4u64, 3u64]);
+    }
+
+    #[test]
+    fn arr_empty_inferred_type() {
+        let arr: [bool; 0] = arr_into![];
+        assert_eq!(arr, [true; 0]);
+    }
+
+    #[test]
+    fn arr_repeat_inferred_type() {
+        let arr: [u64; 2] = arr_into![4u32;2];
+        assert_eq!(arr, [4u64, 4u64]);
+    }
+
+    #[test]
+    fn arr_explicit_inferred_type() {
+        let arr: [u64; 2] = arr_into![4u32, 3u32];
+        assert_eq!(arr, [4u64, 3u64]);
+    }
+}
