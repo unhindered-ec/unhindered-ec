@@ -30,3 +30,5 @@ jobs:
       # them as arguments. Rustfmt v2.x won't have this limitation
       # anymore and then this wrapper can be removed.
       - run: rustfmt-unstable --config-file rustfmt.toml -- cargo fmt --check -- --config error_on_line_overflow=true
+      - run: cargo install example-runner-cli
+      - run: example-runner-cli --error-on-unconfigured --error-on-unknown --parallel
