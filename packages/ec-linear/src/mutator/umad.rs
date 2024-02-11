@@ -76,7 +76,7 @@ mod test {
     use super::*;
     use crate::genome::vector::Vector;
 
-    fn count_missing(short: &Vec<char>, long: &Vec<char>) -> Option<usize> {
+    fn count_missing(short: &[char], long: &[char]) -> Option<usize> {
         let mut short_index = 0;
         let mut long_index = 0;
         let mut num_missing = 0;
