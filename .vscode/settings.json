@@ -21,5 +21,10 @@
         "underflows",
         "Wrappable"
     ],
-    "todo-tree.tree.showCountsInTree": true
+    "todo-tree.tree.showCountsInTree": true,
+    "rust-analyzer.rustfmt.overrideCommand": [
+        "rustfmt-unstable",
+        "--",
+        "rustfmt"
+    ]
 }
