@@ -28,7 +28,7 @@ easy-cast = "0.5.2"
 macro_railroad_annotation = { workspace = true }
 
 [dev-dependencies]
-clap = { version = "4.3.11", features = ["derive"] }
+clap = { version = "4.5.0", features = ["derive"] }
 
 [features]
 default = ["macros"]
