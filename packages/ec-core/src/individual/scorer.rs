@@ -3,11 +3,22 @@ pub trait Scorer<G, R> {
     fn score(&self, genome: &G) -> R;
 }
 
-impl<G, R, T> Scorer<G, R> for T
+pub struct FnScorer<T>(pub T);
+
+impl<G, R, T> Scorer<G, R> for FnScorer<T>
 where
     T: Fn(&G) -> R,
 {
     fn score(&self, genome: &G) -> R {
-        self(genome)
+        self.0(genome)
+    }
+}
+
+impl<G, R, T> Scorer<G, R> for &T
+where
+    T: Scorer<G, R>,
+{
+    fn score(&self, genome: &G) -> R {
+        (*self).score(genome)
     }
 }
