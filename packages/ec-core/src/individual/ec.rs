@@ -9,7 +9,10 @@ use std::{
 
 use rand::rngs::ThreadRng;
 
-use super::{scorer::Scorer, Individual};
+use super::{
+    scorer::{FnScorer, Scorer},
+    Individual,
+};
 use crate::generator::Generator;
 
 /// `EcIndividual` is a struct that represents an individual in an evolutionary
@@ -93,16 +96,28 @@ impl<GG, S> IndividualGenerator<GG, S> {
 
 /// A trait for adding a scorer to a genome generator, creating
 /// an `IndividualGenerator`.
-pub trait WithScorer<Scorer> {
+pub trait WithScorer {
     /// Add a scorer to the genome generator, creating an `IndividualGenerator`.
-    fn with_scorer(self, scorer: Scorer) -> IndividualGenerator<Self, Scorer>
+    fn with_scorer<S, G, R>(self, scorer: S) -> IndividualGenerator<Self, S>
     where
-        Self: Sized;
+        Self: Sized,
+        S: Scorer<G, R>;
+
+    fn with_scorer_fn<F, G, R>(self, f: F) -> IndividualGenerator<Self, FnScorer<F>>
+    where
+        Self: Sized,
+        F: Fn(&G) -> R,
+    {
+        self.with_scorer(FnScorer(f))
+    }
 }
 
-impl<GG, S> WithScorer<S> for GG {
+impl<GG> WithScorer for GG {
     /// Add a scorer to the genome generator, creating an `IndividualGenerator`.
-    fn with_scorer(self, scorer: S) -> IndividualGenerator<GG, S> {
+    fn with_scorer<S, G, R>(self, scorer: S) -> IndividualGenerator<GG, S>
+    where
+        S: Scorer<G, R>,
+    {
         IndividualGenerator::new(self, scorer)
     }
 }
