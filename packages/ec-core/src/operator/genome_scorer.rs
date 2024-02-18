@@ -3,6 +3,10 @@ use anyhow::Result;
 use super::{composable::Wrappable, Composable, Operator};
 use crate::{individual::ec::EcIndividual, population::Population, test_results::TestResults};
 
+// TODO: We need to update `GenomeScorer` to take advantage of the new changes
+//   to the `Scorer` trait. We use `Fn` in the `impl Operator` and that should
+//   be updated to use `Scorer` instead.
+
 pub struct GenomeScorer<GM, S> {
     genome_maker: GM,
     scorer: S,

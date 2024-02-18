@@ -7,7 +7,10 @@ use clap::Parser;
 use ec_core::{
     generation::Generation,
     generator::{collection::CollectionGenerator, Generator},
-    individual::ec::{self, EcIndividual},
+    individual::{
+        ec::{self, EcIndividual},
+        scorer::FnScorer,
+    },
     operator::{
         genome_extractor::GenomeExtractor,
         genome_scorer::GenomeScorer,
@@ -121,7 +124,7 @@ fn main() -> Result<()> {
 
     let individual_generator = ec::IndividualGenerator {
         genome_generator: plushy_generator,
-        scorer,
+        scorer: FnScorer(scorer),
     };
 
     let population_generator = CollectionGenerator {

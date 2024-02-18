@@ -7,7 +7,7 @@ use clap::Parser;
 use ec_core::{
     generation::Generation,
     generator::{collection::ConvertToCollectionGenerator, Generator},
-    individual::ec::WithScorer,
+    individual::{ec::WithScorer, scorer::FnScorer},
     operator::{
         genome_extractor::GenomeExtractor,
         genome_scorer::GenomeScorer,
@@ -20,6 +20,7 @@ use ec_core::{
 use ec_linear::mutator::umad::Umad;
 use ordered_float::OrderedFloat;
 use push::{
+    evaluation::cases::Cases,
     genome::plushy::{GeneGenerator, Plushy},
     instruction::{variable_name::VariableName, FloatInstruction},
     push_vm::{program::PushProgram, push_state::PushState, HasStack, State},
@@ -35,15 +36,17 @@ use crate::args::{Args, RunModel};
  * https://github.com/lspector/propeller/blob/71d378f49fdf88c14dda88387291c9c7be0f1277/src/propeller/problems/complex_regression.cljc
  */
 
+type Of64 = OrderedFloat<f64>;
+
 /// The target polynomial is (x^3 + 1)^3 + 1
-fn target_fn(input: OrderedFloat<f64>) -> OrderedFloat<f64> {
+fn target_fn(input: Of64) -> Of64 {
     let sub_expr = input * input * input + 1.0;
     sub_expr * sub_expr * sub_expr + 1.0
 }
 
 fn build_push_state(
     program: impl DoubleEndedIterator<Item = PushProgram> + ExactSizeIterator,
-    input: OrderedFloat<f64>,
+    input: Of64,
 ) -> PushState {
     #[allow(clippy::unwrap_used)]
     PushState::builder()
@@ -59,9 +62,9 @@ fn build_push_state(
 
 fn score_program(
     program: impl DoubleEndedIterator<Item = PushProgram> + ExactSizeIterator,
-    input: OrderedFloat<f64>,
-    expected_output: OrderedFloat<f64>,
-) -> OrderedFloat<f64> {
+    input: Of64,
+    expected_output: Of64,
+) -> Of64 {
     // The penalty value to use when an evolved program doesn't have an expected
     // "return" value on the appropriate stack at the end of its execution.
     const PENALTY_VALUE: f64 = 1_000.0;
@@ -71,7 +74,7 @@ fn score_program(
     match state.run_to_completion() {
         Ok(final_state) => OrderedFloat(
             final_state
-                .stack::<OrderedFloat<f64>>()
+                .stack::<Of64>()
                 .top()
                 .map_or(PENALTY_VALUE, |answer| (answer - expected_output).abs()),
         ),
@@ -82,14 +85,24 @@ fn score_program(
     }
 }
 
+fn score_genome(
+    genome: &Plushy,
+    training_cases: &Cases<Of64>,
+) -> TestResults<test_results::Error<Of64>> {
+    let program = Vec::<PushProgram>::from(genome.clone());
+    let errors: TestResults<test_results::Error<Of64>> = training_cases
+        .iter()
+        .map(|case| score_program(program.iter().cloned(), case.input, case.output))
+        .collect();
+    errors
+}
+
 fn main() -> Result<()> {
     let args = Args::parse();
 
     // Inputs from -4 (inclusive) to 4 (exclusive) in increments of 0.25.
     let training_inputs = (-4 * 4..4 * 4).map(|n| OrderedFloat(f64::from(n) / 4.0));
-    let training_cases = training_inputs
-        .map(|input| (input, target_fn(input)))
-        .collect::<Vec<_>>();
+    let training_cases = Cases::from_inputs(training_inputs, |&i| target_fn(i));
 
     // The range want is -4 1/8, -3 7/8, -3 5/8, ..., 3 7/8, 4 1/8.
     // I have to multiply that by 8 to get integer values, so:
@@ -97,9 +110,7 @@ fn main() -> Result<()> {
     let testing_inputs = (-33..=33)
         .step_by(2)
         .map(|n| OrderedFloat(f64::from(n) / 8.0));
-    let _testing_cases = testing_inputs
-        .map(|input| (input, target_fn(input)))
-        .collect::<Vec<_>>();
+    let _testing_cases = Cases::from_inputs(testing_inputs, |&i| target_fn(i));
 
     /*
      * The `scorer` will need to take an evolved program (sequence of
@@ -108,15 +119,8 @@ fn main() -> Result<()> {
      * i.e., the absolute difference between the returned value and the
      * expected value.
      */
-    let scorer = |genome: &Plushy| -> TestResults<test_results::Error<OrderedFloat<f64>>> {
-        let program = Vec::<PushProgram>::from(genome.clone());
-        let errors: TestResults<test_results::Error<OrderedFloat<f64>>> = training_cases
-            .iter()
-            .map(|&(input, expected_output)| {
-                score_program(program.iter().cloned(), input, expected_output)
-            })
-            .collect();
-        errors
+    let scorer = |genome: &Plushy| -> TestResults<test_results::Error<Of64>> {
+        score_genome(genome, &training_cases)
     };
 
     let selector = Lexicase::new(training_cases.len());
@@ -138,7 +142,7 @@ fn main() -> Result<()> {
 
     let population = gene_generator
         .to_collection_generator(args.max_initial_instructions)
-        .with_scorer(&scorer)
+        .with_scorer_fn(&scorer)
         .into_collection_generator(args.population_size)
         .generate(&mut rng)?;
 
