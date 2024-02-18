@@ -7,7 +7,7 @@ use clap::Parser;
 use ec_core::{
     generation::Generation,
     generator::{collection::ConvertToCollectionGenerator, Generator},
-    individual::{ec::WithScorer, scorer::FnScorer},
+    individual::ec::WithScorer,
     operator::{
         genome_extractor::GenomeExtractor,
         genome_scorer::GenomeScorer,
