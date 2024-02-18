@@ -1,4 +1,5 @@
 pub mod error;
+pub mod evaluation;
 pub mod genome;
 pub mod instruction;
 pub mod list_into;
