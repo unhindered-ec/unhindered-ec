@@ -18,7 +18,7 @@ debug = true
 
 [workspace.dependencies]
 anyhow = "1.0.79"
-clap = "4.5.0"
+clap = "4.5.1"
 rand = "0.8.5"
 num-traits = "0.2.18"
 thiserror = "1.0.57"
