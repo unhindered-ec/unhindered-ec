@@ -19,6 +19,6 @@ where
     T: Scorer<G, R>,
 {
     fn score(&self, genome: &G) -> R {
-        (*self).score(genome)
+        (**self).score(genome)
     }
 }
