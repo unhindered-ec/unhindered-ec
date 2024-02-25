@@ -98,10 +98,10 @@ impl<GG, S> IndividualGenerator<GG, S> {
 /// an `IndividualGenerator`.
 pub trait WithScorer {
     /// Add a scorer to the genome generator, creating an `IndividualGenerator`.
-    fn with_scorer<S, G, R>(self, scorer: S) -> IndividualGenerator<Self, S>
+    fn with_scorer<S, G>(self, scorer: S) -> IndividualGenerator<Self, S>
     where
         Self: Sized,
-        S: Scorer<G, R>;
+        S: Scorer<G>;
 
     fn with_scorer_fn<F, G, R>(self, f: F) -> IndividualGenerator<Self, FnScorer<F>>
     where
@@ -114,9 +114,9 @@ pub trait WithScorer {
 
 impl<GG> WithScorer for GG {
     /// Add a scorer to the genome generator, creating an `IndividualGenerator`.
-    fn with_scorer<S, G, R>(self, scorer: S) -> IndividualGenerator<GG, S>
+    fn with_scorer<S, G>(self, scorer: S) -> IndividualGenerator<GG, S>
     where
-        S: Scorer<G, R>,
+        S: Scorer<G>,
     {
         IndividualGenerator::new(self, scorer)
     }
@@ -125,19 +125,18 @@ impl<GG> WithScorer for GG {
 // G is Genome
 // GG is Genome generator
 // S is Scorer
-// R is the TestResult type
-impl<G, GG, S, R> Generator<EcIndividual<G, R>> for IndividualGenerator<GG, S>
+impl<G, GG, S> Generator<EcIndividual<G, S::Score>> for IndividualGenerator<GG, S>
 where
     GG: Generator<G>,
-    S: Scorer<G, R>,
+    S: Scorer<G>,
 {
     /// Generate a new, random, individual.
     ///
     /// This creates a new genome of type `G` using the genome generator of
     /// type `GG`, and then scores the genome using the scorer of type `S`.
-    /// The genome and the test results (of type `R`) are then
+    /// The genome and the test results (of type `S::Score`) are then
     /// used to create a new `EcIndividual`.
-    fn generate(&self, rng: &mut ThreadRng) -> anyhow::Result<EcIndividual<G, R>> {
+    fn generate(&self, rng: &mut ThreadRng) -> anyhow::Result<EcIndividual<G, S::Score>> {
         let genome = self.genome_generator.generate(rng)?;
         let test_results = self.scorer.score(&genome);
         Ok(EcIndividual::new(genome, test_results))
