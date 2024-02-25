@@ -36,6 +36,10 @@ use crate::args::{Args, RunModel};
  * https://github.com/lspector/propeller/blob/71d378f49fdf88c14dda88387291c9c7be0f1277/src/propeller/problems/complex_regression.cljc
  */
 
+// The penalty value to use when an evolved program doesn't have an expected
+// "return" value on the appropriate stack at the end of its execution.
+const PENALTY_VALUE: f64 = 1_000.0;
+
 type Of64 = OrderedFloat<f64>;
 
 /// The target polynomial is (x^3 + 1)^3 + 1
@@ -65,10 +69,6 @@ fn score_program(
     input: Of64,
     expected_output: Of64,
 ) -> Of64 {
-    // The penalty value to use when an evolved program doesn't have an expected
-    // "return" value on the appropriate stack at the end of its execution.
-    const PENALTY_VALUE: f64 = 1_000.0;
-
     let state = build_push_state(program, input);
     #[allow(clippy::option_if_let_else)]
     match state.run_to_completion() {
