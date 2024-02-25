@@ -6,9 +6,9 @@ use anyhow::{ensure, Result};
 use clap::Parser;
 use ec_core::{
     generation::Generation,
-    generator::{collection::CollectionGenerator, Generator},
+    generator::{collection::ConvertToCollectionGenerator, Generator},
     individual::{
-        ec::{self, EcIndividual},
+        ec::{EcIndividual, WithScorer},
         scorer::FnScorer,
     },
     operator::{
@@ -58,7 +58,7 @@ fn main() -> Result<()> {
      *
      * The target polynomial is x^3 - 2x^2 - x
      */
-    let scorer = |genome: &Plushy| -> TestResults<test_results::Error<i64>> {
+    let scorer = FnScorer(|genome: &Plushy| -> TestResults<test_results::Error<i64>> {
         let program = Vec::<PushProgram>::from(genome.clone());
         let errors: TestResults<test_results::Error<i64>> = (0..10)
             .map(|input| {
@@ -89,7 +89,7 @@ fn main() -> Result<()> {
             })
             .collect();
         errors
-    };
+    });
 
     // The degree 3 problem in
     // https://github.com/lspector/Clojush/blob/
@@ -117,22 +117,11 @@ fn main() -> Result<()> {
 
     let gene_generator = GeneGenerator::with_uniform_close_probability(instruction_set);
 
-    let plushy_generator = CollectionGenerator {
-        size: args.max_initial_instructions,
-        element_generator: gene_generator.clone(),
-    };
-
-    let individual_generator = ec::IndividualGenerator {
-        genome_generator: plushy_generator,
-        scorer: FnScorer(scorer),
-    };
-
-    let population_generator = CollectionGenerator {
-        size: args.population_size,
-        element_generator: individual_generator,
-    };
-
-    let population = population_generator.generate(&mut rng)?;
+    let population = gene_generator
+        .to_collection_generator(args.max_initial_instructions)
+        .with_scorer(scorer)
+        .into_collection_generator(args.population_size)
+        .generate(&mut rng)?;
 
     ensure!(population.is_empty().not());
 

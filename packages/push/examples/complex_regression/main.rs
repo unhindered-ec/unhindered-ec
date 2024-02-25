@@ -7,7 +7,7 @@ use clap::Parser;
 use ec_core::{
     generation::Generation,
     generator::{collection::ConvertToCollectionGenerator, Generator},
-    individual::ec::WithScorer,
+    individual::{ec::WithScorer, scorer::FnScorer},
     operator::{
         genome_extractor::GenomeExtractor,
         genome_scorer::GenomeScorer,
@@ -117,9 +117,11 @@ fn main() -> Result<()> {
      * i.e., the absolute difference between the returned value and the
      * expected value.
      */
-    let scorer = |genome: &Plushy| -> TestResults<test_results::Error<Of64>> {
-        score_genome(genome, &training_cases)
-    };
+    let scorer = FnScorer(
+        |genome: &Plushy| -> TestResults<test_results::Error<Of64>> {
+            score_genome(genome, &training_cases)
+        },
+    );
 
     let selector = Lexicase::new(training_cases.len());
 
@@ -140,7 +142,7 @@ fn main() -> Result<()> {
 
     let population = gene_generator
         .to_collection_generator(args.max_initial_instructions)
-        .with_scorer_fn(&scorer)
+        .with_scorer(scorer)
         .into_collection_generator(args.population_size)
         .generate(&mut rng)?;
 
