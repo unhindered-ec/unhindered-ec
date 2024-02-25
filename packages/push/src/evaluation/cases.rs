@@ -1,7 +1,25 @@
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub struct Case<Input, Output = Input> {
     pub input: Input,
     pub output: Output,
+}
+
+impl<Input, Output> From<(Input, Output)> for Case<Input, Output> {
+    fn from((input, output): (Input, Output)) -> Self {
+        Self { input, output }
+    }
+}
+
+impl<Input, Output> From<Case<Input, Output>> for (Input, Output) {
+    fn from(case: Case<Input, Output>) -> (Input, Output) {
+        (case.input, case.output)
+    }
+}
+
+impl<Input, Output> Case<Input, Output> {
+    pub const fn new(input: Input, output: Output) -> Self {
+        Self { input, output }
+    }
 }
 
 #[derive(Debug)]
@@ -20,9 +38,9 @@ impl<Input, Output> Cases<Input, Output> {
         target_function: impl Fn(&Input) -> Output,
     ) -> Self {
         inputs
-            .map(|input| Case {
-                output: target_function(&input),
-                input,
+            .map(|input| {
+                let output = target_function(&input);
+                Case::new(input, output)
             })
             .collect()
     }
@@ -31,8 +49,14 @@ impl<Input, Output> Cases<Input, Output> {
     // TODO: Add `from` that gets cases from an external source
     //    Maybe outside of this type?
 
-    pub fn add_case(&mut self, input: Input, output: Output) {
-        self.cases.push(Case { input, output });
+    pub fn add_case(&mut self, case: impl Into<Case<Input, Output>>) {
+        self.cases.push(case.into());
+    }
+
+    #[must_use]
+    pub fn with_case(mut self, case: impl Into<Case<Input, Output>>) -> Self {
+        self.add_case(case);
+        self
     }
 
     pub fn iter(&self) -> std::slice::Iter<Case<Input, Output>> {
