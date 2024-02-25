@@ -101,15 +101,13 @@ fn main() -> Result<()> {
     let args = Args::parse();
 
     // Inputs from -4 (inclusive) to 4 (exclusive) in increments of 0.25.
-    let training_inputs = (-4 * 4..4 * 4).map(|n| OrderedFloat(f64::from(n) / 4.0));
+    let training_inputs = (-4 * 4..4 * 4).map(|n| Of64::from(n) / 4.0);
     let training_cases = Cases::from_inputs(training_inputs, |&i| target_fn(i));
 
     // The range want is -4 1/8, -3 7/8, -3 5/8, ..., 3 7/8, 4 1/8.
     // I have to multiply that by 8 to get integer values, so:
     // -33, -31, -29, ..., 31, 33.
-    let testing_inputs = (-33..=33)
-        .step_by(2)
-        .map(|n| OrderedFloat(f64::from(n) / 8.0));
+    let testing_inputs = (-33..=33).step_by(2).map(|n| Of64::from(n) / 8.0);
     let _testing_cases = Cases::from_inputs(testing_inputs, |&i| target_fn(i));
 
     /*
