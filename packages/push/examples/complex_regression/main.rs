@@ -20,7 +20,7 @@ use ec_core::{
 use ec_linear::mutator::umad::Umad;
 use ordered_float::OrderedFloat;
 use push::{
-    evaluation::cases::Cases,
+    evaluation::cases::{Case, Cases},
     genome::plushy::{GeneGenerator, Plushy},
     instruction::{variable_name::VariableName, FloatInstruction},
     push_vm::{program::PushProgram, push_state::PushState, HasStack, State},
@@ -66,8 +66,7 @@ fn build_push_state(
 
 fn score_program(
     program: impl DoubleEndedIterator<Item = PushProgram> + ExactSizeIterator,
-    input: Of64,
-    expected_output: Of64,
+    Case { input, output }: Case<Of64>,
 ) -> Of64 {
     let state = build_push_state(program, input);
     #[allow(clippy::option_if_let_else)]
@@ -76,7 +75,7 @@ fn score_program(
             final_state
                 .stack::<Of64>()
                 .top()
-                .map_or(PENALTY_VALUE, |answer| (answer - expected_output).abs()),
+                .map_or(PENALTY_VALUE, |answer| (answer - output).abs()),
         ),
         Err(_) => {
             // Do some logging, perhaps?
@@ -92,7 +91,7 @@ fn score_genome(
     let program = Vec::<PushProgram>::from(genome.clone());
     let errors: TestResults<test_results::Error<Of64>> = training_cases
         .iter()
-        .map(|case| score_program(program.iter().cloned(), case.input, case.output))
+        .map(|&case| score_program(program.iter().cloned(), case))
         .collect();
     errors
 }
