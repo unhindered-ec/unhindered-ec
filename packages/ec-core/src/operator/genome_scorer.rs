@@ -6,10 +6,6 @@ use crate::{
     population::Population,
 };
 
-// TODO: We need to update `GenomeScorer` to take advantage of the new changes
-//   to the `Scorer` trait. We use `Fn` in the `impl Operator` and that should
-//   be updated to use `Scorer` instead.
-
 pub struct GenomeScorer<GM, S> {
     genome_maker: GM,
     scorer: S,
