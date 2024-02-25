@@ -36,6 +36,7 @@ test-strategy = { workspace = true }
 
 [dev-dependencies]
 clap = { version = "4.5.1", features = ["derive"] }
+proptest = "1.2.0"
 
 [features]
 default = ["macros"]
