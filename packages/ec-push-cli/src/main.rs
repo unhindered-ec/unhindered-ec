@@ -6,8 +6,8 @@ use anyhow::{ensure, Result};
 use clap::Parser;
 use ec_core::{
     generation::Generation,
-    generator::{collection::CollectionGenerator, Generator},
-    individual::ec::{self, EcIndividual},
+    generator::collection::ConvertToCollectionGenerator,
+    individual::ec::{EcIndividual, WithScorer},
     operator::{
         genome_extractor::GenomeExtractor,
         genome_scorer::GenomeScorer,
@@ -22,12 +22,12 @@ use ec_core::{
 };
 use ec_linear::mutator::umad::Umad;
 use push::{
+    arr_into,
     genome::plushy::{GeneGenerator, Plushy},
     instruction::{variable_name::VariableName, IntInstruction},
     push_vm::{program::PushProgram, push_state::PushState, HasStack, State},
-    vec_into,
 };
-use rand::thread_rng;
+use rand::{prelude::Distribution, thread_rng};
 
 use crate::args::{Args, RunModel};
 
@@ -104,7 +104,7 @@ fn main() -> Result<()> {
 
     let mut rng = thread_rng();
 
-    let instruction_set = vec_into![
+    let instruction_set = arr_into![
         IntInstruction::Add,
         IntInstruction::Subtract,
         IntInstruction::Multiply,
@@ -112,24 +112,13 @@ fn main() -> Result<()> {
         VariableName::from("x")
     ];
 
-    let gene_generator = GeneGenerator::with_uniform_close_probability(instruction_set);
+    let gene_generator = GeneGenerator::with_uniform_close_probability(&instruction_set)?;
 
-    let plushy_generator = CollectionGenerator {
-        size: args.max_initial_instructions,
-        element_generator: gene_generator.clone(),
-    };
-
-    let individual_generator = ec::IndividualGenerator {
-        genome_generator: plushy_generator,
-        scorer,
-    };
-
-    let population_generator = CollectionGenerator {
-        size: args.population_size,
-        element_generator: individual_generator,
-    };
-
-    let population = population_generator.generate(&mut rng)?;
+    let population = gene_generator
+        .to_collection_generator(args.max_initial_instructions)
+        .with_scorer(scorer)
+        .into_collection_generator(args.population_size)
+        .sample(&mut rng);
 
     ensure!(population.is_empty().not());
 

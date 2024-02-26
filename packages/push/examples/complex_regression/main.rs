@@ -6,7 +6,7 @@ use anyhow::{ensure, Result};
 use clap::Parser;
 use ec_core::{
     generation::Generation,
-    generator::{collection::ConvertToCollectionGenerator, Generator},
+    generator::collection::ConvertToCollectionGenerator,
     individual::ec::WithScorer,
     operator::{
         genome_extractor::GenomeExtractor,
@@ -25,7 +25,7 @@ use push::{
     push_vm::{program::PushProgram, push_state::PushState, HasStack, State},
     vec_into,
 };
-use rand::thread_rng;
+use rand::{prelude::Distribution, thread_rng};
 
 use crate::args::{Args, RunModel};
 
@@ -106,13 +106,13 @@ fn main() -> Result<()> {
         VariableName::from("x")
     ];
 
-    let gene_generator = GeneGenerator::with_uniform_close_probability(instruction_set);
+    let gene_generator = GeneGenerator::with_uniform_close_probability(&instruction_set)?;
 
     let population = gene_generator
         .to_collection_generator(args.max_initial_instructions)
         .with_scorer(&scorer)
         .into_collection_generator(args.population_size)
-        .generate(&mut rng)?;
+        .sample(&mut rng);
 
     ensure!(population.is_empty().not());
 

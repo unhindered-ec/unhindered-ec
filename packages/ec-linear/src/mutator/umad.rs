@@ -1,5 +1,5 @@
-use ec_core::{generator::Generator, genome::Genome, operator::mutator::Mutator};
-use rand::{rngs::ThreadRng, Rng};
+use ec_core::{genome::Genome, operator::mutator::Mutator};
+use rand::{prelude::Distribution, rngs::ThreadRng, Rng};
 
 use crate::genome::Linear;
 
@@ -25,23 +25,23 @@ impl<GeneGenerator> Umad<GeneGenerator> {
         }
     }
 
-    fn new_gene<G>(&self, rng: &mut ThreadRng) -> anyhow::Result<G::Gene>
+    fn new_gene<G>(&self, rng: &mut ThreadRng) -> G::Gene
     where
         G: Genome,
-        GeneGenerator: Generator<G::Gene>,
+        GeneGenerator: Distribution<G::Gene>,
     {
-        self.gene_generator.generate(rng)
+        self.gene_generator.sample(rng)
     }
 }
 
 impl<G, GeneGenerator> Mutator<G> for Umad<GeneGenerator>
 where
     G: Linear + IntoIterator<Item = G::Gene> + FromIterator<G::Gene>,
-    GeneGenerator: Generator<G::Gene>,
+    GeneGenerator: Distribution<G::Gene>,
 {
     fn mutate(&self, genome: G, rng: &mut ThreadRng) -> anyhow::Result<G> {
         // Addition pass
-        genome
+        Ok(genome
             .into_iter()
             .flat_map(|gene| {
                 // The body of this closure is due to MizardX@Twitch;
@@ -53,7 +53,7 @@ where
 
                 #[allow(clippy::match_bool)]
                 let old_gene = match delete_gene {
-                    false => Some(Ok(gene)),
+                    false => Some(gene),
                     true => None,
                 };
 
@@ -65,12 +65,13 @@ where
                 [old_gene, new_gene]
             })
             .flatten()
-            .collect::<anyhow::Result<G>>()
+            .collect::<G>())
     }
 }
 
 #[cfg(test)]
 mod test {
+    use ec_core::generator::slice_cloning::SliceCloning;
     use rand::thread_rng;
 
     use super::*;
@@ -97,7 +98,7 @@ mod test {
     fn umad_test() {
         let mut rng = thread_rng();
 
-        let char_options: [char; 1] = ['x'];
+        let char_options = SliceCloning::new(&['x']).unwrap();
         let umad = Umad::new(0.3, 0.3, char_options);
 
         let parent_chars = "Morris, Minnesota".chars().collect::<Vec<_>>();
