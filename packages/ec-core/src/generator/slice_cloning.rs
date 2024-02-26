@@ -22,6 +22,9 @@ impl std::error::Error for EmptySlice {}
 impl<'a, T> SliceCloning<'a, T> {
     /// Create a new `Slice` instance which samples uniformly from the slice.
     /// Returns `Err` if the slice is empty.
+    ///
+    /// # Errors
+    /// - [`EmptySlice`] if the passed in slice is empty
     pub fn new(slice: &'a [T]) -> Result<Self, EmptySlice> {
         Ok(Self(Slice::new(slice).map_err(|_| EmptySlice)?))
     }
