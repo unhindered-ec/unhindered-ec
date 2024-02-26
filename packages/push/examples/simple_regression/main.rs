@@ -6,8 +6,8 @@ use anyhow::{ensure, Result};
 use clap::Parser;
 use ec_core::{
     generation::Generation,
-    generator::{collection::CollectionGenerator, Generator},
-    individual::ec::{self, EcIndividual},
+    generator::{collection::ConvertToCollectionGenerator, Generator},
+    individual::ec::{EcIndividual, WithScorer},
     operator::{
         genome_extractor::GenomeExtractor,
         genome_scorer::GenomeScorer,
@@ -21,9 +21,10 @@ use ec_core::{
     test_results::{self, TestResults},
 };
 use ec_linear::mutator::umad::Umad;
+use ordered_float::OrderedFloat;
 use push::{
     genome::plushy::{GeneGenerator, Plushy},
-    instruction::{variable_name::VariableName, IntInstruction},
+    instruction::{variable_name::VariableName, FloatInstruction},
     push_vm::{program::PushProgram, push_state::PushState, HasStack, State},
     vec_into,
 };
@@ -31,56 +32,63 @@ use rand::thread_rng;
 
 use crate::args::{Args, RunModel};
 
+/*
+ * This is an implementation of the "simple regression" problem from the
+ * Clojush implementation of PushGP:
+ * https://github.com/lspector/Clojush/blob/e2c9d8c830715f7d1e644f6205c192b9e5ceead2/src/clojush/problems/demos/simple_regression.clj
+ */
+
 fn main() -> Result<()> {
     // Using `Error` in `TestResults<Error>` will have the run favor smaller
     // values, where using `Score` (e.g., `TestResults<Score>`) will have the run
     // favor larger values.
-    type Pop = Vec<EcIndividual<Plushy, TestResults<test_results::Error<i64>>>>;
-
+    type Pop = Vec<EcIndividual<Plushy, TestResults<test_results::Error<OrderedFloat<f64>>>>>;
     // The penalty value to use when an evolved program doesn't have an expected
     // "return" value on the appropriate stack at the end of its execution.
-    const PENALTY_VALUE: i64 = 1_000;
+    let penalty_value: OrderedFloat<f64> = OrderedFloat::from(1_000.0);
 
     let args = Args::parse();
 
-    // let base_scorer = match args.target_problem {
-    //     TargetProblem::DegreeThree => todo!(),
-    // };
+    // Inputs from -4 (inclusive) to 4 (exclusive) in increments of 0.25.
+    let training_cases = (-4 * 4..4 * 4)
+        .map(|n| OrderedFloat(f64::from(n) / 4.0))
+        .collect::<Vec<_>>();
 
     /*
      * The `scorer` will need to take an evolved program (sequence of
-     * instructions) and run it 10 times on each of the 10 test inputs (0
-     * through 9), collecting together the 10 errors, i.e., the absolute
-     * difference between the returned value and the expected value.
+     * instructions) and run it on all the inputs from -4 (inclusive) to 4
+     * (exclusive) in increments of 0.25, collecting together the errors,
+     * i.e., the absolute difference between the returned value and the
+     * expected value.
      *
      * The target polynomial is x^3 - 2x^2 - x
      */
-    let scorer = |genome: &Plushy| -> TestResults<test_results::Error<i64>> {
+    let scorer = |genome: &Plushy| -> TestResults<test_results::Error<OrderedFloat<f64>>> {
         let program = Vec::<PushProgram>::from(genome.clone());
-        let errors: TestResults<test_results::Error<i64>> = (0..10)
-            .map(|input| {
+        let errors: TestResults<test_results::Error<OrderedFloat<f64>>> = training_cases
+            .iter()
+            .map(|&input| {
                 #[allow(clippy::unwrap_used)]
-                let state: PushState = PushState::builder()
+                let state = PushState::builder()
                     .with_max_stack_size(1000)
                     .with_program(program.clone())
-                    // This will return an error if the program is longer than
-                    //  the allowed max stack size.
+                    // This will return an error if the program is longer than the allowed
+                    // max stack size.
                     // We arguably should check that and return an error here.
                     .unwrap()
-                    .with_int_input("x", input)
+                    .with_float_input("x", input)
                     .build();
-                // This is the degree 3 problem in
-                // https://github.com/lspector/Clojush/blob/e2c9d8c830715f7d1e644f6205c192b9e5ceead2/src/clojush/problems/demos/simple_regression.clj
-                let expected = input * input * input - 2 * input * input - input;
+                let expected =
+                    input * input * input - OrderedFloat::<f64>::from(2f64) * input * input - input;
                 #[allow(clippy::option_if_let_else)]
                 match state.run_to_completion() {
                     Ok(final_state) => final_state
-                        .stack::<i64>()
+                        .stack::<OrderedFloat<f64>>()
                         .top()
-                        .map_or(PENALTY_VALUE, |answer| (answer - expected).abs()),
+                        .map_or(penalty_value, |answer| (answer - expected).abs().into()),
                     Err(_) => {
                         // Do some logging, perhaps?
-                        PENALTY_VALUE
+                        penalty_value
                     }
                 }
             })
@@ -88,13 +96,7 @@ fn main() -> Result<()> {
         errors
     };
 
-    // The degree 3 problem in
-    // https://github.com/lspector/Clojush/blob/
-    // e2c9d8c830715f7d1e644f6205c192b9e5ceead2/src/
-    // clojush/problems/demos/simple_regression.clj
-    // just uses 10 test cases, 0 to 9 (inclusive).
     let num_test_cases = 10;
-
     let lexicase = Lexicase::new(num_test_cases);
     let binary_tournament = Tournament::new(2);
 
@@ -105,38 +107,27 @@ fn main() -> Result<()> {
     let mut rng = thread_rng();
 
     let instruction_set = vec_into![
-        IntInstruction::Add,
-        IntInstruction::Subtract,
-        IntInstruction::Multiply,
-        IntInstruction::ProtectedDivide,
+        FloatInstruction::Add,
+        FloatInstruction::Subtract,
+        FloatInstruction::Multiply,
+        FloatInstruction::ProtectedDivide,
         VariableName::from("x")
     ];
 
     let gene_generator = GeneGenerator::with_uniform_close_probability(instruction_set);
 
-    let plushy_generator = CollectionGenerator {
-        size: args.max_initial_instructions,
-        element_generator: gene_generator.clone(),
-    };
-
-    let individual_generator = ec::IndividualGenerator {
-        genome_generator: plushy_generator,
-        scorer,
-    };
-
-    let population_generator = CollectionGenerator {
-        size: args.population_size,
-        element_generator: individual_generator,
-    };
-
-    let population = population_generator.generate(&mut rng)?;
+    let population = gene_generator
+        .to_collection_generator(args.max_initial_instructions)
+        .with_scorer(&scorer)
+        .into_collection_generator(args.population_size)
+        .generate(&mut rng)?;
 
     ensure!(population.is_empty().not());
 
     let best = Best.select(&population, &mut rng)?;
     println!("Best initial individual is {best:?}");
 
-    let umad = Umad::new(0.1, 0.1, gene_generator);
+    let umad = Umad::new(0.1, 0.1, &gene_generator);
 
     let make_new_individual = Select::new(selector)
         .then(GenomeExtractor)
@@ -146,7 +137,7 @@ fn main() -> Result<()> {
     let mut generation = Generation::new(make_new_individual, population);
 
     // TODO: It might be useful to insert some kind of logging system so we can
-    //   make this less imperative in nature.
+    // make this less imperative in nature.
 
     for generation_number in 0..args.num_generations {
         match args.run_model {
@@ -156,10 +147,11 @@ fn main() -> Result<()> {
 
         let best = Best.select(generation.population(), &mut rng)?;
         // TODO: Change 2 to be the smallest number of digits needed for
-        //  args.num_generations-1.
+        // args.num_generations-1.
         println!("Generation {generation_number:2} best is {best:#?}");
 
-        if best.test_results.total_result.error == 0 {
+        if best.test_results.total_result.error == OrderedFloat(0.0) {
+            println!("SUCCESS");
             break;
         }
     }
