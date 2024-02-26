@@ -43,14 +43,21 @@ pub struct GeneGenerator<'a> {
 
 impl<'a> GeneGenerator<'a> {
     #[must_use]
-    pub fn new(close_probability: f32, instructions: SliceCloning<'a, PushInstruction>) -> Self {
+    pub const fn new(
+        close_probability: f32,
+        instructions: SliceCloning<'a, PushInstruction>,
+    ) -> Self {
         Self {
             close_probability,
             instructions,
         }
     }
 
-    #[must_use]
+    /// Create a generator where the close tag is just as likely as any passed
+    /// instruction
+    ///
+    /// # Errors
+    /// - [`EmptySlice`] if the passed in slice is empty
     pub fn with_uniform_close_probability(
         instructions: &'a [PushInstruction],
     ) -> Result<Self, EmptySlice> {
@@ -136,6 +143,7 @@ impl FromIterator<PushGene> for Plushy {
     }
 }
 
+#[allow(clippy::unwrap_used)]
 #[cfg(test)]
 mod test {
     use ec_core::{

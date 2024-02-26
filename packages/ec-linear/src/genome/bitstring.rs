@@ -18,7 +18,7 @@ pub struct BoolGenerator {
 }
 
 impl BoolGenerator {
-    pub const fn new(true_probability: f64) -> Self {
+    #[must_use] pub const fn new(true_probability: f64) -> Self {
         Self { true_probability }
     }
 }
