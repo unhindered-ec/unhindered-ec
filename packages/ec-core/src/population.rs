@@ -17,7 +17,7 @@ impl<I> Population for Vec<I> {
 }
 
 #[cfg(test)]
-mod generator_trait_tests {
+mod tests {
     use core::ops::Range;
 
     use rand::{prelude::Distribution, thread_rng, Rng};
