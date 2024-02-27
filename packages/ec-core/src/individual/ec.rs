@@ -107,9 +107,6 @@ impl<GG, S> WithScorer<S> for GG {
 }
 
 // G is Genome
-// GG is Genome generator
-// S is Scorer
-// R is the TestResult type
 impl<GenomeT, GenomeGeneratorT, ScorerT, ResultT> Distribution<EcIndividual<GenomeT, ResultT>>
     for IndividualGenerator<GenomeGeneratorT, ScorerT>
 where
