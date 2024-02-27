@@ -107,11 +107,11 @@ impl<GG, S> WithScorer<S> for GG {
 }
 
 // G is Genome
-impl<GenomeT, GenomeGeneratorT, ScorerT, ResultT> Distribution<EcIndividual<GenomeT, ResultT>>
-    for IndividualGenerator<GenomeGeneratorT, ScorerT>
+// Res is the test result
+impl<G, D, S, Res> Distribution<EcIndividual<G, Res>> for IndividualGenerator<D, S>
 where
-    GenomeGeneratorT: Distribution<GenomeT>,
-    ScorerT: Scorer<GenomeT, ResultT>,
+    D: Distribution<G>,
+    S: Scorer<G, Res>,
 {
     /// Generate a new, random, individual.
     ///
@@ -119,7 +119,7 @@ where
     /// type `GG`, and then scores the genome using the scorer of type `S`.
     /// The genome and the test results (of type `R`) are then
     /// used to create a new `EcIndividual`.
-    fn sample<R: rand::Rng + ?Sized>(&self, rng: &mut R) -> EcIndividual<GenomeT, ResultT> {
+    fn sample<R: rand::Rng + ?Sized>(&self, rng: &mut R) -> EcIndividual<G, Res> {
         let genome = self.genome_generator.sample(rng);
         let test_results = self.scorer.score(&genome);
 
