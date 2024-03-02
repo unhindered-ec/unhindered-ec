@@ -155,7 +155,7 @@ fn main() -> Result<()> {
     let make_new_individual = Select::new(selector)
         .then(GenomeExtractor)
         .then(Mutate::new(umad))
-        .wrap::<GenomeScorer<_, _>>(scorer);
+        .wrap::<GenomeScorer<_, _, _>>(scorer);
 
     let mut generation = Generation::new(make_new_individual, population);
 

@@ -1,31 +1,25 @@
-pub trait Scorer<G> {
-    type Score;
-
+pub trait Scorer<Genome, Score> {
     /// Take a reference to a genome and return some score type `R`.
-    fn score(&self, genome: &G) -> Self::Score;
+    fn score(&self, genome: &Genome) -> Score;
 }
 
 #[derive(Clone, Copy)]
 pub struct FnScorer<T>(pub T);
 
-impl<G, R, T> Scorer<G> for FnScorer<T>
+impl<G, T, S> Scorer<G, S> for FnScorer<T>
 where
-    T: Fn(&G) -> R,
+    T: Fn(&G) -> S,
 {
-    type Score = R;
-
-    fn score(&self, genome: &G) -> Self::Score {
+    fn score(&self, genome: &G) -> S {
         self.0(genome)
     }
 }
 
-impl<G, T> Scorer<G> for &T
+impl<G, T, S> Scorer<G, S> for &T
 where
-    T: Scorer<G>,
+    T: Scorer<G, S>,
 {
-    type Score = T::Score;
-
-    fn score(&self, genome: &G) -> Self::Score {
+    fn score(&self, genome: &G) -> S {
         (**self).score(genome)
     }
 }

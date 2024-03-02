@@ -88,7 +88,7 @@ fn main() -> Result<()> {
         .then_map(GenomeExtractor)
         .then(Recombine::new(TwoPointXo))
         .then(Mutate::new(WithOneOverLength))
-        .wrap::<GenomeScorer<_, _>>(scorer);
+        .wrap::<GenomeScorer<_, _, _>>(scorer);
 
     // generation::new() will take
     //   * a pipeline that gets us from population -> new individual
