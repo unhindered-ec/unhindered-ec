@@ -71,7 +71,7 @@ where
 
 #[cfg(test)]
 mod test {
-    use ec_core::generator::conversion::IntoDistribution;
+    use ec_core::uniform_distribution_of;
     use rand::thread_rng;
 
     use super::*;
@@ -98,7 +98,7 @@ mod test {
     fn umad_test() {
         let mut rng = thread_rng();
 
-        let char_options = ['x'].into_distribution().unwrap();
+        let char_options = uniform_distribution_of!['x'];
         let umad = Umad::new(0.3, 0.3, char_options);
 
         let parent_chars = "Morris, Minnesota".chars().collect::<Vec<_>>();
