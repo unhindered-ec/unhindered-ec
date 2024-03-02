@@ -36,23 +36,27 @@ impl std::fmt::Debug for PushGene {
 }
 
 #[derive(Debug, Clone)]
-pub struct GeneGenerator<'a> {
+pub struct GeneGenerator<T>
+where
+    T: Distribution<PushInstruction>,
+{
     close_probability: f32,
-    instructions: SliceCloning<'a, PushInstruction>,
+    instructions_distribution: T,
 }
 
-impl<'a> GeneGenerator<'a> {
+impl<T> GeneGenerator<T>
+where
+    T: Distribution<PushInstruction>,
+{
     #[must_use]
-    pub const fn new(
-        close_probability: f32,
-        instructions: SliceCloning<'a, PushInstruction>,
-    ) -> Self {
+    pub const fn new(close_probability: f32, instructions_distribution: T) -> Self {
         Self {
             close_probability,
-            instructions,
+            instructions_distribution,
         }
     }
-
+}
+impl<'a> GeneGenerator<SliceCloning<'a, PushInstruction>> {
     /// Create a generator where the close tag is just as likely as any passed
     /// instruction
     ///
@@ -61,20 +65,23 @@ impl<'a> GeneGenerator<'a> {
     pub fn with_uniform_close_probability(
         instructions: &'a [PushInstruction],
     ) -> Result<Self, EmptySlice> {
-        Ok(Self {
-            close_probability: 1.0 / f32::conv_approx(instructions.len() + 1),
-            instructions: SliceCloning::new(instructions)?,
-        })
+        Ok(Self::new(
+            1.0 / f32::conv_approx(instructions.len() + 1),
+            SliceCloning::new(instructions)?,
+        ))
     }
 }
 
-impl Distribution<PushGene> for GeneGenerator<'_> {
+impl<T> Distribution<PushGene> for GeneGenerator<T>
+where
+    T: Distribution<PushInstruction>,
+{
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> PushGene {
         if rng.gen::<f32>() < self.close_probability {
             PushGene::Close
         } else {
             // this is safe since we check that the slice is not empty in the constructor
-            PushGene::Instruction(self.instructions.sample(rng))
+            PushGene::Instruction(self.instructions_distribution.sample(rng))
         }
     }
 }
