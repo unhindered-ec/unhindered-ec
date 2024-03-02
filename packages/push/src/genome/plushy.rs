@@ -2,7 +2,7 @@ use easy_cast::ConvApprox;
 use ec_core::{
     generator::{
         collection::CollectionGenerator,
-        slice_cloning::{EmptySlice, SliceCloning},
+        wrappers::slice_cloning::{EmptySlice, SliceCloning},
     },
     genome::Genome,
 };
