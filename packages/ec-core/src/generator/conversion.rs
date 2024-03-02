@@ -9,6 +9,11 @@ pub trait IntoDistribution<Element> {
     type Distribution: Distribution<Element>;
     type Error;
 
+    /// Converts some type into a Distribution (fallible)
+    ///
+    /// # Errors
+    /// If the conversion to a distribution failed, then [`Self::Error`] is
+    /// returned
     fn into_distribution(self) -> Result<Self::Distribution, Self::Error>;
 }
 
@@ -16,6 +21,11 @@ pub trait ToDistribution<'a, Element> {
     type Distribution: Distribution<Element>;
     type Error;
 
+    /// Creates a Distribution from a reference to self (fallible)
+    ///
+    /// # Errors
+    /// If the creation of a distribution failed, then [`Self::Error`] is
+    /// returned
     fn to_distribution(&'a self) -> Result<Self::Distribution, Self::Error>;
 }
 

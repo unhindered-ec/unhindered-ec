@@ -1,4 +1,4 @@
-use std::{borrow::Borrow, convert::Infallible};
+use std::borrow::Borrow;
 
 use rand::{distributions::Uniform, prelude::Distribution};
 
@@ -10,6 +10,13 @@ pub struct OneOfCloning<T> {
 }
 
 impl<T> OneOfCloning<T> {
+    /// Create a new [`OneOfCloning`] distribution, which selects a
+    /// value from a collection and then returns a new value by cloning the
+    /// selected value.
+    ///
+    /// # Errors
+    /// - [`EmptySlice`] if an empty collection is passed in, since then no
+    ///   element can be selected from there
     pub fn new<U>(val: T) -> Result<Self, EmptySlice>
     where
         T: Borrow<[U]>,
