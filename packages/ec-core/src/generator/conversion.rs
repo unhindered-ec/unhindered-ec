@@ -12,11 +12,11 @@ pub trait IntoDistribution<Element> {
     fn into_distribution(self) -> Result<Self::Distribution, Self::Error>;
 }
 
-pub trait AsDistribution<'a, Element> {
+pub trait ToDistribution<'a, Element> {
     type Distribution: Distribution<Element>;
     type Error;
 
-    fn as_distribution(&'a self) -> Result<Self::Distribution, Self::Error>;
+    fn to_distribution(&'a self) -> Result<Self::Distribution, Self::Error>;
 }
 
 impl<U> IntoDistribution<U> for Vec<U>
@@ -37,7 +37,7 @@ impl<'a, U> IntoDistribution<&'a U> for &'a Vec<U> {
     type Error = EmptySlice;
 
     fn into_distribution(self) -> Result<Self::Distribution, Self::Error> {
-        self.as_distribution()
+        self.to_distribution()
     }
 }
 
@@ -50,30 +50,30 @@ where
     type Error = EmptySlice;
 
     fn into_distribution(self) -> Result<Self::Distribution, Self::Error> {
-        AsDistribution::<U>::as_distribution(self)
+        ToDistribution::<U>::to_distribution(self)
     }
 }
 
-impl<'a, U> AsDistribution<'a, U> for Vec<U>
+impl<'a, U> ToDistribution<'a, U> for Vec<U>
 where
     U: 'a + Clone,
 {
     type Distribution = SliceCloning<'a, U>;
     type Error = EmptySlice;
 
-    fn as_distribution(&'a self) -> Result<Self::Distribution, Self::Error> {
+    fn to_distribution(&'a self) -> Result<Self::Distribution, Self::Error> {
         SliceCloning::new(self)
     }
 }
 
-impl<'a, U> AsDistribution<'a, &'a U> for Vec<U>
+impl<'a, U> ToDistribution<'a, &'a U> for Vec<U>
 where
     U: 'a,
 {
     type Distribution = Slice<'a, U>;
     type Error = EmptySlice;
 
-    fn as_distribution(&'a self) -> Result<Self::Distribution, Self::Error> {
+    fn to_distribution(&'a self) -> Result<Self::Distribution, Self::Error> {
         Slice::new(self).map_err(|_| EmptySlice)
     }
 }
@@ -96,7 +96,7 @@ impl<'a, U, const N: usize> IntoDistribution<&'a U> for &'a [U; N] {
     type Error = EmptySlice;
 
     fn into_distribution(self) -> Result<Self::Distribution, Self::Error> {
-        self.as_distribution()
+        self.to_distribution()
     }
 }
 
@@ -109,30 +109,30 @@ where
     type Error = EmptySlice;
 
     fn into_distribution(self) -> Result<Self::Distribution, Self::Error> {
-        AsDistribution::<U>::as_distribution(self)
+        ToDistribution::<U>::to_distribution(self)
     }
 }
 
-impl<'a, U, const N: usize> AsDistribution<'a, U> for [U; N]
+impl<'a, U, const N: usize> ToDistribution<'a, U> for [U; N]
 where
     U: 'a + Clone,
 {
     type Distribution = SliceCloning<'a, U>;
     type Error = EmptySlice;
 
-    fn as_distribution(&'a self) -> Result<Self::Distribution, Self::Error> {
+    fn to_distribution(&'a self) -> Result<Self::Distribution, Self::Error> {
         SliceCloning::new(self)
     }
 }
 
-impl<'a, U, const N: usize> AsDistribution<'a, &'a U> for [U; N]
+impl<'a, U, const N: usize> ToDistribution<'a, &'a U> for [U; N]
 where
     U: 'a,
 {
     type Distribution = Slice<'a, U>;
     type Error = EmptySlice;
 
-    fn as_distribution(&'a self) -> Result<Self::Distribution, Self::Error> {
+    fn to_distribution(&'a self) -> Result<Self::Distribution, Self::Error> {
         Slice::new(self).map_err(|_| EmptySlice)
     }
 }
@@ -160,17 +160,17 @@ where
     }
 }
 
-impl<'a, T> AsDistribution<'a, &'a T> for [T] {
+impl<'a, T> ToDistribution<'a, &'a T> for [T] {
     type Distribution = Slice<'a, T>;
 
     type Error = EmptySlice;
 
-    fn as_distribution(&'a self) -> Result<Self::Distribution, Self::Error> {
+    fn to_distribution(&'a self) -> Result<Self::Distribution, Self::Error> {
         Slice::new(self).map_err(|_| EmptySlice)
     }
 }
 
-impl<'a, T> AsDistribution<'a, T> for [T]
+impl<'a, T> ToDistribution<'a, T> for [T]
 where
     T: Clone + 'a,
 {
@@ -178,7 +178,7 @@ where
 
     type Error = EmptySlice;
 
-    fn as_distribution(&'a self) -> Result<Self::Distribution, Self::Error> {
+    fn to_distribution(&'a self) -> Result<Self::Distribution, Self::Error> {
         SliceCloning::new(self)
     }
 }
