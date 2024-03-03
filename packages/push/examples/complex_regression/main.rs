@@ -7,7 +7,7 @@ use clap::Parser;
 use ec_core::{
     distributions::collection::ConvertToCollectionGenerator,
     generation::Generation,
-    individual::ec::WithScorer,
+    individual::{ec::WithScorer, scorer::FnScorer},
     operator::{
         genome_extractor::GenomeExtractor,
         genome_scorer::GenomeScorer,
@@ -20,6 +20,7 @@ use ec_core::{
 use ec_linear::mutator::umad::Umad;
 use ordered_float::OrderedFloat;
 use push::{
+    evaluation::cases::{Case, Cases},
     genome::plushy::{GeneGenerator, Plushy},
     instruction::{variable_name::VariableName, FloatInstruction},
     push_vm::{program::PushProgram, push_state::PushState, HasStack, State},
@@ -35,17 +36,79 @@ use crate::args::{Args, RunModel};
  * https://github.com/lspector/propeller/blob/71d378f49fdf88c14dda88387291c9c7be0f1277/src/propeller/problems/complex_regression.cljc
  */
 
-fn main() -> Result<()> {
-    // The penalty value to use when an evolved program doesn't have an expected
-    // "return" value on the appropriate stack at the end of its execution.
-    const PENALTY_VALUE: f64 = 1_000.0;
+// The penalty value to use when an evolved program doesn't have an expected
+// "return" value on the appropriate stack at the end of its execution.
+const PENALTY_VALUE: f64 = 1_000.0;
 
+type Of64 = OrderedFloat<f64>;
+
+/// The target polynomial is (x^3 + 1)^3 + 1
+/// i.e., x^9 + 3x^6 + 3x^3 + 2
+fn target_fn(input: Of64) -> Of64 {
+    let sub_expr = input * input * input + 1.0;
+    sub_expr * sub_expr * sub_expr + 1.0
+}
+
+fn build_push_state(
+    program: impl DoubleEndedIterator<Item = PushProgram> + ExactSizeIterator,
+    input: Of64,
+) -> PushState {
+    #[allow(clippy::unwrap_used)]
+    PushState::builder()
+        .with_max_stack_size(1000)
+        .with_program(program)
+        // This will return an error if the program is longer than the allowed
+        // max stack size.
+        // We arguably should check that and return an error here.
+        .unwrap()
+        .with_float_input("x", input)
+        .build()
+}
+
+fn score_program(
+    program: impl DoubleEndedIterator<Item = PushProgram> + ExactSizeIterator,
+    Case { input, output }: Case<Of64>,
+) -> Of64 {
+    let state = build_push_state(program, input);
+    #[allow(clippy::option_if_let_else)]
+    match state.run_to_completion() {
+        Ok(final_state) => OrderedFloat(
+            final_state
+                .stack::<Of64>()
+                .top()
+                .map_or(PENALTY_VALUE, |answer| (answer - output).abs()),
+        ),
+        Err(_) => {
+            // Do some logging, perhaps?
+            OrderedFloat(PENALTY_VALUE)
+        }
+    }
+}
+
+fn score_genome(
+    genome: &Plushy,
+    training_cases: &Cases<Of64>,
+) -> TestResults<test_results::Error<Of64>> {
+    let program = Vec::<PushProgram>::from(genome.clone());
+    let errors: TestResults<test_results::Error<Of64>> = training_cases
+        .iter()
+        .map(|&case| score_program(program.iter().cloned(), case))
+        .collect();
+    errors
+}
+
+fn main() -> Result<()> {
     let args = Args::parse();
 
     // Inputs from -4 (inclusive) to 4 (exclusive) in increments of 0.25.
-    let training_cases = (-4 * 4..4 * 4)
-        .map(|n| OrderedFloat(f64::from(n) / 4.0))
-        .collect::<Vec<_>>();
+    let training_inputs = (-4 * 4..4 * 4).map(|n| Of64::from(n) / 4.0);
+    let training_cases = Cases::from_inputs(training_inputs, |&i| target_fn(i));
+
+    // The range want is -4 1/8, -3 7/8, -3 5/8, ..., 3 7/8, 4 1/8.
+    // I have to multiply that by 8 to get integer values, so:
+    // -33, -31, -29, ..., 31, 33.
+    let testing_inputs = (-33..=33).step_by(2).map(|n| Of64::from(n) / 8.0);
+    let _testing_cases = Cases::from_inputs(testing_inputs, |&i| target_fn(i));
 
     /*
      * The `scorer` will need to take an evolved program (sequence of
@@ -53,43 +116,12 @@ fn main() -> Result<()> {
      * (exclusive) in increments of 0.25, collecting together the errors,
      * i.e., the absolute difference between the returned value and the
      * expected value.
-     *
-     * The target polynomial is (x^3 + 1)^3 + 1
      */
-    let scorer = |genome: &Plushy| -> TestResults<test_results::Error<OrderedFloat<f64>>> {
-        let program = Vec::<PushProgram>::from(genome.clone());
-        let errors: TestResults<test_results::Error<OrderedFloat<f64>>> = training_cases
-            .iter()
-            .map(|input| {
-                #[allow(clippy::unwrap_used)]
-                let state = PushState::builder()
-                    .with_max_stack_size(1000)
-                    .with_program(program.clone())
-                    // This will return an error if the program is longer than the allowed
-                    // max stack size.
-                    // We arguably should check that and return an error here.
-                    .unwrap()
-                    .with_float_input("x", *input)
-                    .build();
-                let sub_expr = *input * *input * *input + 1.0;
-                let expected = sub_expr * sub_expr * sub_expr + 1.0;
-                #[allow(clippy::option_if_let_else)]
-                match state.run_to_completion() {
-                    Ok(final_state) => OrderedFloat(
-                        final_state
-                            .stack::<OrderedFloat<f64>>()
-                            .top()
-                            .map_or(PENALTY_VALUE, |answer| (answer - expected).abs()),
-                    ),
-                    Err(_) => {
-                        // Do some logging, perhaps?
-                        OrderedFloat(PENALTY_VALUE)
-                    }
-                }
-            })
-            .collect();
-        errors
-    };
+    let scorer = FnScorer(
+        |genome: &Plushy| -> TestResults<test_results::Error<Of64>> {
+            score_genome(genome, &training_cases)
+        },
+    );
 
     let selector = Lexicase::new(training_cases.len());
 
@@ -110,7 +142,7 @@ fn main() -> Result<()> {
 
     let population = gene_generator
         .to_collection_generator(args.max_initial_instructions)
-        .with_scorer(&scorer)
+        .with_scorer(scorer)
         .into_collection_generator(args.population_size)
         .sample(&mut rng);
 

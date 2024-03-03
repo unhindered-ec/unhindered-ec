@@ -1,13 +1,16 @@
 pub mod args;
 
-use std::ops::Not;
+use std::{iter::once, ops::Not};
 
 use anyhow::{ensure, Result};
 use clap::Parser;
 use ec_core::{
     distributions::collection::ConvertToCollectionGenerator,
     generation::Generation,
-    individual::ec::{EcIndividual, WithScorer},
+    individual::{
+        ec::{EcIndividual, WithScorer},
+        scorer::FnScorer,
+    },
     operator::{
         genome_extractor::GenomeExtractor,
         genome_scorer::GenomeScorer,
@@ -22,35 +25,50 @@ use ec_core::{
     test_results::{self, TestResults},
 };
 use ec_linear::{
-    genome::{
-        bitstring::Bitstring,
-        demo_scorers::{count_ones, hiff},
-    },
-    mutator::with_one_over_length::WithOneOverLength,
+    genome::bitstring::Bitstring, mutator::with_one_over_length::WithOneOverLength,
     recombinator::two_point_xo::TwoPointXo,
 };
 use rand::{distributions::Standard, prelude::Distribution, thread_rng};
 
-use crate::args::{Args, RunModel, TargetProblem};
+use crate::args::{Args, RunModel};
+
+#[must_use]
+fn hiff(bits: &[bool]) -> (bool, TestResults<test_results::Score<usize>>) {
+    let len = bits.len();
+    if len < 2 {
+        (true, once(test_results::Score::from(len)).collect())
+    } else {
+        let half_len = len / 2;
+        let (left_all_same, left_score) = hiff(&bits[..half_len]);
+        let (right_all_same, right_score) = hiff(&bits[half_len..]);
+        let all_same = left_all_same && right_all_same && bits[0] == bits[half_len];
+        (
+            all_same,
+            left_score
+                .results
+                .into_iter()
+                .chain(right_score.results)
+                .chain(once(test_results::Score::from(if all_same {
+                    len
+                } else {
+                    0
+                })))
+                .collect(),
+        )
+    }
+}
 
 fn main() -> Result<()> {
     // Using `Error` in `TestResults<Error>` will have the run favor smaller
     // values, where using `Score` (e.g., `TestResults<Score>`) will have the run
     // favor larger values.
-    type Pop = Vec<EcIndividual<Bitstring, TestResults<test_results::Score<i64>>>>;
+    type Pop = Vec<EcIndividual<Bitstring, TestResults<test_results::Score<usize>>>>;
 
     let args = Args::parse();
 
-    let base_scorer = match args.target_problem {
-        TargetProblem::CountOnes => count_ones,
-        TargetProblem::Hiff => hiff,
-    };
-    let scorer = |bitstring: &Bitstring| base_scorer(&bitstring.bits);
+    let scorer = FnScorer(|bitstring: &Bitstring| hiff(&bitstring.bits).1);
 
-    let num_test_cases = match args.target_problem {
-        TargetProblem::CountOnes => args.bit_length,
-        TargetProblem::Hiff => 2 * args.bit_length - 1,
-    };
+    let num_test_cases = 2 * args.bit_length - 1;
 
     let lexicase = Lexicase::new(num_test_cases);
     let binary_tournament = Tournament::new(2);

@@ -9,7 +9,10 @@ use std::{
 
 use rand::prelude::Distribution;
 
-use super::{scorer::Scorer, Individual};
+use super::{
+    scorer::{FnScorer, Scorer},
+    Individual,
+};
 
 /// `EcIndividual` is a struct that represents an individual in an evolutionary
 /// computation system. It contains a genome and the results of scoring the
@@ -92,34 +95,46 @@ impl<GG, S> IndividualGenerator<GG, S> {
 
 /// A trait for adding a scorer to a genome generator, creating
 /// an `IndividualGenerator`.
-pub trait WithScorer<Scorer> {
+pub trait WithScorer {
     /// Add a scorer to the genome generator, creating an `IndividualGenerator`.
-    fn with_scorer(self, scorer: Scorer) -> IndividualGenerator<Self, Scorer>
+    fn with_scorer<S, G>(self, scorer: S) -> IndividualGenerator<Self, S>
     where
-        Self: Sized;
+        Self: Sized,
+        S: Scorer<G>;
+
+    fn with_scorer_fn<F, G, R>(self, f: F) -> IndividualGenerator<Self, FnScorer<F>>
+    where
+        Self: Sized,
+        F: Fn(&G) -> R,
+    {
+        self.with_scorer(FnScorer(f))
+    }
 }
 
-impl<GG, S> WithScorer<S> for GG {
+impl<GG> WithScorer for GG {
     /// Add a scorer to the genome generator, creating an `IndividualGenerator`.
-    fn with_scorer(self, scorer: S) -> IndividualGenerator<GG, S> {
+    fn with_scorer<S, G>(self, scorer: S) -> IndividualGenerator<GG, S>
+    where
+        S: Scorer<G>,
+    {
         IndividualGenerator::new(self, scorer)
     }
 }
 
 // G is Genome
-// Res is the test result
-impl<G, D, S, Res> Distribution<EcIndividual<G, Res>> for IndividualGenerator<D, S>
+// S is Scorer
+impl<G, D, S> Distribution<EcIndividual<G, S::Score>> for IndividualGenerator<D, S>
 where
     D: Distribution<G>,
-    S: Scorer<G, Res>,
+    S: Scorer<G>,
 {
     /// Generate a new, random, individual.
     ///
     /// This creates a new genome of type `G` using the genome generator of
     /// type `GG`, and then scores the genome using the scorer of type `S`.
-    /// The genome and the test results (of type `R`) are then
+    /// The genome and the test results (of type `S::Score`) are then
     /// used to create a new `EcIndividual`.
-    fn sample<R: rand::Rng + ?Sized>(&self, rng: &mut R) -> EcIndividual<G, Res> {
+    fn sample<R: rand::Rng + ?Sized>(&self, rng: &mut R) -> EcIndividual<G, S::Score> {
         let genome = self.genome_generator.sample(rng);
         let test_results = self.scorer.score(&genome);
 
