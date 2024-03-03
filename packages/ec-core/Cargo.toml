@@ -16,6 +16,9 @@ rand = { workspace = true, features = ["alloc"] }
 rayon = "1.7.0"
 macro_railroad_annotation = { workspace = true }
 
+[dev-dependencies]
+rand = { workspace = true, features = ["alloc", "small_rng"] }
+
 [lints]
 workspace = true
 
