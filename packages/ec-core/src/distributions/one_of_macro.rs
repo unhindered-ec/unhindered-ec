@@ -56,12 +56,7 @@ macro_rules! uniform_distribution_of {
 
 #[cfg(test)]
 mod test {
-    use rand::{
-        rngs::{SmallRng, StdRng},
-        thread_rng, Rng, SeedableRng,
-    };
-
-    use crate::distributions::conversion::{IntoDistribution, ToDistribution};
+    use crate::distributions::conversion::IntoDistribution;
 
     #[test]
     fn distr_into_owned() {
