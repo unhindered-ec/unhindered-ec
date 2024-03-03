@@ -64,7 +64,8 @@ macro_rules! uniform_distribution_of {
                     ];
                unsafe {
                     ::std::result::Result::unwrap_unchecked(
-                         $crate::distributions::conversion::ToDistribution::<&_>::to_distribution(&arr)
+                         $crate::distributions::conversion
+                              ::ToDistribution::<&_>::to_distribution(&arr)
                     )
                }
           }
