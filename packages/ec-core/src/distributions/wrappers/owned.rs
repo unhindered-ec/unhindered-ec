@@ -2,7 +2,7 @@ use std::{borrow::Borrow, marker::PhantomData, num::NonZeroUsize};
 
 use rand::{distributions::Uniform, prelude::Distribution};
 
-use crate::generator::wrappers::slice_cloning::EmptySlice;
+use crate::distributions::wrappers::slice_cloning::EmptySlice;
 
 #[derive(Debug, PartialEq)]
 pub struct OneOfCloning<T, U> {

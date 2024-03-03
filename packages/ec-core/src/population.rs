@@ -22,7 +22,7 @@ mod tests {
 
     use rand::{prelude::Distribution, thread_rng, Rng};
 
-    use crate::{generator::collection::ConvertToCollectionGenerator, population::Population};
+    use crate::{distributions::collection::ConvertToCollectionGenerator, population::Population};
 
     struct RandValue {
         val: i32,

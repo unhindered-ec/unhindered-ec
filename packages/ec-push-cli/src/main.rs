@@ -5,8 +5,8 @@ use std::ops::Not;
 use anyhow::{ensure, Result};
 use clap::Parser;
 use ec_core::{
+    distributions::collection::ConvertToCollectionGenerator,
     generation::Generation,
-    generator::collection::ConvertToCollectionGenerator,
     individual::ec::{EcIndividual, WithScorer},
     operator::{
         genome_extractor::GenomeExtractor,

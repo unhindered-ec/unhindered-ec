@@ -26,7 +26,7 @@ macro_rules! uniform_distribution_of {
      (<$output_type:ty>  $($items:expr),+ $(,)?) => {
           unsafe {
                ::std::result::Result::unwrap_unchecked(
-                    $crate::generator::conversion
+                    $crate::distributions::conversion
                          ::IntoDistribution::<$output_type>::into_distribution([
                          $(::std::convert::Into::<$output_type>::into($items)),+
                     ])
@@ -36,7 +36,7 @@ macro_rules! uniform_distribution_of {
      ($($items:expr),+ $(,)?) => {
           unsafe {
                ::std::result::Result::unwrap_unchecked(
-                    $crate::generator::conversion::IntoDistribution::into_distribution([
+                    $crate::distributions::conversion::IntoDistribution::into_distribution([
                          $($items),+
                     ])
                )
@@ -51,7 +51,7 @@ macro_rules! uniform_distribution_of {
 
                unsafe {
                     ::std::result::Result::unwrap_unchecked(
-                         $crate::generator::conversion
+                         $crate::distributions::conversion
                               ::ToDistribution::<&$output_type>::to_distribution(&arr)
                     )
                }
@@ -64,7 +64,7 @@ macro_rules! uniform_distribution_of {
                     ];
                unsafe {
                     ::std::result::Result::unwrap_unchecked(
-                         $crate::generator::conversion::ToDistribution::<&_>::to_distribution(&arr)
+                         $crate::distributions::conversion::ToDistribution::<&_>::to_distribution(&arr)
                     )
                }
           }

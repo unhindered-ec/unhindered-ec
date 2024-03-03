@@ -2,7 +2,7 @@ use std::fmt::Display;
 
 use anyhow::bail;
 use ec_core::{
-    generator::collection::{CollectionGenerator, ConvertToCollectionGenerator},
+    distributions::collection::{CollectionGenerator, ConvertToCollectionGenerator},
     genome::Genome,
 };
 use rand::{distributions::Standard, prelude::Distribution, rngs::ThreadRng, Rng};

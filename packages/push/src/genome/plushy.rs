@@ -1,6 +1,6 @@
 use easy_cast::ConvApprox;
 use ec_core::{
-    generator::{
+    distributions::{
         collection::CollectionGenerator,
         wrappers::slice_cloning::{EmptySlice, SliceCloning},
     },
@@ -154,7 +154,7 @@ impl FromIterator<PushGene> for Plushy {
 #[cfg(test)]
 mod test {
     use ec_core::{
-        generator::collection::ConvertToCollectionGenerator, operator::mutator::Mutator,
+        distributions::collection::ConvertToCollectionGenerator, operator::mutator::Mutator,
     };
     use ec_linear::mutator::umad::Umad;
     use rand::thread_rng;
