@@ -33,10 +33,16 @@ where
         }
     }
 
+    #[allow(clippy::missing_panics_doc)]
     pub fn num_choices(&self) -> NonZeroUsize {
-        // Safety: at construction time, it was ensured that the slice was
-        // non-empty, as such the len is > 0.
-        unsafe { NonZeroUsize::new_unchecked(self.collection.borrow().len()) }
+        let choices = self.collection.borrow().len();
+
+        // FIXME: Check the performance of this
+        // // Safety: at construction time, it was ensured that the slice was
+        // // non-empty, as such the len is > 0.
+        // unsafe { NonZeroUsize::new_unchecked(self.collection.borrow().len()) }
+        #[allow(clippy::unwrap_used)]
+        NonZeroUsize::new(choices).unwrap()
     }
 }
 
@@ -48,10 +54,17 @@ where
     fn sample<R: rand::Rng + ?Sized>(&self, rng: &mut R) -> U {
         let idx = self.range.sample(rng);
 
-        // Safety: at construction time, it was ensured that the slice was
-        // non-empty, and that the `Uniform` range produces values in range
-        // for the slice
         let slice = self.collection.borrow();
-        unsafe { slice.get_unchecked(idx) }.clone()
+
+        // FIXME: Check the performance of this
+        // // Safety: at construction time, it was ensured that the slice was
+        // // non-empty, and that the `Uniform` range produces values in range
+        // // for the slice
+        // let val = unsafe { slice.get_unchecked(idx) }
+
+        #[allow(clippy::unwrap_used)]
+        let val = slice.get(idx).unwrap();
+
+        val.clone()
     }
 }

@@ -24,22 +24,30 @@
 #[macro_export]
 macro_rules! uniform_distribution_of {
      (<$output_type:ty>  $($items:expr),+ $(,)?) => {
-          unsafe {
-               ::std::result::Result::unwrap_unchecked(
+          // FIXME: is unwrap_unchecked a performance gain here?
+          {
+               #[allow(clippy::unwrap_used)]
+               let val = ::std::result::Result::unwrap(
                     $crate::distributions::conversion
                          ::IntoDistribution::<$output_type>::into_distribution([
                          $(::std::convert::Into::<$output_type>::into($items)),+
                     ])
-               )
+               );
+
+               val
           }
      };
      ($($items:expr),+ $(,)?) => {
-          unsafe {
-               ::std::result::Result::unwrap_unchecked(
+          // FIXME: is unwrap_unchecked a performance gain here?
+          {
+               #[allow(clippy::unwrap_used)]
+               let val = ::std::result::Result::unwrap(
                     $crate::distributions::conversion::IntoDistribution::into_distribution([
                          $($items),+
                     ])
-               )
+               );
+
+               val
           }
      };
      (ref <$output_type:ty> $($items:expr),+ $(,)?) => {
