@@ -37,6 +37,10 @@ where
     pub fn num_choices(&self) -> NonZeroUsize {
         let choices = self.collection.borrow().len();
 
+        debug_assert_ne!(
+            choices, 0,
+            "This should never happen since the new method checks for this"
+        );
         // FIXME: Check the performance of this
         // // Safety: at construction time, it was ensured that the slice was
         // // non-empty, as such the len is > 0.
@@ -55,6 +59,11 @@ where
         let idx = self.range.sample(rng);
 
         let slice = self.collection.borrow();
+
+        debug_assert!(
+            slice.len() >= idx,
+            "This should never happen since the new method provides these guarantees"
+        );
 
         // FIXME: Check the performance of this
         // // Safety: at construction time, it was ensured that the slice was
