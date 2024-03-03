@@ -30,8 +30,8 @@ impl<'a, T> SliceCloning<'a, T> {
     }
 
     // This is waiting on https://github.com/rust-random/rand/pull/1402
-    // pub fn choices(&self) -> NonZeroUsize {
-    //     self.0.choices()
+    // pub fn num_choices(&self) -> NonZeroUsize {
+    //     self.0.num_choices()
     // }
 }
 

@@ -33,7 +33,7 @@ where
         }
     }
 
-    pub fn choices(&self) -> NonZeroUsize {
+    pub fn num_choices(&self) -> NonZeroUsize {
         // Safety: at construction time, it was ensured that the slice was
         // non-empty, as such the len is > 0.
         unsafe { NonZeroUsize::new_unchecked(self.collection.borrow().len()) }
