@@ -1,4 +1,4 @@
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub struct Case<Input, Output = Input> {
     pub input: Input,
     pub output: Output,
@@ -75,6 +75,24 @@ impl<Input, Output> Cases<Input, Output> {
     #[must_use]
     pub fn len(&self) -> usize {
         self.cases.len()
+    }
+}
+
+pub trait WithTarget<Input> {
+    fn with_target<Output, F>(self, target_fn: F) -> Cases<Input, Output>
+    where
+        F: Fn(&Input) -> Output;
+}
+
+impl<T, Input> WithTarget<Input> for T
+where
+    T: IntoIterator<Item = Input>,
+{
+    fn with_target<Output, F>(self, target_fn: F) -> Cases<Input, Output>
+    where
+        F: Fn(&Input) -> Output,
+    {
+        Cases::from_inputs(self.into_iter(), target_fn)
     }
 }
 
