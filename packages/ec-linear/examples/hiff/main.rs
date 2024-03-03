@@ -7,7 +7,10 @@ use clap::Parser;
 use ec_core::{
     generation::Generation,
     generator::{collection::CollectionGenerator, Generator},
-    individual::ec::{self, EcIndividual},
+    individual::{
+        ec::{self, EcIndividual},
+        scorer::FnScorer,
+    },
     operator::{
         genome_extractor::GenomeExtractor,
         genome_scorer::GenomeScorer,
@@ -64,7 +67,7 @@ fn main() -> Result<()> {
 
     let args = Args::parse();
 
-    let scorer = |bitstring: &Bitstring| hiff(&bitstring.bits).1;
+    let scorer = FnScorer(|bitstring: &Bitstring| hiff(&bitstring.bits).1);
 
     let num_test_cases = 2 * args.bit_length - 1;
 

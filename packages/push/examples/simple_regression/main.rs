@@ -7,7 +7,10 @@ use clap::Parser;
 use ec_core::{
     generation::Generation,
     generator::{collection::ConvertToCollectionGenerator, Generator},
-    individual::ec::{EcIndividual, WithScorer},
+    individual::{
+        ec::{EcIndividual, WithScorer},
+        scorer::FnScorer,
+    },
     operator::{
         genome_extractor::GenomeExtractor,
         genome_scorer::GenomeScorer,
@@ -50,7 +53,7 @@ fn main() -> Result<()> {
     let args = Args::parse();
 
     // Inputs from -4 (inclusive) to 4 (exclusive) in increments of 0.25.
-    let training_cases = (-4 * 4..4 * 4)
+    let training_inputs = (-4 * 4..4 * 4)
         .map(|n| OrderedFloat(f64::from(n) / 4.0))
         .collect::<Vec<_>>();
 
@@ -63,38 +66,41 @@ fn main() -> Result<()> {
      *
      * The target polynomial is x^3 - 2x^2 - x
      */
-    let scorer = |genome: &Plushy| -> TestResults<test_results::Error<OrderedFloat<f64>>> {
-        let program = Vec::<PushProgram>::from(genome.clone());
-        let errors: TestResults<test_results::Error<OrderedFloat<f64>>> = training_cases
-            .iter()
-            .map(|&input| {
-                #[allow(clippy::unwrap_used)]
-                let state = PushState::builder()
-                    .with_max_stack_size(1000)
-                    .with_program(program.clone())
-                    // This will return an error if the program is longer than the allowed
-                    // max stack size.
-                    // We arguably should check that and return an error here.
-                    .unwrap()
-                    .with_float_input("x", input)
-                    .build();
-                let expected =
-                    input * input * input - OrderedFloat::<f64>::from(2f64) * input * input - input;
-                #[allow(clippy::option_if_let_else)]
-                match state.run_to_completion() {
-                    Ok(final_state) => final_state
-                        .stack::<OrderedFloat<f64>>()
-                        .top()
-                        .map_or(penalty_value, |answer| (answer - expected).abs().into()),
-                    Err(_) => {
-                        // Do some logging, perhaps?
-                        penalty_value
+    let scorer = FnScorer(
+        |genome: &Plushy| -> TestResults<test_results::Error<OrderedFloat<f64>>> {
+            let program = Vec::<PushProgram>::from(genome.clone());
+            let errors: TestResults<test_results::Error<OrderedFloat<f64>>> = training_inputs
+                .iter()
+                .map(|&input| {
+                    #[allow(clippy::unwrap_used)]
+                    let state = PushState::builder()
+                        .with_max_stack_size(1000)
+                        .with_program(program.clone())
+                        // This will return an error if the program is longer than the allowed
+                        // max stack size.
+                        // We arguably should check that and return an error here.
+                        .unwrap()
+                        .with_float_input("x", input)
+                        .build();
+                    let expected = input * input * input
+                        - OrderedFloat::<f64>::from(2f64) * input * input
+                        - input;
+                    #[allow(clippy::option_if_let_else)]
+                    match state.run_to_completion() {
+                        Ok(final_state) => final_state
+                            .stack::<OrderedFloat<f64>>()
+                            .top()
+                            .map_or(penalty_value, |answer| (answer - expected).abs().into()),
+                        Err(_) => {
+                            // Do some logging, perhaps?
+                            penalty_value
+                        }
                     }
-                }
-            })
-            .collect();
-        errors
-    };
+                })
+                .collect();
+            errors
+        },
+    );
 
     let num_test_cases = 10;
     let lexicase = Lexicase::new(num_test_cases);
@@ -118,7 +124,7 @@ fn main() -> Result<()> {
 
     let population = gene_generator
         .to_collection_generator(args.max_initial_instructions)
-        .with_scorer(&scorer)
+        .with_scorer(scorer)
         .into_collection_generator(args.population_size)
         .generate(&mut rng)?;
 
