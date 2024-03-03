@@ -6,8 +6,11 @@ use anyhow::{ensure, Result};
 use clap::Parser;
 use ec_core::{
     generation::Generation,
-    generator::{collection::CollectionGenerator, Generator},
-    individual::ec::{self, EcIndividual},
+    generator::{collection::ConvertToCollectionGenerator, Generator},
+    individual::{
+        ec::{EcIndividual, WithScorer},
+        scorer::FnScorer,
+    },
     operator::{
         genome_extractor::GenomeExtractor,
         genome_scorer::GenomeScorer,
@@ -45,7 +48,7 @@ fn main() -> Result<()> {
         TargetProblem::CountOnes => count_ones,
         TargetProblem::Hiff => hiff,
     };
-    let scorer = |bitstring: &Bitstring| base_scorer(&bitstring.bits);
+    let scorer = FnScorer(|bitstring: &Bitstring| base_scorer(&bitstring.bits));
 
     let num_test_cases = match args.target_problem {
         TargetProblem::CountOnes => args.bit_length,
@@ -63,21 +66,11 @@ fn main() -> Result<()> {
 
     let boolean_generator = BoolGenerator { p: 0.5 };
 
-    let bitstring_generator = CollectionGenerator {
-        size: args.bit_length,
-        element_generator: boolean_generator,
-    };
-
-    let individual_generator = ec::IndividualGenerator {
-        scorer,
-        genome_generator: bitstring_generator,
-    };
-
-    let population_generator = CollectionGenerator {
-        size: args.population_size,
-        element_generator: individual_generator,
-    };
-    let population = population_generator.generate(&mut rng)?;
+    let population = boolean_generator
+        .to_collection_generator(args.bit_length)
+        .with_scorer(scorer)
+        .into_collection_generator(args.population_size)
+        .generate(&mut rng)?;
 
     ensure!(population.is_empty().not());
 
