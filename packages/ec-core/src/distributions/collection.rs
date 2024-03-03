@@ -51,25 +51,26 @@ pub trait ConvertToCollectionGenerator {
     /// generates collections of the specified size, using `self` to
     /// generate the individual elements. This takes a reference to the type
     /// so the type can be used elsewhere when necessary.
-    fn to_collection_generator(&self, size: usize) -> CollectionGenerator<&Self>
-    where
-        Self: Sized;
+    fn to_collection_generator(&self, size: usize) -> CollectionGenerator<&Self>;
 }
 
-impl<C> ConvertToCollectionGenerator for C {
+impl<C> ConvertToCollectionGenerator for C
+where
+    C: ?Sized,
+{
     /// Convert the type into a `CollectionGenerator` that generates collections
     /// of the specified size, using `self` to generate the individual elements.
-    fn into_collection_generator(self, size: usize) -> CollectionGenerator<Self> {
+    fn into_collection_generator(self, size: usize) -> CollectionGenerator<Self>
+    where
+        Self: Sized,
+    {
         CollectionGenerator::new(self, size)
     }
 
     /// Convert a reference to the type into a `CollectionGenerator` that
     /// generates collections of the specified size, using `&self` to
     /// generate the individual elements.
-    fn to_collection_generator(&self, size: usize) -> CollectionGenerator<&Self>
-    where
-        Self: Sized,
-    {
+    fn to_collection_generator(&self, size: usize) -> CollectionGenerator<&Self> {
         CollectionGenerator::new(self, size)
     }
 }
