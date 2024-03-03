@@ -55,6 +55,7 @@ macro_rules! uniform_distribution_of {
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used)]
 mod test {
     use crate::distributions::conversion::IntoDistribution;
 
@@ -65,13 +66,13 @@ mod test {
              3i32
         ];
 
-        assert_eq!(distr, [1i64, 3i64].into_distribution().unwrap())
+        assert_eq!(distr, [1i64, 3i64].into_distribution().unwrap());
     }
 
     #[test]
     fn distr_inferred_owned() {
         let distr = uniform_distribution_of![1i32, 3i32];
 
-        assert_eq!(distr, [1i32, 3i32].into_distribution().unwrap())
+        assert_eq!(distr, [1i32, 3i32].into_distribution().unwrap());
     }
 }
