@@ -28,6 +28,11 @@ impl<'a, T> SliceCloning<'a, T> {
     pub fn new(slice: &'a [T]) -> Result<Self, EmptySlice> {
         Ok(Self(Slice::new(slice).map_err(|_| EmptySlice)?))
     }
+
+    // This is waiting on https://github.com/rust-random/rand/pull/1402
+    // pub fn choices(&self) -> NonZeroUsize {
+    //     self.0.choices()
+    // }
 }
 
 impl<'a, T> Distribution<T> for SliceCloning<'a, T>

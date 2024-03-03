@@ -33,7 +33,7 @@ impl<U> IntoDistribution<U> for Vec<U>
 where
     U: Clone,
 {
-    type Distribution = OneOfCloning<Self>;
+    type Distribution = OneOfCloning<Self, U>;
     type Error = EmptySlice;
 
     fn into_distribution(self) -> Result<Self::Distribution, Self::Error> {
@@ -92,7 +92,7 @@ impl<U, const N: usize> IntoDistribution<U> for [U; N]
 where
     U: Clone,
 {
-    type Distribution = OneOfCloning<Self>;
+    type Distribution = OneOfCloning<Self, U>;
     type Error = EmptySlice;
 
     fn into_distribution(self) -> Result<Self::Distribution, Self::Error> {
