@@ -43,6 +43,7 @@ const PENALTY_VALUE: f64 = 1_000.0;
 type Of64 = OrderedFloat<f64>;
 
 /// The target polynomial is (x^3 + 1)^3 + 1
+/// i.e., x^9 + 3x^6 + 3x^3 + 2
 fn target_fn(input: Of64) -> Of64 {
     let sub_expr = input * input * input + 1.0;
     sub_expr * sub_expr * sub_expr + 1.0
