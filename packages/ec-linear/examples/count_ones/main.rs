@@ -25,16 +25,18 @@ use ec_core::{
     test_results::{self, TestResults},
 };
 use ec_linear::{
-    genome::{
-        bitstring::{Bitstring, BoolGenerator},
-        demo_scorers::{count_ones, hiff},
-    },
+    genome::bitstring::{Bitstring, BoolGenerator},
     mutator::with_one_over_length::WithOneOverLength,
     recombinator::two_point_xo::TwoPointXo,
 };
 use rand::thread_rng;
 
-use crate::args::{Args, RunModel, TargetProblem};
+use crate::args::{Args, RunModel};
+
+#[must_use]
+pub fn count_ones(bits: &[bool]) -> TestResults<test_results::Score<i64>> {
+    bits.iter().map(|bit| i64::from(*bit)).collect()
+}
 
 fn main() -> Result<()> {
     // Using `Error` in `TestResults<Error>` will have the run favor smaller
@@ -44,16 +46,9 @@ fn main() -> Result<()> {
 
     let args = Args::parse();
 
-    let base_scorer = match args.target_problem {
-        TargetProblem::CountOnes => count_ones,
-        TargetProblem::Hiff => hiff,
-    };
-    let scorer = FnScorer(|bitstring: &Bitstring| base_scorer(&bitstring.bits));
+    let scorer = FnScorer(|bitstring: &Bitstring| count_ones(&bitstring.bits));
 
-    let num_test_cases = match args.target_problem {
-        TargetProblem::CountOnes => args.bit_length,
-        TargetProblem::Hiff => 2 * args.bit_length - 1,
-    };
+    let num_test_cases = args.bit_length;
 
     let lexicase = Lexicase::new(num_test_cases);
     let binary_tournament = Tournament::new(2);
@@ -113,4 +108,19 @@ fn main() -> Result<()> {
     })?;
 
     Ok(())
+}
+
+#[cfg(test)]
+mod test {
+    use ec_core::test_results::{self, TestResults};
+
+    use super::count_ones;
+
+    #[test]
+    fn non_empty() {
+        let input = [false, true, true, true, false, true];
+        let output: TestResults<test_results::Score<i64>> =
+            [0, 1, 1, 1, 0, 1].into_iter().collect();
+        assert_eq!(output, count_ones(&input));
+    }
 }

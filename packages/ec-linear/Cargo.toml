@@ -15,5 +15,8 @@ rand = { workspace = true, features = ["alloc"] }
 
 ec-core = { workspace = true }
 
+[dev-dependencies]
+clap = { workspace = true, features = ["derive"] }
+
 [lints]
 workspace = true

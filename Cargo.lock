@@ -222,35 +222,13 @@ dependencies = [
 ]
 
 [[package]]
-name = "ec-ga-cli"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "clap",
- "ec-core",
- "ec-linear",
- "rand",
-]
-
-[[package]]
 name = "ec-linear"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "ec-core",
- "num-traits",
- "rand",
-]
-
-[[package]]
-name = "ec-push-cli"
-version = "0.1.0"
-dependencies = [
- "anyhow",
  "clap",
  "ec-core",
- "ec-linear",
- "push",
+ "num-traits",
  "rand",
 ]
 
