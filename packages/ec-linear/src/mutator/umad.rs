@@ -7,6 +7,7 @@ use crate::genome::Linear;
 pub struct Umad<GeneGenerator> {
     addition_rate: f64,
     deletion_rate: f64,
+    empty_addition_rate: Option<f64>,
     // Provides the generator needed to generate a new, random gene
     // during the addition phase.
     gene_generator: GeneGenerator,
@@ -21,6 +22,34 @@ impl<GeneGenerator> Umad<GeneGenerator> {
         Self {
             addition_rate,
             deletion_rate,
+            empty_addition_rate: Some(addition_rate),
+            gene_generator,
+        }
+    }
+
+    pub const fn new_with_empty_rate(
+        addition_rate: f64,
+        empty_addition_rate: f64,
+        deletion_rate: f64,
+        gene_generator: GeneGenerator,
+    ) -> Self {
+        Self {
+            addition_rate,
+            deletion_rate,
+            empty_addition_rate: Some(empty_addition_rate),
+            gene_generator,
+        }
+    }
+
+    pub const fn new_without_empty(
+        addition_rate: f64,
+        deletion_rate: f64,
+        gene_generator: GeneGenerator,
+    ) -> Self {
+        Self {
+            addition_rate,
+            deletion_rate,
+            empty_addition_rate: None,
             gene_generator,
         }
     }
@@ -40,6 +69,15 @@ where
     GeneGenerator: Generator<G::Gene>,
 {
     fn mutate(&self, genome: G, rng: &mut ThreadRng) -> anyhow::Result<G> {
+        if genome.size() == 0 {
+            if let Some(addition_rate) = self.empty_addition_rate {
+                return rng
+                    .gen_bool(addition_rate)
+                    .then(|| self.new_gene::<G>(rng))
+                    .into_iter()
+                    .collect();
+            }
+        }
         // Addition pass
         genome
             .into_iter()
