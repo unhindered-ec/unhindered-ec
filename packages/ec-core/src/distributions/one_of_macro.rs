@@ -43,31 +43,78 @@ macro_rules! uniform_distribution_of {
           }
      };
      (ref <$output_type:ty> $($items:expr),+ $(,)?) => {
-          {
-               // this is needed cuz we can't impl IntoDistribution<&T> for Vec<T> cuz of lifetime issues
-               let arr = [
-                         $(::std::convert::Into::<$output_type>::into($items)),+
-                    ];
-
-               unsafe {
-                    ::std::result::Result::unwrap_unchecked(
-                         $crate::distributions::conversion
-                              ::ToDistribution::<&$output_type>::to_distribution(&arr)
-                    )
-               }
-          }
+          uniform_distribution_of![<$output_type>
+               $(&$items)+
+          ]
      };
      (ref  $($items:expr),+ $(,)?) => {
-          {
-               let arr = [
-                         $($items),+
-                    ];
-               unsafe {
-                    ::std::result::Result::unwrap_unchecked(
-                         $crate::distributions::conversion
-                              ::ToDistribution::<&_>::to_distribution(&arr)
-                    )
-               }
-          }
+          uniform_distribution_of![
+               $(&$items)+
+          ]
      };
+}
+
+#[cfg(test)]
+mod test {
+    use rand::{rngs::StdRng, thread_rng, Rng, SeedableRng};
+
+    use crate::distributions::conversion::{IntoDistribution, ToDistribution};
+
+    #[test]
+    fn distr_into_owned() {
+        let distr = uniform_distribution_of![<i64>
+             1i32,
+             3i32
+        ];
+
+        assert_eq!(distr, [1i64, 3i64].into_distribution().unwrap())
+    }
+
+    #[test]
+    fn distr_inferred_owned() {
+        let distr = uniform_distribution_of![1i32, 3i32];
+
+        assert_eq!(distr, [1i32, 3i32].into_distribution().unwrap())
+    }
+
+    #[test]
+    fn distr_into_borrowed() {
+        let distr_1 = uniform_distribution_of![ref <i64>
+             1i32,
+             3i32
+        ];
+
+        // rand::distribution::Slice<i64> doesn't impl eq so use this instead
+
+        let distr_2 = ToDistribution::<&_>::to_distribution(&[1i64, 3i64]).unwrap();
+
+        let seed: u64 = thread_rng().gen();
+        let mut rng_1 = StdRng::seed_from_u64(seed);
+        let mut rng_2 = StdRng::seed_from_u64(seed);
+
+        for _ in 0..100 {
+            let a = rng_1.sample(&distr_1);
+            let b = rng_2.sample(distr_2);
+
+            assert_eq!(&a, b);
+        }
+    }
+
+    #[test]
+    fn distr_inferred_borrowed() {
+        let distr_1 = uniform_distribution_of![ref 1i32, 3i32];
+
+        let distr_2 = ToDistribution::<&_>::to_distribution(&[1i32, 3i32]).unwrap();
+
+        let seed: u64 = thread_rng().gen();
+        let mut rng_1 = StdRng::seed_from_u64(seed);
+        let mut rng_2 = StdRng::seed_from_u64(seed);
+
+        for _ in 0..100 {
+            let a = rng_1.sample(&distr_1);
+            let b = rng_2.sample(distr_2);
+
+            assert_eq!(&a, b);
+        }
+    }
 }
