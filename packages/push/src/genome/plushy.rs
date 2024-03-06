@@ -80,7 +80,6 @@ where
         if rng.gen::<f32>() < self.close_probability {
             PushGene::Close
         } else {
-            // this is safe since we check that the slice is not empty in the constructor
             PushGene::Instruction(self.instructions_distribution.sample(rng))
         }
     }
