@@ -88,13 +88,14 @@ fn main() -> Result<()> {
                     .with_int_input("c", c)
                     .with_int_input("d", d)
                     .build();
-                let expected: i64 = [a, b, c, d].into_iter().min().unwrap().into();
+                #[allow(clippy::unwrap_used)]
+                let expected: i64 = [a, b, c, d].into_iter().min().unwrap();
                 #[allow(clippy::option_if_let_else)]
                 match state.run_to_completion() {
                     Ok(final_state) => final_state
                         .stack::<i64>()
                         .top()
-                        .map_or(penalty_value, |answer| (answer - expected).abs().into()),
+                        .map_or(penalty_value, |answer| (answer - expected).abs()),
                     Err(_) => {
                         // Do some logging, perhaps?
                         penalty_value
