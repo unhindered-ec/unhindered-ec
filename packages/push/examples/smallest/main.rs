@@ -26,7 +26,7 @@ use ec_core::{
 use ec_linear::mutator::umad::Umad;
 use push::{
     genome::plushy::{GeneGenerator, Plushy},
-    instruction::{variable_name::VariableName, IntInstruction, PushInstruction},
+    instruction::{variable_name::VariableName, BoolInstruction, IntInstruction, PushInstruction},
     push_vm::{program::PushProgram, push_state::PushState, HasStack, State},
     vec_into,
 };
@@ -164,6 +164,7 @@ fn main() -> Result<()> {
 }
 
 fn instructions() -> Vec<PushInstruction> {
+    // Use `strum` to generate this list of instructions.
     vec_into![
         IntInstruction::Negate,
         IntInstruction::Abs,
@@ -178,6 +179,9 @@ fn instructions() -> Vec<PushInstruction> {
         IntInstruction::Mod,
         IntInstruction::Power,
         IntInstruction::Square,
+        IntInstruction::IsZero,
+        IntInstruction::IsPositive,
+        IntInstruction::IsNegative,
         IntInstruction::IsEven,
         IntInstruction::IsOdd,
         IntInstruction::Equal,
@@ -187,6 +191,13 @@ fn instructions() -> Vec<PushInstruction> {
         IntInstruction::GreaterThan,
         IntInstruction::GreaterThanEqual,
         IntInstruction::FromBoolean,
+        BoolInstruction::Not,
+        BoolInstruction::Or,
+        BoolInstruction::And,
+        BoolInstruction::Xor,
+        BoolInstruction::Implies,
+        BoolInstruction::FromInt,
+        // ExecInstruction::IfElse,
         VariableName::from("a"),
         VariableName::from("b"),
         VariableName::from("c"),
