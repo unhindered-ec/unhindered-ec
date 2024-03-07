@@ -68,6 +68,6 @@ many_generations.arguments = [
 ]
 
 [patch.crates-io]
-rand = { git = "https://github.com/JustusFluegel/rand.git" }
+rand = { git = "https://github.com/rust-random/rand.git" }
 
 
