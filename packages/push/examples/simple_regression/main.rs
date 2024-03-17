@@ -119,7 +119,7 @@ fn main() -> Result<()> {
         FloatInstruction::ProtectedDivide,
         VariableName::from("x")
     ]
-    .into_gene_generator_with_uniform_close_probability();
+    .into_gene_generator();
 
     let population = gene_generator
         .to_collection_generator(args.max_initial_instructions)

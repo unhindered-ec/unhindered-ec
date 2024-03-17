@@ -86,11 +86,16 @@ where
         close_probability: f32,
     ) -> GeneGenerator<&Self>;
 
-    fn into_gene_generator_with_uniform_close_probability(self) -> GeneGenerator<Self>
+    /// This creates a new gene generator, defaulting to a close probability
+    /// that is uniform with the instructions distribution, eg. (1/(n+1)).
+    fn into_gene_generator(self) -> GeneGenerator<Self>
     where
         Self: Sized + ChoicesDistribution;
 
-    fn to_gene_generator_with_uniform_close_probability(&self) -> GeneGenerator<&Self>
+    /// This creates a new gene generator by borrowing from self, defaulting to
+    /// a close probability that is uniform with the instructions distribution,
+    /// eg. (1/(n+1)).
+    fn to_gene_generator(&self) -> GeneGenerator<&Self>
     where
         Self: ChoicesDistribution;
 }
@@ -116,14 +121,14 @@ where
         GeneGenerator::new(close_probability, self)
     }
 
-    fn into_gene_generator_with_uniform_close_probability(self) -> GeneGenerator<Self>
+    fn into_gene_generator(self) -> GeneGenerator<Self>
     where
         Self: Sized + ChoicesDistribution,
     {
         GeneGenerator::with_uniform_close_probability(self)
     }
 
-    fn to_gene_generator_with_uniform_close_probability(&self) -> GeneGenerator<&Self>
+    fn to_gene_generator(&self) -> GeneGenerator<&Self>
     where
         Self: ChoicesDistribution,
     {
@@ -237,7 +242,7 @@ mod test {
             IntInstruction::Multiply,
             IntInstruction::ProtectedDivide,
         ]
-        .into_gene_generator_with_uniform_close_probability()
+        .into_gene_generator()
         .into_collection_generator(10)
         .sample(&mut rng);
 
