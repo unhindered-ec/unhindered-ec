@@ -47,10 +47,7 @@ where
 #[allow(clippy::unwrap_used)]
 mod tests {
     use super::*;
-    use crate::{
-        instruction::{ExecInstruction, Instruction},
-        push_vm::push_state::PushState,
-    };
+    use crate::{instruction::ExecInstruction, push_vm::push_state::PushState};
 
     #[test]
     fn unless_is_correct_with_all_empty_stacks() {
