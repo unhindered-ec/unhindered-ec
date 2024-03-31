@@ -26,7 +26,7 @@ where
             // performed next.
             (Ok(true), Ok(_)) => Ok(state).with_stack_discard::<bool>(1),
             // If there is a boolean that is false and a block, discard both the
-            // boolean and and the block since we don't
+            // boolean and the block since we don't
             // want to perform that block.
             (Ok(false), Ok(_)) => Ok(state)
                 .with_stack_discard::<bool>(1)
