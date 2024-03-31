@@ -1,6 +1,7 @@
+mod unless;
 mod when;
 
-use self::when::When;
+use self::{unless::Unless, when::When};
 use super::{instruction_error::PushInstructionError, Instruction, NumOpens, PushInstruction};
 use crate::{
     error::InstructionResult,
@@ -14,7 +15,7 @@ pub enum ExecInstruction {
     Dup,
     IfElse,
     When(When),
-    Unless,
+    Unless(Unless),
 }
 
 impl ExecInstruction {
@@ -34,7 +35,7 @@ impl NumOpens for ExecInstruction {
     fn num_opens(&self) -> usize {
         match self {
             Self::Noop => 0,
-            Self::Dup | Self::When(_) | Self::Unless => 1,
+            Self::Dup | Self::When(_) | Self::Unless(_) => 1,
             Self::IfElse => 2,
         }
     }
@@ -49,8 +50,8 @@ where
         match self {
             Self::Noop => Ok(state),
             Self::When(w) => w.perform(state),
-            Self::IfElse | Self::Unless => match self {
-                Self::Unless => todo!(),
+            Self::Unless(u) => u.perform(state),
+            Self::IfElse => match self {
                 Self::IfElse => todo!(),
                 _ => {
                     unreachable!("We failed to handle an Exec instruction: {self:?}")
@@ -75,68 +76,5 @@ mod tests {
             .build();
         let result_state = ExecInstruction::Noop.perform(state.clone()).unwrap();
         assert_eq!(result_state, state);
-    }
-
-    #[test]
-    fn unless_is_correct_with_all_empty_stacks() {
-        let state = PushState::builder()
-            .with_max_stack_size(1000)
-            .with_no_program()
-            .with_bool_values([])
-            .unwrap()
-            .build();
-        let result_state = ExecInstruction::Unless.perform(state.clone()).unwrap();
-        assert_eq!(result_state, state);
-    }
-
-    #[test]
-    fn unless_is_correct_with_empty_exec() {
-        let state = PushState::builder()
-            .with_max_stack_size(1000)
-            .with_no_program()
-            .with_bool_values([true])
-            .unwrap()
-            .build();
-        let result_state = ExecInstruction::Unless.perform(state.clone()).unwrap();
-        assert_eq!(result_state, state);
-    }
-
-    #[test]
-    fn unless_is_correct_with_empty_bool() {
-        let state = PushState::builder()
-            .with_max_stack_size(1000)
-            .with_program([ExecInstruction::Noop])
-            .unwrap()
-            .build();
-        let result_state = ExecInstruction::Unless.perform(state).unwrap();
-        assert!(result_state.exec.is_empty());
-    }
-
-    #[test]
-    fn unless_is_correct_with_true() {
-        let state = PushState::builder()
-            .with_max_stack_size(1000)
-            .with_program([ExecInstruction::Noop])
-            .unwrap()
-            .with_bool_values([true])
-            .unwrap()
-            .build();
-        let result_state = ExecInstruction::Unless.perform(state).unwrap();
-        assert!(result_state.bool.is_empty());
-        assert!(result_state.exec.is_empty());
-    }
-
-    #[test]
-    fn unless_is_correct_with_false() {
-        let state = PushState::builder()
-            .with_max_stack_size(1000)
-            .with_program([ExecInstruction::Noop])
-            .unwrap()
-            .with_bool_values([false])
-            .unwrap()
-            .build();
-        let result_state = ExecInstruction::Unless.perform(state.clone()).unwrap();
-        assert!(result_state.bool.is_empty());
-        assert_eq!(result_state.exec, state.exec);
     }
 }
