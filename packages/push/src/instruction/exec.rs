@@ -98,6 +98,7 @@ where
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used)]
 mod exec_instruction_tests {
     use super::ExecInstruction;
     use crate::{instruction::Instruction, push_vm::push_state::PushState};
@@ -108,7 +109,70 @@ mod exec_instruction_tests {
             .with_max_stack_size(1000)
             .with_no_program()
             .build();
-        let result_state = ExecInstruction::Noop.perform(state).unwrap();
-        panic!("Not sure how to check that the result state is the same as the input state");
+        let result_state = ExecInstruction::Noop.perform(state.clone()).unwrap();
+        assert_eq!(result_state, state);
+    }
+
+    #[test]
+    fn when_is_correct_with_all_empty_stacks() {
+        let state = PushState::builder()
+            .with_max_stack_size(1000)
+            .with_no_program()
+            .with_bool_values([])
+            .unwrap()
+            .build();
+        let result_state = ExecInstruction::When.perform(state.clone()).unwrap();
+        assert_eq!(result_state, state);
+    }
+
+    #[test]
+    fn when_is_correct_with_empty_exec() {
+        let state = PushState::builder()
+            .with_max_stack_size(1000)
+            .with_no_program()
+            .with_bool_values([true])
+            .unwrap()
+            .build();
+        let result_state = ExecInstruction::When.perform(state.clone()).unwrap();
+        assert_eq!(result_state, state);
+    }
+
+    #[test]
+    fn when_is_correct_with_empty_bool() {
+        let state = PushState::builder()
+            .with_max_stack_size(1000)
+            .with_program([ExecInstruction::Noop])
+            .unwrap()
+            .build();
+        let result_state = ExecInstruction::When.perform(state).unwrap();
+        assert!(result_state.exec.is_empty());
+    }
+
+    #[test]
+    fn when_is_correct_with_true() {
+        let state = PushState::builder()
+            .with_max_stack_size(1000)
+            .with_program([ExecInstruction::Noop])
+            .unwrap()
+            .with_bool_values([true])
+            .unwrap()
+            .build();
+        let result_state = ExecInstruction::When.perform(state.clone()).unwrap();
+        assert!(result_state.bool.is_empty());
+        assert_eq!(result_state.exec, state.exec);
+    }
+
+    #[test]
+    fn when_is_correct_with_false() {
+        let state = PushState::builder()
+            .with_max_stack_size(1000)
+            .with_program([ExecInstruction::Noop])
+            .unwrap()
+            .with_bool_values([false])
+            .unwrap()
+            .build();
+        let result_state = ExecInstruction::When.perform(state).unwrap();
+        assert!(result_state.bool.is_empty());
+        assert!(result_state.exec.is_empty());
     }
 }
