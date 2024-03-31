@@ -40,6 +40,7 @@ impl NumOpens for ExecInstruction {
         }
     }
 }
+
 impl<S> Instruction<S> for ExecInstruction
 where
     S: Clone + HasStack<PushProgram> + HasStack<bool>,
