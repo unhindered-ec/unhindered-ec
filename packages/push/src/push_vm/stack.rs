@@ -97,7 +97,7 @@ pub enum StackError {
     Overflow { stack_type: &'static str },
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Eq, PartialEq)]
 pub struct Stack<T> {
     max_stack_size: usize,
     values: Vec<T>,
