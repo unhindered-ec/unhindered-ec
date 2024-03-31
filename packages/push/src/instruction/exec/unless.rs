@@ -31,7 +31,7 @@ where
             (Ok(true), Ok(_)) => Ok(state)
                 .with_stack_discard::<bool>(1)
                 .with_stack_discard::<PushProgram>(1),
-            // In all other cases, we return the state unchanged. If the was a boolean
+            // In all other cases, we return the state unchanged. If there was a boolean
             // value, but no block, we skip the instruction without consuming anything.
             // If there was no boolean, we execute the block if there is one.
             (
