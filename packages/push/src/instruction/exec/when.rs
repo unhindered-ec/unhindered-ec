@@ -1,6 +1,6 @@
 use crate::{
     error::{Error, InstructionResult},
-    instruction::{instruction_error::PushInstructionError, Instruction},
+    instruction::{instruction_error::PushInstructionError, Instruction, NumOpens},
     push_vm::{
         program::PushProgram,
         stack::{StackDiscard, StackError},
@@ -10,6 +10,12 @@ use crate::{
 
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct When;
+
+impl NumOpens for When {
+    fn num_opens(&self) -> usize {
+        1
+    }
+}
 
 impl<S> Instruction<S> for When
 where
