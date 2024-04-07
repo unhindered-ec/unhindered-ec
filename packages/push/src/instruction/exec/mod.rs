@@ -1,7 +1,8 @@
+mod ifelse;
 mod unless;
 mod when;
 
-use self::{unless::Unless, when::When};
+use self::{ifelse::IfElse, unless::Unless, when::When};
 use super::{instruction_error::PushInstructionError, Instruction, NumOpens, PushInstruction};
 use crate::{
     error::InstructionResult,
@@ -13,9 +14,9 @@ pub enum ExecInstruction {
     Noop, /* Maybe use `Noop(())` instead of `Noop(Noop)` when we get around to this. See
            * 2024-03-31 chat for more. */
     Dup,
-    IfElse,
     When(When),
     Unless(Unless),
+    IfElse(IfElse),
 }
 
 impl ExecInstruction {
@@ -24,7 +25,6 @@ impl ExecInstruction {
         Self::When(When)
     }
 }
-
 impl From<ExecInstruction> for PushInstruction {
     fn from(instr: ExecInstruction) -> Self {
         Self::Exec(instr)
