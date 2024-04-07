@@ -35,8 +35,10 @@ impl NumOpens for ExecInstruction {
     fn num_opens(&self) -> usize {
         match self {
             Self::Noop => 0,
-            Self::Dup | Self::When(_) | Self::Unless(_) => 1,
-            Self::IfElse => 2,
+            Self::Dup => 1,
+            Self::When(when) => when.num_opens(),
+            Self::Unless(unless) => unless.num_opens(),
+            Self::IfElse(if_else) => if_else.num_opens(),
         }
     }
 }
@@ -50,14 +52,9 @@ where
     fn perform(&self, state: S) -> InstructionResult<S, Self::Error> {
         match self {
             Self::Noop => Ok(state),
-            Self::When(w) => w.perform(state),
-            Self::Unless(u) => u.perform(state),
-            Self::IfElse => match self {
-                Self::IfElse => todo!(),
-                _ => {
-                    unreachable!("We failed to handle an Exec instruction: {self:?}")
-                }
-            },
+            Self::When(when) => when.perform(state),
+            Self::Unless(unless) => unless.perform(state),
+            Self::IfElse(if_else) => if_else.perform(state),
             Self::Dup => todo!(), // Could overflow exec
         }
     }
