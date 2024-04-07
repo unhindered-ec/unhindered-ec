@@ -5,7 +5,7 @@ use strum_macros::EnumIter;
 use super::{Instruction, PushInstruction, PushInstructionError};
 use crate::{
     error::{InstructionResult, MapInstructionError},
-    push_vm::stack::{HasStack, StackPush},
+    push_vm::stack::{HasStack, PushOnto},
 };
 
 #[derive(Debug, strum_macros::Display, Clone, PartialEq, Eq, EnumIter)]
@@ -83,30 +83,18 @@ where
         let bool_stack = state.stack_mut::<bool>();
         match self {
             Self::Push(b) => state.with_push(*b).map_err_into(),
-            Self::Not => bool_stack.pop().map(Not::not).with_stack_push(state),
-            Self::And => bool_stack
-                .pop2()
-                .map(|(x, y)| x && y)
-                .with_stack_push(state),
-            Self::Or => bool_stack
-                .pop2()
-                .map(|(x, y)| x || y)
-                .with_stack_push(state),
-            Self::Xor => bool_stack
-                .pop2()
-                .map(|(x, y)| x != y)
-                .with_stack_push(state),
-            Self::Implies => bool_stack
-                .pop2()
-                .map(|(x, y)| !x || y)
-                .with_stack_push(state),
+            Self::Not => bool_stack.pop().map(Not::not).push_onto(state),
+            Self::And => bool_stack.pop2().map(|(x, y)| x && y).push_onto(state),
+            Self::Or => bool_stack.pop2().map(|(x, y)| x || y).push_onto(state),
+            Self::Xor => bool_stack.pop2().map(|(x, y)| x != y).push_onto(state),
+            Self::Implies => bool_stack.pop2().map(|(x, y)| !x || y).push_onto(state),
             Self::FromInt => {
                 let mut state = state.not_full::<bool>().map_err_into()?;
                 state
                     .stack_mut::<i64>()
                     .pop()
                     .map(|i| i != 0)
-                    .with_stack_push(state)
+                    .push_onto(state)
             }
         }
     }

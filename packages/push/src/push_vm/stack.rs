@@ -373,14 +373,14 @@ impl<T> Stack<T> {
 }
 
 /// Helper trait to chain instruction operations.
-pub trait StackPush<T, E> {
+pub trait PushOnto<T, E> {
     /// Updates the state with `T` pushed to the stack.
     ///
     /// # Errors
     ///
     /// Returns an error of type `E` if pushing this value fails, e.g.,
     /// if adding this element exceeded the maximum stack size.
-    fn with_stack_push<S>(self, state: S) -> InstructionResult<S, E>
+    fn push_onto<S>(self, state: S) -> InstructionResult<S, E>
     where
         S: HasStack<T>;
 
@@ -392,16 +392,16 @@ pub trait StackPush<T, E> {
     /// Returns an error of type `E` if the replacement fails. This could
     /// be, for example, because there aren't `num_to_replace` items on the
     /// stack, or if adding the new element would exceed the maximum stack size.
-    fn with_stack_replace<S>(self, num_to_replace: usize, state: S) -> InstructionResult<S, E>
+    fn replace_on<S>(self, num_to_replace: usize, state: S) -> InstructionResult<S, E>
     where
         S: HasStack<T>;
 }
 
-impl<T, E1, E2> StackPush<T, E2> for Result<T, E1>
+impl<T, E1, E2> PushOnto<T, E2> for Result<T, E1>
 where
     E2: From<E1> + From<StackError>,
 {
-    fn with_stack_push<S>(self, state: S) -> InstructionResult<S, E2>
+    fn push_onto<S>(self, state: S) -> InstructionResult<S, E2>
     where
         S: HasStack<T>,
     {
@@ -411,7 +411,7 @@ where
         }
     }
 
-    fn with_stack_replace<S>(self, num_to_replace: usize, state: S) -> InstructionResult<S, E2>
+    fn replace_on<S>(self, num_to_replace: usize, state: S) -> InstructionResult<S, E2>
     where
         S: HasStack<T>,
     {
@@ -422,9 +422,43 @@ where
     }
 }
 
+pub trait StackPush<S, E> {
+    /// Pushes `value` onto the stack of type `T` in state `S`, returning an
+    /// error of type `E` if that fails.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error of type `E` if this fails, e.g., if pushing onto the
+    /// stack would exceed the maximum stack size.
+    fn with_stack_push<T>(self, value: T) -> InstructionResult<S, E>
+    where
+        S: HasStack<T>;
+}
+
+impl<S, E> StackPush<S, E> for InstructionResult<S, E>
+where
+    E: From<StackError>,
+{
+    fn with_stack_push<T>(self, value: T) -> Self
+    where
+        S: HasStack<T>,
+    {
+        match self {
+            Ok(mut state) => match state.stack_mut::<T>().push(value) {
+                Ok(()) => Ok(state),
+                // If this fails it's because we tried to push onto a full stack.
+                // We _should_ have previously checked that the stack wasn't full
+                // (using `not_full()` for example), so really this should never happen.
+                Err(error) => Err(Error::fatal(state, error)),
+            },
+            Err(error) => Err(error),
+        }
+    }
+}
+
 pub trait StackDiscard<S, E> {
-    /// Discards the top `num_to_discard` elements from `S`, returning an error
-    /// of type `E` if that fails.
+    /// Discards the top `num_to_discard` elements from the stack in `S` of type
+    /// `T`, returning an error of type `E` if that fails.
     ///
     /// # Errors
     ///

@@ -5,7 +5,7 @@ use super::{Instruction, PushInstruction, PushInstructionError};
 use crate::{
     error::{Error, InstructionResult, MapInstructionError},
     push_vm::{
-        stack::{Stack, StackDiscard, StackError, StackPush},
+        stack::{PushOnto, Stack, StackDiscard, StackError},
         HasStack,
     },
 };
@@ -84,7 +84,7 @@ where
                     .top()
                     .map_err(PushInstructionError::from)
                     .cloned()
-                    .with_stack_push(state)
+                    .push_onto(state)
             }
         }
     }
@@ -103,7 +103,7 @@ impl FloatInstruction {
             .top2()
             .map_err(PushInstructionError::from)
             .map(|(&x, &y)| op(x, y))
-            .with_stack_replace(2, state)
+            .replace_on(2, state)
     }
 
     fn binary_predicate<S>(
@@ -124,7 +124,7 @@ impl FloatInstruction {
             .top2()
             .map_err(PushInstructionError::from)
             .map(|(x, y)| op(x, y))
-            .with_stack_push(state)
+            .push_onto(state)
             .with_stack_discard::<OrderedFloat<f64>>(1)
     }
 }
