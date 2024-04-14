@@ -1,8 +1,7 @@
 /// Create a Distribution of a specified type, calling `.into()` on all
-/// elements. Similar to the `[...]` syntax of rust optionally allowing to
-/// specify the type using `uniform_distribution_of![<T> ...]`. To sample from
-/// the Distribution, the elements are cloned. If you wish to avoid that, use
-/// `uniform_distribution_of![ref <T> ...]` to return references instead.
+/// elements. Similar to the `[...]` syntax of rust optionally allowing the
+/// specification of the target type using `uniform_distribution_of![<T> ...]`.
+/// To sample from the Distribution, the elements are cloned.
 ///
 /// This is equivalent to `arr_into![].into_distribution().unwrap()` without the
 /// need for an `unwrap()`.
@@ -10,14 +9,35 @@
 /// ![Railroad diagram for the `uniform_distribution_of!` macro][ref_text]
 ///
 /// # Examples
-/// ```rs
-/// let distrb_1: impl Distribution<&i64> = uniform_distribution_of![ref <i64>
+///
+/// Here we create a distribution of `i32`. Since the provided values
+/// are `i32`, we don't need to specify the target type of the distribution.
+/// ```ignore
+/// let distrb = uniform_distribution_of![
+///    1i32,
+///    2i32
+/// ];
+/// ```
+///
+/// Here we convert a list of `i32` into a distribution of `i64`s.
+/// ```ignore
+/// let distrb: impl Distribution<i64> = uniform_distribution_of![<i64>
 ///     1i32,
 ///     2i32
 /// ];
-/// let distrb_2: impl Distribution<i64> = uniform_distribution_of![<i64>
-///     1i32,
-///     2i32
+/// ```
+///
+/// A common usage is in generating a uniform distribution of instructions where
+/// the target type is `<PushInstruction>`. Using the macro means we don't have
+/// to explicitly convert the various instruction types into `PushInstruction`,
+/// and allows us to have a variety of types in the list (e.g.,
+/// `IntInstruction`, `BoolInstruction`, and `FloatInstruction`).
+/// ```ignore
+/// let instruction_set = uniform_distribution_of![<PushInstruction>
+///     IntInstruction::Add,
+///     IntInstruction::Subtract,
+///     BoolInstruction::And,
+///     FloatInstruction::Multiply,
 /// ];
 /// ```
 #[macro_railroad_annotation::generate_railroad("ref_text")]
@@ -49,16 +69,6 @@ macro_rules! uniform_distribution_of {
 
                val
           }
-     };
-     (ref <$output_type:ty> $($items:expr),+ $(,)?) => {
-          uniform_distribution_of![<$output_type>
-               $(&$items)+
-          ]
-     };
-     (ref  $($items:expr),+ $(,)?) => {
-          uniform_distribution_of![
-               $(&$items)+
-          ]
      };
 }
 
