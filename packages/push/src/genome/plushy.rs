@@ -41,7 +41,7 @@ where
     T: Distribution<PushInstruction>,
 {
     close_probability: f32,
-    instructions_distribution: T,
+    instruction_distribution: T,
 }
 
 impl<T> GeneGenerator<T>
@@ -52,13 +52,13 @@ where
     pub const fn new(close_probability: f32, instructions_distribution: T) -> Self {
         Self {
             close_probability,
-            instructions_distribution,
+            instruction_distribution: instructions_distribution,
         }
     }
 }
 impl<'a> GeneGenerator<SliceCloning<'a, PushInstruction>> {
-    /// Create a generator where the close tag is just as likely as any passed
-    /// instruction
+    /// Create a generator where the close tag has the same likelihood of
+    /// being chosen as any of the passed in instructions.
     ///
     /// # Errors
     /// - [`EmptySlice`] if the passed in slice is empty
@@ -81,7 +81,7 @@ where
             PushGene::Close
         } else {
             // this is safe since we check that the slice is not empty in the constructor
-            PushGene::Instruction(self.instructions_distribution.sample(rng))
+            PushGene::Instruction(self.instruction_distribution.sample(rng))
         }
     }
 }
