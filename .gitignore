@@ -7,3 +7,5 @@ tarpaulin-report.html
 flamegraph.svg
 
 report.html
+
+/mutants.out*
