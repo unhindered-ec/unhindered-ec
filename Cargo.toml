@@ -12,6 +12,7 @@ authors = ["Nic McPhee", "Many cool people on Twitch"]
 description = "An evolutionary computation system in Rust"
 documentation = "https://github.com/NicMcPhee/rust-ga"
 edition = "2021"
+license = "MIT OR Apache-2.0"
 
 [profile.release]
 debug = true
