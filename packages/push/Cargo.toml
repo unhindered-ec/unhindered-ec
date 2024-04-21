@@ -5,6 +5,7 @@ authors = { workspace = true }
 description = { workspace = true }
 documentation = { workspace = true }
 edition = { workspace = true }
+license = { workspace = true }
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -18,8 +19,8 @@ ec-core = { workspace = true }
 ec-linear = { workspace = true }
 
 proptest = "1.2.0"
-strum = "0.26.1"
-strum_macros = "0.26.1"
+strum = "0.26.2"
+strum_macros = "0.26.2"
 embed-doc-image = "0.1.4"
 push_macros = { workspace = true, optional = true }
 collectable = "0.0.2"
