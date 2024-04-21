@@ -59,9 +59,6 @@ where
 {
     /// Create a generator where the close tag has the same likelihood of
     /// being chosen as any of the passed in instructions.
-    ///
-    /// # Errors
-    /// - [`EmptySlice`] if the passed in slice is empty
     pub fn with_uniform_close_probability(instructions_distribution: T) -> Self {
         Self::new(
             1.0 / f32::conv_approx(instructions_distribution.num_choices().get() + 1),
