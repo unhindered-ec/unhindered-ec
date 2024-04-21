@@ -19,16 +19,15 @@ use ec_core::{
         Composable,
     },
     test_results::{self, TestResults},
+    uniform_distribution_of,
 };
 use ec_linear::mutator::umad::Umad;
 use num_traits::Float;
 use ordered_float::OrderedFloat;
 use push::{
-    evaluation::cases::{Case, Cases, WithTarget},
-    genome::plushy::{GeneGenerator, Plushy},
-    instruction::{variable_name::VariableName, FloatInstruction},
+    genome::plushy::{ConvertToGeneGenerator, Plushy, WithTarget},
+    instruction::{variable_name::VariableName, FloatInstruction, PushInstruction},
     push_vm::{program::PushProgram, push_state::PushState, HasStack, State},
-    vec_into,
 };
 use rand::{distributions::Distribution, thread_rng};
 
@@ -130,15 +129,14 @@ fn main() -> Result<()> {
         .with_selector(Lexicase::new(num_test_cases), 5)
         .with_selector(Tournament::new(2), population_size - 1);
 
-    let instruction_set = vec_into![
+    let gene_generator = uniform_distribution_of![<PushInstruction>
         FloatInstruction::Add,
         FloatInstruction::Subtract,
         FloatInstruction::Multiply,
         FloatInstruction::ProtectedDivide,
         VariableName::from("x")
-    ];
-
-    let gene_generator = GeneGenerator::with_uniform_close_probability(&instruction_set)?;
+    ]
+    .into_gene_generator();
 
     let population = gene_generator
         .to_collection_generator(max_initial_instructions)
