@@ -16,6 +16,8 @@ pub struct OneOfCloning<T, U> {
     // Currently these fields are *never* modified at all.
     collection: T,
     range: Uniform<usize>,
+    // we store the NonZeroUsize in the struct here, since we need to check this invariant in the
+    // new anyways. As such it would make little sense to recompute that every time
     num_choices: NonZeroUsize,
     _p: PhantomData<U>,
 }
