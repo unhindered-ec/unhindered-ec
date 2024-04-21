@@ -1,4 +1,8 @@
+use std::num::NonZeroUsize;
+
 use rand::{distributions::Slice, prelude::Distribution};
+
+use crate::distributions::choices::ChoicesDistribution;
 
 /// Generate a random element from an array of options, cloning the choosen
 /// element.
@@ -28,11 +32,12 @@ impl<'a, T> SliceCloning<'a, T> {
     pub fn new(slice: &'a [T]) -> Result<Self, EmptySlice> {
         Ok(Self(Slice::new(slice).map_err(|_| EmptySlice)?))
     }
+}
 
-    // This is waiting on https://github.com/rust-random/rand/pull/1402
-    // pub fn num_choices(&self) -> NonZeroUsize {
-    //     self.0.num_choices()
-    // }
+impl<'a, T> ChoicesDistribution for SliceCloning<'a, T> {
+    fn num_choices(&self) -> NonZeroUsize {
+        self.0.num_choices()
+    }
 }
 
 impl<'a, T> Distribution<T> for SliceCloning<'a, T>
