@@ -19,9 +19,10 @@ use ec_core::{
     uniform_distribution_of,
 };
 use ec_linear::mutator::umad::Umad;
+use num_traits::Float;
 use ordered_float::OrderedFloat;
 use push::{
-    evaluation::cases::{Case, Cases},
+    evaluation::cases::{Case, Cases, WithTarget},
     genome::plushy::{ConvertToGeneGenerator, Plushy},
     instruction::{variable_name::VariableName, FloatInstruction, PushInstruction},
     push_vm::{program::PushProgram, push_state::PushState, HasStack, State},
@@ -45,8 +46,7 @@ type Of64 = OrderedFloat<f64>;
 /// The target polynomial is (x^3 + 1)^3 + 1
 /// i.e., x^9 + 3x^6 + 3x^3 + 2
 fn target_fn(input: Of64) -> Of64 {
-    let sub_expr = input * input * input + 1.0;
-    sub_expr * sub_expr * sub_expr + 1.0
+    (input.powi(3) + 1.0).powi(3) + 1.0
 }
 
 fn build_push_state(
@@ -72,15 +72,14 @@ fn score_program(
     let state = build_push_state(program, input);
     #[allow(clippy::option_if_let_else)]
     match state.run_to_completion() {
-        Ok(final_state) => OrderedFloat(
-            final_state
-                .stack::<Of64>()
-                .top()
-                .map_or(PENALTY_VALUE, |answer| (answer - output).abs()),
-        ),
+        Ok(final_state) => final_state
+            .stack::<Of64>()
+            .top()
+            .map_or(Of64::from(PENALTY_VALUE), |answer| (answer - output).abs()),
+
         Err(_) => {
             // Do some logging, perhaps?
-            OrderedFloat(PENALTY_VALUE)
+            Of64::from(PENALTY_VALUE)
         }
     }
 }
@@ -89,26 +88,38 @@ fn score_genome(
     genome: &Plushy,
     training_cases: &Cases<Of64>,
 ) -> TestResults<test_results::Error<Of64>> {
-    let program = Vec::<PushProgram>::from(genome.clone());
-    let errors: TestResults<test_results::Error<Of64>> = training_cases
+    let program: Vec<PushProgram> = genome.clone().into();
+
+    training_cases
         .iter()
         .map(|&case| score_program(program.iter().cloned(), case))
-        .collect();
-    errors
+        .collect()
 }
 
 fn main() -> Result<()> {
-    let args = Args::parse();
+    let Args {
+        run_model,
+        population_size,
+        max_initial_instructions,
+        // FIXME: Actually use this
+        max_genome_length: _,
+        num_generations,
+    } = Args::parse();
+
+    let mut rng = thread_rng();
 
     // Inputs from -4 (inclusive) to 4 (exclusive) in increments of 0.25.
-    let training_inputs = (-4 * 4..4 * 4).map(|n| Of64::from(n) / 4.0);
-    let training_cases = Cases::from_inputs(training_inputs, |&i| target_fn(i));
+    let training_cases = (-4 * 4..4 * 4)
+        .map(|n| Of64::from(n) / 4.0)
+        .with_target(|&i| target_fn(i));
 
     // The range want is -4 1/8, -3 7/8, -3 5/8, ..., 3 7/8, 4 1/8.
     // I have to multiply that by 8 to get integer values, so:
     // -33, -31, -29, ..., 31, 33.
-    let testing_inputs = (-33..=33).step_by(2).map(|n| Of64::from(n) / 8.0);
-    let _testing_cases = Cases::from_inputs(testing_inputs, |&i| target_fn(i));
+    let _testing_cases = (-33..=33)
+        .step_by(2)
+        .map(|n| Of64::from(n) / 8.0)
+        .with_target(|&i| target_fn(i));
 
     /*
      * The `scorer` will need to take an evolved program (sequence of
@@ -117,15 +128,9 @@ fn main() -> Result<()> {
      * i.e., the absolute difference between the returned value and the
      * expected value.
      */
-    let scorer = FnScorer(
-        |genome: &Plushy| -> TestResults<test_results::Error<Of64>> {
-            score_genome(genome, &training_cases)
-        },
-    );
+    let scorer = FnScorer(|genome: &Plushy| score_genome(genome, &training_cases));
 
     let selector = Lexicase::new(training_cases.len());
-
-    let mut rng = thread_rng();
 
     let gene_generator = uniform_distribution_of![<PushInstruction>
         FloatInstruction::Add,
@@ -140,9 +145,9 @@ fn main() -> Result<()> {
     .into_gene_generator();
 
     let population = gene_generator
-        .to_collection_generator(args.max_initial_instructions)
+        .to_collection_generator(max_initial_instructions)
         .with_scorer(scorer)
-        .into_collection_generator(args.population_size)
+        .into_collection_generator(population_size)
         .sample(&mut rng);
 
     ensure!(population.is_empty().not());
@@ -162,15 +167,15 @@ fn main() -> Result<()> {
     // TODO: It might be useful to insert some kind of logging system so we can
     // make this less imperative in nature.
 
-    for generation_number in 0..args.num_generations {
-        match args.run_model {
+    for generation_number in 0..num_generations {
+        match run_model {
             RunModel::Serial => generation.serial_next()?,
             RunModel::Parallel => generation.par_next()?,
         }
 
         let best = Best.select(generation.population(), &mut rng)?;
         // TODO: Change 2 to be the smallest number of digits needed for
-        // args.num_generations-1.
+        // num_generations-1.
         println!("Generation {generation_number:2} best is {best:#?}");
 
         if best.test_results.total_result.error == OrderedFloat(0.0) {
