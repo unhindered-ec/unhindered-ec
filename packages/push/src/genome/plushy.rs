@@ -142,8 +142,6 @@ mod test {
         list_into::{arr_into, vec_into},
     };
 
-    #[ignore = "this has about a 2.665% chance on failing at least once across the three test \
-                runners in ci"]
     #[test]
     #[allow(clippy::unwrap_used)]
     fn generator() {
@@ -164,6 +162,8 @@ mod test {
         assert_eq!(10, plushy.genes.len());
     }
 
+    #[ignore = "this has about a 2.665% chance on failing at least once across the three test \
+                runners in ci"]
     #[test]
     fn umad() {
         let mut rng = thread_rng();
