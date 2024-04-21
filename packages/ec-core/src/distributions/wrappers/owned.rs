@@ -2,12 +2,27 @@ use std::{borrow::Borrow, marker::PhantomData, num::NonZeroUsize};
 
 use rand::{distributions::Uniform, prelude::Distribution};
 
-use crate::distributions::wrappers::slice_cloning::EmptySlice;
+use crate::distributions::{choices::ChoicesDistribution, wrappers::slice_cloning::EmptySlice};
 
-#[derive(Debug, PartialEq)]
+/// Generate a random element from a collection of options, cloning the chosen
+/// element. The [`OneOfCloning`] struct takes ownership of the collection; the
+/// [`SliceCloning`](super::slice_cloning::SliceCloning) struct allows one to
+/// borrow the collection.
+#[derive(Debug, PartialEq, Eq)]
 pub struct OneOfCloning<T, U> {
+    // It is really important here that the fields `collection`, `range` and `num_choices` are
+    // never modified, since they all contain information about the length of the collection
+    // which need to be in sync for no panics to occur.
+    //
+    // Therefore, these fields may *never* be pub and no methods may be introduced which can modify
+    // fields without keeping this contract.
+    //
+    // Currently these fields are *never* modified at all.
     collection: T,
     range: Uniform<usize>,
+    // we store the NonZeroUsize in the struct here, since we need to check this invariant in the
+    // new anyways. As such it would make little sense to recompute that every time.
+    num_choices: NonZeroUsize,
     _p: PhantomData<U>,
 }
 
@@ -19,34 +34,45 @@ where
     /// value from a collection and then returns a new value by cloning the
     /// selected value.
     ///
+    /// ```
+    /// # use rand::distributions::Distribution;
+    /// # use ec_core::distributions::{
+    /// #    choices::ChoicesDistribution,
+    /// #    wrappers::{
+    /// #       owned::OneOfCloning,
+    /// #       slice_cloning::EmptySlice,
+    /// #    },
+    /// # };
+    /// #
+    /// let options = [1, 2, 3];
+    /// let distr = OneOfCloning::new(options)?;
+    /// assert_eq!(options.len(), distr.num_choices().get());
+    ///
+    /// let val = distr.sample(&mut rand::thread_rng());
+    /// assert!(options.contains(&val));
+    ///
+    /// # Ok::<(), EmptySlice>(())
+    ///  ```
+    ///
     /// # Errors
     /// - [`EmptySlice`] if an empty collection is passed in, since then no
     ///   element can be selected from there
-    pub fn new(val: T) -> Result<Self, EmptySlice> {
-        match val.borrow().len() {
-            0 => Err(EmptySlice),
-            len => Ok(Self {
-                collection: val,
-                range: Uniform::new(0, len),
-                _p: PhantomData,
-            }),
-        }
-    }
-
+    #[allow(clippy::unwrap_used)]
     #[allow(clippy::missing_panics_doc)]
-    pub fn num_choices(&self) -> NonZeroUsize {
-        let choices = self.collection.borrow().len();
+    pub fn new(collection: T) -> Result<Self, EmptySlice> {
+        let num_choices = NonZeroUsize::new(collection.borrow().len()).ok_or(EmptySlice)?;
 
-        debug_assert_ne!(
-            choices, 0,
-            "This should never happen since the new method checks for this"
-        );
-        // FIXME: Check the performance of this
-        // // Safety: at construction time, it was ensured that the slice was
-        // // non-empty, as such the len is > 0.
-        // unsafe { NonZeroUsize::new_unchecked(self.collection.borrow().len()) }
-        #[allow(clippy::unwrap_used)]
-        NonZeroUsize::new(choices).unwrap()
+        Ok(Self {
+            collection,
+            range: Uniform::new(0, num_choices.get()).unwrap(),
+            num_choices,
+            _p: PhantomData,
+        })
+    }
+}
+impl<T, U> ChoicesDistribution for OneOfCloning<T, U> {
+    fn num_choices(&self) -> NonZeroUsize {
+        self.num_choices
     }
 }
 
