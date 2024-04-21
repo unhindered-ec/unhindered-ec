@@ -25,7 +25,8 @@ use ec_linear::mutator::umad::Umad;
 use num_traits::Float;
 use ordered_float::OrderedFloat;
 use push::{
-    genome::plushy::{ConvertToGeneGenerator, Plushy, WithTarget},
+    evaluation::cases::{Case, Cases, WithTarget},
+    genome::plushy::{ConvertToGeneGenerator, Plushy},
     instruction::{variable_name::VariableName, FloatInstruction, PushInstruction},
     push_vm::{program::PushProgram, push_state::PushState, HasStack, State},
 };
