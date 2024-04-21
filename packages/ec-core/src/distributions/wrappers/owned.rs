@@ -6,6 +6,14 @@ use crate::distributions::{choices::ChoicesDistribution, wrappers::slice_cloning
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct OneOfCloning<T, U> {
+    // It is really important here that the fields `collection`, `range` and `num_choices` are
+    // never modified, since they all contain information about the length of the collection
+    // which need to be in sync for no panics to occur.
+    //
+    // Therefore, these fields may *never* be pub and no methods may be introduced which can modify
+    // fields without keeping this contract
+    //
+    // Currently these fields are *never* modified at all.
     collection: T,
     range: Uniform<usize>,
     num_choices: NonZeroUsize,
