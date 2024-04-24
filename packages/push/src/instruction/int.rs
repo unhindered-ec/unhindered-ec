@@ -237,19 +237,19 @@ where
                         .top()
                         .map_err(PushInstructionError::from)
                         .map(|&x| x == 0)
-                        .with_stack_push(state)
+                        .push_onto(state)
                         .with_stack_discard::<i64>(1),
                     Self::IsPositive => int_stack
                         .top()
                         .map_err(PushInstructionError::from)
                         .map(|&x| x > 0)
-                        .with_stack_push(state)
+                        .push_onto(state)
                         .with_stack_discard::<i64>(1),
                     Self::IsNegative => int_stack
                         .top()
                         .map_err(PushInstructionError::from)
                         .map(|&x| x < 0)
-                        .with_stack_push(state)
+                        .push_onto(state)
                         .with_stack_discard::<i64>(1),
                     // TODO: Write a test for IsEven that makes sure
                     // all the stack manipulation is correct.
