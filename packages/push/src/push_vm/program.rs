@@ -114,7 +114,7 @@ mod test {
     fn conversion() {
         let genes = arr_into![
             IntInstruction::Add,
-            ExecInstruction::IfElse,
+            ExecInstruction::if_else(),
             IntInstruction::Multiply,
             PushGene::Close,
             ExecInstruction::Dup,
@@ -129,7 +129,7 @@ mod test {
             program,
             vec_into![
                 IntInstruction::Add,
-                ExecInstruction::IfElse,
+                ExecInstruction::if_else(),
                 PushProgram::Block(vec_into![IntInstruction::Multiply]),
                 PushProgram::Block(vec_into![
                     ExecInstruction::Dup,

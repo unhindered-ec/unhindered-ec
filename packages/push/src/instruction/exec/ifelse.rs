@@ -75,3 +75,119 @@ where
         }
     }
 }
+
+// mod proptests {
+//     use proptest::prelude::*;
+//     use proptest::arbitrary::any;
+//     use crate::push_vm::push_state::PushState;
+//     use crate::push_vm::program::PushProgram;
+//     use crate::instruction::IntInstruction;
+//     use strum::IntoEnumIterator;
+
+//     proptest! {
+
+//         #[test]
+//         fn if_else_is_correct(
+//             condition in proptest::bool::ANY,
+//             x in any::<i64>(),
+//             y in any::<i64>(),
+//             then_instr in proptest::sample::select(IntInstruction::iter().collect()),
+//             else_instr in proptest::sample::select(IntInstruction::iter().collect()),
+//         ) {
+//             todo!();
+//             // let state = PushState::builder()
+//             //     .with_max_stack_size(100)
+//             //     .with_bool_values(vec![condition])
+//             //     .unwrap()
+//             //     .with_programs(vec![then_block.clone(), else_block.clone()])
+//             //     .build();
+
+//             // let state = IfElse.perform(state).unwrap();
+
+//             // if condition {
+//             //     assert_eq!(state.stack::<PushProgram>().top().unwrap(), then_block);
+//             // } else {
+//             //     assert_eq!(state.stack::<PushProgram>().top().unwrap(), else_block);
+//             // }
+//         }
+
+//     }
+// }
+
+#[cfg(test)]
+#[allow(clippy::unwrap_used)]
+mod tests {
+    use crate::{
+        instruction::{exec::ifelse::IfElse, ExecInstruction, Instruction},
+        push_vm::push_state::PushState,
+    };
+
+    #[test]
+    fn if_else_is_correct_with_all_empty_stacks() {
+        let state = PushState::builder()
+            .with_max_stack_size(1000)
+            .with_no_program()
+            .with_bool_values([])
+            .unwrap()
+            .build();
+
+        let result_state = IfElse.perform(state.clone()).unwrap();
+        assert_eq!(result_state, state);
+    }
+
+    // #[test]
+    // fn if_else_is_correct() {
+    //     let state = PushState::builder()
+    //         .with_stack(vec![true, PushProgram::new(vec![]), PushProgram::new(vec![])])
+    //         .build();
+
+    //     let state = IfElse.perform(state).unwrap();
+
+    //     assert_eq!(state.stack::<bool>().top(), Ok(true));
+    //     assert_eq!(state.stack::<PushProgram>().top().unwrap().len(), 0);
+    // }
+
+    // #[test]
+    // fn if_else_is_correct_with_false_condition() {
+    //     let state = PushState::builder()
+    //         .with_stack(vec![false, PushProgram::new(vec![]), PushProgram::new(vec![])])
+    //         .build();
+
+    //     let state = IfElse.perform(state).unwrap();
+
+    //     assert_eq!(state.stack::<bool>().top(), Ok(false));
+    //     assert_eq!(state.stack::<PushProgram>().top(), Ok(PushProgram::new(vec![])));
+    // }
+
+    // #[test]
+    // fn if_else_is_correct_with_no_condition() {
+    //     let state = PushState::builder()
+    //         .with_stack(vec![PushProgram::new(vec![]), PushProgram::new(vec![])])
+    //         .build();
+
+    //     let state = IfElse.perform(state).unwrap();
+
+    //     assert_eq!(state.stack::<bool>().top(), Ok(true));
+    //     assert_eq!(state.stack::<PushProgram>().top().unwrap().len(), 0);
+    // }
+
+    // #[test]
+    // fn if_else_is_correct_with_no_condition_and_no_else() {
+    //     let state = PushState::builder().with_stack(vec![PushProgram::new(vec![])]).build();
+
+    //     let state = IfElse.perform(state).unwrap();
+
+    //     assert_eq!(state.stack::<bool>().top(), Ok(true));
+    //     assert_eq!(state.stack::<PushProgram>().top().unwrap().len(), 0);
+    // }
+
+    // #[test]
+    // fn if_else_is_correct_with_no_condition_and_no_then() {
+    //     let state = PushState::builder().with_stack(vec![PushProgram::new(vec![])]).build();
+
+    //     let state = IfElse.perform(state).unwrap();
+
+    //     assert_eq!(state.stack::<bool>().top(), Ok(true));
+    //     assert_eq!(state.stack::<PushProgram>().top().unwrap().len(), 0);
+    // }
+}

@@ -24,6 +24,16 @@ impl ExecInstruction {
     pub const fn when() -> Self {
         Self::When(When)
     }
+
+    #[must_use]
+    pub const fn unless() -> Self {
+        Self::Unless(Unless)
+    }
+
+    #[must_use]
+    pub const fn if_else() -> Self {
+        Self::IfElse(IfElse)
+    }
 }
 impl From<ExecInstruction> for PushInstruction {
     fn from(instr: ExecInstruction) -> Self {

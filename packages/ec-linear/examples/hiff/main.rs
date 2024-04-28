@@ -7,10 +7,7 @@ use clap::Parser;
 use ec_core::{
     distributions::collection::ConvertToCollectionGenerator,
     generation::Generation,
-    individual::{
-        ec::{EcIndividual, WithScorer},
-        scorer::FnScorer,
-    },
+    individual::{ec::WithScorer, scorer::FnScorer},
     operator::{
         genome_extractor::GenomeExtractor,
         genome_scorer::GenomeScorer,
@@ -22,7 +19,7 @@ use ec_core::{
         },
         Composable,
     },
-    test_results::{self, TestResults},
+    test_results::{Score, TestResults},
 };
 use ec_linear::{
     genome::bitstring::Bitstring, mutator::with_one_over_length::WithOneOverLength,
@@ -33,56 +30,52 @@ use rand::{distributions::Standard, prelude::Distribution, thread_rng};
 use crate::args::{Args, RunModel};
 
 #[must_use]
-fn hiff(bits: &[bool]) -> (bool, TestResults<test_results::Score<usize>>) {
+fn hiff(bits: &[bool]) -> (bool, TestResults<Score<usize>>) {
     let len = bits.len();
     if len < 2 {
-        (true, once(test_results::Score::from(len)).collect())
+        (true, once(Score::from(len)).collect())
     } else {
         let half_len = len / 2;
         let (left_all_same, left_score) = hiff(&bits[..half_len]);
         let (right_all_same, right_score) = hiff(&bits[half_len..]);
         let all_same = left_all_same && right_all_same && bits[0] == bits[half_len];
+
         (
             all_same,
             left_score
                 .results
                 .into_iter()
                 .chain(right_score.results)
-                .chain(once(test_results::Score::from(if all_same {
-                    len
-                } else {
-                    0
-                })))
+                .chain(once(Score::from(
+                    all_same.then_some(len).unwrap_or_default(),
+                )))
                 .collect(),
         )
     }
 }
 
 fn main() -> Result<()> {
-    // Using `Error` in `TestResults<Error>` will have the run favor smaller
-    // values, where using `Score` (e.g., `TestResults<Score>`) will have the run
-    // favor larger values.
-    type Pop = Vec<EcIndividual<Bitstring, TestResults<test_results::Score<usize>>>>;
-
-    let args = Args::parse();
-
-    let scorer = FnScorer(|bitstring: &Bitstring| hiff(&bitstring.bits).1);
-
-    let num_test_cases = 2 * args.bit_length - 1;
-
-    let lexicase = Lexicase::new(num_test_cases);
-    let binary_tournament = Tournament::new(2);
-
-    let selector: Weighted<Pop> = Weighted::new(Best, 1)
-        .with_selector(lexicase, 5)
-        .with_selector(binary_tournament, args.population_size - 1);
+    let Args {
+        run_model,
+        population_size,
+        bit_length,
+        num_generations,
+    } = Args::parse();
 
     let mut rng = thread_rng();
 
+    let scorer = FnScorer(|bitstring: &Bitstring| hiff(&bitstring.bits).1);
+
+    let num_test_cases = 2 * bit_length - 1;
+
+    let selector = Weighted::new(Best, 1)
+        .with_selector(Lexicase::new(num_test_cases), 5)
+        .with_selector(Tournament::new(2), population_size - 1);
+
     let population = Standard
-        .into_collection_generator(args.bit_length)
+        .into_collection_generator(bit_length)
         .with_scorer(scorer)
-        .into_collection_generator(args.population_size)
+        .into_collection_generator(population_size)
         .sample(&mut rng);
 
     ensure!(population.is_empty().not());
@@ -111,19 +104,18 @@ fn main() -> Result<()> {
     // TODO: It might be useful to insert some kind of logging system so we can
     //   make this less imperative in nature.
 
-    (0..args.num_generations).try_for_each(|generation_number| {
-        match args.run_model {
+    for generation_number in 0..num_generations {
+        match run_model {
             RunModel::Serial => generation.serial_next()?,
             RunModel::Parallel => generation.par_next()?,
         }
 
         let best = Best.select(generation.population(), &mut rng)?;
-        // TODO: Change 2 to be the smallest number of digits needed for
-        //  args.num_generations-1.
-        println!("Generation {generation_number:2} best is {best}");
 
-        Ok::<(), anyhow::Error>(())
-    })?;
+        // TODO: Change 2 to be the smallest number of digits needed for
+        //  num_generations-1.
+        println!("Generation {generation_number:2} best is {best}");
+    }
 
     Ok(())
 }
