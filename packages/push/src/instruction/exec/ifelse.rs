@@ -63,12 +63,15 @@ where
             // logic here consistent with the logic in `Unless`, where we perform that
             // block when there is no boolean.
             (Err(_), Ok(_), Ok(_) | Err(_)) => Ok(state).with_stack_discard::<PushProgram>(1),
+            // If there are no blocks, then we want to return some sort of error. Currently we're
+            // just returning the error for the "else" block.
             // TODO: This ignores the fact that we underflowed on the boolean stack. We should
             // probably be able to accumulate/merge errors, and then we could merge the error
             // from the boolean stack with the error from the exec stack.
             (Ok(_) | Err(_), Err(_), Err(e)) => Err(Error::recoverable(state, e)),
-            // If there is no boolean and only one block, discard the block since we only want to
-            // perform it if there is a boolean that is true.
+            // We know that there can't be an "else" block without there also being a "then" block,
+            // i.e., this case can't happen, but the compiler doesn't know that so we have to handle
+            // it explicitly.
             (_, Err(_), Ok(_)) => {
                 unreachable!("There can't be an `else` block without a `then` block")
             }
@@ -76,43 +79,7 @@ where
     }
 }
 
-// mod proptests {
-//     use proptest::prelude::*;
-//     use proptest::arbitrary::any;
-//     use crate::push_vm::push_state::PushState;
-//     use crate::push_vm::program::PushProgram;
-//     use crate::instruction::IntInstruction;
-//     use strum::IntoEnumIterator;
-
-//     proptest! {
-
-//         #[test]
-//         fn if_else_is_correct(
-//             condition in proptest::bool::ANY,
-//             x in any::<i64>(),
-//             y in any::<i64>(),
-//             then_instr in proptest::sample::select(IntInstruction::iter().collect()),
-//             else_instr in proptest::sample::select(IntInstruction::iter().collect()),
-//         ) {
-//             todo!();
-//             // let state = PushState::builder()
-//             //     .with_max_stack_size(100)
-//             //     .with_bool_values(vec![condition])
-//             //     .unwrap()
-//             //     .with_programs(vec![then_block.clone(), else_block.clone()])
-//             //     .build();
-
-//             // let state = IfElse.perform(state).unwrap();
-
-//             // if condition {
-//             //     assert_eq!(state.stack::<PushProgram>().top().unwrap(), then_block);
-//             // } else {
-//             //     assert_eq!(state.stack::<PushProgram>().top().unwrap(), else_block);
-//             // }
-//         }
-
-//     }
-// }
+// TODO: Add a `proptest` module and tests
 
 #[cfg(test)]
 #[allow(clippy::unwrap_used)]
@@ -138,8 +105,8 @@ mod tests {
     // #[test]
     // fn if_else_is_correct() {
     //     let state = PushState::builder()
-    //         .with_stack(vec![true, PushProgram::new(vec![]), PushProgram::new(vec![])])
-    //         .build();
+    //         .with_stack(vec![true, PushProgram::new(vec![]),
+    // PushProgram::new(vec![])])         .build();
 
     //     let state = IfElse.perform(state).unwrap();
 
@@ -150,20 +117,20 @@ mod tests {
     // #[test]
     // fn if_else_is_correct_with_false_condition() {
     //     let state = PushState::builder()
-    //         .with_stack(vec![false, PushProgram::new(vec![]), PushProgram::new(vec![])])
-    //         .build();
+    //         .with_stack(vec![false, PushProgram::new(vec![]),
+    // PushProgram::new(vec![])])         .build();
 
     //     let state = IfElse.perform(state).unwrap();
 
     //     assert_eq!(state.stack::<bool>().top(), Ok(false));
-    //     assert_eq!(state.stack::<PushProgram>().top(), Ok(PushProgram::new(vec![])));
-    // }
+    //     assert_eq!(state.stack::<PushProgram>().top(),
+    // Ok(PushProgram::new(vec![]))); }
 
     // #[test]
     // fn if_else_is_correct_with_no_condition() {
     //     let state = PushState::builder()
-    //         .with_stack(vec![PushProgram::new(vec![]), PushProgram::new(vec![])])
-    //         .build();
+    //         .with_stack(vec![PushProgram::new(vec![]),
+    // PushProgram::new(vec![])])         .build();
 
     //     let state = IfElse.perform(state).unwrap();
 
@@ -173,7 +140,8 @@ mod tests {
 
     // #[test]
     // fn if_else_is_correct_with_no_condition_and_no_else() {
-    //     let state = PushState::builder().with_stack(vec![PushProgram::new(vec![])]).build();
+    //     let state =
+    // PushState::builder().with_stack(vec![PushProgram::new(vec![])]).build();
 
     //     let state = IfElse.perform(state).unwrap();
 
@@ -183,7 +151,8 @@ mod tests {
 
     // #[test]
     // fn if_else_is_correct_with_no_condition_and_no_then() {
-    //     let state = PushState::builder().with_stack(vec![PushProgram::new(vec![])]).build();
+    //     let state =
+    // PushState::builder().with_stack(vec![PushProgram::new(vec![])]).build();
 
     //     let state = IfElse.perform(state).unwrap();
 
