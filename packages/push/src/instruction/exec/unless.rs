@@ -8,6 +8,51 @@ use crate::{
     },
 };
 
+/// The Push `Unless` instruction performs a block of code on the
+/// `Exec` stack _when_ the boolean on the top of the `bool` stack is
+/// false, ignoring that block otherwise.
+///
+/// # Inputs
+///
+/// The `Unless` instruction takes the following inputs:
+///    - `Bool` stack
+///      - Zero or one booleans
+///    - `Exec` stack
+///      - Zero or one code blocks
+///
+/// # Behavior
+///
+/// An important feature of `Unless` is the code block is only skipped when:
+///    - There is a boolean condition, and
+///    - That condition is `true`
+///
+/// ## Action Table
+///
+/// The table below indicates the behavior in each of the different
+/// cases.
+///
+///    - The "Boolean stack" column indicates the value of the top of the
+///      boolean stack, or whether it exists
+///    - The "Code block" column indicates whether there is a code block on the
+///      `Exec stack`.
+///    - The "Action" columns indicate the action taken on the respective
+/// stacks.
+///       - "Consumed" means the value on that stack is consumed (i.e., removed)
+///       - "Unchanged" means that value was left on the stack unchanged.
+///
+/// | Boolean stack  | Code block | Action (`Bool`) | Action (Code block) | Returns error | Note |
+/// | ------------- | ------------- | ------------- | ------------- | ------------- | ------------- |
+/// | `false`  | exists | Consumed | Unchanged | ✖️ | The code block is executed |
+/// | `true` | exists | Consumed | Consumed | ✖️ | The code block is skipped |
+/// | missing | exists | Non-existent | Unchanged | ✖️ | The code block is executed |
+/// | exists | missing | Unchanged | Non-existent | ✖️ | No action is taken; state is unchanged |
+/// | missing | missing | Non-existent | Non-existent | ❗ | No action is take; a recoverable [`StackError::Underflow`] error is returned |
+///
+/// # Errors
+///
+/// If either of the stack accesses returns any error other than a
+/// [`StackError::Underflow`] then this returns that as a [`Error::Fatal`]
+/// error.
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct Unless;
 
@@ -37,14 +82,21 @@ where
             (Ok(true), Ok(_)) => Ok(state)
                 .with_stack_discard::<bool>(1)
                 .with_stack_discard::<PushProgram>(1),
-            // In all other cases, we return the state unchanged. If there was a boolean
-            // value, but no block, we skip the instruction without consuming anything.
-            // If there was no boolean, we execute the block if there is one.
-            (
-                Ok(_) | Err(StackError::Underflow { .. }),
-                Ok(_) | Err(StackError::Underflow { .. }),
-            ) => Ok(state),
-            (Err(e), _) | (_, Err(e)) => Err(Error::recoverable(state, e)),
+            // If there is a boolean but no block, then we just skip this instruction
+            // and return the state unchanged.
+            (Ok(_), Err(StackError::Underflow { .. }))
+            // If there is no boolean, but there is a block, then the state should be
+            // unchanged because we wish to execute that block.
+            | (Err(StackError::Underflow { .. }), Ok(_)) => Ok(state),
+            // If there is no boolean and no block, then we return an stack underflow
+            // error.
+            (Err(StackError::Underflow { .. }), Err(e @ StackError::Underflow { .. })) => {
+                Err(Error::recoverable(state, e))
+            }
+            // If some other error occurs (e.g., a fatal error), then we just
+            // pass that forward.
+            (Err(e @ StackError::Overflow { .. }), _)
+            | (_, Err(e @ StackError::Overflow { .. })) => Err(Error::fatal(state, e)),
         }
     }
 }
@@ -53,7 +105,9 @@ where
 #[allow(clippy::unwrap_used)]
 mod tests {
     use super::*;
-    use crate::{instruction::ExecInstruction, push_vm::push_state::PushState};
+    use crate::{
+        error::into_state::IntoState, instruction::ExecInstruction, push_vm::push_state::PushState,
+    };
 
     #[test]
     fn unless_is_correct_with_all_empty_stacks() {
@@ -63,16 +117,33 @@ mod tests {
             .with_bool_values([])
             .unwrap()
             .build();
+        let result_error = Unless.perform(state.clone()).unwrap_err();
+        assert!(result_error.is_recoverable());
+        assert!(matches!(
+            result_error.error(),
+            PushInstructionError::StackError(StackError::Underflow { .. })
+        ));
+        assert_eq!(result_error.into_state(), state);
+    }
+
+    #[test]
+    fn unless_is_correct_with_true_and_empty_exec() {
+        let state = PushState::builder()
+            .with_max_stack_size(1000)
+            .with_no_program()
+            .with_bool_values([true])
+            .unwrap()
+            .build();
         let result_state = Unless.perform(state.clone()).unwrap();
         assert_eq!(result_state, state);
     }
 
     #[test]
-    fn unless_is_correct_with_empty_exec() {
+    fn unless_is_correct_with_false_and_empty_exec() {
         let state = PushState::builder()
             .with_max_stack_size(1000)
             .with_no_program()
-            .with_bool_values([true])
+            .with_bool_values([false])
             .unwrap()
             .build();
         let result_state = Unless.perform(state.clone()).unwrap();
