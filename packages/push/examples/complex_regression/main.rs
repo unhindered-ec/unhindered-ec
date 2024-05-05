@@ -1,3 +1,6 @@
+#![allow(clippy::use_debug)]
+#![allow(clippy::arithmetic_side_effects)]
+
 pub mod args;
 
 use std::ops::Not;

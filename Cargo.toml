@@ -25,6 +25,7 @@ num-traits = "0.2.18"
 thiserror = "1.0.59"
 itertools = "0.12.1"
 macro_railroad_annotation = "1.0.3"
+rustversion = "1.0.15"
 
 ec-core = { path = "packages/ec-core" }
 ec-linear = { path = "packages/ec-linear" }
@@ -35,10 +36,51 @@ push_macros = { path = "packages/push-macros" }
 [workspace.lints.clippy]
 pedantic = "warn"
 nursery = "warn"
+cargo = "warn"
+perf = "warn"
+complexity = "warn"
+correctness = "deny"
+dbg_macro = "warn"
+clone_on_ref_ptr = "warn"
+empty_enum_variants_with_brackets = "warn"
+empty_struct_with_brackets = "warn"
+error_impl_error = "warn"
+format_push_string = "warn"
+if_then_some_else_none = "warn"
+infinite_loop = "warn"
+rc_buffer = "warn"
+rc_mutex = "warn"
+redundant_type_annotations = "warn"
+rest_pat_in_fully_bound_structs = "warn"
+self_named_module_files = "deny"
+suspicious_xor_used_as_pow = "warn"
+tests_outside_test_module = "deny"
+todo = "warn"
+try_err = "warn"
+unnecessary_safety_comment = "warn"
+unnecessary_safety_doc = "warn"
+unnecessary_self_imports = "warn"
+unneeded_field_pattern = "warn"
+use_debug = "warn"
+style = "warn"
+
 unwrap_used = "warn"
 expect_used = "warn"
+panic = "warn"
 module_name_repetitions = "allow"
 as_conversions = "deny"
+
+# these lints rely on the lint reasons rfc 
+# https://github.com/rust-lang/rust/issues/54503
+# and will become active once that is in stable.
+# We should get ample warning with the nightly & beta
+# ci builds if we need to change anything
+allow_attributes_without_reason = "warn"
+allow_attributes = "deny"
+
+# we should probably enable this at some point but
+# it's a bit spammy right now
+# arithmetic_side_effects = "warn"
 
 
 [workspace.metadata.example_runner]
