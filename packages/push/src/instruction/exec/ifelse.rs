@@ -118,24 +118,33 @@ where
             }
             // If there is a boolean and only one block, then `IfThen` is equivalent to `When`
             // so we'll just call that.
-            (Ok(_), Ok(_), Err(_)) => When.perform(state),
-            // If there is no boolean but at one (then) block, discard the then block but keep the
+            (Ok(_), Ok(_), Err(StackError::Underflow { .. })) => When.perform(state),
+            // If there is no boolean but one (then) block, discard the then block but keep the
             // rest of the exec stack unchanged. If there is a second (else) block, this makes the
             // logic here consistent with the logic in `Unless`, where we perform that
             // block when there is no boolean.
-            (Err(_), Ok(_), Ok(_) | Err(_)) => Ok(state).with_stack_discard::<PushProgram>(1),
+            (
+                Err(StackError::Underflow { .. }),
+                Ok(_),
+                Ok(_) | Err(StackError::Underflow { .. }),
+            ) => Ok(state).with_stack_discard::<PushProgram>(1),
             // If there are no blocks, then we want to return some sort of error. Currently we're
             // just returning the error for the "else" block.
-            // TODO: This ignores the fact that we underflowed on the boolean stack. We should
-            // probably be able to accumulate/merge errors, and then we could merge the error
-            // from the boolean stack with the error from the exec stack.
-            (Ok(_) | Err(_), Err(_), Err(e)) => Err(Error::recoverable(state, e)),
+            // TODO: This ignores the fact that we underflowed on the exec stack twice. We should
+            // probably be able to accumulate/merge errors, and then we could merge the two errors
+            // from the exec stack, along the possible error from the boolean stack.
+            (
+                Ok(_) | Err(StackError::Underflow { .. }),
+                Err(StackError::Underflow { .. }),
+                Err(e @ StackError::Underflow { .. }),
+            ) => Err(Error::recoverable(state, e)),
             // We know that there can't be an "else" block without there also being a "then" block,
             // i.e., this case can't happen, but the compiler doesn't know that so we have to handle
             // it explicitly.
-            (_, Err(_), Ok(_)) => {
+            (Ok(_) | Err(StackError::Underflow { .. }), Err(_), Ok(_)) => {
                 unreachable!("There can't be an `else` block without a `then` block")
             }
+            (Err(e), _, _) | (_, Err(e), _) | (_, _, Err(e)) => Err(Error::fatal(state, e)),
         }
     }
 }
