@@ -8,9 +8,7 @@ use crate::{
     },
 };
 
-/// The Push `When` instruction performs a block of code on the
-/// `Exec` stack _when_ the boolean on the top of the `bool` stack is
-/// true, ignoring that block otherwise.
+/// A basic `When`/`If` conditional (without `Else`)
 ///
 /// # Inputs
 ///
@@ -21,6 +19,10 @@ use crate::{
 ///      - Zero or one code blocks
 ///
 /// # Behavior
+///
+/// The `When` instruction performs a block of code on the
+/// `Exec` stack _when_ the boolean on the top of the `bool` stack is
+/// true, ignoring that block otherwise.
 ///
 /// An important feature of `When` is the code block is only executed when:
 ///    - There is a boolean condition, and
@@ -34,19 +36,25 @@ use crate::{
 ///    - The "Boolean stack" column indicates the value of the top of the
 ///      boolean stack, or whether it exists
 ///    - The "Code block" column indicates whether there is a code block on the
-///      `Exec stack`.
+///      `Exec` stack.
 ///    - The "Action" columns indicate the action taken on the respective
 /// stacks.
 ///       - "Consumed" means the value on that stack is consumed (i.e., removed)
 ///       - "Unchanged" means that value was left on the stack unchanged.
+///    - The "Success" column indicates whether the instruction succeeds, and if
+///      not what kind of error is returned:
+///       - ✅: success
+///       - ❗: recoverable error, with links to the error kind
+///       - ‼️: fatal error, with links to the error kind
+///    - The "Note" column briefly summarizes the action state in that case
 ///
-/// | Boolean stack  | Code block | Action (`Bool`) | Action (Code block) | Returns error | Note |
+/// | Boolean stack  | Code block | Action (`Bool`) | Action (Code block) | Success| Note |
 /// | ------------- | ------------- | ------------- | ------------- | ------------- | ------------- |
-/// | `true`  | exists | Consumed | Unchanged | ✖️ | The code block is executed |
-/// | `false` | exists | Consumed | Consumed | ✖️ | The code block is skipped |
-/// | missing | exists | Non-existent | Consumed | ✖️ | The code block is skipped |
-/// | exists | missing | Unchanged | Non-existent | ✖️ | No action is taken; state is unchanged |
-/// | missing | missing | Non-existent | Non-existent | ❗ | No action is take; a recoverable [`StackError::Underflow`] error is returned |
+/// | `true`  | exists | Consumed | Unchanged | ✅ | The code block is executed |
+/// | `false` | exists | Consumed | Consumed | ✅ | The code block is skipped |
+/// | missing | exists | Non-existent | Consumed | ✅ | The code block is skipped |
+/// | exists | missing | Unchanged | Non-existent | ✅ | State is unchanged |
+/// | missing | missing | Non-existent | Non-existent | [❗…](StackError::Underflow) | State is unchanged |
 ///
 /// # Errors
 ///

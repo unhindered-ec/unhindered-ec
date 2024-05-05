@@ -4,11 +4,72 @@ use crate::{
     instruction::{instruction_error::PushInstructionError, Instruction, NumOpens},
     push_vm::{
         program::PushProgram,
-        stack::{StackDiscard, StackPush},
+        stack::{StackDiscard, StackError, StackPush},
         HasStack,
     },
 };
 
+/// A basic `If-Then-Else` conditional.
+///
+/// # Inputs
+///
+/// The `IfElse` instruction takes the following inputs:
+///    - `Bool` stack
+///      - One boolean
+///    - `Exec` stack
+///      - Two code blocks
+///
+/// # Behavior
+///
+/// The `IfElse` instruction uses the value on the top of the `bool`
+/// stack to determine which of two blocks of code on the
+/// `Exec` stack to perform. If the boolean is `true` then we perform
+/// the first (i.e., top) block, discard the second (lower) block,
+/// and the reverse when the boolean is `false`.
+///
+/// If there is a boolean and no "else" block (i.e., at most one item on the
+/// `Exec` stack), this should behave the same as [`When`].
+///
+/// If there is no boolean and a "then" block, this should behave the
+/// same as [`Unless`](super::unless::Unless).
+///
+/// ## Action Table
+///
+/// The table below indicates the behavior in each of the different
+/// cases.
+///
+///    - The "Boolean stack" column indicates the value of the top of the
+///      boolean stack, or whether it exists
+///    - The "Then block" column indicates whether there is at least one code
+///      block on the `Exec` stack.
+///    - The "Else block" column indicates whether there is a second code block
+///      on the `Exec` stack.
+///    - The "Action" columns indicate the action taken on the respective
+/// stacks.
+///       - "Consumed" means the value on that stack is consumed (i.e., removed)
+///       - "Unchanged" means that value was left on the stack unchanged.
+///    - The "Success" column indicates whether the instruction succeeds, and if
+///      not what kind of error is returned:
+///       - ✅: success
+///       - ❗: recoverable error, with links to the error kind
+///       - ‼️: fatal error, with links to the error kind
+///    - The "Note" column briefly summarizes the action state in that case
+///
+/// | Boolean stack  | Then block | Else block | Action (`Bool`) | Action (Then block) | Action (Else block) | Success | Note |
+/// | ------------- | ------------- | ------------- | ------------- | ------------- | ------------- | ------------- | ------------- |
+/// | `true`  | exists | exists | Consumed | Unchanged | Consumed | ✅ | Only the "then" block is executed |
+/// | `false` | exists | exists | Consumed | Consumed | Unchanged | ✅ | Only the "else" block is executed |
+/// | `true`  | exists | missing | Consumed | Unchanged | Non-existent | ✅ | The "then" block is executed |
+/// | `false` | exists | missing | Consumed | Consumed | Non-existent | ✅ | The "then" block is discarded |
+/// | missing | exists | irrelevant | Non-existent | Consumed | Unchanged | ✅ | Only the "else" block is executed, if present |
+/// | missing | missing | missing | Non-existent | Non-existent | Non-existent| [❗…](StackError::Underflow) | State is unchanged |
+/// | exists | missing | missing | Unchanged | Non-existent | Non-existent| [❗…](StackError::Underflow) | State is unchanged |
+///
+/// # Errors
+///
+/// If either of the stack accesses returns any error other than a
+/// [`StackError::Underflow`] then this returns that as a [`Error::Fatal`]
+/// error.
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct IfElse;
 
