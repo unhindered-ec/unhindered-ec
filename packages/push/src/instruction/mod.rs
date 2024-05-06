@@ -92,7 +92,7 @@ impl Instruction<PushState> for PushInstruction {
                 // Or add a `with_input` that returns the new state and keep `push_input`?
                 state.with_input(var_name)
             }
-            Self::Exec(_) => todo!(),
+            Self::Exec(i) => i.perform(state),
             Self::BoolInstruction(i) => i.perform(state),
             Self::IntInstruction(i) => i.perform(state),
             Self::FloatInstruction(i) => i.perform(state),
