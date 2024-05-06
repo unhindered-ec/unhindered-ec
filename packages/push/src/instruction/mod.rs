@@ -120,7 +120,7 @@ impl std::fmt::Debug for PushInstruction {
         match self {
             Self::InputVar(instruction) => write!(f, "{instruction}"),
             Self::Exec(instruction) => write!(f, "Exec-{instruction:?}"),
-            Self::BoolInstruction(instruction) => write!(f, "Bool-{instruction}"),
+            Self::BoolInstruction(instruction) => write!(f, "Bool-{instruction:?}"),
             Self::IntInstruction(instruction) => write!(f, "Int-{instruction:?}"),
             Self::FloatInstruction(instruction) => write!(f, "Float-{instruction:?}"),
         }
