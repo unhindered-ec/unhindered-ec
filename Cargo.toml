@@ -25,7 +25,6 @@ num-traits = "0.2.18"
 thiserror = "1.0.59"
 itertools = "0.12.1"
 macro_railroad_annotation = "1.0.3"
-rustversion = "1.0.15"
 
 ec-core = { path = "packages/ec-core" }
 ec-linear = { path = "packages/ec-linear" }
