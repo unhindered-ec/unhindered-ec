@@ -2,6 +2,17 @@
 # This script automatically creates issues for all failing clippy lints
 
 def main [base_link?: string] {
+
+if (which gh | is-empty) {
+  print "This script requires the installation of the github cli. Please install it and try again.";
+  exit 1;
+}
+
+if (which cargo | is-empty) {
+  print "This script requires a working rust (with cargo) installation.";
+  exit 1;
+}
+  
   
 let repo = gh repo set-default -v;
 print $"This script will automatically create issues in the selected repo: ($repo). Are you sure you wish to continue?";
