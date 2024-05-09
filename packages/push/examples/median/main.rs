@@ -16,7 +16,8 @@ use ec_core::{
         genome_scorer::GenomeScorer,
         mutator::Mutate,
         selector::{
-            best::Best, lexicase::Lexicase, Select, Selector
+            best::Best, lexicase::Lexicase, weighted::Weighted, Select,
+            Selector,
         },
         Composable,
     },
@@ -33,7 +34,8 @@ use rand::{rngs::ThreadRng, thread_rng, Rng,};
 
 use crate::args::{Args, RunModel};
 
-fn training_inputs(num_cases: usize, rng: &mut ThreadRng) -> Vec<(i64, i64, i64)> {
+fn training_inputs(num_cases: usize, rng: &mut ThreadRng) -> Vec<(i8, i8, i8)> {
+    // Inputs from in the range [-100, 100] inclusive
     (0..num_cases)
     .map(|_| {
         (
@@ -45,13 +47,13 @@ fn training_inputs(num_cases: usize, rng: &mut ThreadRng) -> Vec<(i64, i64, i64)
     .collect()
 }
 
-fn median((x, y, z): (i64, i64, i64)) -> i64 {
+fn median((x, y, z): (i8, i8, i8)) -> i8 {
     let mut sorted_values = [x, y, z];
     sorted_values.sort();
     return sorted_values[1];
 }
 
-fn training_cases(num_cases: usize, rng: &mut ThreadRng) -> Vec<((i64, i64, i64), i64)> {
+fn training_cases(num_cases: usize, rng: &mut ThreadRng) -> Vec<((i8, i8, i8), i8)> {
     let inputs = training_inputs(num_cases, rng);
     inputs.into_iter().map(|input| (input, median(input))).collect()
 }
@@ -63,22 +65,22 @@ fn main() -> Result <()> {
     type Pop = Vec<EcIndividual<Plushy, TestResults<test_results::Error<i64>>>>;
     let mut rng = thread_rng();
 
-    let penalty_value: i64 = 1_000_000;
+    let penalty_value: i64 = 1_000;
 
-    let training_cases = training_cases(100, &mut rng);
+    let training_cases = training_cases(args.population_size, &mut rng);
 
     println!("Training cases: {training_cases:#?}");
 
     // We're defining a scorer function to be used to score a given generation
-    let scorer = FnScorer(|genome: &Plushy| -> TestResults<test_results::Error<i64>> {
+    let scorer = FnScorer(|genome: &Plushy| -> TestResults<test_results::Error<i8>> {
         // We need to clone our program so we can score it.
         let program = Vec::<PushProgram>::from(genome.clone());
-        let errors: TestResults<test_results::Error<i64>> = training_cases
+        let errors: TestResults<test_results::Error<i8>> = training_cases
             .iter()
             .map(|&((a, b, c), expected)| {
                 #[allow(clippy::unwrap_used)]
                 let state = PushState::builder()
-                .with_max_stack_size(1_000)
+                .with_max_stack_size(args.max_initial_instructions)
                 .with_program(program.clone())
                 .unwrap()
                     .with_int_input("a", a.into())
@@ -88,7 +90,7 @@ fn main() -> Result <()> {
 
                     match state.run_to_completion() {
                         Ok(final_state) => final_state
-                        .stack::<i64>()
+                        .stack::<i8>()
                         .top()
                         .map_or(penalty_value, |answer | (answer - expected).abs()),
                         Err(_) => {
@@ -105,10 +107,8 @@ fn main() -> Result <()> {
     let num_test_cases = training_cases.len();
     let lexicase = Lexicase::new(num_test_cases);
 
-    // let selector: Weighted<Pop> = Weighted::new(Best, 1)
-    // .with_selector(lexicase, 5);
-
-    let selector = lexicase;
+    let selector: Weighted<Pop> = Weighted::new(Best, 1)
+    .with_selector(lexicase, 5);
 
     let gene_generator = GeneGenerator::with_uniform_close_probability(instructions());
 
@@ -166,9 +166,9 @@ fn instructions() -> Vec<PushInstruction> {
         IntInstruction::Mod,
         IntInstruction::Power,
         IntInstruction::Square,
-        // IntInstruction::IsZero,
-        // IntInstruction::IsPositive,
-        // IntInstruction::IsNegative,
+        IntInstruction::IsZero,
+        IntInstruction::IsPositive,
+        IntInstruction::IsNegative,
         IntInstruction::IsEven,
         IntInstruction::IsOdd,
         IntInstruction::Equal,
