@@ -21,7 +21,7 @@ fn to_push_instruction() {
 fn push_float() {
     let x = OrderedFloat(589.632);
     let state = PushState::builder()
-        .with_max_stack_size(100)
+        .with_max_stack_size(1)
         .with_no_program()
         .build();
     let result = FloatInstruction::Push(x).perform(state).unwrap();
@@ -34,7 +34,7 @@ fn add() {
     let x = OrderedFloat(409.37);
     let y = OrderedFloat(512.825);
     let state = PushState::builder()
-        .with_max_stack_size(100)
+        .with_max_stack_size(2)
         .with_float_values(vec![x, y])
         .unwrap()
         .with_no_program()
@@ -69,7 +69,7 @@ fn overflow_bool_stack() {
 fn dup() {
     let x = OrderedFloat(409.37);
     let state = PushState::builder()
-        .with_max_stack_size(100)
+        .with_max_stack_size(2)
         .with_float_values(std::iter::once(x))
         .unwrap()
         .with_no_program()
@@ -86,7 +86,7 @@ fn dup() {
 fn add_prop(#[any] x: OrderedFloat<f64>, #[any] y: OrderedFloat<f64>) {
     let expected_result = x + y;
     let state = PushState::builder()
-        .with_max_stack_size(100)
+        .with_max_stack_size(2)
         .with_float_values([x, y])
         .unwrap()
         .with_no_program()
@@ -100,7 +100,7 @@ fn add_prop(#[any] x: OrderedFloat<f64>, #[any] y: OrderedFloat<f64>) {
 fn subtract_prop(#[any] x: OrderedFloat<f64>, #[any] y: OrderedFloat<f64>) {
     let expected_result = x - y;
     let state = PushState::builder()
-        .with_max_stack_size(100)
+        .with_max_stack_size(2)
         .with_float_values([x, y])
         .unwrap()
         .with_no_program()
@@ -114,7 +114,7 @@ fn subtract_prop(#[any] x: OrderedFloat<f64>, #[any] y: OrderedFloat<f64>) {
 fn multiply_prop(#[any] x: OrderedFloat<f64>, #[any] y: OrderedFloat<f64>) {
     let expected_result = x * y;
     let state = PushState::builder()
-        .with_max_stack_size(100)
+        .with_max_stack_size(2)
         .with_float_values([x, y])
         .unwrap()
         .with_no_program()
@@ -128,7 +128,7 @@ fn multiply_prop(#[any] x: OrderedFloat<f64>, #[any] y: OrderedFloat<f64>) {
 fn protected_divide_prop(#[any] x: OrderedFloat<f64>, #[any] y: OrderedFloat<f64>) {
     let expected_result = if y == 0.0 { OrderedFloat(1.0) } else { x / y };
     let state = PushState::builder()
-        .with_max_stack_size(100)
+        .with_max_stack_size(2)
         .with_float_values([x, y])
         .unwrap()
         .with_no_program()
@@ -142,7 +142,7 @@ fn protected_divide_prop(#[any] x: OrderedFloat<f64>, #[any] y: OrderedFloat<f64
 fn equal_prop(#[any] x: OrderedFloat<f64>, #[any] y: OrderedFloat<f64>) {
     let expected_result = x == y;
     let state = PushState::builder()
-        .with_max_stack_size(100)
+        .with_max_stack_size(2)
         .with_float_values([x, y])
         .unwrap()
         .with_no_program()
@@ -156,7 +156,7 @@ fn equal_prop(#[any] x: OrderedFloat<f64>, #[any] y: OrderedFloat<f64>) {
 fn not_equal_prop(#[any] x: OrderedFloat<f64>, #[any] y: OrderedFloat<f64>) {
     let expected_result = x != y;
     let state = PushState::builder()
-        .with_max_stack_size(100)
+        .with_max_stack_size(2)
         .with_float_values([x, y])
         .unwrap()
         .with_no_program()
@@ -170,7 +170,7 @@ fn not_equal_prop(#[any] x: OrderedFloat<f64>, #[any] y: OrderedFloat<f64>) {
 fn greater_than_prop(#[any] x: OrderedFloat<f64>, #[any] y: OrderedFloat<f64>) {
     let expected_result = x > y;
     let state = PushState::builder()
-        .with_max_stack_size(100)
+        .with_max_stack_size(2)
         .with_float_values([x, y])
         .unwrap()
         .with_no_program()
@@ -184,7 +184,7 @@ fn greater_than_prop(#[any] x: OrderedFloat<f64>, #[any] y: OrderedFloat<f64>) {
 fn less_than_prop(#[any] x: OrderedFloat<f64>, #[any] y: OrderedFloat<f64>) {
     let expected_result = x < y;
     let state = PushState::builder()
-        .with_max_stack_size(100)
+        .with_max_stack_size(2)
         .with_float_values([x, y])
         .unwrap()
         .with_no_program()
@@ -198,7 +198,7 @@ fn less_than_prop(#[any] x: OrderedFloat<f64>, #[any] y: OrderedFloat<f64>) {
 fn greater_than_or_equal_prop(#[any] x: OrderedFloat<f64>, #[any] y: OrderedFloat<f64>) {
     let expected_result = x >= y;
     let state = PushState::builder()
-        .with_max_stack_size(100)
+        .with_max_stack_size(2)
         .with_float_values([x, y])
         .unwrap()
         .with_no_program()
@@ -212,7 +212,7 @@ fn greater_than_or_equal_prop(#[any] x: OrderedFloat<f64>, #[any] y: OrderedFloa
 fn less_than_or_equal_prop(#[any] x: OrderedFloat<f64>, #[any] y: OrderedFloat<f64>) {
     let expected_result = x <= y;
     let state = PushState::builder()
-        .with_max_stack_size(100)
+        .with_max_stack_size(2)
         .with_float_values([x, y])
         .unwrap()
         .with_no_program()

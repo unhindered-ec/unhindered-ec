@@ -17,7 +17,7 @@ fn add() {
     let x = 409;
     let y = 512;
     let state = PushState::builder()
-        .with_max_stack_size(100)
+        .with_max_stack_size(2)
         .with_int_values([x, y])
         .unwrap()
         .with_no_program()
@@ -32,7 +32,7 @@ fn add_overflows() {
     let x = 4_098_586_571_925_584_936;
     let y = 5_124_785_464_929_190_872;
     let state = PushState::builder()
-        .with_max_stack_size(100)
+        .with_max_stack_size(2)
         .with_int_values([x, y])
         .unwrap()
         .with_no_program()
@@ -53,7 +53,7 @@ fn add_overflows() {
 fn inc_overflows() {
     let x = i64::MAX;
     let state = PushState::builder()
-        .with_max_stack_size(100)
+        .with_max_stack_size(1)
         .with_int_values(std::iter::once(x))
         .unwrap()
         .with_no_program()
@@ -76,7 +76,7 @@ fn inc_overflows() {
 fn dec_overflows() {
     let x = i64::MIN;
     let state = PushState::builder()
-        .with_max_stack_size(100)
+        .with_max_stack_size(1)
         .with_int_values(std::iter::once(x))
         .unwrap()
         .with_no_program()
@@ -101,7 +101,7 @@ fn all_instructions() -> Vec<IntInstruction> {
 #[proptest]
 fn negate(#[any] x: i64) {
     let state = PushState::builder()
-        .with_max_stack_size(100)
+        .with_max_stack_size(1)
         .with_int_values(std::iter::once(x))
         .unwrap()
         .with_no_program()
@@ -114,7 +114,7 @@ fn negate(#[any] x: i64) {
 #[proptest]
 fn abs(#[any] x: i64) {
     let state = PushState::builder()
-        .with_max_stack_size(100)
+        .with_max_stack_size(1)
         .with_int_values(std::iter::once(x))
         .unwrap()
         .with_no_program()
@@ -127,7 +127,7 @@ fn abs(#[any] x: i64) {
 #[proptest]
 fn sqr(#[any] x: i64) {
     let state = PushState::builder()
-        .with_max_stack_size(100)
+        .with_max_stack_size(1)
         .with_int_values(std::iter::once(x))
         .unwrap()
         .with_no_program()
@@ -156,7 +156,7 @@ fn sqr(#[any] x: i64) {
 #[proptest]
 fn add_does_not_crash(#[any] x: i64, #[any] y: i64) {
     let state = PushState::builder()
-        .with_max_stack_size(100)
+        .with_max_stack_size(2)
         .with_int_values([x, y])
         .unwrap()
         .with_no_program()
@@ -167,7 +167,7 @@ fn add_does_not_crash(#[any] x: i64, #[any] y: i64) {
 #[proptest]
 fn add_adds_or_does_nothing(#[any] x: i64, #[any] y: i64) {
     let state = PushState::builder()
-        .with_max_stack_size(100)
+        .with_max_stack_size(2)
         .with_int_values([x, y])
         .unwrap()
         .with_no_program()
@@ -199,7 +199,7 @@ fn add_adds_or_does_nothing(#[any] x: i64, #[any] y: i64) {
 #[proptest]
 fn subtract_subs_or_does_nothing(#[any] x: i64, #[any] y: i64) {
     let state = PushState::builder()
-        .with_max_stack_size(100)
+        .with_max_stack_size(2)
         .with_int_values([x, y])
         .unwrap()
         .with_no_program()
@@ -231,7 +231,7 @@ fn subtract_subs_or_does_nothing(#[any] x: i64, #[any] y: i64) {
 #[proptest]
 fn multiply_works_or_does_nothing(#[any] x: i64, #[any] y: i64) {
     let state = PushState::builder()
-        .with_max_stack_size(100)
+        .with_max_stack_size(2)
         .with_int_values([x, y])
         .unwrap()
         .with_no_program()
@@ -263,7 +263,7 @@ fn multiply_works_or_does_nothing(#[any] x: i64, #[any] y: i64) {
 #[proptest]
 fn protected_divide_zero_denominator(#[any] x: i64) {
     let state = PushState::builder()
-        .with_max_stack_size(100)
+        .with_max_stack_size(2)
         .with_int_values([x, 0])
         .unwrap()
         .with_no_program()
@@ -278,7 +278,7 @@ fn protected_divide_zero_denominator(#[any] x: i64) {
 #[proptest]
 fn protected_divide_works_or_does_nothing(#[any] x: i64, #[any] y: i64) {
     let state = PushState::builder()
-        .with_max_stack_size(100)
+        .with_max_stack_size(2)
         .with_int_values([x, y])
         .unwrap()
         .with_no_program()
@@ -310,7 +310,7 @@ fn protected_divide_works_or_does_nothing(#[any] x: i64, #[any] y: i64) {
 #[proptest]
 fn mod_zero_denominator(#[any] x: i64) {
     let state = PushState::builder()
-        .with_max_stack_size(100)
+        .with_max_stack_size(2)
         .with_int_values([0, x])
         .unwrap()
         .with_no_program()
@@ -325,7 +325,7 @@ fn mod_zero_denominator(#[any] x: i64) {
 #[proptest]
 fn mod_rems_or_does_nothing(#[any] x: i64, #[any] y: i64) {
     let state = PushState::builder()
-        .with_max_stack_size(100)
+        .with_max_stack_size(2)
         .with_int_values([x, y])
         .unwrap()
         .with_no_program()
@@ -361,7 +361,7 @@ fn mod_rems_or_does_nothing(#[any] x: i64, #[any] y: i64) {
 #[proptest]
 fn inc_does_not_crash(#[any] x: i64) {
     let state = PushState::builder()
-        .with_max_stack_size(100)
+        .with_max_stack_size(1)
         .with_int_values(std::iter::once(x))
         .unwrap()
         .with_no_program()
@@ -377,7 +377,7 @@ fn int_ops_do_not_crash(
     #[any] b: bool,
 ) {
     let state = PushState::builder()
-        .with_max_stack_size(100)
+        .with_max_stack_size(2)
         .with_int_values([x, y])
         .unwrap()
         .with_bool_values(std::iter::once(b))

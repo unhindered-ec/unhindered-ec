@@ -142,7 +142,7 @@ mod property_tests {
         #[any] i: i64,
     ) {
         let state = PushState::builder()
-            .with_max_stack_size(1000)
+            .with_max_stack_size(3)
             .with_no_program()
             .with_bool_values([x, y])
             .unwrap()
@@ -156,7 +156,7 @@ mod property_tests {
     #[proptest]
     fn and_is_correct(#[any] x: bool, #[any] y: bool) {
         let state = PushState::builder()
-            .with_max_stack_size(1000)
+            .with_max_stack_size(2)
             .with_no_program()
             .with_bool_values([x, y])
             .unwrap()
@@ -170,7 +170,7 @@ mod property_tests {
     #[proptest]
     fn implies_is_correct(#[any] x: bool, #[any] y: bool) {
         let state = PushState::builder()
-            .with_max_stack_size(1000)
+            .with_max_stack_size(2)
             .with_no_program()
             .with_bool_values([x, y])
             .unwrap()
