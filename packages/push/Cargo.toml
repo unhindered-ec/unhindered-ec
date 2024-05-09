@@ -18,7 +18,7 @@ thiserror = { workspace = true }
 ec-core = { workspace = true }
 ec-linear = { workspace = true }
 
-proptest = "1.2.0"
+proptest = { workspace = true }
 strum = "0.26.2"
 strum_macros = "0.26.2"
 embed-doc-image = "0.1.4"
@@ -27,7 +27,7 @@ collectable = "0.0.2"
 ordered-float = { version = "4.1.1", features = ["proptest"] }
 easy-cast = "0.5.2"
 macro_railroad_annotation = { workspace = true }
-test-strategy = "0.3.1"
+test-strategy = { workspace = true }
 
 [dev-dependencies]
 clap = { version = "4.5.1", features = ["derive"] }
