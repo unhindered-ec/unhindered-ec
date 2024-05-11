@@ -67,7 +67,7 @@ style = "warn"
 
 unwrap_used = "warn"
 expect_used = "warn"
-# panic = "warn"
+panic = "warn"
 module_name_repetitions = "allow"
 as_conversions = "deny"
 
@@ -90,7 +90,6 @@ redundant_type_annotations = "allow"
 use_debug = "allow"
 todo = "allow"
 if_then_some_else_none = "allow"
-panic = "allow"
 unneeded_field_pattern = "allow"
 dbg_macro = "allow"
 
