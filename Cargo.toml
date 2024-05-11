@@ -10,7 +10,8 @@ exclude = ["packages/rust-lexicase"]
 version = "0.1.0"
 authors = ["Nic McPhee", "Many cool people on Twitch"]
 description = "An evolutionary computation system in Rust"
-documentation = "https://github.com/NicMcPhee/rust-ga"
+documentation = "https://github.com/unhindered-ec/unhindered-ec"
+repository = "https://github.com/unhindered-ec/unhindered-ec.git"
 edition = "2021"
 license = "MIT OR Apache-2.0"
 
@@ -38,6 +39,7 @@ push_macros = { path = "packages/push-macros" }
 pedantic = "warn"
 nursery = "warn"
 # cargo = "warn"
+cargo_common_metadata = "warn"
 perf = "warn"
 complexity = "warn"
 correctness = "deny"
@@ -84,7 +86,6 @@ allow_attributes = "deny"
 # arithmetic_side_effects = "warn"
 
 # allow the following lints for now until they are fixed
-cargo_common_metadata = "allow"
 multiple_crate_versions = "allow"
 redundant_type_annotations = "allow"
 use_debug = "allow"

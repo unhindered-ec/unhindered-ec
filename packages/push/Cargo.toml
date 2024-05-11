@@ -4,8 +4,13 @@ version = { workspace = true }
 authors = { workspace = true }
 description = { workspace = true }
 documentation = { workspace = true }
+repository = { workspace = true }
 edition = { workspace = true }
 license = { workspace = true }
+# Per definition crates.io compilers includes interpreters
+categories = ["science", "algorithms", "compilers"]
+keywords = ["evolutionary-computation", "genetic-programming", "interpreter", "stack-based", "programming-language"]
+readme = "README.md"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

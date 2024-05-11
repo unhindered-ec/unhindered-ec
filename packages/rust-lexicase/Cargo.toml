@@ -1,8 +1,15 @@
 [package]
 name = "rust-lexicase"
 version = "0.1.0"
-edition = "2021"
+authors = { workspace = true }
+description = { workspace = true }
+documentation = { workspace = true }
+repository = { workspace = true }
+edition = { workspace = true }
 license = { workspace = true }
+categories = ["algorithms"]
+keywords = ["lexicase-selection", "genetic", "evolutionary-computation"]
+readme = "README.md"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [lib]

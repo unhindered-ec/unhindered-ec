@@ -4,8 +4,12 @@ version = { workspace = true }
 authors = { workspace = true }
 description = { workspace = true }
 documentation = { workspace = true }
+repository = { workspace = true }
 edition = { workspace = true }
 license = { workspace = true }
+categories = ["science", "algorithms"]
+keywords = ["evolutionary-computation", "genetic", "genetic-algorithm", "framework"]
+readme = "README.md"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
