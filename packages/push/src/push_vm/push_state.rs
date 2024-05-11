@@ -82,7 +82,7 @@ impl PushState {
         let instruction = self
             .input_instructions
             .iter()
-            .find_map(|(n, v)| if n == var_name { Some(v) } else { None })
+            .find_map(|(n, v)| (n == var_name).then_some(v))
             .unwrap_or_else(|| {
                 panic!(
                     "Failed to get an instruction for the input variable '{var_name}' that hadn't \
