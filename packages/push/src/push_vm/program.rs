@@ -101,7 +101,6 @@ impl Instruction<PushState> for PushProgram {
 mod test {
     use super::PushProgram;
     use crate::{
-        error::Error,
         genome::plushy::{Plushy, PushGene},
         instruction::{
             BoolInstruction, ExecInstruction, FloatInstruction, Instruction, IntInstruction,
