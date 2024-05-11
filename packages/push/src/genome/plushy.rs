@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use easy_cast::ConvApprox;
 use ec_core::{
     distributions::{choices::ChoicesDistribution, collection::CollectionGenerator},
@@ -6,12 +8,31 @@ use ec_core::{
 use ec_linear::genome::Linear;
 use rand::{prelude::Distribution, Rng};
 
-use crate::instruction::PushInstruction;
+use crate::instruction::{NumOpens, PushInstruction};
 
-#[derive(Clone, Eq, PartialEq)]
+#[derive(Clone, Eq, PartialEq, Debug)]
 pub enum PushGene {
     Close,
     Instruction(PushInstruction),
+}
+
+impl Display for PushGene {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Close => {
+                f.write_str("}")?;
+            }
+            Self::Instruction(i) => {
+                i.fmt(f)?;
+
+                for bracket in std::iter::repeat(" {").take(i.num_opens()) {
+                    f.write_str(bracket)?;
+                }
+            }
+        }
+
+        Ok(())
+    }
 }
 
 impl<T> From<T> for PushGene
@@ -20,15 +41,6 @@ where
 {
     fn from(instruction: T) -> Self {
         Self::Instruction(instruction.into())
-    }
-}
-
-impl std::fmt::Debug for PushGene {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::Close => write!(f, "Close"),
-            Self::Instruction(instruction) => instruction.fmt(f),
-        }
     }
 }
 
@@ -150,6 +162,22 @@ where
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct Plushy {
     genes: Vec<PushGene>,
+}
+
+impl Display for Plushy {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let mut iter = self.genes.iter();
+        if let Some(gene) = iter.next() {
+            gene.fmt(f)?;
+        };
+
+        for gene in iter {
+            f.write_str(" ")?;
+            gene.fmt(f)?;
+        }
+
+        Ok(())
+    }
 }
 
 // TODO: We might want to implement some sort of `Into`

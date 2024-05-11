@@ -63,12 +63,10 @@ impl<G: PartialEq, R: PartialOrd> PartialOrd for EcIndividual<G, R> {
     }
 }
 
-// TODO: Maybe change R to implement `Display` and have `TestResults` have a
-//   nice-ish display function.
-impl<G: Display, R: Debug> Display for EcIndividual<G, R> {
+impl<G: Display, R: Display> Display for EcIndividual<G, R> {
     /// Display the genome and test results of the individual.
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "[{}]\n{:?}", self.genome(), self.test_results())
+        write!(f, "[{}]\n{}", self.genome(), self.test_results())
     }
 }
 
