@@ -13,7 +13,7 @@ use crate::instruction::PushInstruction;
  * followed by another copy of exec_while.
  */
 
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, strum_macros::Display, Clone, Eq, PartialEq)]
 pub enum ExecInstruction {
     Dup,
     IfElse,

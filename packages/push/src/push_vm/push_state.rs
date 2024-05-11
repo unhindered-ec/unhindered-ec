@@ -171,10 +171,9 @@ mod simple_check {
             .with_int_input("x", 5)
             .with_float_input("f", OrderedFloat(0.75))
             .build();
-        println!("{state:?}");
-        #[allow(clippy::unwrap_used)]
+
         let state = state.run_to_completion().unwrap();
-        println!("{state:?}");
+
         assert!(state.exec.is_empty());
         assert_eq!(&state.int, &vec![5, 17]);
         assert_eq!(&state.bool, &vec![true, false]);
