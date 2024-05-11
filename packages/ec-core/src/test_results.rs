@@ -1,4 +1,8 @@
-use std::{cmp::Ordering, fmt::Debug, iter::Sum};
+use std::{
+    cmp::Ordering,
+    fmt::{Debug, Display},
+    iter::Sum,
+};
 
 // TODO: We can probably use things in the `num` family of traits
 //   (https://github.com/rust-num/num) to genericize `Score` and
@@ -28,6 +32,12 @@ pub struct Score<T> {
 impl<T: Debug> Debug for Score<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_fmt(format_args!("{:?}", self.score))
+    }
+}
+
+impl<T: Display> Display for Score<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Score (higher is better): {}", self.score)
     }
 }
 
@@ -94,6 +104,11 @@ impl<T: PartialOrd> PartialOrd for Error<T> {
     }
 }
 
+impl<T: Display> Display for Error<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Error (lower is better): {}", self.error)
+    }
+}
 // TODO: Write tests for the `From` and `Sum` trait implementations.
 
 impl<T> From<T> for Error<T> {
@@ -234,6 +249,12 @@ impl<R: Ord> Ord for TestResults<R> {
 impl<R: PartialOrd> PartialOrd for TestResults<R> {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         self.total_result.partial_cmp(&other.total_result)
+    }
+}
+
+impl<R: Display> Display for TestResults<R> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Test result: {}", self.total_result)
     }
 }
 
