@@ -156,7 +156,7 @@ mod simple_check {
 
         let plushy = Plushy::new(genes);
         let state = PushState::builder()
-            .with_max_stack_size(1000)
+            .with_max_stack_size(16)
             .with_program(Vec::<PushProgram>::from(plushy))
             .unwrap()
             .with_bool_input("a", true)
