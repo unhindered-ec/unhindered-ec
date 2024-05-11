@@ -61,7 +61,7 @@ try_err = "warn"
 unnecessary_safety_comment = "warn"
 unnecessary_safety_doc = "warn"
 unnecessary_self_imports = "warn"
-# unneeded_field_pattern = "warn"
+unneeded_field_pattern = "warn"
 # use_debug = "warn"
 style = "warn"
 
@@ -91,7 +91,6 @@ use_debug = "allow"
 todo = "allow"
 if_then_some_else_none = "allow"
 panic = "allow"
-unneeded_field_pattern = "allow"
 dbg_macro = "allow"
 
 

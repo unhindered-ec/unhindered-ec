@@ -100,13 +100,13 @@ fn score_genome(
 }
 
 fn main() -> Result<()> {
+    // FIXME: Respect the max_genome_length input
     let Args {
         run_model,
         population_size,
         max_initial_instructions,
-        // FIXME: Actually use this
-        max_genome_length: _,
         num_generations,
+        ..
     } = Args::parse();
 
     let mut rng = thread_rng();
