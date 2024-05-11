@@ -176,6 +176,6 @@ mod test {
         assert!(
             block.perform(state).is_err(),
             "Performing the block didn't generate an overflow error"
-        )
+        );
     }
 }
