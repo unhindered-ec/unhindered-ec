@@ -91,7 +91,6 @@ todo = "allow"
 if_then_some_else_none = "allow"
 panic = "allow"
 unneeded_field_pattern = "allow"
-dbg_macro = "allow"
 
 
 [workspace.metadata.example_runner]
