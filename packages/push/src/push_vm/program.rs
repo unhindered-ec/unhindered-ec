@@ -146,7 +146,7 @@ mod test {
             FloatInstruction::Multiply,
             BoolInstruction::And,
         ];
-        let block = dbg!(PushProgram::Block(instructions));
+        let block = PushProgram::Block(instructions);
         let state = PushState::builder()
             .with_max_stack_size(3)
             .with_no_program()

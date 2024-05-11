@@ -41,7 +41,7 @@ nursery = "warn"
 perf = "warn"
 complexity = "warn"
 correctness = "deny"
-# dbg_macro = "warn"
+dbg_macro = "warn"
 clone_on_ref_ptr = "warn"
 empty_enum_variants_with_brackets = "warn"
 empty_structs_with_brackets = "warn"
@@ -91,7 +91,6 @@ use_debug = "allow"
 todo = "allow"
 panic = "allow"
 unneeded_field_pattern = "allow"
-dbg_macro = "allow"
 
 
 [workspace.metadata.example_runner]
