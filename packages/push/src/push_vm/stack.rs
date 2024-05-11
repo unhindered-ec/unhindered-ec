@@ -212,22 +212,19 @@ impl<T> Stack<T> {
     /// Returns `StackError::Underflow` error if the stack has less than
     /// two elements.
     pub fn top2(&self) -> Result<(&T, &T), StackError> {
-        if self.size() >= 2 {
-            let x = self.top()?;
-            let y = self
-                .values
-                .get(self.size() - 2)
-                .ok_or(StackError::Underflow {
-                    num_requested: 2,
-                    num_present: 1,
-                })?;
-            Ok((x, y))
-        } else {
-            Err(StackError::Underflow {
+        let index_second_to_top = self.size().checked_sub(2).ok_or(StackError::Underflow {
+            num_requested: 2,
+            num_present: self.size(),
+        })?;
+        let x = self.top()?;
+        let y = self
+            .values
+            .get(index_second_to_top)
+            .ok_or(StackError::Underflow {
                 num_requested: 2,
-                num_present: self.size(),
-            })
-        }
+                num_present: 1,
+            })?;
+        Ok((x, y))
     }
 
     /// Removes the top element from a stack and returns it, or
@@ -362,7 +359,11 @@ impl<T> Stack<T> {
     {
         let iter = iter.into_iter();
         // Check that adding these items won't overflow the stack.
-        if iter.len() + self.size() > self.max_stack_size {
+        if iter
+            .len()
+            .checked_add(self.size())
+            .is_some_and(|x| x > self.max_stack_size)
+        {
             return Err(StackError::Overflow {
                 stack_type: std::any::type_name::<T>(),
             });

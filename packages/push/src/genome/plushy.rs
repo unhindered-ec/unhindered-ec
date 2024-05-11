@@ -61,7 +61,12 @@ where
     /// being chosen as any of the passed in instructions.
     pub fn with_uniform_close_probability(instructions_distribution: T) -> Self {
         Self::new(
-            1.0 / f32::conv_approx(instructions_distribution.num_choices().get() + 1),
+            1.0 / f32::conv_approx(
+                instructions_distribution
+                    .num_choices()
+                    .get()
+                    .saturating_add(1),
+            ),
             instructions_distribution,
         )
     }
