@@ -81,7 +81,7 @@ impl PushState {
         let instruction = self
             .input_instructions
             .iter()
-            .find_map(|(n, v)| if n == var_name { Some(v) } else { None })
+            .find_map(|(n, v)| (n == var_name).then_some(v))
             .unwrap_or_else(|| {
                 panic!(
                     "Failed to get an instruction for the input variable '{var_name}' that hadn't \
@@ -170,10 +170,9 @@ mod simple_check {
             .with_int_input("x", 5)
             .with_float_input("f", OrderedFloat(0.75))
             .build();
-        println!("{state:?}");
-        #[allow(clippy::unwrap_used)]
+
         let state = state.run_to_completion().unwrap();
-        println!("{state:?}");
+
         assert!(state.exec.is_empty());
         assert_eq!(&state.int, &vec![5, 17]);
         assert_eq!(&state.bool, &vec![true, false]);
