@@ -29,6 +29,7 @@ where
 impl<F, G> Composable for Then<F, G> {}
 
 #[cfg(test)]
+#[allow(clippy::arithmetic_side_effects)]
 pub mod tests {
     use rand::thread_rng;
 

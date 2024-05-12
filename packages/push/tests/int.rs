@@ -1,6 +1,7 @@
 #![cfg(test)]
 #![allow(clippy::unwrap_used)]
 #![allow(clippy::tuple_array_conversions)]
+#![allow(clippy::arithmetic_side_effects)]
 
 use proptest::prop_assert_eq;
 use push::{
