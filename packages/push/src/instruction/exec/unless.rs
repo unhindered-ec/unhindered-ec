@@ -118,7 +118,7 @@ mod tests {
     };
 
     #[test]
-    fn unless_is_correct_with_all_empty_stacks() {
+    fn stacks_empty() {
         let state = PushState::builder()
             .with_max_stack_size(0)
             .with_no_program()
@@ -135,7 +135,7 @@ mod tests {
     }
 
     #[test]
-    fn unless_is_correct_with_true_and_empty_exec() {
+    fn cond_true_exec_empty() {
         let state = PushState::builder()
             .with_max_stack_size(1)
             .with_no_program()
@@ -147,7 +147,7 @@ mod tests {
     }
 
     #[test]
-    fn unless_is_correct_with_false_and_empty_exec() {
+    fn cond_false_exec_empty() {
         let state = PushState::builder()
             .with_max_stack_size(1)
             .with_no_program()
@@ -159,7 +159,7 @@ mod tests {
     }
 
     #[test]
-    fn unless_is_correct_with_empty_bool() {
+    fn cond_missing() {
         // If there's no boolean, we leave the state unchanged and skip the instruction.
         let state = PushState::builder()
             .with_max_stack_size(1)
@@ -171,7 +171,7 @@ mod tests {
     }
 
     #[test]
-    fn unless_is_correct_with_true() {
+    fn cond_true() {
         let state = PushState::builder()
             .with_max_stack_size(1)
             .with_program([ExecInstruction::Noop])
@@ -185,7 +185,7 @@ mod tests {
     }
 
     #[test]
-    fn unless_is_correct_with_false() {
+    fn cond_false() {
         let state = PushState::builder()
             .with_max_stack_size(1)
             .with_program([ExecInstruction::Noop])
