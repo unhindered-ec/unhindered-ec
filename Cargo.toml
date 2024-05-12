@@ -38,8 +38,12 @@ push_macros = { path = "packages/push-macros" }
 [workspace.lints.clippy]
 pedantic = "warn"
 nursery = "warn"
-# cargo = "warn"
-cargo_common_metadata = "warn"
+cargo = "warn"
+
+
+
+
+
 perf = "warn"
 complexity = "warn"
 correctness = "deny"
@@ -69,7 +73,7 @@ style = "warn"
 
 unwrap_used = "warn"
 expect_used = "warn"
-# panic = "warn"
+panic = "warn"
 module_name_repetitions = "allow"
 as_conversions = "deny"
 
@@ -86,10 +90,13 @@ allow_attributes = "deny"
 # arithmetic_side_effects = "warn"
 
 # allow the following lints for now until they are fixed
-multiple_crate_versions = "allow"
+
+
+
+
+
 redundant_type_annotations = "allow"
 todo = "allow"
-panic = "allow"
 unneeded_field_pattern = "allow"
 
 

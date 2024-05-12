@@ -71,13 +71,14 @@ impl PushState {
     /// This panics if there is no instruction associated with `var_name`, i.e.,
     /// we have not yet added that variable name to the map of names to
     /// instructions.
+    #[allow(clippy::panic)]
     pub fn with_input(
         self,
         var_name: &VariableName,
     ) -> InstructionResult<Self, <PushInstruction as Instruction<Self>>::Error> {
         // TODO: This `panic` here is icky, and we really should deal with it better.
         // I wonder if the fact that this index might not be there should be telling
-        // us something...
+        // us something... - see issue #172
         let instruction = self
             .input_instructions
             .iter()
