@@ -44,6 +44,7 @@ where
 impl<F, const N: usize> Composable for RepeatWith<F, N> {}
 
 #[cfg(test)]
+#[allow(clippy::arithmetic_side_effects)]
 mod tests {
     use std::ops::Range;
 
