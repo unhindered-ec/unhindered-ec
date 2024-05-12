@@ -117,7 +117,7 @@ mod test {
             ExecInstruction::if_else(),
             IntInstruction::Multiply,
             PushGene::Close,
-            ExecInstruction::Dup,
+            ExecInstruction::dup(),
             IntInstruction::Subtract,
         ];
         let plushy: Plushy = genes.into_iter().collect();
@@ -132,7 +132,7 @@ mod test {
                 ExecInstruction::if_else(),
                 PushProgram::Block(vec_into![IntInstruction::Multiply]),
                 PushProgram::Block(vec_into![
-                    ExecInstruction::Dup,
+                    ExecInstruction::dup(),
                     PushProgram::Block(vec_into![IntInstruction::Subtract])
                 ])
             ]
