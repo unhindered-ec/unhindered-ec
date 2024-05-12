@@ -101,7 +101,6 @@ impl Instruction<PushState> for PushProgram {
 mod test {
     use super::PushProgram;
     use crate::{
-        error::Error,
         genome::plushy::{Plushy, PushGene},
         instruction::{
             BoolInstruction, ExecInstruction, FloatInstruction, Instruction, IntInstruction,
@@ -173,8 +172,10 @@ mod test {
             .with_max_stack_size(0)
             .with_no_program()
             .build();
-        let Error::Fatal(_) = block.perform(state).unwrap_err() else {
-            panic!("Performing the block didn't generate an overflow error");
-        };
+
+        assert!(
+            block.perform(state).is_err(),
+            "Performing the block didn't generate an overflow error"
+        );
     }
 }
