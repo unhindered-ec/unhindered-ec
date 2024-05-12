@@ -108,6 +108,7 @@ where
 }
 
 #[cfg(test)]
+#[allow(clippy::arithmetic_side_effects)]
 mod test {
     use ec_core::uniform_distribution_of;
     use rand::thread_rng;
