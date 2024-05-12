@@ -38,6 +38,7 @@ push_macros = { path = "packages/push-macros" }
 pedantic = "warn"
 nursery = "warn"
 # cargo = "warn"
+multiple_crate_versions = "warn"
 perf = "warn"
 complexity = "warn"
 correctness = "deny"
@@ -85,7 +86,6 @@ allow_attributes = "deny"
 
 # allow the following lints for now until they are fixed
 cargo_common_metadata = "allow"
-multiple_crate_versions = "allow"
 redundant_type_annotations = "allow"
 todo = "allow"
 unneeded_field_pattern = "allow"
