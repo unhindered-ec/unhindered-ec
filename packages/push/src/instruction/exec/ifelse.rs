@@ -154,79 +154,140 @@ where
 #[cfg(test)]
 #[allow(clippy::unwrap_used)]
 mod tests {
+    use super::*;
     use crate::{
-        instruction::{exec::ifelse::IfElse, ExecInstruction, Instruction},
+        error::into_state::IntoState,
+        instruction::{exec::ifelse::IfElse, ExecInstruction, Instruction, IntInstruction},
+        list_into::arr_into,
         push_vm::push_state::PushState,
     };
 
     #[test]
-    fn if_else_is_correct_with_all_empty_stacks() {
+    fn cond_true() {
         let state = PushState::builder()
-            .with_max_stack_size(1000)
+            .with_max_stack_size(2)
+            .with_program([IntInstruction::Push(0), IntInstruction::Push(1)])
+            .unwrap()
+            .with_bool_values([true])
+            .unwrap()
+            .build();
+        let result_state = IfElse.perform(state).unwrap();
+        assert!(result_state.bool.is_empty());
+        assert_eq!(
+            result_state.exec,
+            arr_into![<PushProgram> IntInstruction::Push(0)]
+        );
+    }
+
+    #[test]
+    fn cond_false() {
+        let state = PushState::builder()
+            .with_max_stack_size(2)
+            .with_program([IntInstruction::Push(0), IntInstruction::Push(1)])
+            .unwrap()
+            .with_bool_values([false])
+            .unwrap()
+            .build();
+        let result_state = IfElse.perform(state).unwrap();
+        assert!(result_state.bool.is_empty());
+        assert_eq!(
+            result_state.exec,
+            arr_into![<PushProgram> IntInstruction::Push(1)]
+        );
+    }
+
+    #[test]
+    fn cond_true_missing_else() {
+        let state = PushState::builder()
+            .with_max_stack_size(1)
+            .with_program([ExecInstruction::Noop])
+            .unwrap()
+            .with_bool_values([true])
+            .unwrap()
+            .build();
+        let result_state = IfElse.perform(state.clone()).unwrap();
+        assert!(result_state.bool.is_empty());
+        assert_eq!(result_state.exec, state.exec);
+    }
+
+    #[test]
+    fn cond_false_missing_else() {
+        let state = PushState::builder()
+            .with_max_stack_size(1)
+            .with_program([ExecInstruction::Noop])
+            .unwrap()
+            .with_bool_values([false])
+            .unwrap()
+            .build();
+        let result_state = IfElse.perform(state).unwrap();
+        assert!(result_state.bool.is_empty());
+        assert!(result_state.exec.is_empty());
+    }
+
+    #[test]
+    fn cond_missing() {
+        let state = PushState::builder()
+            .with_max_stack_size(2)
+            .with_program([IntInstruction::Push(0), IntInstruction::Push(1)])
+            .unwrap()
+            .build();
+        let result_state = IfElse.perform(state).unwrap();
+        assert!(result_state.bool.is_empty());
+        assert_eq!(
+            result_state.exec,
+            arr_into![<PushProgram> IntInstruction::Push(1)]
+        );
+    }
+
+    #[test]
+    fn cond_true_exec_empty() {
+        let state = PushState::builder()
+            .with_max_stack_size(1)
+            .with_no_program()
+            .with_bool_values([true])
+            .unwrap()
+            .build();
+        let result_error = IfElse.perform(state.clone()).unwrap_err();
+        assert!(result_error.is_recoverable());
+        assert!(matches!(
+            result_error.error(),
+            PushInstructionError::StackError(StackError::Underflow { .. })
+        ));
+        assert_eq!(result_error.into_state(), state);
+    }
+
+    #[test]
+    fn cond_false_exec_empty() {
+        let state = PushState::builder()
+            .with_max_stack_size(1)
+            .with_no_program()
+            .with_bool_values([false])
+            .unwrap()
+            .build();
+        let result_error = IfElse.perform(state.clone()).unwrap_err();
+        assert!(result_error.is_recoverable());
+        assert!(matches!(
+            result_error.error(),
+            PushInstructionError::StackError(StackError::Underflow { .. })
+        ));
+        assert_eq!(result_error.into_state(), state);
+    }
+
+    #[test]
+    fn stacks_empty() {
+        let state = PushState::builder()
+            .with_max_stack_size(0)
             .with_no_program()
             .with_bool_values([])
             .unwrap()
             .build();
 
-        let result_state = IfElse.perform(state.clone()).unwrap();
-        assert_eq!(result_state, state);
+        let result_error = IfElse.perform(state.clone()).unwrap_err();
+        assert!(result_error.is_recoverable());
+        assert!(matches!(
+            result_error.error(),
+            PushInstructionError::StackError(StackError::Underflow { .. })
+        ));
+        assert_eq!(result_error.into_state(), state);
     }
-
-    // #[test]
-    // fn if_else_is_correct() {
-    //     let state = PushState::builder()
-    //         .with_stack(vec![true, PushProgram::new(vec![]),
-    // PushProgram::new(vec![])])         .build();
-
-    //     let state = IfElse.perform(state).unwrap();
-
-    //     assert_eq!(state.stack::<bool>().top(), Ok(true));
-    //     assert_eq!(state.stack::<PushProgram>().top().unwrap().len(), 0);
-    // }
-
-    // #[test]
-    // fn if_else_is_correct_with_false_condition() {
-    //     let state = PushState::builder()
-    //         .with_stack(vec![false, PushProgram::new(vec![]),
-    // PushProgram::new(vec![])])         .build();
-
-    //     let state = IfElse.perform(state).unwrap();
-
-    //     assert_eq!(state.stack::<bool>().top(), Ok(false));
-    //     assert_eq!(state.stack::<PushProgram>().top(),
-    // Ok(PushProgram::new(vec![]))); }
-
-    // #[test]
-    // fn if_else_is_correct_with_no_condition() {
-    //     let state = PushState::builder()
-    //         .with_stack(vec![PushProgram::new(vec![]),
-    // PushProgram::new(vec![])])         .build();
-
-    //     let state = IfElse.perform(state).unwrap();
-
-    //     assert_eq!(state.stack::<bool>().top(), Ok(true));
-    //     assert_eq!(state.stack::<PushProgram>().top().unwrap().len(), 0);
-    // }
-
-    // #[test]
-    // fn if_else_is_correct_with_no_condition_and_no_else() {
-    //     let state =
-    // PushState::builder().with_stack(vec![PushProgram::new(vec![])]).build();
-
-    //     let state = IfElse.perform(state).unwrap();
-
-    //     assert_eq!(state.stack::<bool>().top(), Ok(true));
-    //     assert_eq!(state.stack::<PushProgram>().top().unwrap().len(), 0);
-    // }
-
-    // #[test]
-    // fn if_else_is_correct_with_no_condition_and_no_then() {
-    //     let state =
-    // PushState::builder().with_stack(vec![PushProgram::new(vec![])]).build();
-
-    //     let state = IfElse.perform(state).unwrap();
-
-    //     assert_eq!(state.stack::<bool>().top(), Ok(true));
-    //     assert_eq!(state.stack::<PushProgram>().top().unwrap().len(), 0);
-    // }
 }
