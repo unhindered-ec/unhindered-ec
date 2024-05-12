@@ -124,12 +124,57 @@ impl<T> Default for Stack<T> {
     }
 }
 
+impl<T, const N: usize> PartialEq<&[T; N]> for Stack<T>
+where
+    T: PartialEq,
+{
+    fn eq(&self, other: &&[T; N]) -> bool {
+        <Self as PartialEq<[T]>>::eq(self, &(**other)[..])
+    }
+}
+
+impl<T, const N: usize> PartialEq<[T; N]> for Stack<T>
+where
+    T: PartialEq,
+{
+    fn eq(&self, other: &[T; N]) -> bool {
+        <Self as PartialEq<[T]>>::eq(self, &(*other)[..])
+    }
+}
+
+impl<T> PartialEq<&[T]> for Stack<T>
+where
+    T: PartialEq,
+{
+    fn eq(&self, other: &&[T]) -> bool {
+        <Self as PartialEq<[T]>>::eq(self, *other)
+    }
+}
+
+impl<T> PartialEq<&mut [T]> for Stack<T>
+where
+    T: PartialEq,
+{
+    fn eq(&self, other: &&mut [T]) -> bool {
+        <Self as PartialEq<[T]>>::eq(self, *other)
+    }
+}
+
 impl<T> PartialEq<Vec<T>> for Stack<T>
 where
     T: PartialEq,
 {
     fn eq(&self, other: &Vec<T>) -> bool {
-        &self.values == other
+        <Self as PartialEq<[T]>>::eq(self, other)
+    }
+}
+
+impl<T> PartialEq<[T]> for Stack<T>
+where
+    T: PartialEq,
+{
+    fn eq(&self, other: &[T]) -> bool {
+        self.values == other
     }
 }
 
