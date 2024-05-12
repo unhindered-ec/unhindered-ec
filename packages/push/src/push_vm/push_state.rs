@@ -71,17 +71,18 @@ impl PushState {
     /// This panics if there is no instruction associated with `var_name`, i.e.,
     /// we have not yet added that variable name to the map of names to
     /// instructions.
+    #[allow(clippy::panic)]
     pub fn with_input(
         self,
         var_name: &VariableName,
     ) -> InstructionResult<Self, <PushInstruction as Instruction<Self>>::Error> {
         // TODO: This `panic` here is icky, and we really should deal with it better.
         // I wonder if the fact that this index might not be there should be telling
-        // us something...
+        // us something... - see issue #172
         let instruction = self
             .input_instructions
             .iter()
-            .find_map(|(n, v)| if n == var_name { Some(v) } else { None })
+            .find_map(|(n, v)| (n == var_name).then_some(v))
             .unwrap_or_else(|| {
                 panic!(
                     "Failed to get an instruction for the input variable '{var_name}' that hadn't \
@@ -170,10 +171,9 @@ mod simple_check {
             .with_int_input("x", 5)
             .with_float_input("f", OrderedFloat(0.75))
             .build();
-        println!("{state:?}");
-        #[allow(clippy::unwrap_used)]
+
         let state = state.run_to_completion().unwrap();
-        println!("{state:?}");
+
         assert!(state.exec.is_empty());
         assert_eq!(&state.int, &vec![5, 17]);
         assert_eq!(&state.bool, &vec![true, false]);
