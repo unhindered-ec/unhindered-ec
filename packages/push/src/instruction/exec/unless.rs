@@ -120,7 +120,7 @@ mod tests {
     #[test]
     fn unless_is_correct_with_all_empty_stacks() {
         let state = PushState::builder()
-            .with_max_stack_size(1000)
+            .with_max_stack_size(0)
             .with_no_program()
             .with_bool_values([])
             .unwrap()
@@ -137,7 +137,7 @@ mod tests {
     #[test]
     fn unless_is_correct_with_true_and_empty_exec() {
         let state = PushState::builder()
-            .with_max_stack_size(1000)
+            .with_max_stack_size(1)
             .with_no_program()
             .with_bool_values([true])
             .unwrap()
@@ -149,7 +149,7 @@ mod tests {
     #[test]
     fn unless_is_correct_with_false_and_empty_exec() {
         let state = PushState::builder()
-            .with_max_stack_size(1000)
+            .with_max_stack_size(1)
             .with_no_program()
             .with_bool_values([false])
             .unwrap()
@@ -162,7 +162,7 @@ mod tests {
     fn unless_is_correct_with_empty_bool() {
         // If there's no boolean, we leave the state unchanged and skip the instruction.
         let state = PushState::builder()
-            .with_max_stack_size(1000)
+            .with_max_stack_size(1)
             .with_program([ExecInstruction::Noop])
             .unwrap()
             .build();
@@ -173,7 +173,7 @@ mod tests {
     #[test]
     fn unless_is_correct_with_true() {
         let state = PushState::builder()
-            .with_max_stack_size(1000)
+            .with_max_stack_size(1)
             .with_program([ExecInstruction::Noop])
             .unwrap()
             .with_bool_values([true])
@@ -187,7 +187,7 @@ mod tests {
     #[test]
     fn unless_is_correct_with_false() {
         let state = PushState::builder()
-            .with_max_stack_size(1000)
+            .with_max_stack_size(1)
             .with_program([ExecInstruction::Noop])
             .unwrap()
             .with_bool_values([false])

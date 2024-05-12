@@ -79,7 +79,7 @@ mod tests {
     #[test]
     fn noop_is_correct() {
         let state = PushState::builder()
-            .with_max_stack_size(1000)
+            .with_max_stack_size(0)
             .with_no_program()
             .build();
         let result_state = ExecInstruction::Noop.perform(state.clone()).unwrap();
