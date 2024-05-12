@@ -8,7 +8,7 @@ exclude = ["packages/rust-lexicase"]
 
 [workspace.package]
 version = "0.1.0"
-authors = ["Nic McPhee", "Many cool people on Twitch"]
+authors = ["Nic McPhee", "Justus Flügel", "Many cool people on Twitch"]
 description = "An evolutionary computation system in Rust"
 documentation = "https://github.com/unhindered-ec/unhindered-ec"
 repository = "https://github.com/unhindered-ec/unhindered-ec.git"
