@@ -120,20 +120,31 @@ mod tests {
     };
 
     #[test]
-    fn stacks_empty() {
+    fn cond_true() {
         let state = PushState::builder()
-            .with_max_stack_size(0)
-            .with_no_program()
-            .with_bool_values([])
+            .with_max_stack_size(1)
+            .with_program([ExecInstruction::Noop])
+            .unwrap()
+            .with_bool_values([true])
             .unwrap()
             .build();
-        let result_error = When.perform(state.clone()).unwrap_err();
-        assert!(result_error.is_recoverable());
-        assert!(matches!(
-            result_error.error(),
-            PushInstructionError::StackError(StackError::Underflow { .. })
-        ));
-        assert_eq!(result_error.into_state(), state);
+        let result_state = When.perform(state.clone()).unwrap();
+        assert!(result_state.bool.is_empty());
+        assert_eq!(result_state.exec, state.exec);
+    }
+
+    #[test]
+    fn cond_false() {
+        let state = PushState::builder()
+            .with_max_stack_size(1)
+            .with_program([ExecInstruction::Noop])
+            .unwrap()
+            .with_bool_values([false])
+            .unwrap()
+            .build();
+        let result_state = When.perform(state).unwrap();
+        assert!(result_state.bool.is_empty());
+        assert!(result_state.exec.is_empty());
     }
 
     #[test]
@@ -172,30 +183,19 @@ mod tests {
     }
 
     #[test]
-    fn cond_true() {
+    fn stacks_empty() {
         let state = PushState::builder()
-            .with_max_stack_size(1)
-            .with_program([ExecInstruction::Noop])
-            .unwrap()
-            .with_bool_values([true])
+            .with_max_stack_size(0)
+            .with_no_program()
+            .with_bool_values([])
             .unwrap()
             .build();
-        let result_state = When.perform(state.clone()).unwrap();
-        assert!(result_state.bool.is_empty());
-        assert_eq!(result_state.exec, state.exec);
-    }
-
-    #[test]
-    fn cond_false() {
-        let state = PushState::builder()
-            .with_max_stack_size(1)
-            .with_program([ExecInstruction::Noop])
-            .unwrap()
-            .with_bool_values([false])
-            .unwrap()
-            .build();
-        let result_state = When.perform(state).unwrap();
-        assert!(result_state.bool.is_empty());
-        assert!(result_state.exec.is_empty());
+        let result_error = When.perform(state.clone()).unwrap_err();
+        assert!(result_error.is_recoverable());
+        assert!(matches!(
+            result_error.error(),
+            PushInstructionError::StackError(StackError::Underflow { .. })
+        ));
+        assert_eq!(result_error.into_state(), state);
     }
 }
