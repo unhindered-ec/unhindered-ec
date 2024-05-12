@@ -148,7 +148,7 @@ mod test {
         ];
         let block = dbg!(PushProgram::Block(instructions));
         let state = PushState::builder()
-            .with_max_stack_size(100)
+            .with_max_stack_size(3)
             .with_no_program()
             .build();
         let mut result = block.perform(state).unwrap();
@@ -170,7 +170,7 @@ mod test {
         let block = PushProgram::Block(instructions);
         let state = PushState::builder()
             // Set the max stack size to 2, so when we execute the block it overflows
-            .with_max_stack_size(2)
+            .with_max_stack_size(0)
             .with_no_program()
             .build();
         let Error::Fatal(_) = block.perform(state).unwrap_err() else {
