@@ -67,7 +67,7 @@ style = "warn"
 
 unwrap_used = "warn"
 expect_used = "warn"
-# panic = "warn"
+panic = "warn"
 module_name_repetitions = "allow"
 as_conversions = "deny"
 
@@ -88,7 +88,6 @@ cargo_common_metadata = "allow"
 multiple_crate_versions = "allow"
 redundant_type_annotations = "allow"
 todo = "allow"
-panic = "allow"
 unneeded_field_pattern = "allow"
 
 
