@@ -1,0 +1,8 @@
+allowed-duplicate-crates = [
+  "rand",
+  "rand_chacha",
+  "rand_core",
+  "base64",
+  "itertools",
+  "syn"
+]

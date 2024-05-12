@@ -10,7 +10,7 @@ use crate::{
     push_vm::{program::PushProgram, HasStack},
 };
 
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, strum_macros::Display, Clone, Eq, PartialEq)]
 pub enum ExecInstruction {
     Noop, /* Maybe use `Noop(())` instead of `Noop(Noop)` when we get around to this. See
            * 2024-03-31 stream chat for more. */

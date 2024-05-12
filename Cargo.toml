@@ -38,16 +38,17 @@ push_macros = { path = "packages/push-macros" }
 pedantic = "warn"
 nursery = "warn"
 # cargo = "warn"
+multiple_crate_versions = "warn"
 perf = "warn"
 complexity = "warn"
 correctness = "deny"
-# dbg_macro = "warn"
+dbg_macro = "warn"
 clone_on_ref_ptr = "warn"
 empty_enum_variants_with_brackets = "warn"
 empty_structs_with_brackets = "warn"
 error_impl_error = "warn"
 format_push_string = "warn"
-# if_then_some_else_none = "warn"
+if_then_some_else_none = "warn"
 infinite_loop = "warn"
 rc_buffer = "warn"
 rc_mutex = "warn"
@@ -62,16 +63,17 @@ unnecessary_safety_comment = "warn"
 unnecessary_safety_doc = "warn"
 unnecessary_self_imports = "warn"
 # unneeded_field_pattern = "warn"
-# use_debug = "warn"
+use_debug = "warn"
 style = "warn"
+arithmetic_side_effects = "warn"
 
 unwrap_used = "warn"
 expect_used = "warn"
-# panic = "warn"
+panic = "warn"
 module_name_repetitions = "allow"
 as_conversions = "deny"
 
-# these lints rely on the lint reasons rfc 
+# these lints rely on the lint reasons rfc
 # https://github.com/rust-lang/rust/issues/54503
 # and will become active once that is in stable.
 # We should get ample warning with the nightly & beta
@@ -79,20 +81,10 @@ as_conversions = "deny"
 allow_attributes_without_reason = "warn"
 allow_attributes = "deny"
 
-# we should probably enable this at some point but
-# it's a bit spammy right now
-# arithmetic_side_effects = "warn"
-
 # allow the following lints for now until they are fixed
 cargo_common_metadata = "allow"
-multiple_crate_versions = "allow"
 redundant_type_annotations = "allow"
-use_debug = "allow"
-if_then_some_else_none = "allow"
-panic = "allow"
 unneeded_field_pattern = "allow"
-dbg_macro = "allow"
-
 
 [workspace.metadata.example_runner]
 default = [
