@@ -49,14 +49,10 @@ where
             Self::Add => Self::binary_arithmetic(state, std::ops::Add::add),
             Self::Subtract => Self::binary_arithmetic(state, std::ops::Sub::sub),
             Self::Multiply => Self::binary_arithmetic(state, std::ops::Mul::mul),
-            Self::ProtectedDivide => {
-                Self::binary_arithmetic(
-                    state,
-                    |x, y| {
-                        if y == 0.0 { OrderedFloat(1.0) } else { x / y }
-                    },
-                )
-            }
+            Self::ProtectedDivide => Self::binary_arithmetic(state, |x, y| {
+                #[allow(clippy::arithmetic_side_effects)]
+                if y == 0.0 { OrderedFloat(1.0) } else { x / y }
+            }),
 
             // None of these instructions pop anything off the boolean stack, but
             // they will push a result onto that stack. Thus before we start performing
