@@ -112,9 +112,11 @@ where
 #[cfg(test)]
 #[allow(clippy::unwrap_used)]
 mod tests {
-    use super::*;
+    use super::Unless;
     use crate::{
-        error::into_state::IntoState, instruction::ExecInstruction, push_vm::push_state::PushState,
+        error::into_state::IntoState,
+        instruction::{ExecInstruction, Instruction, PushInstructionError},
+        push_vm::{push_state::PushState, stack::StackError},
     };
 
     #[test]
