@@ -26,3 +26,24 @@ impl<S> Instruction<S> for Noop {
         Ok(state)
     }
 }
+
+#[cfg(test)]
+#[allow(clippy::unwrap_used)]
+mod tests {
+    use super::Noop;
+    use crate::{
+        instruction::{ExecInstruction, Instruction},
+        push_vm::push_state::PushState,
+    };
+
+    #[test]
+    fn noop_is_correct() {
+        let state = PushState::builder()
+            .with_max_stack_size(2)
+            .with_program([ExecInstruction::noop(), ExecInstruction::noop()])
+            .unwrap()
+            .build();
+        let result_state = Noop.perform(state.clone()).unwrap();
+        assert_eq!(result_state, state);
+    }
+}

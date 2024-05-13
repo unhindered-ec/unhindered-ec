@@ -76,21 +76,3 @@ where
         }
     }
 }
-
-#[cfg(test)]
-#[allow(clippy::unwrap_used)]
-mod tests {
-    use super::ExecInstruction;
-    use crate::{instruction::Instruction, push_vm::push_state::PushState};
-
-    #[test]
-    fn noop_is_correct() {
-        let state = PushState::builder()
-            .with_max_stack_size(2)
-            .with_program([ExecInstruction::noop(), ExecInstruction::noop()])
-            .unwrap()
-            .build();
-        let result_state = ExecInstruction::noop().perform(state.clone()).unwrap();
-        assert_eq!(result_state, state);
-    }
-}
