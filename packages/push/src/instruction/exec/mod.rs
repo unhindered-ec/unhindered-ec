@@ -86,7 +86,7 @@ mod tests {
     fn noop_is_correct() {
         let state = PushState::builder()
             .with_max_stack_size(0)
-            .with_no_program()
+            .with_program([ExecInstruction::Noop, ExecInstruction::Noop]).unwrap()
             .build();
         let result_state = ExecInstruction::Noop.perform(state.clone()).unwrap();
         assert_eq!(result_state, state);
