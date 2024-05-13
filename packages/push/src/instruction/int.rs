@@ -188,7 +188,6 @@ where
                         .top2()
                         .map_err(PushInstructionError::from)
                         .map(|(&x, &y)| {
-                            let x: i32 = x.try_into().ok()?;
                             let y: u32 = y.try_into().ok()?;
                             x.checked_pow(y).map(i64::from)
                         })
