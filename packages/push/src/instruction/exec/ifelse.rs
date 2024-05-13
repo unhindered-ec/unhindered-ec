@@ -108,8 +108,8 @@ where
                     // This should never happen since we just checked that the stack has a boolean.
                     return Err(Error::fatal(state, e));
                 }
-                let (r#then, _) = match state.stack_mut::<PushProgram>().pop2() {
-                    Ok(blocks) => blocks,
+                let r#then = match state.stack_mut::<PushProgram>().pop2() {
+                    Ok((r#then,_)) => r#then,
                     // This case should never happen since we just checked that there are two blocks
                     // on the exec stack.
                     Err(e) => return Err(Error::fatal(state, e)),
