@@ -109,7 +109,7 @@ where
                     return Err(Error::fatal(state, e));
                 }
                 let r#then = match state.stack_mut::<PushProgram>().pop2() {
-                    Ok((r#then,_)) => r#then,
+                    Ok((r#then, _)) => r#then,
                     // This case should never happen since we just checked that there are two blocks
                     // on the exec stack.
                     Err(e) => return Err(Error::fatal(state, e)),
@@ -148,8 +148,6 @@ where
         }
     }
 }
-
-// TODO: Add a `proptest` module and tests
 
 #[cfg(test)]
 #[allow(clippy::unwrap_used)]
