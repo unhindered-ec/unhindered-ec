@@ -1,11 +1,15 @@
 [package]
 name = "push_macros"
-version.workspace = true
-authors.workspace = true
-description.workspace = true
-documentation.workspace = true
-edition.workspace = true
-license.workspace = true
+version = { workspace = true }
+authors = { workspace = true }
+description = { workspace = true }
+documentation = { workspace = true }
+repository = { workspace = true }
+edition = { workspace = true }
+license = { workspace = true }
+categories = ["development-tools"]
+keywords = ["push", "proc-macros", "builder-pattern"]
+readme = "README.md"
 
 [lib]
 proc-macro=true
