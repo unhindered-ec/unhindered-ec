@@ -1,9 +1,10 @@
 mod dup_block;
 mod ifelse;
+mod noop;
 mod unless;
 mod when;
 
-use self::{dup_block::DupBlock, ifelse::IfElse, unless::Unless, when::When};
+use self::{dup_block::DupBlock, ifelse::IfElse, noop::Noop, unless::Unless, when::When};
 use super::{instruction_error::PushInstructionError, Instruction, NumOpens, PushInstruction};
 use crate::{
     error::InstructionResult,
@@ -13,8 +14,7 @@ use crate::{
 #[derive(Debug, strum_macros::Display, Clone, Eq, PartialEq)]
 pub enum ExecInstruction {
     Noop, /* Maybe use `Noop(())` instead of `Noop(Noop)` when we get around to this. See
-           * 2024-03-31 stream chat for more. */
-    Dup(DupBlock),
+    DupBlock(DupBlock),
     When(When),
     Unless(Unless),
     IfElse(IfElse),
@@ -23,7 +23,7 @@ pub enum ExecInstruction {
 impl ExecInstruction {
     #[must_use]
     pub const fn dup() -> Self {
-        Self::Dup(DupBlock)
+        Self::DupBlock(DupBlock)
     }
 
     #[must_use]
@@ -51,7 +51,7 @@ impl NumOpens for ExecInstruction {
     fn num_opens(&self) -> usize {
         match self {
             Self::Noop => 0,
-            Self::Dup(dup) => dup.num_opens(),
+            Self::DupBlock(dup) => dup.num_opens(),
             Self::When(when) => when.num_opens(),
             Self::Unless(unless) => unless.num_opens(),
             Self::IfElse(if_else) => if_else.num_opens(),
@@ -71,7 +71,7 @@ where
             Self::When(when) => when.perform(state),
             Self::Unless(unless) => unless.perform(state),
             Self::IfElse(if_else) => if_else.perform(state),
-            Self::Dup(dup) => dup.perform(state),
+            Self::DupBlock(dup) => dup.perform(state),
         }
     }
 }

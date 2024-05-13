@@ -4,19 +4,22 @@ use crate::{
     push_vm::{program::PushProgram, stack::PushOnto, HasStack},
 };
 
-/// A `Dup` instruction for the `Exec` stack that duplicates (clones) the top
-/// element of the `Exec` stack.
+/// An instructions that duplicates (clones) the top
+/// _block_ of the `Exec` stack, adding an implied "open"
+/// to crate a block from here to the corresponding `Close`.
 ///
 /// # Inputs
 ///
-/// The `Exec::Dup` instruction takes the following inputs:
+/// The `Exec::DupBlock` instruction takes the following inputs:
 ///    - `Exec` stack
 ///      - One code block
 ///
 /// # Behavior
 ///
-/// The `Exec::Dup` instruction clones the top block on the `Exec` stack
-/// leaving both the original and the copy on the `Exec` stack.
+/// The `Exec::DupBlock` instruction clones the top block on the `Exec` stack
+/// leaving both the original and the copy on the `Exec` stack. It has an
+/// implied "open" to create a block that runs from this instruction to the
+/// first `Close` in a Plushy genome.
 ///
 /// If the `Exec` stack (after this instruction) is empty, this is a no-op,
 /// and the state is returned unchanged.
