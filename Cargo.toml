@@ -62,13 +62,8 @@ try_err = "warn"
 unnecessary_safety_comment = "warn"
 unnecessary_safety_doc = "warn"
 unnecessary_self_imports = "warn"
-
 unneeded_field_pattern = "warn"
-
-
-
 use_debug = "warn"
-
 style = "warn"
 arithmetic_side_effects = "warn"
 
@@ -86,17 +81,10 @@ as_conversions = "deny"
 allow_attributes_without_reason = "warn"
 allow_attributes = "deny"
 
-
 # allow the following lints for now until they are fixed
 cargo_common_metadata = "allow"
 redundant_type_annotations = "allow"
 todo = "allow"
-
-
-
-
-
-
 
 [workspace.metadata.example_runner]
 default = [
