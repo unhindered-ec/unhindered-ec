@@ -1,9 +1,9 @@
-mod dup;
+mod dup_block;
 mod ifelse;
 mod unless;
 mod when;
 
-use self::{dup::Dup, ifelse::IfElse, unless::Unless, when::When};
+use self::{dup_block::DupBlock, ifelse::IfElse, unless::Unless, when::When};
 use super::{instruction_error::PushInstructionError, Instruction, NumOpens, PushInstruction};
 use crate::{
     error::InstructionResult,
@@ -14,7 +14,7 @@ use crate::{
 pub enum ExecInstruction {
     Noop, /* Maybe use `Noop(())` instead of `Noop(Noop)` when we get around to this. See
            * 2024-03-31 stream chat for more. */
-    Dup(Dup),
+    Dup(DupBlock),
     When(When),
     Unless(Unless),
     IfElse(IfElse),
@@ -23,7 +23,7 @@ pub enum ExecInstruction {
 impl ExecInstruction {
     #[must_use]
     pub const fn dup() -> Self {
-        Self::Dup(Dup)
+        Self::Dup(DupBlock)
     }
 
     #[must_use]

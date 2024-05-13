@@ -54,15 +54,15 @@ use crate::{
 /// then this returns that as a [`Error::Fatal`](crate::error::Error::Fatal)
 /// error.
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
-pub struct Dup;
+pub struct DupBlock;
 
-impl NumOpens for Dup {
+impl NumOpens for DupBlock {
     fn num_opens(&self) -> usize {
         1
     }
 }
 
-impl<S> Instruction<S> for Dup
+impl<S> Instruction<S> for DupBlock
 where
     S: Clone + HasStack<PushProgram>,
 {
@@ -81,11 +81,11 @@ where
 #[cfg(test)]
 #[allow(clippy::unwrap_used)]
 mod tests {
-    use super::*;
+    use super::DupBlock;
     use crate::{
-        instruction::{ExecInstruction, Instruction},
+        instruction::{ExecInstruction, Instruction, PushInstructionError},
         list_into::arr_into,
-        push_vm::{push_state::PushState, stack::StackError},
+        push_vm::{program::PushProgram, push_state::PushState, stack::StackError},
     };
 
     #[test]
@@ -95,7 +95,7 @@ mod tests {
             .with_program([ExecInstruction::Noop])
             .unwrap()
             .build();
-        let result_state = Dup.perform(state).unwrap();
+        let result_state = DupBlock.perform(state).unwrap();
         assert_eq!(
             result_state.exec,
             arr_into![<PushProgram> ExecInstruction::Noop, ExecInstruction::Noop]
@@ -108,7 +108,7 @@ mod tests {
             .with_max_stack_size(0)
             .with_no_program()
             .build();
-        let result_error = Dup.perform(state).unwrap_err();
+        let result_error = DupBlock.perform(state).unwrap_err();
         assert!(result_error.is_recoverable());
         assert!(matches!(
             result_error.error(),
@@ -123,7 +123,7 @@ mod tests {
             .with_program([ExecInstruction::Noop])
             .unwrap()
             .build();
-        let result_error = Dup.perform(state).unwrap_err();
+        let result_error = DupBlock.perform(state).unwrap_err();
         assert!(result_error.is_fatal());
         assert!(matches!(
             result_error.error(),
