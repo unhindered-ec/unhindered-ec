@@ -60,7 +60,7 @@ mod tests {
     fn mutate_one_over_does_not_change_much() {
         let mut rng = rand::thread_rng();
         let num_bits = 100;
-        let parent_bits: Bitstring = Bitstring::random(num_bits, &mut rng);
+        let parent_bits = Bitstring::random(num_bits, &mut rng);
 
         let child_bits = WithOneOverLength
             .mutate(parent_bits.clone(), &mut rng)

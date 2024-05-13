@@ -52,7 +52,7 @@ if_then_some_else_none = "warn"
 infinite_loop = "warn"
 rc_buffer = "warn"
 rc_mutex = "warn"
-# redundant_type_annotations = "warn"
+redundant_type_annotations = "warn"
 rest_pat_in_fully_bound_structs = "warn"
 self_named_module_files = "deny"
 suspicious_xor_used_as_pow = "warn"
@@ -80,9 +80,6 @@ as_conversions = "deny"
 # ci builds if we need to change anything
 allow_attributes_without_reason = "warn"
 allow_attributes = "deny"
-
-# allow the following lints for now until they are fixed
-redundant_type_annotations = "allow"
 
 [workspace.metadata.example_runner]
 default = [
