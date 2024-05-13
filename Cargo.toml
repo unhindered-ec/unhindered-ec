@@ -84,7 +84,6 @@ allow_attributes = "deny"
 
 # allow the following lints for now until they are fixed
 cargo_common_metadata = "allow"
-
 todo = "allow"
 unneeded_field_pattern = "allow"
 
