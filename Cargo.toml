@@ -57,7 +57,7 @@ rest_pat_in_fully_bound_structs = "warn"
 self_named_module_files = "deny"
 suspicious_xor_used_as_pow = "warn"
 tests_outside_test_module = "deny"
-# todo = "warn"
+todo = "warn"
 try_err = "warn"
 unnecessary_safety_comment = "warn"
 unnecessary_safety_doc = "warn"
@@ -73,16 +73,13 @@ panic = "warn"
 module_name_repetitions = "allow"
 as_conversions = "deny"
 
-# these lints rely on the lint reasons rfc 
+# these lints rely on the lint reasons rfc
 # https://github.com/rust-lang/rust/issues/54503
 # and will become active once that is in stable.
 # We should get ample warning with the nightly & beta
 # ci builds if we need to change anything
 allow_attributes_without_reason = "warn"
 allow_attributes = "deny"
-
-# allow the following lints for now until they are fixed
-todo = "allow"
 
 [workspace.metadata.example_runner]
 default = [

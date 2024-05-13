@@ -17,10 +17,7 @@ use crate::{
 // its own package as well. We could, for example, do a FFI
 // implementation that just forwards to the a Clojure implementation
 // or Python implementation for comparison/testing purposes.
-
-// Because `f64` doesn't impl `Eq`, having a float stack means
-// that `PushState` also can't impl `Eq`.
-#[derive(Default, Debug, Clone)]
+#[derive(Default, Debug, Clone, Eq, PartialEq)]
 #[push_macros::push_state(builder)]
 pub struct PushState {
     #[stack(exec)]

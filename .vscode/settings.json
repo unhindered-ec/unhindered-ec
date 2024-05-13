@@ -18,6 +18,7 @@
         "thiserror",
         "typestate",
         "UMAD",
+        "underflowed",
         "underflows",
         "Wrappable"
     ],
