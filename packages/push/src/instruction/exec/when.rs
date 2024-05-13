@@ -124,7 +124,7 @@ mod tests {
     fn cond_true() {
         let state = PushState::builder()
             .with_max_stack_size(1)
-            .with_program([ExecInstruction::Noop])
+            .with_program([ExecInstruction::noop()])
             .unwrap()
             .with_bool_values([true])
             .unwrap()
@@ -138,7 +138,7 @@ mod tests {
     fn cond_false() {
         let state = PushState::builder()
             .with_max_stack_size(1)
-            .with_program([ExecInstruction::Noop])
+            .with_program([ExecInstruction::noop()])
             .unwrap()
             .with_bool_values([false])
             .unwrap()
@@ -176,7 +176,7 @@ mod tests {
     fn cond_missing() {
         let state = PushState::builder()
             .with_max_stack_size(1)
-            .with_program([ExecInstruction::Noop])
+            .with_program([ExecInstruction::noop()])
             .unwrap()
             .build();
         let result_state = When.perform(state).unwrap();

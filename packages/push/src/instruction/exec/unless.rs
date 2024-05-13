@@ -123,7 +123,7 @@ mod tests {
     fn cond_true() {
         let state = PushState::builder()
             .with_max_stack_size(1)
-            .with_program([ExecInstruction::Noop])
+            .with_program([ExecInstruction::noop()])
             .unwrap()
             .with_bool_values([true])
             .unwrap()
@@ -137,7 +137,7 @@ mod tests {
     fn cond_false() {
         let state = PushState::builder()
             .with_max_stack_size(1)
-            .with_program([ExecInstruction::Noop])
+            .with_program([ExecInstruction::noop()])
             .unwrap()
             .with_bool_values([false])
             .unwrap()
@@ -176,7 +176,7 @@ mod tests {
         // If there's no boolean, we leave the state unchanged and skip the instruction.
         let state = PushState::builder()
             .with_max_stack_size(1)
-            .with_program([ExecInstruction::Noop])
+            .with_program([ExecInstruction::noop()])
             .unwrap()
             .build();
         let result_state = Unless.perform(state.clone()).unwrap();

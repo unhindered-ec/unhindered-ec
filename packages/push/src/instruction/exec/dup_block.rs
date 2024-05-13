@@ -95,13 +95,13 @@ mod tests {
     fn exec_present_not_full() {
         let state = PushState::builder()
             .with_max_stack_size(2)
-            .with_program([ExecInstruction::Noop])
+            .with_program([ExecInstruction::noop()])
             .unwrap()
             .build();
         let result_state = DupBlock.perform(state).unwrap();
         assert_eq!(
             result_state.exec,
-            arr_into![<PushProgram> ExecInstruction::Noop, ExecInstruction::Noop]
+            arr_into![<PushProgram> ExecInstruction::noop(), ExecInstruction::noop()]
         );
     }
 
@@ -123,7 +123,7 @@ mod tests {
     fn exec_present_and_full() {
         let state = PushState::builder()
             .with_max_stack_size(1)
-            .with_program([ExecInstruction::Noop])
+            .with_program([ExecInstruction::noop()])
             .unwrap()
             .build();
         let result_error = DupBlock.perform(state).unwrap_err();

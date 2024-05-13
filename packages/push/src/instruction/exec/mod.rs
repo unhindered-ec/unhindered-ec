@@ -13,7 +13,7 @@ use crate::{
 
 #[derive(Debug, strum_macros::Display, Clone, Eq, PartialEq)]
 pub enum ExecInstruction {
-    Noop, /* Maybe use `Noop(())` instead of `Noop(Noop)` when we get around to this. See
+    Noop(Noop),
     DupBlock(DupBlock),
     When(When),
     Unless(Unless),
@@ -21,6 +21,11 @@ pub enum ExecInstruction {
 }
 
 impl ExecInstruction {
+    #[must_use]
+    pub const fn noop() -> Self {
+        Self::Noop(Noop)
+    }
+
     #[must_use]
     pub const fn dup() -> Self {
         Self::DupBlock(DupBlock)
@@ -50,7 +55,7 @@ impl From<ExecInstruction> for PushInstruction {
 impl NumOpens for ExecInstruction {
     fn num_opens(&self) -> usize {
         match self {
-            Self::Noop => 0,
+            Self::Noop(noop) => noop.num_opens(),
             Self::DupBlock(dup) => dup.num_opens(),
             Self::When(when) => when.num_opens(),
             Self::Unless(unless) => unless.num_opens(),
@@ -67,7 +72,7 @@ where
 
     fn perform(&self, state: S) -> InstructionResult<S, Self::Error> {
         match self {
-            Self::Noop => Ok(state),
+            Self::Noop(noop) => noop.perform(state),
             Self::When(when) => when.perform(state),
             Self::Unless(unless) => unless.perform(state),
             Self::IfElse(if_else) => if_else.perform(state),
@@ -86,10 +91,10 @@ mod tests {
     fn noop_is_correct() {
         let state = PushState::builder()
             .with_max_stack_size(2)
-            .with_program([ExecInstruction::Noop, ExecInstruction::Noop])
+            .with_program([ExecInstruction::noop(), ExecInstruction::noop()])
             .unwrap()
             .build();
-        let result_state = ExecInstruction::Noop.perform(state.clone()).unwrap();
+        let result_state = ExecInstruction::noop().perform(state.clone()).unwrap();
         assert_eq!(result_state, state);
     }
 }
