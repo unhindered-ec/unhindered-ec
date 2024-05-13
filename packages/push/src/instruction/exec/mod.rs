@@ -12,6 +12,7 @@ use crate::{
 };
 
 #[derive(Debug, strum_macros::Display, Clone, Eq, PartialEq)]
+#[must_use]
 pub enum ExecInstruction {
     Noop(Noop),
     DupBlock(DupBlock),
@@ -21,27 +22,22 @@ pub enum ExecInstruction {
 }
 
 impl ExecInstruction {
-    #[must_use]
     pub const fn noop() -> Self {
         Self::Noop(Noop)
     }
 
-    #[must_use]
     pub const fn dup() -> Self {
         Self::DupBlock(DupBlock)
     }
 
-    #[must_use]
     pub const fn when() -> Self {
         Self::When(When)
     }
 
-    #[must_use]
     pub const fn unless() -> Self {
         Self::Unless(Unless)
     }
 
-    #[must_use]
     pub const fn if_else() -> Self {
         Self::IfElse(IfElse)
     }
