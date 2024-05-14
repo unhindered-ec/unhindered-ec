@@ -78,17 +78,17 @@ impl<Input, Output> Cases<Input, Output> {
     }
 }
 
-pub trait WithTarget<Input> {
-    fn with_target<Output, F>(self, target_fn: F) -> Cases<Input, Output>
+pub trait WithTargetFn<Input> {
+    fn with_target_fn<Output, F>(self, target_fn: F) -> Cases<Input, Output>
     where
         F: Fn(&Input) -> Output;
 }
 
-impl<T, Input> WithTarget<Input> for T
+impl<T, Input> WithTargetFn<Input> for T
 where
     T: IntoIterator<Item = Input>,
 {
-    fn with_target<Output, F>(self, target_fn: F) -> Cases<Input, Output>
+    fn with_target_fn<Output, F>(self, target_fn: F) -> Cases<Input, Output>
     where
         F: Fn(&Input) -> Output,
     {

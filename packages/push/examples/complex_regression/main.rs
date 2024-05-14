@@ -25,7 +25,7 @@ use ec_linear::mutator::umad::Umad;
 use num_traits::Float;
 use ordered_float::OrderedFloat;
 use push::{
-    evaluation::cases::{Case, Cases, WithTarget},
+    evaluation::cases::{Case, Cases, WithTargetFn},
     genome::plushy::{ConvertToGeneGenerator, Plushy},
     instruction::{variable_name::VariableName, FloatInstruction, PushInstruction},
     push_vm::{program::PushProgram, push_state::PushState, HasStack, State},
@@ -114,7 +114,7 @@ fn main() -> Result<()> {
     // Inputs from -4 (inclusive) to 4 (exclusive) in increments of 0.25.
     let training_cases = (-4 * 4..4 * 4)
         .map(|n| Of64::from(n) / 4.0)
-        .with_target(|&i| target_fn(i));
+        .with_target_fn(|&i| target_fn(i));
 
     // The range want is -4 1/8, -3 7/8, -3 5/8, ..., 3 7/8, 4 1/8.
     // I have to multiply that by 8 to get integer values, so:
@@ -122,7 +122,7 @@ fn main() -> Result<()> {
     let _testing_cases = (-33..=33)
         .step_by(2)
         .map(|n| Of64::from(n) / 8.0)
-        .with_target(|&i| target_fn(i));
+        .with_target_fn(|&i| target_fn(i));
 
     /*
      * The `scorer` will need to take an evolved program (sequence of

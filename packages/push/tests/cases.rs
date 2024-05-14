@@ -4,7 +4,7 @@
 use std::ops::Not;
 
 use push::{
-    evaluation::cases::{Case, Cases, WithTarget},
+    evaluation::cases::{Case, Cases, WithTargetFn},
     vec_into,
 };
 
@@ -64,7 +64,7 @@ fn test_len() {
 #[test]
 fn test_with_target() {
     let inputs = 0..10;
-    let cases = inputs.with_target(|x| x * 2);
+    let cases = inputs.with_target_fn(|x| x * 2);
     assert_eq!(
         cases.into_iter().collect::<Vec<_>>(),
         (0..10).map(|x| Case::new(x, x * 2)).collect::<Vec<_>>()
