@@ -156,7 +156,7 @@ fn main() -> Result<()> {
     ensure!(population.is_empty().not());
 
     let best = Best.select(&population, &mut rng)?;
-    println!("Best initial individual is {best:?}");
+    println!("Best initial individual is {best}");
 
     let umad = Umad::new(0.1, 0.1, &gene_generator);
 
@@ -179,7 +179,7 @@ fn main() -> Result<()> {
         let best = Best.select(generation.population(), &mut rng)?;
         // TODO: Change 2 to be the smallest number of digits needed for
         // num_generations-1.
-        println!("Generation {generation_number:2} best is {best:#?}");
+        println!("Generation {generation_number:2} best is {best}");
 
         if best.test_results.total_result.error == OrderedFloat(0.0) {
             println!("SUCCESS");

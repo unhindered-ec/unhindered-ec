@@ -56,7 +56,7 @@ use crate::{
 /// [`StackError::Underflow`](crate::push_vm::stack::StackError::Underflow)
 /// then this returns that as a [`Error::Fatal`](crate::error::Error::Fatal)
 /// error.
-#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+#[derive(Debug, Copy, Clone, Default, Eq, PartialEq)]
 pub struct DupBlock;
 
 impl NumOpens for DupBlock {

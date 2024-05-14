@@ -4,6 +4,8 @@ mod noop;
 mod unless;
 mod when;
 
+use strum_macros::EnumIter;
+
 use self::{dup_block::DupBlock, ifelse::IfElse, noop::Noop, unless::Unless, when::When};
 use super::{instruction_error::PushInstructionError, Instruction, NumOpens, PushInstruction};
 use crate::{
@@ -11,7 +13,7 @@ use crate::{
     push_vm::{program::PushProgram, HasStack},
 };
 
-#[derive(Debug, strum_macros::Display, Clone, Eq, PartialEq)]
+#[derive(Debug, strum_macros::Display, Clone, Eq, PartialEq, EnumIter)]
 #[must_use]
 pub enum ExecInstruction {
     Noop(Noop),

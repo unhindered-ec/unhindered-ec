@@ -61,7 +61,7 @@ use crate::{
 /// If either of the stack accesses returns any error other than a
 /// [`StackError::Underflow`] then this returns that as a [`Error::Fatal`]
 /// error.
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, Copy, Clone, Default, Eq, PartialEq)]
 pub struct Unless;
 
 impl NumOpens for Unless {
