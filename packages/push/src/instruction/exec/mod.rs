@@ -28,7 +28,7 @@ impl ExecInstruction {
         Self::Noop(Noop)
     }
 
-    pub const fn dup() -> Self {
+    pub const fn dup_block() -> Self {
         Self::DupBlock(DupBlock)
     }
 
