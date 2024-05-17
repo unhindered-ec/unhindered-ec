@@ -32,45 +32,38 @@ use strum::IntoEnumIterator;
 
 use crate::args::{Args, RunModel};
 
-/*
- * This is an implementation of the "smallest" problem from Tom Helmuth's
- * software synthesis benchmark suite (PSB1):
- *
- * T. Helmuth and L. Spector. General Program Synthesis Benchmark Suite. In
- * GECCO '15: Proceedings of the 17th annual conference on Genetic and
- * evolutionary computation. July 2015. ACM.
- *
- * Problem Source: C. Le Goues et al., "The ManyBugs and IntroClass
- * Benchmarks for Automated Repair of C Programs," in IEEE Transactions on
- * Software Engineering, vol. 41, no. 12, pp. 1236-1256, Dec. 1 2015.
- * doi: 10.1109/TSE.2015.2454513
- *
- * This problem is quite easy if you have a `Min` instruction, but can be
- * more a bit more difficult without that instruction.
- */
-
 // An input for this problem is a tuple of four `i64`s.
 #[derive(Copy, Clone)]
 struct Input(i64, i64, i64, i64);
 // An output for this problem is an `i64`.
 struct Output(i64);
 
+// This is an implementation of the "smallest" problem from Tom Helmuth's
+// software synthesis benchmark suite (PSB1):
+//
+// T. Helmuth and L. Spector. General Program Synthesis Benchmark Suite. In
+// GECCO '15: Proceedings of the 17th annual conference on Genetic and
+// evolutionary computation. July 2015. ACM.
+//
+// Problem Source: C. Le Goues et al., "The ManyBugs and IntroClass
+// Benchmarks for Automated Repair of C Programs," in IEEE Transactions on
+// Software Engineering, vol. 41, no. 12, pp. 1236-1256, Dec. 1 2015.
+// doi: 10.1109/TSE.2015.2454513
+//
+// This problem is quite easy if you have a `Min` instruction, but can be
+// more a bit more difficult without that instruction.
 fn main() -> Result<()> {
-    // The penalty value to use when an evolved program doesn't have an expected
-    // "return" value on the appropriate stack at the end of its execution.
-    let penalty_value: i64 = 1_000;
-    let num_training_cases = 100;
+    let mut rng = thread_rng();
 
     let args = Args::parse();
 
-    let mut rng = thread_rng();
-    let training_cases = training_cases(num_training_cases, &mut rng);
+    let training_cases = training_cases(&mut rng);
 
     let scorer = FnScorer(|genome: &Plushy| -> TestResults<test_results::Error<i64>> {
-        score_genome(genome, &training_cases, penalty_value)
+        score_genome(genome, &training_cases)
     });
 
-    let lexicase = Lexicase::new(num_training_cases);
+    let lexicase = Lexicase::new(training_cases.len());
 
     let instruction_set = instructions();
 
@@ -118,8 +111,10 @@ fn main() -> Result<()> {
 fn score_genome(
     genome: &Plushy,
     training_cases: &Cases<Input, Output>,
-    penalty_value: i64,
 ) -> TestResults<test_results::Error<i64>> {
+    // The penalty value to use when an evolved program doesn't have an expected
+    // "return" value on the appropriate stack at the end of its execution.
+    const PENALTY_VALUE: i64 = 1_000;
     let program = Vec::<PushProgram>::from(genome.clone());
     let mut errors: TestResults<test_results::Error<i64>> = training_cases
         .iter()
@@ -128,7 +123,7 @@ fn score_genome(
                  input,
                  output: Output(expected),
              }: &Case<Input, Output>| {
-                run_case(&program, input, penalty_value, expected)
+                run_case(&program, input, PENALTY_VALUE, expected)
             },
         )
         .collect();
@@ -177,8 +172,9 @@ fn build_state(program: &[PushProgram], Input(a, b, c, d): Input) -> Result<Push
         .build())
 }
 
-fn training_inputs(num_cases: usize, rng: &mut ThreadRng) -> Vec<Input> {
-    (0..num_cases)
+fn training_inputs(rng: &mut ThreadRng) -> Vec<Input> {
+    const NUM_TRAINING_CASES: usize = 100;
+    (0..NUM_TRAINING_CASES)
         .map(|_| {
             Input(
                 (rng.next_u32() % 100).into(),
@@ -195,17 +191,22 @@ fn smallest(&Input(a, b, c, d): &Input) -> Output {
     Output([a, b, c, d].into_iter().min().unwrap())
 }
 
-fn training_cases(num_cases: usize, rng: &mut ThreadRng) -> Cases<Input, Output> {
-    training_inputs(num_cases, rng).with_target_fn(smallest)
+fn training_cases(rng: &mut ThreadRng) -> Cases<Input, Output> {
+    training_inputs(rng).with_target_fn(smallest)
 }
 
 fn instructions() -> Vec<PushInstruction> {
     let int_instructions = IntInstruction::iter()
         // Restore this line to remove `Min` from the instruction set.
-        // .filter(|&i| i != IntInstruction::Min)
+        .filter(|&i| i != IntInstruction::Min)
         .map(Into::into);
     let bool_instructions = BoolInstruction::iter().map(Into::into);
-    let exec_instructions = ExecInstruction::iter().map(Into::into);
+    let exec_instructions = ExecInstruction::iter()
+        // The `ExecInstruction::DupBlock` instruction often leads to substantially more complicated
+        // evolved programs which take much longer to run. Restore this `filter` line
+        // to remove it from the instruction set.
+        .filter(|&i| i != ExecInstruction::dup_block())
+        .map(Into::into);
     let variables = ["a", "b", "c", "d"]
         .into_iter()
         .map(VariableName::from)
