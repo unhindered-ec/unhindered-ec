@@ -10,7 +10,7 @@ use crate::instruction::{instruction_error::PushInstructionError, Instruction, N
 /// # Behavior
 ///
 /// This always succeeds and makes no changes to any of the stacks.
-#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+#[derive(Debug, Copy, Clone, Default, Eq, PartialEq)]
 pub struct Noop;
 
 impl NumOpens for Noop {
