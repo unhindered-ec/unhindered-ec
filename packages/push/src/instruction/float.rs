@@ -5,7 +5,7 @@ use super::{Instruction, PushInstruction, PushInstructionError};
 use crate::{
     error::{Error, InstructionResult, MapInstructionError},
     push_vm::{
-        stack::{Stack, StackDiscard, StackError, StackPush},
+        stack::{PushOnto, Stack, StackDiscard, StackError},
         HasStack,
     },
 };
@@ -49,14 +49,10 @@ where
             Self::Add => Self::binary_arithmetic(state, std::ops::Add::add),
             Self::Subtract => Self::binary_arithmetic(state, std::ops::Sub::sub),
             Self::Multiply => Self::binary_arithmetic(state, std::ops::Mul::mul),
-            Self::ProtectedDivide => {
-                Self::binary_arithmetic(
-                    state,
-                    |x, y| {
-                        if y == 0.0 { OrderedFloat(1.0) } else { x / y }
-                    },
-                )
-            }
+            Self::ProtectedDivide => Self::binary_arithmetic(state, |x, y| {
+                #[allow(clippy::arithmetic_side_effects)]
+                if y == 0.0 { OrderedFloat(1.0) } else { x / y }
+            }),
 
             // None of these instructions pop anything off the boolean stack, but
             // they will push a result onto that stack. Thus before we start performing
@@ -84,7 +80,7 @@ where
                     .top()
                     .map_err(PushInstructionError::from)
                     .cloned()
-                    .with_stack_push(state)
+                    .push_onto(state)
             }
         }
     }
@@ -103,7 +99,7 @@ impl FloatInstruction {
             .top2()
             .map_err(PushInstructionError::from)
             .map(|(&x, &y)| op(x, y))
-            .with_stack_replace(2, state)
+            .replace_on(2, state)
     }
 
     fn binary_predicate<S>(
@@ -124,7 +120,7 @@ impl FloatInstruction {
             .top2()
             .map_err(PushInstructionError::from)
             .map(|(x, y)| op(x, y))
-            .with_stack_push(state)
+            .push_onto(state)
             .with_stack_discard::<OrderedFloat<f64>>(1)
     }
 }

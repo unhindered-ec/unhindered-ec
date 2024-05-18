@@ -101,7 +101,6 @@ impl Instruction<PushState> for PushProgram {
 mod test {
     use super::PushProgram;
     use crate::{
-        error::Error,
         genome::plushy::{Plushy, PushGene},
         instruction::{
             BoolInstruction, ExecInstruction, FloatInstruction, Instruction, IntInstruction,
@@ -114,10 +113,10 @@ mod test {
     fn conversion() {
         let genes = arr_into![
             IntInstruction::Add,
-            ExecInstruction::IfElse,
+            ExecInstruction::if_else(),
             IntInstruction::Multiply,
             PushGene::Close,
-            ExecInstruction::Dup,
+            ExecInstruction::dup(),
             IntInstruction::Subtract,
         ];
         let plushy: Plushy = genes.into_iter().collect();
@@ -129,10 +128,10 @@ mod test {
             program,
             vec_into![
                 IntInstruction::Add,
-                ExecInstruction::IfElse,
+                ExecInstruction::if_else(),
                 PushProgram::Block(vec_into![IntInstruction::Multiply]),
                 PushProgram::Block(vec_into![
-                    ExecInstruction::Dup,
+                    ExecInstruction::dup(),
                     PushProgram::Block(vec_into![IntInstruction::Subtract])
                 ])
             ]
@@ -146,9 +145,9 @@ mod test {
             FloatInstruction::Multiply,
             BoolInstruction::And,
         ];
-        let block = dbg!(PushProgram::Block(instructions));
+        let block = PushProgram::Block(instructions);
         let state = PushState::builder()
-            .with_max_stack_size(100)
+            .with_max_stack_size(3)
             .with_no_program()
             .build();
         let mut result = block.perform(state).unwrap();
@@ -170,11 +169,13 @@ mod test {
         let block = PushProgram::Block(instructions);
         let state = PushState::builder()
             // Set the max stack size to 2, so when we execute the block it overflows
-            .with_max_stack_size(2)
+            .with_max_stack_size(0)
             .with_no_program()
             .build();
-        let Error::Fatal(_) = block.perform(state).unwrap_err() else {
-            panic!("Performing the block didn't generate an overflow error");
-        };
+
+        assert!(
+            block.perform(state).is_err(),
+            "Performing the block didn't generate an overflow error"
+        );
     }
 }

@@ -8,10 +8,12 @@ exclude = ["packages/rust-lexicase"]
 
 [workspace.package]
 version = "0.1.0"
-authors = ["Nic McPhee", "Many cool people on Twitch"]
+authors = ["Nic McPhee", "Justus Flügel", "Many cool people on Twitch"]
 description = "An evolutionary computation system in Rust"
-documentation = "https://github.com/NicMcPhee/rust-ga"
+documentation = "https://github.com/unhindered-ec/unhindered-ec"
+repository = "https://github.com/unhindered-ec/unhindered-ec.git"
 edition = "2021"
+license = "MIT OR Apache-2.0"
 
 [profile.release]
 debug = true
@@ -19,11 +21,13 @@ debug = true
 [workspace.dependencies]
 anyhow = "1.0.80"
 clap = "4.5.1"
-rand = "0.8.5"
+rand = "0.9.0-alpha.1"
 num-traits = "0.2.18"
-thiserror = "1.0.57"
+thiserror = "1.0.59"
 itertools = "0.12.1"
 macro_railroad_annotation = "1.0.3"
+test-strategy = "0.3.1"
+proptest = "1.2.0"
 
 ec-core = { path = "packages/ec-core" }
 ec-linear = { path = "packages/ec-linear" }
@@ -34,11 +38,48 @@ push_macros = { path = "packages/push-macros" }
 [workspace.lints.clippy]
 pedantic = "warn"
 nursery = "warn"
+cargo = "warn"
+perf = "warn"
+complexity = "warn"
+correctness = "deny"
+dbg_macro = "warn"
+clone_on_ref_ptr = "warn"
+empty_enum_variants_with_brackets = "warn"
+empty_structs_with_brackets = "warn"
+error_impl_error = "warn"
+format_push_string = "warn"
+if_then_some_else_none = "warn"
+infinite_loop = "warn"
+rc_buffer = "warn"
+rc_mutex = "warn"
+redundant_type_annotations = "warn"
+rest_pat_in_fully_bound_structs = "warn"
+self_named_module_files = "deny"
+suspicious_xor_used_as_pow = "warn"
+tests_outside_test_module = "deny"
+todo = "warn"
+try_err = "warn"
+unnecessary_safety_comment = "warn"
+unnecessary_safety_doc = "warn"
+unnecessary_self_imports = "warn"
+unneeded_field_pattern = "warn"
+use_debug = "warn"
+style = "warn"
+arithmetic_side_effects = "warn"
+
 unwrap_used = "warn"
 expect_used = "warn"
+panic = "warn"
 module_name_repetitions = "allow"
 as_conversions = "deny"
 
+# these lints rely on the lint reasons rfc
+# https://github.com/rust-lang/rust/issues/54503
+# and will become active once that is in stable.
+# We should get ample warning with the nightly & beta
+# ci builds if we need to change anything
+allow_attributes_without_reason = "warn"
+allow_attributes = "deny"
 
 [workspace.metadata.example_runner]
 default = [

@@ -4,7 +4,13 @@ version = { workspace = true }
 authors = { workspace = true }
 description = { workspace = true }
 documentation = { workspace = true }
+repository = { workspace = true }
 edition = { workspace = true }
+license = { workspace = true }
+# Per definition crates.io compilers includes interpreters
+categories = ["science", "algorithms", "compilers"]
+keywords = ["push-language", "genetic-programming", "interpreter", "pushgp", "programming-language"]
+readme = "README.md"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -17,15 +23,16 @@ thiserror = { workspace = true }
 ec-core = { workspace = true }
 ec-linear = { workspace = true }
 
-proptest = "1.2.0"
-strum = "0.26.1"
-strum_macros = "0.26.1"
+proptest = { workspace = true }
+strum = "0.26.2"
+strum_macros = "0.26.2"
 embed-doc-image = "0.1.4"
 push_macros = { workspace = true, optional = true }
 collectable = "0.0.2"
 ordered-float = { version = "4.1.1", features = ["proptest"] }
 easy-cast = "0.5.2"
 macro_railroad_annotation = { workspace = true }
+test-strategy = { workspace = true }
 
 [dev-dependencies]
 clap = { version = "4.5.1", features = ["derive"] }

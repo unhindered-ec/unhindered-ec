@@ -5,7 +5,7 @@ use strum_macros::EnumIter;
 use super::{Instruction, PushInstruction, PushInstructionError};
 use crate::{
     error::{InstructionResult, MapInstructionError},
-    push_vm::stack::{HasStack, StackPush},
+    push_vm::stack::{HasStack, PushOnto},
 };
 
 #[derive(Debug, strum_macros::Display, Clone, PartialEq, Eq, EnumIter)]
@@ -83,30 +83,18 @@ where
         let bool_stack = state.stack_mut::<bool>();
         match self {
             Self::Push(b) => state.with_push(*b).map_err_into(),
-            Self::Not => bool_stack.pop().map(Not::not).with_stack_push(state),
-            Self::And => bool_stack
-                .pop2()
-                .map(|(x, y)| x && y)
-                .with_stack_push(state),
-            Self::Or => bool_stack
-                .pop2()
-                .map(|(x, y)| x || y)
-                .with_stack_push(state),
-            Self::Xor => bool_stack
-                .pop2()
-                .map(|(x, y)| x != y)
-                .with_stack_push(state),
-            Self::Implies => bool_stack
-                .pop2()
-                .map(|(x, y)| !x || y)
-                .with_stack_push(state),
+            Self::Not => bool_stack.pop().map(Not::not).push_onto(state),
+            Self::And => bool_stack.pop2().map(|(x, y)| x && y).push_onto(state),
+            Self::Or => bool_stack.pop2().map(|(x, y)| x || y).push_onto(state),
+            Self::Xor => bool_stack.pop2().map(|(x, y)| x != y).push_onto(state),
+            Self::Implies => bool_stack.pop2().map(|(x, y)| !x || y).push_onto(state),
             Self::FromInt => {
                 let mut state = state.not_full::<bool>().map_err_into()?;
                 state
                     .stack_mut::<i64>()
                     .pop()
                     .map(|i| i != 0)
-                    .with_stack_push(state)
+                    .push_onto(state)
             }
         }
     }
@@ -121,8 +109,9 @@ impl From<BoolInstruction> for PushInstruction {
 #[cfg(test)]
 #[allow(clippy::unwrap_used, clippy::ignored_unit_patterns)]
 mod property_tests {
-    use proptest::{arbitrary::any, prop_assert_eq, proptest};
+    use proptest::prop_assert_eq;
     use strum::IntoEnumIterator;
+    use test_strategy::proptest;
 
     use crate::{
         instruction::{BoolInstruction, Instruction},
@@ -133,45 +122,50 @@ mod property_tests {
         BoolInstruction::iter().collect()
     }
 
-    proptest! {
-        #[test]
-        fn ops_do_not_crash(instr in proptest::sample::select(all_instructions()),
-                x in any::<bool>(), y in any::<bool>(), i in any::<i64>()) {
-            let state = PushState::builder()
-                .with_max_stack_size(1000)
-                .with_no_program()
-                .with_bool_values([x, y])
-                .unwrap()
-                .with_int_values([i])
-                .unwrap()
-                .build();
-            instr.perform(state).unwrap();
-        }
+    #[proptest]
+    fn ops_do_not_crash(
+        #[strategy(proptest::sample::select(all_instructions()))] instr: BoolInstruction,
+        #[any] x: bool,
+        #[any] y: bool,
+        #[any] i: i64,
+    ) {
+        let state = PushState::builder()
+            .with_max_stack_size(3)
+            .with_no_program()
+            .with_bool_values([x, y])
+            .unwrap()
+            .with_int_values([i])
+            .unwrap()
+            .build();
 
-        #[test]
-        fn and_is_correct(x in any::<bool>(), y in any::<bool>()) {
-            let state = PushState::builder()
-                .with_max_stack_size(1000)
-                .with_no_program()
-                .with_bool_values([x, y])
-                .unwrap()
-                .build();
-            let result_state = BoolInstruction::And.perform(state).unwrap();
-            prop_assert_eq!(result_state.bool.size(), 1);
-            prop_assert_eq!(*result_state.bool.top().unwrap(), x && y);
-        }
+        instr.perform(state).unwrap();
+    }
 
-        #[test]
-        fn implies_is_correct(x in any::<bool>(), y in any::<bool>()) {
-            let state = PushState::builder()
-                .with_max_stack_size(1000)
-                .with_no_program()
-                .with_bool_values([x, y])
-                .unwrap()
-                .build();
-            let result_state = BoolInstruction::Implies.perform(state).unwrap();
-            prop_assert_eq!(result_state.bool.size(), 1);
-            prop_assert_eq!(*result_state.bool.top().unwrap(), !x || y);
-        }
+    #[proptest]
+    fn and_is_correct(#[any] x: bool, #[any] y: bool) {
+        let state = PushState::builder()
+            .with_max_stack_size(2)
+            .with_no_program()
+            .with_bool_values([x, y])
+            .unwrap()
+            .build();
+        let result_state = BoolInstruction::And.perform(state).unwrap();
+
+        prop_assert_eq!(result_state.bool.size(), 1);
+        prop_assert_eq!(*result_state.bool.top().unwrap(), x && y);
+    }
+
+    #[proptest]
+    fn implies_is_correct(#[any] x: bool, #[any] y: bool) {
+        let state = PushState::builder()
+            .with_max_stack_size(2)
+            .with_no_program()
+            .with_bool_values([x, y])
+            .unwrap()
+            .build();
+        let result_state = BoolInstruction::Implies.perform(state).unwrap();
+
+        prop_assert_eq!(result_state.bool.size(), 1);
+        prop_assert_eq!(*result_state.bool.top().unwrap(), !x || y);
     }
 }

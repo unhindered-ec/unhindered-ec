@@ -55,7 +55,7 @@ impl<S, E> Instruction<S> for Box<dyn Instruction<S, Error = E>> {
     }
 }
 
-#[derive(Clone, Eq, PartialEq)]
+#[derive(Clone, Eq, PartialEq, Debug)]
 #[non_exhaustive]
 pub enum PushInstruction {
     InputVar(VariableName),
@@ -92,7 +92,7 @@ impl Instruction<PushState> for PushInstruction {
                 // Or add a `with_input` that returns the new state and keep `push_input`?
                 state.with_input(var_name)
             }
-            Self::Exec(_) => todo!(),
+            Self::Exec(i) => i.perform(state),
             Self::BoolInstruction(i) => i.perform(state),
             Self::IntInstruction(i) => i.perform(state),
             Self::FloatInstruction(i) => i.perform(state),
@@ -115,14 +115,14 @@ impl NumOpens for PushInstruction {
     }
 }
 
-impl std::fmt::Debug for PushInstruction {
+impl std::fmt::Display for PushInstruction {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::InputVar(instruction) => write!(f, "{instruction}"),
-            Self::Exec(instruction) => write!(f, "Exec-{instruction:?}"),
+            Self::Exec(instruction) => write!(f, "Exec-{instruction}"),
             Self::BoolInstruction(instruction) => write!(f, "Bool-{instruction}"),
-            Self::IntInstruction(instruction) => write!(f, "Int-{instruction:?}"),
-            Self::FloatInstruction(instruction) => write!(f, "Float-{instruction:?}"),
+            Self::IntInstruction(instruction) => write!(f, "Int-{instruction}"),
+            Self::FloatInstruction(instruction) => write!(f, "Float-{instruction}"),
         }
     }
 }

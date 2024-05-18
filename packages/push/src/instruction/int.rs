@@ -5,7 +5,7 @@ use strum_macros::EnumIter;
 use super::{Instruction, PushInstruction, PushInstructionError};
 use crate::{
     error::{Error, InstructionResult, MapInstructionError},
-    push_vm::stack::{HasStack, Stack, StackDiscard, StackError, StackPush},
+    push_vm::stack::{HasStack, PushOnto, Stack, StackDiscard, StackError},
 };
 
 #[derive(Debug, strum_macros::Display, Copy, Clone, PartialEq, Eq, EnumIter)]
@@ -30,6 +30,9 @@ pub enum IntInstruction {
     // so we might need to do the log(n) integer
     // implementation of sqrt.
     // Sqrt,
+    IsZero,
+    IsPositive,
+    IsNegative,
     IsEven,
     IsOdd,
     Equal,
@@ -91,12 +94,8 @@ where
                 let int_stack = state.stack_mut::<i64>();
                 match self {
                     Self::Push(i) => state.with_push(*i).map_err_into(),
-                    Self::Negate => int_stack.top().map(Neg::neg).with_stack_replace(1, state),
-                    Self::Abs => int_stack
-                        .top()
-                        .copied()
-                        .map(i64::abs)
-                        .with_stack_replace(1, state),
+                    Self::Negate => int_stack.top().map(Neg::neg).replace_on(1, state),
+                    Self::Abs => int_stack.top().copied().map(i64::abs).replace_on(1, state),
 
                     // This works, but is going to be nasty after we repeat a lot. There should
                     // perhaps be another trait method somewhere that eliminates a lot of this
@@ -109,7 +108,7 @@ where
                             v.ok_or(IntInstructionError::Overflow { op: *self })
                                 .map_err(Into::into)
                         })
-                        .with_stack_replace(1, state),
+                        .replace_on(1, state),
 
                     Self::Dec => int_stack
                         .top()
@@ -119,7 +118,7 @@ where
                             v.ok_or(IntInstructionError::Overflow { op: *self })
                                 .map_err(Into::into)
                         })
-                        .with_stack_replace(1, state),
+                        .replace_on(1, state),
 
                     Self::Square => int_stack
                         .top()
@@ -129,7 +128,7 @@ where
                             v.ok_or(IntInstructionError::Overflow { op: *self })
                                 .map_err(Into::into)
                         })
-                        .with_stack_replace(1, state),
+                        .replace_on(1, state),
 
                     Self::Add => int_stack
                         .top2()
@@ -139,7 +138,7 @@ where
                             v.ok_or(IntInstructionError::Overflow { op: *self })
                                 .map_err(Into::into)
                         })
-                        .with_stack_replace(2, state),
+                        .replace_on(2, state),
 
                     Self::Subtract => int_stack
                         .top2()
@@ -149,7 +148,7 @@ where
                             v.ok_or(IntInstructionError::Overflow { op: *self })
                                 .map_err(Into::into)
                         })
-                        .with_stack_replace(2, state),
+                        .replace_on(2, state),
 
                     Self::Multiply => int_stack
                         .top2()
@@ -159,7 +158,7 @@ where
                             v.ok_or(IntInstructionError::Overflow { op: *self })
                                 .map_err(Into::into)
                         })
-                        .with_stack_replace(2, state),
+                        .replace_on(2, state),
 
                     Self::ProtectedDivide => int_stack
                         .top2()
@@ -169,7 +168,7 @@ where
                             v.ok_or(IntInstructionError::Overflow { op: *self })
                                 .map_err(Into::into)
                         })
-                        .with_stack_replace(2, state),
+                        .replace_on(2, state),
 
                     Self::Mod => int_stack
                         .top2()
@@ -179,13 +178,12 @@ where
                             v.ok_or(IntInstructionError::Overflow { op: *self })
                                 .map_err(Into::into)
                         })
-                        .with_stack_replace(2, state),
+                        .replace_on(2, state),
 
                     Self::Power => int_stack
                         .top2()
                         .map_err(PushInstructionError::from)
                         .map(|(&x, &y)| {
-                            let x: i32 = x.try_into().ok()?;
                             let y: u32 = y.try_into().ok()?;
                             x.checked_pow(y).map(i64::from)
                         })
@@ -193,25 +191,28 @@ where
                             v.ok_or(IntInstructionError::Overflow { op: *self })
                                 .map_err(Into::into)
                         })
-                        .with_stack_replace(2, state),
+                        .replace_on(2, state),
 
                     Self::Min => int_stack
                         .top2()
                         .map_err(PushInstructionError::from)
                         .map(|(&x, &y)| x.min(y))
-                        .with_stack_replace(2, state),
+                        .replace_on(2, state),
 
                     Self::Max => int_stack
                         .top2()
                         .map_err(PushInstructionError::from)
                         .map(|(&x, &y)| x.max(y))
-                        .with_stack_replace(2, state),
+                        .replace_on(2, state),
                     _ => {
                         unreachable!("We failed to handle an arithmetic Int instruction: {self:?}")
                     }
                 }
             }
-            Self::IsEven
+            Self::IsZero
+            | Self::IsPositive
+            | Self::IsNegative
+            | Self::IsEven
             | Self::IsOdd
             | Self::Equal
             | Self::NotEqual
@@ -231,62 +232,80 @@ where
                 }
                 let int_stack: &mut Stack<i64> = state.stack_mut::<i64>();
                 match self {
+                    Self::IsZero => int_stack
+                        .top()
+                        .map_err(PushInstructionError::from)
+                        .map(|&x| x == 0)
+                        .push_onto(state)
+                        .with_stack_discard::<i64>(1),
+                    Self::IsPositive => int_stack
+                        .top()
+                        .map_err(PushInstructionError::from)
+                        .map(|&x| x > 0)
+                        .push_onto(state)
+                        .with_stack_discard::<i64>(1),
+                    Self::IsNegative => int_stack
+                        .top()
+                        .map_err(PushInstructionError::from)
+                        .map(|&x| x < 0)
+                        .push_onto(state)
+                        .with_stack_discard::<i64>(1),
                     // TODO: Write a test for IsEven that makes sure
                     // all the stack manipulation is correct.
                     Self::IsEven => int_stack
                         .top()
                         .map_err(PushInstructionError::from)
                         .map(|&x| x % 2 == 0)
-                        .with_stack_push(state)
+                        .push_onto(state)
                         .with_stack_discard::<i64>(1),
 
                     Self::IsOdd => int_stack
                         .top()
                         .map_err(PushInstructionError::from)
                         .map(|&x| x % 2 == 1)
-                        .with_stack_push(state)
+                        .push_onto(state)
                         .with_stack_discard::<i64>(1),
 
                     Self::Equal => int_stack
                         .top2()
                         .map_err(PushInstructionError::from)
                         .map(|(&x, &y)| x == y)
-                        .with_stack_push(state)
+                        .push_onto(state)
                         .with_stack_discard::<i64>(1),
 
                     Self::NotEqual => int_stack
                         .top2()
                         .map_err(PushInstructionError::from)
                         .map(|(&x, &y)| x != y)
-                        .with_stack_push(state)
+                        .push_onto(state)
                         .with_stack_discard::<i64>(1),
 
                     Self::LessThan => int_stack
                         .top2()
                         .map_err(PushInstructionError::from)
                         .map(|(&x, &y)| x < y)
-                        .with_stack_push(state)
+                        .push_onto(state)
                         .with_stack_discard::<i64>(1),
 
                     Self::LessThanEqual => int_stack
                         .top2()
                         .map_err(PushInstructionError::from)
                         .map(|(&x, &y)| x <= y)
-                        .with_stack_push(state)
+                        .push_onto(state)
                         .with_stack_discard::<i64>(1),
 
                     Self::GreaterThan => int_stack
                         .top2()
                         .map_err(PushInstructionError::from)
                         .map(|(&x, &y)| x > y)
-                        .with_stack_push(state)
+                        .push_onto(state)
                         .with_stack_discard::<i64>(1),
 
                     Self::GreaterThanEqual => int_stack
                         .top2()
                         .map_err(PushInstructionError::from)
                         .map(|(&x, &y)| x >= y)
-                        .with_stack_push(state)
+                        .push_onto(state)
                         .with_stack_discard::<i64>(1),
                     _ => unreachable!(
                         "We failed to implement a boolean-valued operation on integers: {self:?}"
@@ -299,7 +318,7 @@ where
                     .top()
                     .map_err(PushInstructionError::from)
                     .map(|&b| i64::from(b))
-                    .with_stack_push(state)
+                    .push_onto(state)
                     .with_stack_discard::<bool>(1)
             }
         }
