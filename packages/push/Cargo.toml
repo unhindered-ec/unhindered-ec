@@ -43,3 +43,30 @@ macros = ["dep:push_macros"]
 
 [lints]
 workspace = true
+
+[[package.metadata.example_runner.examples.smallest]]
+template = "balanced"
+arguments = [
+  "--max-generations",
+  "10",
+  "--population-size",
+  "200"
+]
+
+[[package.metadata.example_runner.examples.smallest]]
+template = "big_population"
+arguments = [
+  "--max-generations",
+  "1",
+  "--population-size",
+  "2000"
+]
+
+[[package.metadata.example_runner.examples.smallest]]
+template = "many_generations"
+arguments = [
+  "--max-generations",
+  "200",
+  "--population-size",
+  "10"
+]
