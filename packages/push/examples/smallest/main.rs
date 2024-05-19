@@ -33,7 +33,7 @@ use rand::{
 };
 use strum::IntoEnumIterator;
 
-use crate::args::{Args, RunModel};
+use crate::args::{CliArgs, RunModel};
 
 // An input for this problem is a tuple of four `i64`s.
 #[derive(Copy, Clone)]
@@ -76,7 +76,7 @@ struct Output(i64);
 // This problem is quite easy if you have a `Min` instruction, but can be
 // more a bit more difficult without that instruction.
 fn main() -> Result<()> {
-    let Args {
+    let CliArgs {
         run_model,
         population_size,
         max_initial_instructions,
@@ -86,7 +86,7 @@ fn main() -> Result<()> {
         upper_input_bound,
         penalty_value,
         ..
-    } = Args::parse();
+    } = CliArgs::parse();
 
     let mut rng = thread_rng();
 

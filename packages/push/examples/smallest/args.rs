@@ -9,7 +9,7 @@ pub enum RunModel {
 /// Simple genetic algorithm in Rust
 #[derive(Parser, Debug, Copy, Clone)]
 #[clap(author, version, about, long_about = None)]
-pub struct Args {
+pub struct CliArgs {
     /// Maximum number of generations to run
     #[clap(short = 'g', long, default_value_t = 100)]
     pub max_generations: usize,
