@@ -59,9 +59,11 @@ fn main() -> Result<()> {
 
     let training_cases = training_cases(&mut rng);
 
-    let scorer = FnScorer(|genome: &Plushy| -> TestResults<test_results::Error<i64>> {
-        score_genome(genome, &training_cases)
-    });
+    let scorer = FnScorer(
+        |genome: &Plushy| -> TestResults<test_results::Error<i128>> {
+            score_genome(genome, &training_cases)
+        },
+    );
 
     let lexicase = Lexicase::new(training_cases.len());
 
@@ -111,12 +113,12 @@ fn main() -> Result<()> {
 fn score_genome(
     genome: &Plushy,
     training_cases: &Cases<Input, Output>,
-) -> TestResults<test_results::Error<i64>> {
+) -> TestResults<test_results::Error<i128>> {
     // The penalty value to use when an evolved program doesn't have an expected
     // "return" value on the appropriate stack at the end of its execution.
-    const PENALTY_VALUE: i64 = 1_000;
+    const PENALTY_VALUE: i128 = 1_000;
     let program = Vec::<PushProgram>::from(genome.clone());
-    let mut errors: TestResults<test_results::Error<i64>> = training_cases
+    let errors: TestResults<test_results::Error<i128>> = training_cases
         .iter()
         .map(
             |&Case {
@@ -127,18 +129,10 @@ fn score_genome(
             },
         )
         .collect();
-    // This is a total hack, but `.sum()` doesn't support saturating and thus can
-    // wrap when we add up all the errors to get the total error, yielding a
-    // (very) negative value. This can then "confuse" selectors like `Best`
-    // into returning really "bad" individuals as the "best" in the
-    // population.
-    if errors.total_result.error < 0 {
-        errors.total_result.error = i64::MAX;
-    }
     errors
 }
 
-fn run_case(program: &[PushProgram], input: Input, penalty_value: i64, expected: i64) -> i64 {
+fn run_case(program: &[PushProgram], input: Input, penalty_value: i128, expected: i64) -> i128 {
     build_state(program, input).map_or(penalty_value, |start_state| {
         // I don't think we're properly handling things like exceeding maximum
         // stack size. I think the "Push way" here would be to take whatever
@@ -152,12 +146,14 @@ fn run_case(program: &[PushProgram], input: Input, penalty_value: i64, expected:
     })
 }
 
-fn compute_error(final_state: &PushState, penalty_value: i64, expected: i64) -> i64 {
+fn compute_error(final_state: &PushState, penalty_value: i128, expected: i64) -> i128 {
     final_state
         .stack::<i64>()
         .top()
         .map_or(penalty_value, |answer| {
-            answer.saturating_sub(expected).abs()
+            i128::from(*answer)
+                .saturating_sub(i128::from(expected))
+                .abs()
         })
 }
 
