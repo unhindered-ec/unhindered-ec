@@ -204,14 +204,14 @@ fn build_state(
 fn instructions() -> Vec<PushInstruction> {
     let int_instructions = IntInstruction::iter()
         // Restore this line to remove `Min` from the instruction set.
-        .filter(|&i| i != IntInstruction::Min)
+        // .filter(|&i| i != IntInstruction::Min)
         .map(Into::into);
     let bool_instructions = BoolInstruction::iter().map(Into::into);
     let exec_instructions = ExecInstruction::iter()
         // The `ExecInstruction::DupBlock` instruction often leads to substantially more complicated
         // evolved programs which take much longer to run. Restore this `filter` line
         // to remove it from the instruction set.
-        .filter(|&i| i != ExecInstruction::dup_block())
+        // .filter(|&i| i != ExecInstruction::dup_block())
         .map(Into::into);
     let variables = ["a", "b", "c", "d"]
         .into_iter()
