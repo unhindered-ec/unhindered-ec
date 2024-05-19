@@ -124,7 +124,7 @@ fn score_genome(
     // "return" value on the appropriate stack at the end of its execution.
     const PENALTY_VALUE: i128 = 1_000;
     let program = Vec::<PushProgram>::from(genome.clone());
-    let errors: TestResults<test_results::Error<i128>> = training_cases
+    training_cases
         .iter()
         .map(
             |&Case {
@@ -134,8 +134,7 @@ fn score_genome(
                 run_case(&program, input, PENALTY_VALUE, expected)
             },
         )
-        .collect();
-    errors
+        .collect()
 }
 
 fn run_case(program: &[PushProgram], input: Input, penalty_value: i128, expected: i64) -> i128 {
