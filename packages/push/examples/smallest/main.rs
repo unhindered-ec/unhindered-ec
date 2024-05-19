@@ -55,7 +55,13 @@ struct Output(i64);
 fn main() -> Result<()> {
     let mut rng = thread_rng();
 
-    let args = Args::parse();
+    let Args {
+        run_model,
+        population_size,
+        max_initial_instructions,
+        num_generations,
+        ..
+    } = Args::parse();
 
     let training_cases = training_cases(&mut rng);
 
@@ -73,9 +79,9 @@ fn main() -> Result<()> {
         GeneGenerator::with_uniform_close_probability(instruction_set.into_distribution()?);
 
     let population = gene_generator
-        .to_collection_generator(args.max_initial_instructions)
+        .to_collection_generator(max_initial_instructions)
         .with_scorer(scorer)
-        .into_collection_generator(args.population_size)
+        .into_collection_generator(population_size)
         .sample(&mut rng);
 
     ensure!(population.is_empty().not());
@@ -92,8 +98,8 @@ fn main() -> Result<()> {
 
     let mut generation = Generation::new(make_new_individual, population);
 
-    for generation_number in 0..args.num_generations {
-        match args.run_model {
+    for generation_number in 0..num_generations {
+        match run_model {
             RunModel::Serial => generation.serial_next()?,
             RunModel::Parallel => generation.par_next()?,
         }
