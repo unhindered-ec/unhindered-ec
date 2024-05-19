@@ -100,7 +100,7 @@ fn main() -> Result<()> {
 
     let lexicase = Lexicase::new(training_cases.len());
 
-    let instruction_set = instructions();
+    let instruction_set = instructions().collect::<Vec<_>>();
 
     let gene_generator =
         GeneGenerator::with_uniform_close_probability(instruction_set.into_distribution()?);
@@ -201,7 +201,7 @@ fn build_state(
         .build())
 }
 
-fn instructions() -> Vec<PushInstruction> {
+fn instructions() -> impl Iterator<Item = PushInstruction> {
     let int_instructions = IntInstruction::iter()
         // Restore this line to remove `Min` from the instruction set.
         // .filter(|&i| i != IntInstruction::Min)
@@ -213,13 +213,14 @@ fn instructions() -> Vec<PushInstruction> {
         // to remove it from the instruction set.
         // .filter(|&i| i != ExecInstruction::dup_block())
         .map(Into::into);
+
     let variables = ["a", "b", "c", "d"]
         .into_iter()
         .map(VariableName::from)
         .map(Into::into);
+
     int_instructions
         .chain(bool_instructions)
         .chain(exec_instructions)
         .chain(variables)
-        .collect()
 }
