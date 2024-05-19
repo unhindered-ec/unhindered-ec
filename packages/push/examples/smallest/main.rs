@@ -35,6 +35,15 @@ use crate::args::{Args, RunModel};
 // An input for this problem is a tuple of four `i64`s.
 #[derive(Copy, Clone)]
 struct Input([i64; 4]);
+
+impl Input {
+    fn smallest(&self) -> Output {
+        let Self(input) = self;
+        #[allow(clippy::unwrap_used)]
+        Output(*input.into_iter().min().unwrap())
+    }
+}
+
 // An output for this problem is an `i64`.
 struct Output(i64);
 
@@ -190,13 +199,8 @@ fn training_inputs(rng: &mut ThreadRng) -> Vec<Input> {
         .collect::<Vec<_>>()
 }
 
-fn smallest(&Input(input): &Input) -> Output {
-    #[allow(clippy::unwrap_used)]
-    Output(input.into_iter().min().unwrap())
-}
-
 fn training_cases(rng: &mut ThreadRng) -> Cases<Input, Output> {
-    training_inputs(rng).with_target_fn(smallest)
+    training_inputs(rng).with_target_fn(Input::smallest)
 }
 
 fn instructions() -> Vec<PushInstruction> {
