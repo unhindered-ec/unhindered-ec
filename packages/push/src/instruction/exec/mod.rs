@@ -13,7 +13,7 @@ use crate::{
     push_vm::{program::PushProgram, HasStack},
 };
 
-#[derive(Debug, strum_macros::Display, Clone, Eq, PartialEq, EnumIter)]
+#[derive(Debug, strum_macros::Display, Copy, Clone, Eq, PartialEq, EnumIter)]
 #[must_use]
 pub enum ExecInstruction {
     Noop(Noop),
@@ -28,7 +28,7 @@ impl ExecInstruction {
         Self::Noop(Noop)
     }
 
-    pub const fn dup() -> Self {
+    pub const fn dup_block() -> Self {
         Self::DupBlock(DupBlock)
     }
 
