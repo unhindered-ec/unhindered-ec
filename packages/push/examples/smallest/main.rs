@@ -59,6 +59,7 @@ impl Distribution<Input> for Uniform<i64> {
 }
 
 // An output for this problem is an `i64`.
+#[derive(Copy, Clone)]
 struct Output(i64);
 
 // This is an implementation of the "smallest" problem from Tom Helmuth's
@@ -154,18 +155,18 @@ fn score_genome(
     let program = Vec::<PushProgram>::from(genome.clone());
     training_cases
         .iter()
-        .map(
-            |&Case {
-                 input,
-                 output: Output(expected),
-             }: &Case<Input, Output>| {
-                run_case(&program, input, penalty_value, expected)
-            },
-        )
+        .map(|&case: &Case<Input, Output>| run_case(case, &program, penalty_value))
         .collect()
 }
 
-fn run_case(program: &[PushProgram], input: Input, penalty_value: i128, expected: i64) -> i128 {
+fn run_case(
+    Case {
+        input,
+        output: Output(expected),
+    }: Case<Input, Output>,
+    program: &[PushProgram],
+    penalty_value: i128,
+) -> i128 {
     build_state(program, input).map_or(penalty_value, |start_state| {
         // I don't think we're properly handling things like exceeding maximum
         // stack size. I think the "Push way" here would be to take whatever
