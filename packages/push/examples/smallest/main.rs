@@ -34,7 +34,7 @@ use crate::args::{Args, RunModel};
 
 // An input for this problem is a tuple of four `i64`s.
 #[derive(Copy, Clone)]
-struct Input(i64, i64, i64, i64);
+struct Input([i64; 4]);
 // An output for this problem is an `i64`.
 struct Output(i64);
 
@@ -162,7 +162,10 @@ fn compute_error(final_state: &PushState, penalty_value: i128, expected: i64) ->
         })
 }
 
-fn build_state(program: &[PushProgram], Input(a, b, c, d): Input) -> Result<PushState, StackError> {
+fn build_state(
+    program: &[PushProgram],
+    Input([a, b, c, d]): Input,
+) -> Result<PushState, StackError> {
     Ok(PushState::builder()
         .with_max_stack_size(1000)
         .with_program(program.to_vec())?
@@ -177,19 +180,19 @@ fn training_inputs(rng: &mut ThreadRng) -> Vec<Input> {
     const NUM_TRAINING_CASES: usize = 100;
     (0..NUM_TRAINING_CASES)
         .map(|_| {
-            Input(
+            Input([
                 (rng.next_u32() % 100).into(),
                 (rng.next_u32() % 100).into(),
                 (rng.next_u32() % 100).into(),
                 (rng.next_u32() % 100).into(),
-            )
+            ])
         })
         .collect::<Vec<_>>()
 }
 
-fn smallest(&Input(a, b, c, d): &Input) -> Output {
+fn smallest(&Input(input): &Input) -> Output {
     #[allow(clippy::unwrap_used)]
-    Output([a, b, c, d].into_iter().min().unwrap())
+    Output(input.into_iter().min().unwrap())
 }
 
 fn training_cases(rng: &mut ThreadRng) -> Cases<Input, Output> {
