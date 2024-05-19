@@ -76,26 +76,28 @@ struct Output(i64);
 // This problem is quite easy if you have a `Min` instruction, but can be
 // more a bit more difficult without that instruction.
 fn main() -> Result<()> {
-    const NUM_TRAINING_CASES: usize = 100;
-
     let Args {
         run_model,
         population_size,
         max_initial_instructions,
-        num_generations,
+        max_generations,
+        num_training_cases,
+        lower_input_bound,
+        upper_input_bound,
+        penalty_value,
         ..
     } = Args::parse();
 
     let mut rng = thread_rng();
 
-    let training_cases = Uniform::new(0, 100)?
+    let training_cases = Uniform::new(lower_input_bound, upper_input_bound)?
         .sample_iter(&mut rng)
-        .take(NUM_TRAINING_CASES)
+        .take(num_training_cases)
         .with_target_fn(Input::smallest);
 
     let scorer = FnScorer(
         |genome: &Plushy| -> TestResults<test_results::Error<i128>> {
-            score_genome(genome, &training_cases)
+            score_genome(genome, &training_cases, penalty_value)
         },
     );
 
@@ -126,7 +128,7 @@ fn main() -> Result<()> {
 
     let mut generation = Generation::new(make_new_individual, population);
 
-    for generation_number in 0..num_generations {
+    for generation_number in 0..max_generations {
         match run_model {
             RunModel::Serial => generation.serial_next()?,
             RunModel::Parallel => generation.par_next()?,
@@ -147,10 +149,8 @@ fn main() -> Result<()> {
 fn score_genome(
     genome: &Plushy,
     training_cases: &Cases<Input, Output>,
+    penalty_value: i128,
 ) -> TestResults<test_results::Error<i128>> {
-    // The penalty value to use when an evolved program doesn't have an expected
-    // "return" value on the appropriate stack at the end of its execution.
-    const PENALTY_VALUE: i128 = 1_000;
     let program = Vec::<PushProgram>::from(genome.clone());
     training_cases
         .iter()
@@ -159,7 +159,7 @@ fn score_genome(
                  input,
                  output: Output(expected),
              }: &Case<Input, Output>| {
-                run_case(&program, input, PENALTY_VALUE, expected)
+                run_case(&program, input, penalty_value, expected)
             },
         )
         .collect()
