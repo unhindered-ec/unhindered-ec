@@ -27,7 +27,10 @@ use push::{
     },
     push_vm::{program::PushProgram, push_state::PushState, stack::StackError, HasStack, State},
 };
-use rand::{distributions::Distribution, rngs::ThreadRng, thread_rng, RngCore};
+use rand::{
+    distributions::{Distribution, Uniform},
+    thread_rng,
+};
 use strum::IntoEnumIterator;
 
 use crate::args::{Args, RunModel};
@@ -40,7 +43,18 @@ impl Input {
     fn smallest(&self) -> Output {
         let Self(input) = self;
         #[allow(clippy::unwrap_used)]
-        Output(*input.into_iter().min().unwrap())
+        Output(*input.iter().min().unwrap())
+    }
+}
+
+impl Distribution<Input> for Uniform<i64> {
+    fn sample<R: rand::prelude::Rng + ?Sized>(&self, rng: &mut R) -> Input {
+        Input([
+            self.sample(rng),
+            self.sample(rng),
+            self.sample(rng),
+            self.sample(rng),
+        ])
     }
 }
 
@@ -62,7 +76,7 @@ struct Output(i64);
 // This problem is quite easy if you have a `Min` instruction, but can be
 // more a bit more difficult without that instruction.
 fn main() -> Result<()> {
-    let mut rng = thread_rng();
+    const NUM_TRAINING_CASES: usize = 100;
 
     let Args {
         run_model,
@@ -72,7 +86,12 @@ fn main() -> Result<()> {
         ..
     } = Args::parse();
 
-    let training_cases = training_cases(&mut rng);
+    let mut rng = thread_rng();
+
+    let training_cases = Uniform::new(0, 100)?
+        .sample_iter(&mut rng)
+        .take(NUM_TRAINING_CASES)
+        .with_target_fn(Input::smallest);
 
     let scorer = FnScorer(
         |genome: &Plushy| -> TestResults<test_results::Error<i128>> {
@@ -183,24 +202,6 @@ fn build_state(
         .with_int_input("c", c)
         .with_int_input("d", d)
         .build())
-}
-
-fn training_inputs(rng: &mut ThreadRng) -> Vec<Input> {
-    const NUM_TRAINING_CASES: usize = 100;
-    (0..NUM_TRAINING_CASES)
-        .map(|_| {
-            Input([
-                (rng.next_u32() % 100).into(),
-                (rng.next_u32() % 100).into(),
-                (rng.next_u32() % 100).into(),
-                (rng.next_u32() % 100).into(),
-            ])
-        })
-        .collect::<Vec<_>>()
-}
-
-fn training_cases(rng: &mut ThreadRng) -> Cases<Input, Output> {
-    training_inputs(rng).with_target_fn(Input::smallest)
 }
 
 fn instructions() -> Vec<PushInstruction> {
