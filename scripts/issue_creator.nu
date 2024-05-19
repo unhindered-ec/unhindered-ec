@@ -95,7 +95,7 @@ Issues found:
 let created_issues = $issues | each {|issue| 
   print $"Creating issue for lint ($issue.lint) ...";
 
-  $issue.content | (gh issue create -F - -t $issue.title -a "@me" -l automated-creation,clippy-lints) | url parse | get path | split row "/" | last
+  $issue.content | (gh issue create -F - -t $issue.title -a "@me" -l C-automated-creation,A-clippy-lints) | url parse | get path | split row "/" | last
 };
 
 print $"Creating tracking issue ...";
@@ -110,7 +110,7 @@ The following clippy lints currently fail, and they should be fixed:
   "
 }
 
-$master_issue.content | gh issue create -F - -t $master_issue.title -a "@me" -l automated-creation,clippy-lints
+$master_issue.content | gh issue create -F - -t $master_issue.title -a "@me" -l C-automated-creation,A-clippy-lints
 
 
 }
