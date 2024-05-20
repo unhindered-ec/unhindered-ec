@@ -1,7 +1,8 @@
-use std::ops::Neg;
+mod negate;
 
 use strum_macros::EnumIter;
 
+use self::negate::Negate;
 use super::{Instruction, PushInstruction, PushInstructionError};
 use crate::{
     error::{Error, InstructionResult, MapInstructionError},
@@ -10,10 +11,11 @@ use crate::{
 
 #[derive(Debug, strum_macros::Display, Copy, Clone, PartialEq, Eq, EnumIter)]
 #[non_exhaustive]
+#[must_use]
 pub enum IntInstruction {
     Push(i64),
 
-    Negate,
+    Negate(Negate),
     Abs,
     Min,
     Max,
@@ -45,6 +47,12 @@ pub enum IntInstruction {
     FromBoolean,
 }
 
+impl IntInstruction {
+    pub const fn negate() -> Self {
+        Self::Negate(Negate)
+    }
+}
+
 impl From<IntInstruction> for PushInstruction {
     fn from(instr: IntInstruction) -> Self {
         Self::IntInstruction(instr)
@@ -73,8 +81,8 @@ where
     #[allow(unreachable_code, clippy::let_unit_value)] // Remove this
     fn perform(&self, mut state: S) -> InstructionResult<S, Self::Error> {
         match self {
+            Self::Negate(negate) => negate.perform(state),
             Self::Push(_)
-            | Self::Negate
             | Self::Abs
             | Self::Inc
             | Self::Dec
@@ -94,7 +102,6 @@ where
                 let int_stack = state.stack_mut::<i64>();
                 match self {
                     Self::Push(i) => state.with_push(*i).map_err_into(),
-                    Self::Negate => int_stack.top().map(Neg::neg).replace_on(1, state),
                     Self::Abs => int_stack.top().copied().map(i64::abs).replace_on(1, state),
 
                     // This works, but is going to be nasty after we repeat a lot. There should

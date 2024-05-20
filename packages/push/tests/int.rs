@@ -107,7 +107,7 @@ fn negate(#[any] x: i64) {
         .unwrap()
         .with_no_program()
         .build();
-    let result = IntInstruction::Negate.perform(state).unwrap();
+    let result = IntInstruction::negate().perform(state).unwrap();
     prop_assert_eq!(result.stack::<i64>().size(), 1);
     prop_assert_eq!(*result.stack::<i64>().top().unwrap(), -x);
 }
