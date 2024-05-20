@@ -20,3 +20,29 @@ where
         int_stack.top().map(Neg::neg).replace_on(1, state)
     }
 }
+
+#[cfg(test)]
+#[allow(clippy::unwrap_used)]
+mod tests {
+
+    use proptest::prop_assert_eq;
+    use test_strategy::proptest;
+
+    use crate::{
+        instruction::{Instruction, IntInstruction},
+        push_vm::{push_state::PushState, HasStack},
+    };
+
+    #[proptest]
+    fn negate(#[any] x: i64) {
+        let state = PushState::builder()
+            .with_max_stack_size(1)
+            .with_int_values(std::iter::once(x))
+            .unwrap()
+            .with_no_program()
+            .build();
+        let result = IntInstruction::negate().perform(state).unwrap();
+        prop_assert_eq!(result.stack::<i64>().size(), 1);
+        prop_assert_eq!(*result.stack::<i64>().top().unwrap(), -x);
+    }
+}
