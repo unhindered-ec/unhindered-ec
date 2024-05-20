@@ -1,11 +1,71 @@
-use std::ops::Neg;
-
 use crate::{
     error::InstructionResult,
     instruction::{Instruction, PushInstructionError},
     push_vm::{stack::PushOnto, HasStack},
 };
 
+/// An instruction that negates the top
+/// value on the `i64` stack.
+///
+/// There's an edge case when the value is `i64::MIN` since
+/// negating that generates a wrapping error. This is because the two's
+/// complement representation used for integer types has an asymmetry
+/// where the magnitude of `MIN` is one larger than the magnitude of `MAX`.
+/// See <https://en.wikipedia.org/wiki/Two%27s_complement#Most_negative_number>
+/// for additional details and examples.
+///
+/// We have `Negate` return `i64::MAX` when it negates `i64::MIN`. This
+/// isn't mathematically accurate, but is logically plausible since it
+/// converts the smallest negative number into the largest positive
+/// number.
+///
+/// The alternative would be to have this instruction "fail"
+/// in some way in this case, presumably by either being skipped or
+/// generating a fatal error and terminating program evaluation. Neither of
+/// these options seem terribly reasonable from an evolutionary standpoint.
+/// Skipping would leave the value on the stack, not negated, which would
+/// be quite "surprising" and almost certainly leading to unexpected behavior.
+/// Failing doesn't seem to be in the spirit of Push, where we try to make
+/// sure almost every instruction "succeeds" in some reasonable way.
+///
+/// # Inputs
+///
+/// The `IntInstruction::Negate` instruction takes the following inputs:
+///    - `i64` stack
+///      - One value
+///
+/// # Behavior
+///
+/// The `IntInstruction::Negate` instruction negates the top value of
+/// the `i64` stack. The one exception (as described above) is when
+/// the value is `i64::MIN`, where `Negate` removes it and pushes
+/// on `i64::MAX` in its place.
+///
+/// ## Action Table
+///
+/// The table below indicates the behavior in each of the different
+/// cases.
+///
+///    - The "`i64` stack" column indicates the value of the top of the `i64`
+///      stack, or whether it exists.
+///    - The "Success" column indicates whether the instruction succeeds, and if
+///      not what kind of error is returned:
+///       - ✅: success (so two copies of the top block on the `Exec stack`)
+///       - ❗: recoverable error, with links to the error kind
+///       - ‼️: fatal error, with links to the error kind
+///    - The "Note" column briefly summarizes the action state in that case
+///
+/// | `i64`` stack  |  Success | Note |
+/// | ------------- | ------------- | ------------- |
+/// | `i64::MIN`    | ✅ | `i64::MAX` is pushed on the `i64` stack |
+/// | exists, not `i64::MIN` | ✅ | Negates top value of `i64` stack |
+/// | missing | [❗..](crate::push_vm::stack::StackError::Underflow) | State is unchanged |
+///
+/// # Errors
+///
+/// Returns a
+/// [`StackError::Underflow`](crate::push_vm::stack::StackError::Underflow)
+/// error when the `i64` stack is empty.
 #[derive(Debug, Default, Copy, Clone, PartialEq, Eq)]
 pub struct Negate;
 
@@ -17,7 +77,10 @@ where
 
     fn perform(&self, state: S) -> InstructionResult<S, Self::Error> {
         let int_stack = state.stack::<i64>();
-        int_stack.top().map(Neg::neg).replace_on(1, state)
+        int_stack
+            .top()
+            .map(|x| x.saturating_neg())
+            .replace_on(1, state)
     }
 }
 
