@@ -43,6 +43,9 @@ mod tests {
             .build();
         let result = IntInstruction::negate().perform(state).unwrap();
         prop_assert_eq!(result.stack::<i64>().size(), 1);
-        prop_assert_eq!(*result.stack::<i64>().top().unwrap(), -x);
+        prop_assert_eq!(
+            *result.stack::<i64>().top().unwrap(),
+            x.checked_neg().unwrap()
+        );
     }
 }
