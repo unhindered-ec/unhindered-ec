@@ -4,7 +4,7 @@ use crate::{
     push_vm::{program::PushProgram, stack::PushOnto, HasStack},
 };
 
-/// An instructions that duplicates (clones) the top
+/// An instruction that duplicates (clones) the top
 /// _block_ of the `Exec` stack, adding an implied "open"
 /// to crate a block from here to the corresponding `Close`.
 ///
