@@ -101,7 +101,7 @@ mod tests {
     // Simply negating that value will wrap around to
     // `i64::MAX_VALUE`, which is definitely not what we want.
     #[test]
-    fn handle_min() {
+    fn handle_i64_min() {
         let input = i64::MIN;
         let state = PushState::builder()
             .with_max_stack_size(1)
@@ -115,7 +115,10 @@ mod tests {
     }
 
     #[proptest]
-    fn negate(#[any] x: i64) {
+    // We need to make sure that `x` is greater than `i64::MIN` since
+    // we handle that case differently. This is described in the documentation
+    // for `Negate`, and handled in the preceding test.
+    fn negate(#[filter(#x > i64::MIN)] x: i64) {
         let state = PushState::builder()
             .with_max_stack_size(1)
             .with_int_values(std::iter::once(x))
