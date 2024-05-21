@@ -4,6 +4,8 @@ use crate::{
     push_vm::{stack::PushOnto, HasStack},
 };
 
+/// ![`Negate` saturates on `i64::MIN`, returning `i64::MAX`](https://img.shields.io/badge/Saturates_on_overflow-orange)
+///
 /// An instruction that negates the top
 /// value on the `i64` stack.
 ///
@@ -66,6 +68,12 @@ use crate::{
 /// Returns a
 /// [`StackError::Underflow`](crate::push_vm::stack::StackError::Underflow)
 /// error when the `i64` stack is empty.
+///
+/// # Differences
+///
+/// Neither Clojure (Clojush, Propeller) or Python (PyshGP) implementations of
+/// integer negation instructions will have this issue because they act on
+/// arbitrary precision integers.
 #[derive(Debug, Default, Copy, Clone, PartialEq, Eq)]
 pub struct Negate;
 
