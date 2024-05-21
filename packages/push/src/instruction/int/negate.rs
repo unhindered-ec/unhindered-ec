@@ -70,10 +70,10 @@ use crate::{
 /// error when the `i64` stack is empty.
 ///
 /// # Differences
-///
-/// Neither Clojure (Clojush, Propeller) or Python (PyshGP) implementations of
-/// integer negation instructions will have this issue because they act on
-/// arbitrary precision integers.
+#[allow(clippy::doc_markdown)]
+/// Implementations of integer negation instructions in Clojure (e.g., Clojush
+/// or Propeller) or Python (e.g., PyshGP) won't have the wrapping issue because
+/// they act on arbitrary precision integers.
 #[derive(Debug, Default, Copy, Clone, PartialEq, Eq)]
 pub struct Negate;
 
