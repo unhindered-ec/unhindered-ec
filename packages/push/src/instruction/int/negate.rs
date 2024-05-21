@@ -16,17 +16,17 @@ use crate::{
 /// See <https://en.wikipedia.org/wiki/Two%27s_complement#Most_negative_number>
 /// for additional details and examples.
 ///
-/// We have `Negate` return `i64::MAX` when it negates `i64::MIN`. This
-/// isn't mathematically accurate, but is logically plausible since it
-/// converts the smallest negative number into the largest positive
-/// number.
+/// In our implementation, `Negate` returns `i64::MAX` when it negates
+/// `i64::MIN`. This isn't mathematically accurate, but is semantically
+/// plausible since it converts the smallest negative number into the largest
+/// positive number.
 ///
 /// The alternative would be to have this instruction "fail"
-/// in some way in this case, presumably by either being skipped or
+/// in some way on `i64::MIN`, presumably by either skipping the instruction or
 /// generating a fatal error and terminating program evaluation. Neither of
 /// these options seem terribly reasonable from an evolutionary standpoint.
-/// Skipping would leave the value on the stack, not negated, which would
-/// be quite "surprising" and almost certainly leading to unexpected behavior.
+/// Skipping would leave the value on the stack, un-negated, which would
+/// be quite "surprising" and almost certainly lead to unexpected behavior.
 /// Failing doesn't seem to be in the spirit of Push, where we try to make
 /// sure almost every instruction "succeeds" in some reasonable way.
 ///
@@ -52,15 +52,15 @@ use crate::{
 ///      stack, or whether it exists.
 ///    - The "Success" column indicates whether the instruction succeeds, and if
 ///      not what kind of error is returned:
-///       - ✅: success (so two copies of the top block on the `Exec stack`)
+///       - ✅: success
 ///       - ❗: recoverable error, with links to the error kind
 ///       - ‼️: fatal error, with links to the error kind
 ///    - The "Note" column briefly summarizes the action state in that case
 ///
-/// | `i64`` stack  |  Success | Note |
+/// | `i64` stack  |  Success | Note |
 /// | ------------- | ------------- | ------------- |
-/// | `i64::MIN`    | ✅ | `i64::MAX` is pushed on the `i64` stack |
-/// | exists, not `i64::MIN` | ✅ | Negates top value of `i64` stack |
+/// | `i64::MIN`    | ✅ | `i64::MIN` is replaced with `i64::MAX` |
+/// | exists, not `i64::MIN` | ✅ | Negates top value of the `i64` stack |
 /// | missing | [❗..](crate::push_vm::stack::StackError::Underflow) | State is unchanged |
 ///
 /// # Errors
