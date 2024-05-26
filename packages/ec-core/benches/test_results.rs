@@ -1,5 +1,9 @@
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
-use ec_core::test_results::TestResults;
+use ec_core::{distributions::collection::ConvertToCollectionGenerator, test_results::TestResults};
+use rand::{
+    distributions::{Distribution, Standard},
+    thread_rng,
+};
 
 // Benchmark the time required to construct instances of `TestResults` from a
 // collection of individual error values.
@@ -14,5 +18,24 @@ pub fn from_iterator(c: &mut Criterion) {
     });
 }
 
-criterion_group!(benches, from_iterator);
+// Benchmark the time required to find the smallest from a set of
+// previously constructed `TestResults`.
+pub fn find_smallest(c: &mut Criterion) {
+    const NUM_VALUES: usize = 100;
+    const NUM_RESULTS: usize = 1_000;
+    let test_results: Vec<TestResults<i64>> = Distribution::<Vec<i64>>::sample_iter(
+        Standard.into_collection_generator(NUM_VALUES),
+        &mut thread_rng(),
+    )
+    .map(Into::into)
+    .take(NUM_RESULTS)
+    .collect::<Vec<_>>();
+    c.bench_function("Find smallest TestResults", |b| {
+        b.iter(|| {
+            _ = black_box(&test_results).iter().min();
+        });
+    });
+}
+
+criterion_group!(benches, from_iterator, find_smallest);
 criterion_main!(benches);
