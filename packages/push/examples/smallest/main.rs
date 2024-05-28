@@ -1,8 +1,6 @@
 pub mod args;
 
-use std::ops::Not;
-
-use anyhow::{ensure, Result};
+use anyhow::Result;
 use clap::Parser;
 use ec_core::{
     distributions::{collection::ConvertToCollectionGenerator, conversion::IntoDistribution},
