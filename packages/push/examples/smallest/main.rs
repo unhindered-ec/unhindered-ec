@@ -111,8 +111,6 @@ fn main() -> Result<()> {
         .into_collection_generator(population_size)
         .sample(&mut rng);
 
-    ensure!(population.is_empty().not());
-
     let best = Best.select(&population, &mut rng)?;
     println!("Best initial individual is {best}");
 
