@@ -1,191 +1,210 @@
 pub mod args;
 
-use std::ops::Not;
-
-use anyhow::{ensure, Result};
+use anyhow::Result;
 use clap::Parser;
 use ec_core::{
+    distributions::{collection::ConvertToCollectionGenerator, conversion::IntoDistribution},
     generation::Generation,
-    generator::{collection::ConvertToCollectionGenerator, Generator},
-    individual::{
-        ec::{EcIndividual, WithScorer},
-        scorer::FnScorer,
-    },
+    individual::{ec::WithScorer, scorer::FnScorer},
     operator::{
         genome_extractor::GenomeExtractor,
         genome_scorer::GenomeScorer,
         mutator::Mutate,
-        selector::{
-            best::Best, lexicase::Lexicase, Select, Selector
-        },
+        selector::{best::Best, lexicase::Lexicase, Select, Selector},
         Composable,
     },
     test_results::{self, TestResults},
 };
 use ec_linear::mutator::umad::Umad;
 use push::{
+    evaluation::cases::{Case, Cases, WithTargetFn},
     genome::plushy::{GeneGenerator, Plushy},
-    instruction::{variable_name::VariableName, BoolInstruction, IntInstruction, PushInstruction},
-    push_vm::{program::PushProgram, push_state::PushState, HasStack, State},
-    vec_into,
+    instruction::{
+        variable_name::VariableName, BoolInstruction, ExecInstruction, IntInstruction,
+        PushInstruction,
+    },
+    push_vm::{program::PushProgram, push_state::PushState, stack::StackError, HasStack, State},
 };
-use rand::{rngs::ThreadRng, thread_rng, Rng,};
+use rand::{
+    distributions::{Distribution, Uniform},
+    thread_rng, Rng,
+};
+use strum::IntoEnumIterator;
 
-use crate::args::{Args, RunModel};
+use crate::args::{CliArgs, RunModel};
 
-fn training_inputs(num_cases: usize, rng: &mut ThreadRng) -> Vec<(i64, i64, i64)> {
-    (0..num_cases)
-    .map(|_| {
-        (
-            rng.gen_range(-100..=100),
-            rng.gen_range(-100..=100),
-            rng.gen_range(-100..=100),
-        )
-    })
-    .collect()
+#[derive(Copy, Clone)]
+struct Input([i64; 3]);
+
+#[derive(Copy, Clone)]
+struct Output(i64);
+
+impl Input {
+    fn median(&self) -> Output {
+        let Self(mut input) = self;
+        input.sort_unstable();
+        Output(input[1])
+    }
 }
 
-fn median((x, y, z): (i64, i64, i64)) -> i64 {
-    let mut sorted_values = [x, y, z];
-    sorted_values.sort();
-    return sorted_values[1];
+impl Distribution<Input> for Uniform<i64> {
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Input {
+        Input([self.sample(rng), self.sample(rng), self.sample(rng)])
+    }
 }
 
-fn training_cases(num_cases: usize, rng: &mut ThreadRng) -> Vec<((i64, i64, i64), i64)> {
-    let inputs = training_inputs(num_cases, rng);
-    inputs.into_iter().map(|input| (input, median(input))).collect()
-}
+// This is an implementation of the "median" problem from Tom Helmuth's
+// software synthesis benchmark suite (PSB1):
+//
+// T. Helmuth and L. Spector. General Program Synthesis Benchmark Suite. In
+// GECCO '15: Proceedings of the 17th annual conference on Genetic and
+// evolutionary computation. July 2015. ACM.
+//
+// Problem Source: C. Le Goues et al., "The ManyBugs and IntroClass
+// Benchmarks for Automated Repair of C Programs," in IEEE Transactions on
+// Software Engineering, vol. 41, no. 12, pp. 1236-1256, Dec. 1 2015.
+// doi: 10.1109/TSE.2015.2454513
+//
+// This problem is quite easy if you have both `Min` and `Max` instructions, but
+// can be more difficult without those instruction.
+fn main() -> Result<()> {
+    let CliArgs {
+        run_model,
+        population_size,
+        max_initial_instructions,
+        max_generations,
+        num_training_cases,
+        lower_input_bound,
+        upper_input_bound,
+        penalty_value,
+        ..
+    } = CliArgs::parse();
 
-
-fn main() -> Result <()> {
-    let args = Args::parse();
-
-    type Pop = Vec<EcIndividual<Plushy, TestResults<test_results::Error<i64>>>>;
     let mut rng = thread_rng();
 
-    let penalty_value: i64 = 1_000_000;
+    let training_cases = Uniform::new(lower_input_bound, upper_input_bound)?
+        .sample_iter(&mut rng)
+        .take(num_training_cases)
+        .with_target_fn(Input::median);
 
-    let training_cases = training_cases(100, &mut rng);
+    let scorer = FnScorer(|genome: &Plushy| score_genome(genome, &training_cases, penalty_value));
 
-    println!("Training cases: {training_cases:#?}");
+    let lexicase = Lexicase::new(training_cases.len());
 
-    // We're defining a scorer function to be used to score a given generation
-    let scorer = FnScorer(|genome: &Plushy| -> TestResults<test_results::Error<i64>> {
-        // We need to clone our program so we can score it.
-        let program = Vec::<PushProgram>::from(genome.clone());
-        let errors: TestResults<test_results::Error<i64>> = training_cases
-            .iter()
-            .map(|&((a, b, c), expected)| {
-                #[allow(clippy::unwrap_used)]
-                let state = PushState::builder()
-                .with_max_stack_size(1_000)
-                .with_program(program.clone())
-                .unwrap()
-                    .with_int_input("a", a.into())
-                    .with_int_input("b", b.into())
-                    .with_int_input("c", c.into())
-                    .build();
+    let instruction_set = instructions().collect::<Vec<_>>();
 
-                    match state.run_to_completion() {
-                        Ok(final_state) => final_state
-                        .stack::<i64>()
-                        .top()
-                        .map_or(penalty_value, |answer | (answer - expected).abs()),
-                        Err(_) => {
-                            penalty_value
-                        }
-                    }
-                
-                
-            })
-            .collect();
-    errors
-    });
-
-    let num_test_cases = training_cases.len();
-    let lexicase = Lexicase::new(num_test_cases);
-
-    // let selector: Weighted<Pop> = Weighted::new(Best, 1)
-    // .with_selector(lexicase, 5);
-
-    let selector = lexicase;
-
-    let gene_generator = GeneGenerator::with_uniform_close_probability(instructions());
+    let gene_generator =
+        GeneGenerator::with_uniform_close_probability(instruction_set.into_distribution()?);
 
     let population = gene_generator
-    .to_collection_generator(args.max_initial_instructions)
-    .with_scorer(scorer)
-    .into_collection_generator(args.population_size)
-    .generate(&mut rng)?;
+        .to_collection_generator(max_initial_instructions)
+        .with_scorer(scorer)
+        .into_collection_generator(population_size)
+        .sample(&mut rng);
 
+    let best = Best.select(&population, &mut rng)?;
+    println!("Best initial individual is {best}");
 
-let best = Best.select(&population, &mut rng)?;
-println!("Best initial individual is {best:?}");
+    let umad = Umad::new(0.1, 0.1, &gene_generator);
 
-let umad = Umad::new(0.1, 0.1, &gene_generator);
+    let make_new_individual = Select::new(lexicase)
+        .then(GenomeExtractor)
+        .then(Mutate::new(umad))
+        .wrap::<GenomeScorer<_, _>>(scorer);
 
-let make_new_individual = Select::new(selector)
-    .then(GenomeExtractor)
-    .then(Mutate::new(umad))
-    .wrap::<GenomeScorer<_, _>>(scorer);
+    let mut generation = Generation::new(make_new_individual, population);
 
-let mut generation = Generation::new(make_new_individual, population);
+    for generation_number in 0..max_generations {
+        match run_model {
+            RunModel::Serial => generation.serial_next()?,
+            RunModel::Parallel => generation.par_next()?,
+        }
 
+        let best = Best.select(generation.population(), &mut rng)?;
+        println!("Generation {generation_number:4} best is {best}");
 
-for generation_number in 0..args.num_generations {
-    match args.run_model {
-        RunModel::Serial => generation.serial_next()?,
-        RunModel::Parallel => generation.par_next()?,
+        if best.test_results.total_result.error == 0 {
+            println!("SUCCESS");
+            break;
+        }
     }
-
-    let best = Best.select(generation.population(), &mut rng)?;
-    println!("Generation {generation_number:2} best is {best:#?}");
-
-    if best.test_results.total_result.error == 0 {
-        println!("SUCCESS");
-        break;
-    }
-}
     Ok(())
 }
 
-fn instructions() -> Vec<PushInstruction> {
-    // Use `strum` to generate this list of instructions.
-    vec_into![
-        IntInstruction::Negate,
-        IntInstruction::Abs,
-        IntInstruction::Min,
-        IntInstruction::Max,
-        IntInstruction::Inc,
-        IntInstruction::Dec,
-        IntInstruction::Add,
-        IntInstruction::Subtract,
-        IntInstruction::Multiply,
-        IntInstruction::ProtectedDivide,
-        IntInstruction::Mod,
-        IntInstruction::Power,
-        IntInstruction::Square,
-        // IntInstruction::IsZero,
-        // IntInstruction::IsPositive,
-        // IntInstruction::IsNegative,
-        IntInstruction::IsEven,
-        IntInstruction::IsOdd,
-        IntInstruction::Equal,
-        IntInstruction::NotEqual,
-        IntInstruction::LessThan,
-        IntInstruction::LessThanEqual,
-        IntInstruction::GreaterThan,
-        IntInstruction::GreaterThanEqual,
-        IntInstruction::FromBoolean,
-        BoolInstruction::Not,
-        BoolInstruction::Or,
-        BoolInstruction::And,
-        BoolInstruction::Xor,
-        BoolInstruction::Implies,
-        BoolInstruction::FromInt,
-        // ExecInstruction::IfElse,
-        VariableName::from("a"),
-        VariableName::from("b"),
-        VariableName::from("c"),
-    ]
+fn score_genome(
+    genome: &Plushy,
+    training_cases: &Cases<Input, Output>,
+    penalty_value: i128,
+) -> TestResults<test_results::Error<i128>> {
+    let program = Vec::<PushProgram>::from(genome.clone());
+    training_cases
+        .iter()
+        .map(|&case: &Case<Input, Output>| run_case(case, &program, penalty_value))
+        .collect()
+}
+
+fn run_case(
+    Case {
+        input,
+        output: Output(expected),
+    }: Case<Input, Output>,
+    program: &[PushProgram],
+    penalty_value: i128,
+) -> i128 {
+    build_state(program, input).map_or(penalty_value, |start_state| {
+        // I don't think we're properly handling things like exceeding maximum
+        // stack size. I think the "Push way" here would be to take whatever
+        // value is on top of the relevant stack and go with it, but we instead
+        // return the penalty value.
+        start_state
+            .run_to_completion()
+            .map_or(penalty_value, |final_state| {
+                compute_error(&final_state, penalty_value, expected)
+            })
+    })
+}
+
+fn build_state(program: &[PushProgram], Input([a, b, c]): Input) -> Result<PushState, StackError> {
+    Ok(PushState::builder()
+        .with_max_stack_size(1000)
+        .with_program(program.to_vec())?
+        .with_int_input("a", a)
+        .with_int_input("b", b)
+        .with_int_input("c", c)
+        .build())
+}
+
+fn compute_error(final_state: &PushState, penalty_value: i128, expected: i64) -> i128 {
+    final_state
+        .stack::<i64>()
+        .top()
+        .map_or(penalty_value, |answer| {
+            i128::from(*answer)
+                .saturating_sub(i128::from(expected))
+                .abs()
+        })
+}
+
+fn instructions() -> impl Iterator<Item = PushInstruction> {
+    let int_instructions = IntInstruction::iter()
+        // Restore this line to remove `Min` from the instruction set.
+        // .filter(|&i| i != IntInstruction::Min)
+        .map(Into::into);
+    let bool_instructions = BoolInstruction::iter().map(Into::into);
+    let exec_instructions = ExecInstruction::iter()
+        // The `ExecInstruction::DupBlock` instruction often leads to substantially more complicated
+        // evolved programs which take much longer to run. Restore this `filter` line
+        // to remove it from the instruction set.
+        // .filter(|&i| i != ExecInstruction::dup_block())
+        .map(Into::into);
+
+    let variables = ["a", "b", "c"]
+        .into_iter()
+        .map(VariableName::from)
+        .map(Into::into);
+
+    int_instructions
+        .chain(bool_instructions)
+        .chain(exec_instructions)
+        .chain(variables)
 }
