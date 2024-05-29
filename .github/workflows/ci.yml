@@ -13,6 +13,10 @@ jobs:
     name: rust-ga - latest
     runs-on: ubuntu-latest
     strategy:
+      # This ensures that all three toolchains will run even if one of
+      # them fails. This, for example, prevents a `nightly` failure
+      # from blocking `stable` and `beta` from running.
+      fail-fast: false
       matrix:
         toolchain:
           - stable
