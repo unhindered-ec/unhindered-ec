@@ -10,7 +10,7 @@ env:
 
 jobs:
   build_and_test:
-    name: rust-ga - latest
+    name: unhindered-ec - latest
     runs-on: ubuntu-latest
     strategy:
       # This ensures that all three toolchains will run even if one of
