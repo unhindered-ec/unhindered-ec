@@ -361,17 +361,17 @@ impl<T> Stack<T> {
     ///
     /// # Arguments
     ///
-    /// - `values` - An implementation of [`IntoIterator`] which
-    /// must also implement both [`ExactSizeIterator`] and
-    /// [`DoubleEndedIterator`]. `values` can be, for example,
-    /// any collection of items of type `T` that can be converted
-    /// into an appropriate iterator, including both [`Vec`] and arrays.
+    /// - `values` - An implementation of [`IntoIterator`] which must also
+    ///   implement both [`ExactSizeIterator`] and [`DoubleEndedIterator`].
+    ///   `values` can be, for example, any collection of items of type `T` that
+    ///   can be converted into an appropriate iterator, including both [`Vec`]
+    ///   and arrays.
     ///
     /// # Errors
     ///
-    /// - [`StackError::Overflow`] is returned when adding the provided
-    /// elements would cause the stack size to exceed maximum stack size
-    /// for this stack, as set with [`Stack::set_max_stack_size`].
+    /// - [`StackError::Overflow`] is returned when adding the provided elements
+    ///   would cause the stack size to exceed maximum stack size for this
+    ///   stack, as set with [`Stack::set_max_stack_size`].
     ///
     /// # Examples
     ///

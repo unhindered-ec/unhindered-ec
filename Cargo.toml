@@ -37,12 +37,18 @@ push_macros = { path = "packages/push-macros" }
 
 
 [workspace.lints.clippy]
-pedantic = "warn"
-nursery = "warn"
-cargo = "warn"
-perf = "warn"
-complexity = "warn"
-correctness = "deny"
+# Lint groups
+pedantic = { level =  "warn", priority = -1 }
+nursery = { level =  "warn", priority = -1 }
+cargo = { level =  "warn", priority = -1 }
+perf = { level =  "warn", priority = -1 }
+complexity = { level =  "warn", priority = -1 }
+correctness = { level =  "deny", priority = -1 }
+style = { level =  "warn", priority = -1 }
+
+
+# Individual lints
+
 dbg_macro = "warn"
 clone_on_ref_ptr = "warn"
 empty_enum_variants_with_brackets = "warn"
@@ -65,7 +71,6 @@ unnecessary_safety_doc = "warn"
 unnecessary_self_imports = "warn"
 unneeded_field_pattern = "warn"
 use_debug = "warn"
-style = "warn"
 arithmetic_side_effects = "warn"
 
 unwrap_used = "warn"
