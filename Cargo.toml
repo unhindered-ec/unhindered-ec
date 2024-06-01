@@ -48,7 +48,6 @@ style = { level =  "warn", priority = -1 }
 
 
 # Individual lints
-
 dbg_macro = "warn"
 clone_on_ref_ptr = "warn"
 empty_enum_variants_with_brackets = "warn"
