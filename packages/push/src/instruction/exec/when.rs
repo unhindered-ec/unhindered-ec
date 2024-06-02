@@ -38,7 +38,7 @@ use crate::{
 ///    - The "Code block" column indicates whether there is a code block on the
 ///      `Exec` stack.
 ///    - The "Action" columns indicate the action taken on the respective
-/// stacks.
+///      stacks.
 ///       - "Consumed" means the value on that stack is consumed (i.e., removed)
 ///       - "Unchanged" means that value was left on the stack unchanged.
 ///    - The "Success" column indicates whether the instruction succeeds, and if
