@@ -1,4 +1,4 @@
-# rust-ga
+# unhindered-ec
 
 This is a simple (but pretty flexible) bit-string genetic algorithm
 in Rust so I can compare its performance to a similar system in
