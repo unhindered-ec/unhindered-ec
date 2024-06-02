@@ -38,6 +38,8 @@ push_macros = { path = "packages/push-macros" }
 
 [workspace.lints.clippy]
 # Lint groups
+# These have a priority of -1 to ensure that individual
+# Lints override them, if present.
 pedantic = { level =  "warn", priority = -1 }
 nursery = { level =  "warn", priority = -1 }
 cargo = { level =  "warn", priority = -1 }
