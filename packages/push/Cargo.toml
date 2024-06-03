@@ -25,7 +25,7 @@ ec-linear = { workspace = true }
 
 proptest = { workspace = true }
 strum = "0.26.2"
-strum_macros = "0.26.2"
+strum_macros = "0.26.3"
 embed-doc-image = "0.1.4"
 push_macros = { workspace = true, optional = true }
 collectable = "0.0.2"
