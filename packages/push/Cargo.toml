@@ -45,6 +45,7 @@ macros = ["dep:push_macros"]
 workspace = true
 
 [[package.metadata.example_runner.examples.smallest]]
+[[package.metadata.example_runner.examples.median]]
 template = "balanced"
 arguments = [
   "--max-generations",
@@ -54,6 +55,7 @@ arguments = [
 ]
 
 [[package.metadata.example_runner.examples.smallest]]
+[[package.metadata.example_runner.examples.median]]
 template = "big_population"
 arguments = [
   "--max-generations",
@@ -63,6 +65,7 @@ arguments = [
 ]
 
 [[package.metadata.example_runner.examples.smallest]]
+[[package.metadata.example_runner.examples.median]]
 template = "many_generations"
 arguments = [
   "--max-generations",
