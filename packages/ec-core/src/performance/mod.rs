@@ -23,7 +23,7 @@ use std::{
 //   anymore. At a minimum we should try to push those requirements
 //   closer to where they're actually needed.
 
-pub mod modname {
+pub mod score {
     use std::{
         fmt::{Debug, Display},
         iter::Sum,
@@ -192,7 +192,7 @@ mod error_tests {
 
 #[derive(Eq, PartialEq)]
 pub enum TestResult<S, E> {
-    Score(modname::ScoreValue<S>),
+    Score(score::ScoreValue<S>),
     Error(ErrorValue<E>),
 }
 
@@ -218,8 +218,8 @@ mod test_result_tests {
 
     #[test]
     fn score_compares_to_score() {
-        let first: TestResult<i32, i32> = TestResult::Score(modname::ScoreValue { score: 32 });
-        let second = TestResult::Score(modname::ScoreValue { score: 87 });
+        let first: TestResult<i32, i32> = TestResult::Score(score::ScoreValue { score: 32 });
+        let second = TestResult::Score(score::ScoreValue { score: 87 });
         assert!(first < second);
         assert!(first != second);
         assert!((first > second).not());
@@ -236,7 +236,7 @@ mod test_result_tests {
 
     #[test]
     fn error_and_score_incomparable() {
-        let first = TestResult::Score(modname::ScoreValue { score: 32 });
+        let first = TestResult::Score(score::ScoreValue { score: 32 });
         let second = TestResult::Error(ErrorValue { error: 87 });
         assert!((first > second).not());
         assert!(first != second);
@@ -342,7 +342,7 @@ mod test_results_from_vec {
     #[test]
     fn create_test_results_from_scores() {
         let scores = vec![5, 8, 0, 9];
-        let test_results: TestResults<modname::ScoreValue<i32>> = scores.clone().into();
+        let test_results: TestResults<score::ScoreValue<i32>> = scores.clone().into();
         assert_eq!(
             test_results
                 .results
@@ -366,8 +366,8 @@ mod test_results_from_vec {
     #[test]
     fn create_test_results_from_iter_scores() {
         let scores = vec![5, 8, 0, 9];
-        let results = scores.iter().copied().map(modname::ScoreValue::from);
-        let test_results: TestResults<modname::ScoreValue<i32>> = results.clone().collect();
+        let results = scores.iter().copied().map(score::ScoreValue::from);
+        let test_results: TestResults<score::ScoreValue<i32>> = results.clone().collect();
         assert_eq!(test_results.results, results.collect::<Vec<_>>());
         assert_eq!(test_results.total_result, scores.into_iter().sum());
     }

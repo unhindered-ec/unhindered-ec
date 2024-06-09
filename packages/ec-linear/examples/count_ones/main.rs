@@ -32,7 +32,7 @@ use ec_core::{
         },
         Composable,
     },
-    performance::{modname::ScoreValue, TestResults},
+    performance::{score::ScoreValue, TestResults},
 };
 use ec_linear::{
     genome::bitstring::Bitstring, mutator::with_one_over_length::WithOneOverLength,
@@ -124,7 +124,7 @@ mod test {
     #[test]
     fn non_empty() {
         let input = [false, true, true, true, false, true];
-        let output: TestResults<performance::modname::ScoreValue<i64>> =
+        let output: TestResults<performance::score::ScoreValue<i64>> =
             [0, 1, 1, 1, 0, 1].into_iter().collect();
         assert_eq!(output, count_ones(&input));
     }
