@@ -33,10 +33,10 @@ use rand::{distributions::Standard, prelude::Distribution, thread_rng};
 use crate::args::{Args, RunModel};
 
 #[must_use]
-fn hiff(bits: &[bool]) -> (bool, TestResults<modname::ScoreValue<usize>>) {
+fn hiff(bits: &[bool]) -> (bool, TestResults<ScoreValue<usize>>) {
     let len = bits.len();
     if len < 2 {
-        (true, once(modname::ScoreValue::from(len)).collect())
+        (true, once(ScoreValue::from(len)).collect())
     } else {
         let half_len = len / 2;
         let (left_all_same, left_score) = hiff(&bits[..half_len]);
