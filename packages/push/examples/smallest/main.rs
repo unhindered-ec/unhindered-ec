@@ -150,7 +150,7 @@ fn score_genome(
     genome: &Plushy,
     training_cases: &Cases<Input, Output>,
     penalty_value: i128,
-) -> TestResults<performance::Error<i128>> {
+) -> TestResults<performance::ErrorValue<i128>> {
     let program = Vec::<PushProgram>::from(genome.clone());
     training_cases
         .iter()

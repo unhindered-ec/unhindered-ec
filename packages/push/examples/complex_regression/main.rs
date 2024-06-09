@@ -101,7 +101,7 @@ fn score_program(
 fn score_genome(
     genome: &Plushy,
     training_cases: &Cases<Of64>,
-) -> TestResults<performance::Error<Of64>> {
+) -> TestResults<performance::ErrorValue<Of64>> {
     let program: Vec<PushProgram> = genome.clone().into();
 
     training_cases
