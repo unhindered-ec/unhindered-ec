@@ -28,7 +28,7 @@ use ec_core::{
         },
         Composable,
     },
-    performance::{ScoreValue, TestResults},
+    performance::{modname::ScoreValue, TestResults},
 };
 use ec_linear::{
     genome::bitstring::Bitstring, mutator::with_one_over_length::WithOneOverLength,
@@ -39,10 +39,10 @@ use rand::{distr::Standard, prelude::Distribution, thread_rng};
 use crate::args::{Args, RunModel};
 
 #[must_use]
-fn hiff(bits: &[bool]) -> (bool, TestResults<ScoreValue<usize>>) {
+fn hiff(bits: &[bool]) -> (bool, TestResults<modname::ScoreValue<usize>>) {
     let len = bits.len();
     if len < 2 {
-        (true, once(ScoreValue::from(len)).collect())
+        (true, once(modname::ScoreValue::from(len)).collect())
     } else {
         let half_len = len / 2;
         let (left_all_same, left_score) = hiff(&bits[..half_len]);
