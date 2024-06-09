@@ -4,7 +4,7 @@ use anyhow::{Context, Result};
 use rand::{prelude::SliceRandom, rngs::ThreadRng};
 
 use super::Selector;
-use crate::{individual::Individual, population::Population, test_results::TestResults};
+use crate::{individual::Individual, performance::TestResults, population::Population};
 
 pub struct Lexicase {
     num_test_cases: usize,
