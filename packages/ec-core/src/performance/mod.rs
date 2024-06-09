@@ -23,7 +23,7 @@ use std::{
 //   anymore. At a minimum we should try to push those requirements
 //   closer to where they're actually needed.
 
-mod modname {
+pub mod modname {
     use std::{
         fmt::{Debug, Display},
         iter::Sum,
@@ -82,7 +82,9 @@ mod modname {
     }
 
     #[cfg(test)]
-    pub(crate) mod score_tests {
+    mod score_tests {
+        use std::cmp::Ordering;
+
         use super::*;
 
         #[test]
