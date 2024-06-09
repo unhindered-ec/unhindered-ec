@@ -22,7 +22,7 @@ use ec_core::{
         },
         Composable,
     },
-    performance::{ScoreValue, TestResults},
+    performance::{modname::ScoreValue, TestResults},
 };
 use ec_linear::{
     genome::bitstring::Bitstring, mutator::with_one_over_length::WithOneOverLength,
@@ -36,7 +36,7 @@ use rand::{
 use crate::args::{Args, RunModel};
 
 #[must_use]
-pub fn count_ones(bits: &[bool]) -> TestResults<ScoreValue<i64>> {
+pub fn count_ones(bits: &[bool]) -> TestResults<modname::ScoreValue<i64>> {
     bits.iter().copied().map(i64::from).collect()
 }
 
@@ -114,7 +114,7 @@ mod test {
     #[test]
     fn non_empty() {
         let input = [false, true, true, true, false, true];
-        let output: TestResults<performance::ScoreValue<i64>> =
+        let output: TestResults<performance::modname::ScoreValue<i64>> =
             [0, 1, 1, 1, 0, 1].into_iter().collect();
         assert_eq!(output, count_ones(&input));
     }
