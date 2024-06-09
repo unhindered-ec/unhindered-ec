@@ -46,7 +46,7 @@ use rand::{
 use crate::args::{Args, RunModel};
 
 #[must_use]
-pub fn count_ones(bits: &[bool]) -> TestResults<modname::ScoreValue<i64>> {
+pub fn count_ones(bits: &[bool]) -> TestResults<ScoreValue<i64>> {
     bits.iter().copied().map(i64::from).collect()
 }
 
