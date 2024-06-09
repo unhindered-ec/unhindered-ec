@@ -24,7 +24,7 @@ use ec_core::{
         selector::{best::Best, lexicase::Lexicase, Select, Selector},
         Composable,
     },
-    performance::{error::ErrorValue, TestResults},
+    performance::{error::ErrorValue, test_results::TestResults},
     uniform_distribution_of,
 };
 use ec_linear::mutator::umad::Umad;

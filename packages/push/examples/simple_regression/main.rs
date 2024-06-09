@@ -27,7 +27,7 @@ use ec_core::{
         },
         Composable,
     },
-    performance::{error::ErrorValue, TestResults},
+    performance::{error::ErrorValue, test_results::TestResults},
     uniform_distribution_of,
 };
 use ec_linear::mutator::umad::Umad;
