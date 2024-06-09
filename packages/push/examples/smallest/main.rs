@@ -15,7 +15,7 @@ use ec_core::{
         selector::{best::Best, lexicase::Lexicase, Select, Selector},
         Composable,
     },
-    performance::{self, TestResults},
+    performance::{self, test_results::TestResults},
 };
 use ec_linear::mutator::umad::Umad;
 use push::{

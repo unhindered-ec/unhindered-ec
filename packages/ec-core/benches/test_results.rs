@@ -1,5 +1,7 @@
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
-use ec_core::{distributions::collection::ConvertToCollectionGenerator, performance::TestResults};
+use ec_core::{
+    distributions::collection::ConvertToCollectionGenerator, performance::test_results::TestResults,
+};
 use rand::{
     distributions::{Distribution, Standard},
     thread_rng,

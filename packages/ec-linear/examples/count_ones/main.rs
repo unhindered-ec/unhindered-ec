@@ -22,7 +22,7 @@ use ec_core::{
         },
         Composable,
     },
-    performance::{score::ScoreValue, TestResults},
+    performance::{score::ScoreValue, test_results::TestResults},
 };
 use ec_linear::{
     genome::bitstring::Bitstring, mutator::with_one_over_length::WithOneOverLength,
