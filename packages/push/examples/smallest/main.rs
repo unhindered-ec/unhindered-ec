@@ -15,7 +15,7 @@ use ec_core::{
         selector::{best::Best, lexicase::Lexicase, Select, Selector},
         Composable,
     },
-    test_results::{self, TestResults},
+    performance::{self, TestResults},
 };
 use ec_linear::mutator::umad::Umad;
 use push::{
@@ -147,7 +147,7 @@ fn score_genome(
     genome: &Plushy,
     training_cases: &Cases<Input, Output>,
     penalty_value: i128,
-) -> TestResults<test_results::Error<i128>> {
+) -> TestResults<performance::Error<i128>> {
     let program = Vec::<PushProgram>::from(genome.clone());
     training_cases
         .iter()
