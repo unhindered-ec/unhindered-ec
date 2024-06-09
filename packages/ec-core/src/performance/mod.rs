@@ -77,6 +77,25 @@ where
     }
 }
 
+#[cfg(test)]
+mod score_tests {
+    use super::*;
+
+    #[test]
+    fn score_bigger_is_better() {
+        let first = ScoreValue { score: 37 };
+        let second = ScoreValue { score: 82 };
+        // These use `Ord`
+        assert_eq!(first.cmp(&second), Ordering::Less);
+        assert_eq!(second.cmp(&first), Ordering::Greater);
+        assert_eq!(first.cmp(&first), Ordering::Equal);
+        // Now use `PartialOrd`
+        assert_eq!(first.partial_cmp(&second), Some(Ordering::Less));
+        assert_eq!(second.partial_cmp(&first), Some(Ordering::Greater));
+        assert_eq!(first.partial_cmp(&first), Some(Ordering::Equal));
+    }
+}
+
 // TODO: Rewrite `Error` using the std::cmp::Reverse type
 //   to convert `Score` to `Error`.
 #[derive(Eq, PartialEq)]
@@ -146,22 +165,8 @@ where
 }
 
 #[cfg(test)]
-mod score_error_tests {
+mod error_tests {
     use super::*;
-
-    #[test]
-    fn score_bigger_is_better() {
-        let first = ScoreValue { score: 37 };
-        let second = ScoreValue { score: 82 };
-        // These use `Ord`
-        assert_eq!(first.cmp(&second), Ordering::Less);
-        assert_eq!(second.cmp(&first), Ordering::Greater);
-        assert_eq!(first.cmp(&first), Ordering::Equal);
-        // Now use `PartialOrd`
-        assert_eq!(first.partial_cmp(&second), Some(Ordering::Less));
-        assert_eq!(second.partial_cmp(&first), Some(Ordering::Greater));
-        assert_eq!(first.partial_cmp(&first), Some(Ordering::Equal));
-    }
 
     #[test]
     fn error_smaller_is_better() {
