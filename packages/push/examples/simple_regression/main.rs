@@ -27,7 +27,7 @@ use ec_core::{
         },
         Composable,
     },
-    performance::{self, TestResults},
+    performance::{error::ErrorValue, TestResults},
     uniform_distribution_of,
 };
 use ec_linear::mutator::umad::Umad;
@@ -101,10 +101,7 @@ fn score_program(
     (answer - output).abs()
 }
 
-fn score_genome(
-    genome: &Plushy,
-    training_cases: &Cases<Of64>,
-) -> TestResults<performance::ErrorValue<Of64>> {
+fn score_genome(genome: &Plushy, training_cases: &Cases<Of64>) -> TestResults<ErrorValue<Of64>> {
     let program: Vec<PushProgram> = genome.clone().into();
 
     training_cases
