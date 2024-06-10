@@ -40,8 +40,8 @@ mod test_result_tests {
 
     #[test]
     fn error_compares_to_error() {
-        let first: TestResult<i32, i32> = TestResult::Error(error::ErrorValue { error: 32 });
-        let second = TestResult::Error(error::ErrorValue { error: 87 });
+        let first: TestResult<i32, i32> = TestResult::Error(error::ErrorValue(32));
+        let second = TestResult::Error(error::ErrorValue(87));
         assert!(first > second);
         assert!(first != second);
         assert!((first < second).not());
@@ -50,7 +50,7 @@ mod test_result_tests {
     #[test]
     fn error_and_score_incomparable() {
         let first = TestResult::Score(score::ScoreValue { score: 32 });
-        let second = TestResult::Error(error::ErrorValue { error: 87 });
+        let second = TestResult::Error(error::ErrorValue(87));
         assert!((first > second).not());
         assert!(first != second);
         assert!((first < second).not());
