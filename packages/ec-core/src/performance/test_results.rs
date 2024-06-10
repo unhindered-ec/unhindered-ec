@@ -58,14 +58,10 @@ pub(crate) mod test_results_from_vec {
         let errors = vec![5, 8, 0, 9];
         let test_results: TestResults<ErrorValue<i32>> = errors.clone().into();
         assert_eq!(
-            test_results
-                .results
-                .iter()
-                .map(|r| r.error)
-                .collect::<Vec<_>>(),
+            test_results.results.iter().map(|r| r.0).collect::<Vec<_>>(),
             errors
         );
-        assert_eq!(test_results.total_result, errors.into_iter().sum());
+        assert_eq!(test_results.total_result, errors.into_iter().sum::<i32>());
     }
 
     #[test]
@@ -89,7 +85,7 @@ pub(crate) mod test_results_from_vec {
         let results = errors.iter().copied().map(ErrorValue::from);
         let test_results: TestResults<ErrorValue<i32>> = results.clone().collect();
         assert_eq!(test_results.results, results.collect::<Vec<_>>());
-        assert_eq!(test_results.total_result, errors.into_iter().sum());
+        assert_eq!(test_results.total_result, errors.into_iter().sum::<i32>());
     }
 
     #[test]

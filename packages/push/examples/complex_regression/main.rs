@@ -189,7 +189,7 @@ fn main() -> Result<()> {
         // num_generations-1.
         println!("Generation {generation_number:2} best is {best}");
 
-        if best.test_results.total_result.error == OrderedFloat(0.0) {
+        if best.test_results.total_result == OrderedFloat(0.0) {
             println!("SUCCESS");
             break;
         }

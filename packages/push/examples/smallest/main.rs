@@ -15,7 +15,7 @@ use ec_core::{
         selector::{best::Best, lexicase::Lexicase, Select, Selector},
         Composable,
     },
-    performance::{self, test_results::TestResults},
+    performance::{error::ErrorValue, test_results::TestResults},
 };
 use ec_linear::mutator::umad::Umad;
 use push::{
@@ -137,7 +137,7 @@ fn main() -> Result<()> {
         let best = Best.select(generation.population(), &mut rng)?;
         println!("Generation {generation_number:4} best is {best}");
 
-        if best.test_results.total_result.error == 0 {
+        if best.test_results.total_result == 0 {
             println!("SUCCESS");
             break;
         }
@@ -150,7 +150,7 @@ fn score_genome(
     genome: &Plushy,
     training_cases: &Cases<Input, Output>,
     penalty_value: i128,
-) -> TestResults<performance::error::ErrorValue<i128>> {
+) -> TestResults<ErrorValue<i128>> {
     let program = Vec::<PushProgram>::from(genome.clone());
     training_cases
         .iter()
