@@ -4,7 +4,7 @@ use std::{
 };
 
 /// Score implicitly follows a "bigger is better" model.
-#[derive(Eq, PartialEq, Ord, PartialOrd)]
+#[derive(Eq, PartialEq, Ord, PartialOrd, Clone)]
 pub struct ScoreValue<T> {
     pub score: T,
 }
