@@ -21,7 +21,7 @@ use std::{
 /// a `ScoreValue` from an `ErrorValue`, effectively
 /// flipping the sign on the `ScoreValue` so that smaller
 /// becomes better.
-#[derive(Default, Clone, Eq, PartialEq)]
+#[derive(Default, Copy, Clone, Eq, PartialEq)]
 pub struct ErrorValue<T>(pub T);
 
 impl<T: Debug> Debug for ErrorValue<T> {
