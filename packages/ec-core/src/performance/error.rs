@@ -3,8 +3,10 @@ use std::{
     fmt::{Debug, Display},
     iter::Sum,
     num::Saturating,
-    ops::Add,
+    ops::{Add, Sub},
 };
+
+use super::score::ScoreValue;
 
 /// A performance measure where smaller is better
 ///
@@ -101,6 +103,58 @@ where
     }
 }
 
+/// Provide saturating addition combining errors of type
+/// `U` and scores of type `T`, returning an error of
+/// type U. This effectively negates the score value (turning
+/// it into a kind of error, where small is good) and
+/// adds it to the error.
+impl<T, U> Add<ScoreValue<T>> for ErrorValue<U>
+where
+    T: Into<U>,
+    Saturating<U>: Sub<Saturating<U>, Output = Saturating<U>>,
+{
+    type Output = Self;
+
+    /// Saturating addition combining values errors of type
+    /// `U` and scores of type `T`, returning an error of type
+    /// `U`. This effectively negates the score value (turning
+    /// it into a kind of error, where small is good) and
+    /// adds it to the error.
+    #[allow(clippy::suspicious_arithmetic_impl)]
+    fn add(self, rhs: ScoreValue<T>) -> Self::Output {
+        Self((Saturating(self.0) - Saturating(rhs.score.into())).0)
+    }
+}
+
+/// Provide saturating addition combining errors of type
+/// `U` and references to scores of type `T`, returning an error of
+/// type U. This effectively negates the score value (turning
+/// it into a kind of error, where small is good) and
+/// adds it to the error.
+impl<'a, T, U> Add<&'a ScoreValue<T>> for ErrorValue<U>
+where
+    T: Clone,
+    Self: Sub<ScoreValue<T>, Output = Self>,
+{
+    type Output = Self;
+
+    /// Saturating addition combining values errors of type
+    /// `U` and references to scores of type `T`, returning an error of type
+    /// `U`. This effectively negates the score value (turning
+    /// it into a kind of error, where small is good) and
+    /// adds it to the error.
+    // This subtraction will use the implementation of `Add<ErrorValue<T>>`
+    // which guarantees saturating addition, so we can ignore this warning
+    // here.
+    #[allow(clippy::arithmetic_side_effects)]
+    // Clippy is worried that we're using `-` in an implementation of `Add`,
+    // but that's what we want here.
+    #[allow(clippy::suspicious_arithmetic_impl)]
+    fn add(self, rhs: &'a ScoreValue<T>) -> Self::Output {
+        self - rhs.clone()
+    }
+}
+
 /// Provide saturating summation combining values of type
 /// `T` into a sum of type `ErrorValue<T>`.
 impl<T: Sum> Sum<T> for ErrorValue<T> {
@@ -157,5 +211,24 @@ mod error_tests {
         assert_eq!(first.partial_cmp(&second), Some(Ordering::Greater));
         assert_eq!(second.partial_cmp(&first), Some(Ordering::Less));
         assert_eq!(first.partial_cmp(&first), Some(Ordering::Equal));
+    }
+
+    #[test]
+    fn addition_saturates() {
+        let first = ErrorValue(i32::MAX);
+        let second = ErrorValue(18);
+        let sum = first + second;
+        assert_eq!(sum, i32::MAX);
+
+        let sum = second + first;
+        assert_eq!(sum, i32::MAX);
+    }
+
+    #[test]
+    fn adding_score_to_negative_value_saturates() {
+        let first = ErrorValue(-18);
+        let second = ScoreValue { score: i32::MAX };
+        let sum = first + second;
+        assert_eq!(sum, i32::MIN);
     }
 }
