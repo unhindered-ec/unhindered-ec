@@ -195,6 +195,20 @@ where
     }
 }
 
+// Attempting to replace the previous three `Sum` implementation
+// blocks with the following `impl` breaks the world because
+// floating point values don't saturate. If we just keep the
+// preceding ones, though, then we don't get saturation. Sighz.
+
+// impl<'a, T, U> Sum<&'a ErrorValue<T>> for ErrorValue<U>
+// where
+//     for<'b> Self: Add<&'b ErrorValue<T>, Output = Self> + Default,
+// {
+//     fn sum<I: Iterator<Item = &'a ErrorValue<T>>>(iter: I) -> Self {
+//         iter.fold(Self::default(), Add::add)
+//     }
+// }
+
 #[cfg(test)]
 mod error_tests {
     use super::*;
