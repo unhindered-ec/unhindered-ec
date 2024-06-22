@@ -4,8 +4,6 @@ use crate::{
     push_vm::{stack::PushOnto, HasStack},
 };
 
-/// ![`Negate` saturates on `i64::MIN`, returning `i64::MAX`](https://img.shields.io/badge/Saturates_on_overflow-orange)
-///
 /// An instruction that negates the top
 /// value on the `i64` stack.
 ///
