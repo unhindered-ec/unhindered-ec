@@ -23,7 +23,11 @@ macro_railroad_annotation = { workspace = true }
 
 [dev-dependencies]
 rand = { workspace = true, features = ["alloc", "small_rng"] }
+criterion = { workspace = true }
 
 [lints]
 workspace = true
 
+[[bench]]
+name = "test_results"
+harness = false
