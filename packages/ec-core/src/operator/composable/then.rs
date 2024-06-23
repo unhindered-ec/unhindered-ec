@@ -1,4 +1,4 @@
-use anyhow::{Context, Result};
+use anyhow::Context;
 use rand::rngs::ThreadRng;
 
 use super::{super::Operator, Composable};
@@ -18,12 +18,18 @@ impl<A, F, G> Operator<A> for Then<F, G>
 where
     F: Operator<A>,
     G: Operator<F::Output>,
+    anyhow::Error: From<F::Error> + From<G::Error>,
 {
     type Output = G::Output;
+    type Error = anyhow::Error;
 
-    fn apply(&self, x: A, rng: &mut ThreadRng) -> Result<Self::Output> {
-        let f_result = self.f.apply(x, rng).context("f in `Then` failed")?;
-        self.g.apply(f_result, rng)
+    fn apply(&self, x: A, rng: &mut ThreadRng) -> Result<Self::Output, Self::Error> {
+        let f_result = self
+            .f
+            .apply(x, rng)
+            .map_err(anyhow::Error::from)
+            .context("f in `Then` failed")?;
+        self.g.apply(f_result, rng).map_err(anyhow::Error::from)
     }
 }
 impl<F, G> Composable for Then<F, G> {}
@@ -31,6 +37,8 @@ impl<F, G> Composable for Then<F, G> {}
 #[cfg(test)]
 #[allow(clippy::arithmetic_side_effects)]
 pub mod tests {
+    use std::convert::Infallible;
+
     use rand::thread_rng;
 
     use super::*;
@@ -38,8 +46,9 @@ pub mod tests {
     struct Increment;
     impl Operator<i32> for Increment {
         type Output = i32;
+        type Error = Infallible;
 
-        fn apply(&self, input: i32, _: &mut ThreadRng) -> Result<Self::Output> {
+        fn apply(&self, input: i32, _: &mut ThreadRng) -> Result<Self::Output, Self::Error> {
             Ok(input + 1)
         }
     }
@@ -48,8 +57,9 @@ pub mod tests {
     struct Double;
     impl Operator<i32> for Double {
         type Output = i32;
+        type Error = Infallible;
 
-        fn apply(&self, input: i32, _: &mut ThreadRng) -> Result<Self::Output> {
+        fn apply(&self, input: i32, _: &mut ThreadRng) -> Result<Self::Output, Self::Error> {
             Ok(input * 2)
         }
     }

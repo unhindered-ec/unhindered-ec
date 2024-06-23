@@ -1,4 +1,3 @@
-use anyhow::Result;
 use rand::rngs::ThreadRng;
 
 use super::{Composable, Operator};
@@ -19,7 +18,7 @@ pub trait Recombinator<GS> {
     /// # Errors
     /// This will return an error if there's some problem with the
     /// recombination.
-    fn recombine(&self, genomes: GS, rng: &mut ThreadRng) -> Result<Self::Output>;
+    fn recombine(&self, genomes: GS, rng: &mut ThreadRng) -> anyhow::Result<Self::Output>;
 }
 
 pub struct Recombine<R> {
@@ -37,8 +36,9 @@ where
     R: Recombinator<G>,
 {
     type Output = R::Output;
+    type Error = anyhow::Error;
 
-    fn apply(&self, genomes: G, rng: &mut ThreadRng) -> Result<Self::Output> {
+    fn apply(&self, genomes: G, rng: &mut ThreadRng) -> Result<Self::Output, Self::Error> {
         self.recombinator.recombine(genomes, rng)
     }
 }

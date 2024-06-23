@@ -1,5 +1,3 @@
-use anyhow::Result;
-
 use super::{composable::Wrappable, Composable, Operator};
 use crate::{
     individual::{ec::EcIndividual, scorer::Scorer},
@@ -34,10 +32,16 @@ where
     P: Population,
     GM: Operator<&'pop P>,
     S: Scorer<GM::Output, Score = R>,
+    anyhow::Error: From<GM::Error>,
 {
     type Output = EcIndividual<GM::Output, S::Score>;
+    type Error = anyhow::Error;
 
-    fn apply(&self, population: &'pop P, rng: &mut rand::rngs::ThreadRng) -> Result<Self::Output> {
+    fn apply(
+        &self,
+        population: &'pop P,
+        rng: &mut rand::rngs::ThreadRng,
+    ) -> Result<Self::Output, Self::Error> {
         let genome = self.genome_maker.apply(population, rng)?;
         let score = self.scorer.score(&genome);
         // TODO: We probably don't want to bake in `EcIndividual` here, but instead
@@ -45,4 +49,5 @@ where
         Ok(EcIndividual::new(genome, score))
     }
 }
+
 impl<GM, S> Composable for GenomeScorer<GM, S> {}

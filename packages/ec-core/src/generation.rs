@@ -1,4 +1,3 @@
-use anyhow::Result;
 use itertools::Itertools;
 use rayon::prelude::{FromParallelIterator, IntoParallelIterator, ParallelIterator};
 
@@ -28,7 +27,8 @@ impl<P, C> Generation<P, C>
 where
     P: Population + FromParallelIterator<P::Individual> + Send + Sync,
     P::Individual: Send,
-    C: for<'a> Operator<&'a P, Output = P::Individual> + Send + Sync,
+    for<'a> C: Operator<&'a P, Output = P::Individual, Error: Send> + Send + Sync,
+    for<'a> anyhow::Error: From<<C as Operator<&'a P>>::Error>,
 {
     /// Make the next generation using a Rayon parallel iterator.
     /// # Errors
@@ -42,7 +42,7 @@ where
             .map_init(rand::thread_rng, |rng, _| {
                 self.child_maker.apply(&self.population, rng)
             })
-            .collect::<Result<_>>()?;
+            .collect::<Result<_, _>>()?;
         // TODO: We can reduce allocations by pre-allocating the memory for "old" and
         // "new"   population in `::new()` and then re-using those vectors here.
         self.population = population;
@@ -54,6 +54,7 @@ impl<P, C> Generation<P, C>
 where
     P: Population + FromIterator<P::Individual>,
     C: for<'a> Operator<&'a P, Output = P::Individual>,
+    for<'a> anyhow::Error: From<<C as Operator<&'a P>>::Error>,
 {
     /// Make the next generation serially.
     /// # Errors
