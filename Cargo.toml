@@ -27,7 +27,7 @@ thiserror = "1.0.59"
 itertools = "0.12.1"
 macro_railroad_annotation = "1.0.3"
 test-strategy = "0.3.1"
-proptest = "1.2.0"
+proptest = "1.5.0"
 criterion = "0.5.1"
 miette = "7.2.0"
 
