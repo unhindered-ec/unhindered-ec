@@ -1,7 +1,5 @@
 use std::iter;
 
-use itertools::Itertools;
-
 use super::Composable;
 use crate::operator::Operator;
 
@@ -35,7 +33,7 @@ where
         #[allow(clippy::panic)]
         Ok(iter::repeat_with(|| self.f.apply(input.clone(), rng))
             .take(N)
-            .try_collect::<_, Vec<_>, _>()?
+            .collect::<Result<Vec<_>, _>>()?
             .try_into()
             .unwrap_or_else(|v: Vec<_>| {
                 panic!(
