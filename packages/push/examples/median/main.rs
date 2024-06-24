@@ -49,7 +49,7 @@ impl Input {
 
 impl Distribution<Input> for Uniform<i64> {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Input {
-        Input([self.sample(rng), self.sample(rng), self.sample(rng)])
+        Input(std::array::from_fn(|_| self.sample(rng)))
     }
 }
 
