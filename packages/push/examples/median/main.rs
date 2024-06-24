@@ -1,6 +1,8 @@
 pub mod args;
 
-use anyhow::Result;
+use std::ops::Not;
+
+use anyhow::{ensure, Result};
 use clap::Parser;
 use ec_core::{
     distributions::{collection::ConvertToCollectionGenerator, conversion::IntoDistribution},
@@ -101,6 +103,8 @@ fn main() -> Result<()> {
         .with_scorer(scorer)
         .into_collection_generator(population_size)
         .sample(&mut rng);
+
+    ensure!(population.is_empty().not());
 
     let best = Best.select(&population, &mut rng)?;
     println!("Best initial individual is {best}");
