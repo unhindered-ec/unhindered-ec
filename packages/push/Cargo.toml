@@ -44,56 +44,14 @@ macros = ["dep:push_macros"]
 [lints]
 workspace = true
 
-[[package.metadata.example_runner.examples.median]]
-template = "balanced"
-arguments = [
-  "--max-generations",
-  "10",
-  "--population-size",
-  "200"
+[package.metadata.example_runner.examples]
+median = [
+  { template = "balanced_v2" },
+  { template = "big_population_v2" },
+  { template = "many_generations_v2" }
 ]
-
-[[package.metadata.example_runner.examples.median]]
-template = "big_population"
-arguments = [
-  "--max-generations",
-  "1",
-  "--population-size",
-  "2000"
-]
-
-[[package.metadata.example_runner.examples.median]]
-template = "many_generations"
-arguments = [
-  "--max-generations",
-  "200",
-  "--population-size",
-  "10"
-]
-
-[[package.metadata.example_runner.examples.smallest]]
-template = "balanced"
-arguments = [
-  "--max-generations",
-  "10",
-  "--population-size",
-  "200"
-]
-
-[[package.metadata.example_runner.examples.smallest]]
-template = "big_population"
-arguments = [
-  "--max-generations",
-  "1",
-  "--population-size",
-  "2000"
-]
-
-[[package.metadata.example_runner.examples.smallest]]
-template = "many_generations"
-arguments = [
-  "--max-generations",
-  "200",
-  "--population-size",
-  "10"
+smallest = [
+  { template = "balanced_v2" },
+  { template = "big_population_v2" },
+  { template = "many_generations_v2" }
 ]
