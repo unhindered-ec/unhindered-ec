@@ -167,17 +167,6 @@ fn run_case(
     })
 }
 
-fn compute_error(final_state: &PushState, penalty_value: i128, expected: i64) -> i128 {
-    final_state
-        .stack::<i64>()
-        .top()
-        .map_or(penalty_value, |answer| {
-            i128::from(*answer)
-                .saturating_sub(i128::from(expected))
-                .abs()
-        })
-}
-
 fn build_state(
     program: &[PushProgram],
     Input([a, b, c, d]): Input,
@@ -190,6 +179,17 @@ fn build_state(
         .with_int_input("c", c)
         .with_int_input("d", d)
         .build())
+}
+
+fn compute_error(final_state: &PushState, penalty_value: i128, expected: i64) -> i128 {
+    final_state
+        .stack::<i64>()
+        .top()
+        .map_or(penalty_value, |answer| {
+            i128::from(*answer)
+                .saturating_sub(i128::from(expected))
+                .abs()
+        })
 }
 
 fn instructions() -> impl Iterator<Item = PushInstruction> {
