@@ -11,6 +11,7 @@ use crate::{
 #[derive(Debug, strum_macros::Display, Clone, PartialEq, Eq, EnumIter)]
 #[non_exhaustive]
 pub enum BoolInstruction {
+    #[strum(to_string = "Push({0})")]
     Push(bool),
     Not,
     Or,
