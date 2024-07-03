@@ -13,6 +13,7 @@ use crate::{
 #[derive(Debug, strum_macros::Display, Copy, Clone, EnumIter, Eq, PartialEq)]
 #[non_exhaustive]
 pub enum FloatInstruction {
+    #[strum(to_string = "Push({0})")]
     Push(OrderedFloat<f64>),
     Add,
     Subtract,
@@ -121,5 +122,20 @@ impl FloatInstruction {
             .map(|(x, y)| op(x, y))
             .push_onto(state)
             .with_stack_discard::<OrderedFloat<f64>>(1)
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::FloatInstruction;
+
+    #[test]
+    fn auto_display() {
+        assert_eq!(format!("{}", FloatInstruction::NotEqual), "NotEqual");
+    }
+
+    #[test]
+    fn manual_push_display() {
+        assert_eq!(format!("{}", FloatInstruction::Push(1.0.into())), "Push(1)");
     }
 }
