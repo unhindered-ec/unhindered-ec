@@ -4,5 +4,6 @@ allowed-duplicate-crates = [
   "rand_core",
   "base64",
   "itertools",
-  "syn"
+  "syn",
+  "heck"
 ]
