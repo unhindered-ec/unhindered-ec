@@ -110,7 +110,7 @@ impl From<BoolInstruction> for PushInstruction {
 #[cfg(test)]
 #[allow(clippy::unwrap_used, clippy::ignored_unit_patterns)]
 mod property_tests {
-    use proptest::prop_assert_eq;
+    use proptest::{prop_assert, prop_assert_eq};
     use strum::IntoEnumIterator;
     use test_strategy::proptest;
 
@@ -121,6 +121,16 @@ mod property_tests {
 
     fn all_instructions() -> Vec<BoolInstruction> {
         BoolInstruction::iter().collect()
+    }
+
+    #[proptest]
+    fn to_string_contains_value(#[any] x: bool) {
+        let instruction = BoolInstruction::Push(x);
+        let s = instruction.to_string();
+        prop_assert!(
+            s.contains(&x.to_string()),
+            "String version of instruction (\"{s}\") doesn't contain value (\"{x}\")"
+        );
     }
 
     #[proptest]
