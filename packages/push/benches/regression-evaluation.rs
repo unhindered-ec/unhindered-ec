@@ -44,6 +44,7 @@ pub fn sample_program() -> Vec<PushProgram> {
 }
 
 /// The target polynomial, (x^3+1)^3 + 1.
+#[allow(clippy::arithmetic_side_effects)]
 #[must_use]
 pub fn expected(x: OrderedFloat<f64>) -> OrderedFloat<f64> {
     let term = x * x * x + 1.0;
