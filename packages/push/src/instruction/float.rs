@@ -50,7 +50,10 @@ where
             Self::Subtract => Self::binary_arithmetic(state, std::ops::Sub::sub),
             Self::Multiply => Self::binary_arithmetic(state, std::ops::Mul::mul),
             Self::ProtectedDivide => Self::binary_arithmetic(state, |x, y| {
-                #[allow(clippy::arithmetic_side_effects)]
+                #[expect(
+                    clippy::arithmetic_side_effects,
+                    reason = "Dividing floats won't overflow"
+                )]
                 if y == 0.0 { OrderedFloat(1.0) } else { x / y }
             }),
 

@@ -46,6 +46,10 @@ where
 }
 
 #[cfg(test)]
+#[expect(
+    clippy::unwrap_used,
+    reason = "Panicking is the best way to deal with errors in unit tests"
+)]
 mod tests {
     use std::iter::zip;
 
@@ -53,10 +57,8 @@ mod tests {
 
     use crate::{genome::bitstring::Bitstring, mutator::with_one_over_length::WithOneOverLength};
 
-    // This test is stochastic, so I'm going to ignore it most of the time.
     #[test]
-    #[ignore]
-    #[allow(clippy::unwrap_used)]
+    #[ignore = "This test is stochastic, so I'm going to ignore it most of the time."]
     fn mutate_one_over_does_not_change_much() {
         let mut rng = rand::thread_rng();
         let num_bits = 100;

@@ -35,7 +35,15 @@ where
 impl<F, G> Composable for Then<F, G> {}
 
 #[cfg(test)]
-#[allow(clippy::arithmetic_side_effects)]
+#[expect(
+    clippy::arithmetic_side_effects,
+    reason = "The tradeoff safety <> ease of writing arguably lies on the ease of writing side \
+              for test code."
+)]
+#[expect(
+    clippy::unwrap_used,
+    reason = "Panicking is the best way to deal with errors in unit tests"
+)]
 pub mod tests {
     use std::convert::Infallible;
 
@@ -66,7 +74,6 @@ pub mod tests {
     impl Composable for Double {}
 
     #[test]
-    #[allow(clippy::unwrap_used)]
     fn increment_then_double() {
         let combo = Increment.then(Double);
         let result = combo.apply(7, &mut thread_rng()).unwrap();

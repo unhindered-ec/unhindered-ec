@@ -18,7 +18,10 @@ use super::{
 /// computation system. It contains a genome and the results of scoring the
 /// genome.
 #[derive(Debug, Eq, PartialEq, Clone)]
-#[allow(clippy::module_name_repetitions)]
+#[expect(
+    clippy::module_name_repetitions,
+    reason = "This is legacy and arguably should be changed. Tracked in #221"
+)]
 pub struct EcIndividual<G, R> {
     pub genome: G,
     pub test_results: R,

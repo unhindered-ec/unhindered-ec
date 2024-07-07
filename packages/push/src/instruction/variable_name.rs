@@ -24,13 +24,16 @@ impl Display for VariableName {
 }
 
 #[cfg(test)]
+#[expect(
+    clippy::unwrap_used,
+    reason = "Panicking is the best way to deal with errors in unit tests"
+)]
 pub(crate) mod variable_name_test {
     use std::collections::HashMap;
 
     use super::*;
 
     #[test]
-    #[allow(clippy::unwrap_used)]
     fn variable_name() {
         let x = VariableName::from("x");
         let x2 = VariableName::from("x");

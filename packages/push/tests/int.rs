@@ -1,7 +1,8 @@
 #![cfg(test)]
-#![allow(clippy::unwrap_used)]
-#![allow(clippy::tuple_array_conversions)]
-#![allow(clippy::arithmetic_side_effects)]
+#![expect(
+    clippy::unwrap_used,
+    reason = "Panicking is the best way to deal with errors in integration tests"
+)]
 
 use proptest::prop_assert_eq;
 use push::{
@@ -161,7 +162,6 @@ fn add_adds_or_does_nothing(#[any] x: i64, #[any] y: i64) {
         .with_no_program()
         .build();
     let result = IntInstruction::Add.perform(state);
-    #[allow(clippy::unwrap_used)]
     if let Some(expected_result) = x.checked_add(y) {
         let output = result.unwrap().stack_mut::<i64>().pop().unwrap();
         prop_assert_eq!(output, expected_result);
@@ -193,7 +193,6 @@ fn subtract_subs_or_does_nothing(#[any] x: i64, #[any] y: i64) {
         .with_no_program()
         .build();
     let result = IntInstruction::Subtract.perform(state);
-    #[allow(clippy::unwrap_used)]
     if let Some(expected_result) = x.checked_sub(y) {
         let output = result.unwrap().stack_mut::<i64>().pop().unwrap();
         prop_assert_eq!(output, expected_result);
@@ -225,7 +224,6 @@ fn multiply_works_or_does_nothing(#[any] x: i64, #[any] y: i64) {
         .with_no_program()
         .build();
     let result = IntInstruction::Multiply.perform(state);
-    #[allow(clippy::unwrap_used)]
     if let Some(expected_result) = x.checked_mul(y) {
         let output = result.unwrap().stack_mut::<i64>().pop().unwrap();
         prop_assert_eq!(output, expected_result);
@@ -257,7 +255,6 @@ fn protected_divide_zero_denominator(#[any] x: i64) {
         .with_no_program()
         .build();
     let result = IntInstruction::ProtectedDivide.perform(state);
-    #[allow(clippy::unwrap_used)]
     let output = result.unwrap().stack_mut::<i64>().pop().unwrap();
     // Dividing by zero should always return 1.
     prop_assert_eq!(output, 1);
@@ -272,7 +269,6 @@ fn protected_divide_works_or_does_nothing(#[any] x: i64, #[any] y: i64) {
         .with_no_program()
         .build();
     let result = IntInstruction::ProtectedDivide.perform(state);
-    #[allow(clippy::unwrap_used)]
     if let Some(expected_result) = x.checked_div(y) {
         let output = result.unwrap().stack_mut::<i64>().pop().unwrap();
         prop_assert_eq!(output, expected_result);
@@ -304,7 +300,6 @@ fn mod_zero_denominator(#[any] x: i64) {
         .with_no_program()
         .build();
     let result = IntInstruction::Mod.perform(state);
-    #[allow(clippy::unwrap_used)]
     let output = result.unwrap().stack_mut::<i64>().pop().unwrap();
     // Modding by zero should always return 0 since x % x = 0 for all x != 0.
     prop_assert_eq!(output, 0);
@@ -319,7 +314,6 @@ fn mod_rems_or_does_nothing(#[any] x: i64, #[any] y: i64) {
         .with_no_program()
         .build();
     let result = IntInstruction::Mod.perform(state);
-    #[allow(clippy::unwrap_used)]
     if let Some(expected_result) = x.checked_rem(y) {
         let output = result.unwrap().stack_mut::<i64>().pop().unwrap();
         prop_assert_eq!(output, expected_result);

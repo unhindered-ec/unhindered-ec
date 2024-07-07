@@ -19,7 +19,10 @@ use rand::prelude::Distribution;
 ///
 /// `size` indicates how many elements to generate.
 /// `element_generator` is used to generate individual elements.
-#[allow(clippy::module_name_repetitions)]
+#[expect(
+    clippy::module_name_repetitions,
+    reason = "This is legacy and arguably should be changed. Tracked in #220"
+)]
 pub struct CollectionGenerator<C> {
     pub element_generator: C,
     pub size: usize,

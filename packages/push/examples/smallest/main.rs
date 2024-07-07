@@ -42,7 +42,11 @@ struct Input([i64; 4]);
 impl Input {
     fn smallest(&self) -> Output {
         let Self(input) = self;
-        #[allow(clippy::unwrap_used)]
+        #[expect(
+            clippy::unwrap_used,
+            reason = "Because the iterator has a guaranteed length of 4 (because of the array \
+                      size) it can never not have a minimum value."
+        )]
         Output(*input.iter().min().unwrap())
     }
 }

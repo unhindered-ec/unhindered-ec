@@ -1,5 +1,9 @@
-#![allow(clippy::use_debug)]
-#![allow(clippy::arithmetic_side_effects)]
+#![expect(clippy::use_debug, reason = "Debug printing is useful for examples.")]
+#![expect(
+    clippy::arithmetic_side_effects,
+    reason = "The tradeoff safety <> ease of writing arguably lies on the ease of writing side \
+              for example code."
+)]
 
 pub mod args;
 

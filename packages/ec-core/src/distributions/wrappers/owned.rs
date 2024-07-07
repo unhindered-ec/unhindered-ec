@@ -57,14 +57,14 @@ where
     /// # Errors
     /// - [`EmptySlice`] if an empty collection is passed in, since then no
     ///   element can be selected from there
-    #[allow(clippy::unwrap_used)]
-    #[allow(clippy::missing_panics_doc)]
     pub fn new(collection: T) -> Result<Self, EmptySlice> {
         let num_choices = NonZeroUsize::new(collection.borrow().len()).ok_or(EmptySlice)?;
 
         Ok(Self {
             collection,
-            range: Uniform::new(0, num_choices.get()).unwrap(),
+            // This error can actually never occur since it's checked above, but erroring is the
+            // easiest option here.
+            range: Uniform::new(0, num_choices.get()).map_err(|_| EmptySlice)?,
             num_choices,
             _p: PhantomData,
         })
@@ -91,13 +91,15 @@ where
             "This should never happen since the new method provides these guarantees"
         );
 
-        // FIXME: Check the performance of this
-        // // Safety: at construction time, it was ensured that the slice was
-        // // non-empty, and that the `Uniform` range produces values in range
-        // // for the slice
+        // FIXME: Check the performance of this, and if neccessary replace with
         // let val = unsafe { slice.get_unchecked(idx) }
 
-        #[allow(clippy::unwrap_used)]
+        #[expect(
+            clippy::unwrap_used,
+            reason = "At construction time, it was ensured that the slice was non-empty, and that \
+                      the `Uniform` range produces values in range for the slice - this should \
+                      never occur"
+        )]
         let val = slice.get(idx).unwrap();
 
         val.clone()

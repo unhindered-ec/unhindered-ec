@@ -28,7 +28,10 @@ impl<S> Instruction<S> for Noop {
 }
 
 #[cfg(test)]
-#[allow(clippy::unwrap_used)]
+#[expect(
+    clippy::unwrap_used,
+    reason = "Panicking is the best way to deal with errors in unit tests"
+)]
 mod tests {
     use super::Noop;
     use crate::{

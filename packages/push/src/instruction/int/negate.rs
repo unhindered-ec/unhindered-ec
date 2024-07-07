@@ -68,7 +68,7 @@ use crate::{
 /// error when the `i64` stack is empty.
 ///
 /// # Differences
-#[allow(clippy::doc_markdown)]
+#[expect(clippy::doc_markdown, reason = "False-positive lint.")]
 /// Implementations of integer negation instructions in Clojure (e.g., Clojush
 /// or Propeller) or Python (e.g., PyshGP) won't have the wrapping issue because
 /// they act on arbitrary precision integers.
@@ -91,7 +91,10 @@ where
 }
 
 #[cfg(test)]
-#[allow(clippy::unwrap_used)]
+#[expect(
+    clippy::unwrap_used,
+    reason = "Panicking is the best way to deal with errors in unit tests"
+)]
 mod tests {
 
     use proptest::prop_assert_eq;

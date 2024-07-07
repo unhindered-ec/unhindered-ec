@@ -185,13 +185,13 @@ impl<A> TryExtend<A> for Stack<A> {
     where
         T: Iterator<Item = A>,
     {
-        // We need the call to `.collect()` to effectively convert the iterable into
-        // something that implements both `ExactSizeIterator` (needed so that `.len()`
-        // doesn't consume the iterator) and `DoubleEndedIterator` (so that `.rev()`
-        // works) in the `self.extend()` call. We can't add those constraints
-        // here because we're implementing their `TryExtend`, which doesn't
-        // include those constraints.
-        #[allow(clippy::needless_collect)]
+        #[expect(
+            clippy::needless_collect,
+            reason = "The collect is neccessary to turn a arbitary iterator into one that \
+                      implements ExactSizeIterator (to support .len()) and DoubleEndedIterator \
+                      (to support .rev()), which TryExtend doesn't guarantee and isn't able to \
+                      guarantee."
+        )]
         self.try_extend(iter.into_iter().collect::<Vec<_>>())
     }
 }
@@ -542,11 +542,14 @@ where
 // correct `Underflow` and `Overflow` errors.
 
 #[cfg(test)]
+#[expect(
+    clippy::unwrap_used,
+    reason = "Panicking is the best way to deal with errors in unit tests"
+)]
 mod test {
     use super::{Stack, StackError};
 
     #[test]
-    #[allow(clippy::unwrap_used)]
     fn top_from_empty_fails() {
         let stack: Stack<bool> = Stack::default();
         let result = stack.top().unwrap_err();

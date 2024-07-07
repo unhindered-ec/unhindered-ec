@@ -1,5 +1,8 @@
-#![allow(clippy::use_debug)]
-#![allow(clippy::arithmetic_side_effects)]
+#![expect(
+    clippy::arithmetic_side_effects,
+    reason = "The tradeoff safety <> ease of writing arguably lies on the ease of writing side \
+              for example code."
+)]
 
 pub mod args;
 
@@ -82,8 +85,6 @@ fn main() -> Result<()> {
         .sample(&mut rng);
 
     ensure!(population.is_empty().not());
-
-    println!("{population:?}");
 
     // Let's assume the process will be generational, i.e., we replace the entire
     // population with newly created/selected individuals every generation.

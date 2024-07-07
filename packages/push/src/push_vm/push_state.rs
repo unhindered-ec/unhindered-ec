@@ -68,14 +68,14 @@ impl PushState {
     /// This panics if there is no instruction associated with `var_name`, i.e.,
     /// we have not yet added that variable name to the map of names to
     /// instructions.
-    #[allow(clippy::panic)]
     pub fn with_input(
         self,
         var_name: &VariableName,
     ) -> InstructionResult<Self, <PushInstruction as Instruction<Self>>::Error> {
-        // TODO: This `panic` here is icky, and we really should deal with it better.
-        // I wonder if the fact that this index might not be there should be telling
-        // us something... - see issue #172
+        #[expect(
+            clippy::panic,
+            reason = "This is legacy and arguably should be changed. Tracked in #172"
+        )]
         let instruction = self
             .input_instructions
             .iter()
@@ -107,7 +107,10 @@ impl State for PushState {
 }
 
 #[cfg(test)]
-#[allow(clippy::unwrap_used)]
+#[expect(
+    clippy::unwrap_used,
+    reason = "Panicking is the best way to deal with errors in unit tests"
+)]
 mod simple_check {
     use ordered_float::OrderedFloat;
 

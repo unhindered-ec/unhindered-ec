@@ -244,8 +244,11 @@ impl FromIterator<PushGene> for Plushy {
     }
 }
 
-#[allow(clippy::unwrap_used)]
 #[cfg(test)]
+#[expect(
+    clippy::unwrap_used,
+    reason = "Panicking is the best way to deal with errors in unit tests"
+)]
 mod test {
     use ec_core::{
         distributions::collection::ConvertToCollectionGenerator, operator::mutator::Mutator,
@@ -261,7 +264,6 @@ mod test {
     };
 
     #[test]
-    #[allow(clippy::unwrap_used)]
     fn generator() {
         let mut rng = thread_rng();
         let plushy: Plushy = uniform_distribution_of![<PushInstruction>
@@ -314,7 +316,6 @@ mod test {
 
         let child = umad.mutate(parent, &mut rng);
 
-        #[allow(clippy::unwrap_used)]
         let num_inputs = child
             .unwrap()
             .genes
