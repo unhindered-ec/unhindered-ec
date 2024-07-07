@@ -1,11 +1,14 @@
-#![expect(
+// TODO: since inner attributes are unstable, we can't use rustversion here.
+// Once we revert this commit, this is proper again.
+#![allow(clippy::allow_attributes_without_reason)]
+#![allow(
     clippy::unwrap_used,
-    reason = "Panicking is the best way to deal with errors in benches"
+    // reason = "Panicking is the best way to deal with errors in integration tests"
 )]
-#![expect(
+#![allow(
     clippy::arithmetic_side_effects,
-    reason = "The tradeoff safety <> ease of writing arguably lies on the ease of writing side \
-              for test code."
+    // reason = "The tradeoff safety <> ease of writing arguably lies on the ease of writing side \
+    //           for test code."
 )]
 
 use criterion::{black_box, criterion_group, criterion_main, Criterion};

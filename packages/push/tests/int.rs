@@ -1,7 +1,10 @@
 #![cfg(test)]
-#![expect(
+// TODO: since inner attributes are unstable, we can't use rustversion here.
+// Once we revert this commit, this is proper again.
+#![allow(clippy::allow_attributes_without_reason)]
+#![allow(
     clippy::unwrap_used,
-    reason = "Panicking is the best way to deal with errors in integration tests"
+    // reason = "Panicking is the best way to deal with errors in integration tests"
 )]
 
 use proptest::prop_assert_eq;

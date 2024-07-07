@@ -1,8 +1,13 @@
-#![expect(clippy::use_debug, reason = "Debug printing is useful for examples.")]
-#![expect(
+// TODO: since inner attributes are unstable, we can't use rustversion here.
+// Once we revert this commit, this is proper again.
+#![allow(clippy::allow_attributes_without_reason)]
+#![allow(clippy::use_debug
+//    , reason = "Debug printing is useful for examples."
+)]
+#![allow(
     clippy::arithmetic_side_effects,
-    reason = "The tradeoff safety <> ease of writing arguably lies on the ease of writing side \
-              for example code."
+//     reason = "The tradeoff safety <> ease of writing arguably lies on the ease of writing side \
+//               for example code."
 )]
 
 pub mod args;

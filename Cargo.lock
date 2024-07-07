@@ -358,6 +358,7 @@ dependencies = [
  "num-traits",
  "rand 0.9.0-alpha.1",
  "rayon",
+ "rustversion",
  "thiserror",
 ]
 
@@ -370,6 +371,7 @@ dependencies = [
  "ec-core",
  "num-traits",
  "rand 0.9.0-alpha.1",
+ "rustversion",
 ]
 
 [[package]]
@@ -826,6 +828,7 @@ dependencies = [
  "proptest",
  "push_macros",
  "rand 0.9.0-alpha.1",
+ "rustversion",
  "strum",
  "strum_macros",
  "test-strategy",

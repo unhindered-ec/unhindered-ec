@@ -8,7 +8,13 @@ repository = { workspace = true }
 edition = { workspace = true }
 license = { workspace = true }
 categories = ["science", "algorithms"]
-keywords = ["evolutionary-computation", "genetic", "genetic-algorithm", "framework", "machine-learning"]
+keywords = [
+    "evolutionary-computation",
+    "genetic",
+    "genetic-algorithm",
+    "framework",
+    "machine-learning",
+]
 readme = "README.md"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -20,6 +26,7 @@ num-traits = { workspace = true }
 rand = { workspace = true, features = ["alloc"] }
 rayon = "1.7.0"
 macro_railroad_annotation = { workspace = true }
+rustversion = { workspace = true }
 
 [dev-dependencies]
 rand = { workspace = true, features = ["alloc", "small_rng"] }
