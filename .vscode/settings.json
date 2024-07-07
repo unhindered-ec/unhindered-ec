@@ -32,6 +32,15 @@
     "rust-analyzer.rustfmt.overrideCommand": [
         "rustfmt-unstable",
         "--",
-        "rustfmt"
-    ]
+        "rustfmt",
+        "--edition",
+        "2021"
+    ],
+    "rust-analyzer.check.overrideCommand": [
+        "cargo",
+        "clippy",
+        "--all-targets",
+        "--workspace",
+        "--message-format=json-diagnostic-rendered-ansi"
+    ],
 }
