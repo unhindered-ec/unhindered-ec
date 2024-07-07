@@ -29,35 +29,33 @@ use push::{
 };
 use rand::{
     distributions::{Distribution, Uniform},
-    thread_rng,
+    thread_rng, Rng,
 };
 use strum::IntoEnumIterator;
 
 use crate::args::{CliArgs, RunModel};
 
-// An input for this problem is a tuple of four `i64`s.
 #[derive(Copy, Clone)]
-struct Input([i64; 4]);
+struct Input([i64; 3]);
+
+#[derive(Copy, Clone)]
+struct Output(i64);
 
 impl Input {
-    fn smallest(&self) -> Output {
-        let Self(input) = self;
-        #[allow(clippy::unwrap_used)]
-        Output(*input.iter().min().unwrap())
+    fn median(&self) -> Output {
+        let Self(mut input) = self;
+        input.sort_unstable();
+        Output(input[1])
     }
 }
 
 impl Distribution<Input> for Uniform<i64> {
-    fn sample<R: rand::prelude::Rng + ?Sized>(&self, rng: &mut R) -> Input {
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Input {
         Input(std::array::from_fn(|_| self.sample(rng)))
     }
 }
 
-// An output for this problem is an `i64`.
-#[derive(Copy, Clone)]
-struct Output(i64);
-
-// This is an implementation of the "smallest" problem from Tom Helmuth's
+// This is an implementation of the "median" problem from Tom Helmuth's
 // software synthesis benchmark suite (PSB1):
 //
 // T. Helmuth and L. Spector. General Program Synthesis Benchmark Suite. In
@@ -69,8 +67,8 @@ struct Output(i64);
 // Software Engineering, vol. 41, no. 12, pp. 1236-1256, Dec. 1 2015.
 // doi: 10.1109/TSE.2015.2454513
 //
-// This problem is quite easy if you have a `Min` instruction, but can be
-// more a bit more difficult without that instruction.
+// This problem is quite easy if you have both `Min` and `Max` instructions, but
+// can be more difficult without those instruction.
 fn main() -> Result<()> {
     let CliArgs {
         run_model,
@@ -89,7 +87,7 @@ fn main() -> Result<()> {
     let training_cases = Uniform::new(lower_input_bound, upper_input_bound)?
         .sample_iter(&mut rng)
         .take(num_training_cases)
-        .with_target_fn(Input::smallest);
+        .with_target_fn(Input::median);
 
     let scorer = FnScorer(|genome: &Plushy| score_genome(genome, &training_cases, penalty_value));
 
@@ -134,7 +132,6 @@ fn main() -> Result<()> {
             break;
         }
     }
-
     Ok(())
 }
 
@@ -171,17 +168,13 @@ fn run_case(
     })
 }
 
-fn build_state(
-    program: &[PushProgram],
-    Input([a, b, c, d]): Input,
-) -> Result<PushState, StackError> {
+fn build_state(program: &[PushProgram], Input([a, b, c]): Input) -> Result<PushState, StackError> {
     Ok(PushState::builder()
         .with_max_stack_size(1000)
         .with_program(program.to_vec())?
         .with_int_input("a", a)
         .with_int_input("b", b)
         .with_int_input("c", c)
-        .with_int_input("d", d)
         .build())
 }
 
@@ -209,7 +202,7 @@ fn instructions() -> impl Iterator<Item = PushInstruction> {
         // .filter(|&i| i != ExecInstruction::dup_block())
         .map(Into::into);
 
-    let variables = ["a", "b", "c", "d"]
+    let variables = ["a", "b", "c"]
         .into_iter()
         .map(VariableName::from)
         .map(Into::into);

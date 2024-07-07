@@ -27,8 +27,9 @@ thiserror = "1.0.59"
 itertools = "0.12.1"
 macro_railroad_annotation = "1.0.3"
 test-strategy = "0.3.1"
-proptest = "1.2.0"
-criterion = { version = "0.5.1", features = ["html_reports"] }
+proptest = "1.5.0"
+criterion = "0.5.1"
+miette = "7.2.0"
 
 ec-core = { path = "packages/ec-core" }
 ec-linear = { path = "packages/ec-linear" }
@@ -110,6 +111,24 @@ big_population.arguments = [
 ]
 many_generations.arguments = [
   "--num-generations",
+  "200",
+  "--population-size",
+  "10"
+]
+balanced_v2.arguments = [
+  "--max-generations",
+  "10",
+  "--population-size",
+  "200"
+]
+big_population_v2.arguments = [
+  "--max-generations",
+  "1",
+  "--population-size",
+  "2000"
+]
+many_generations_v2.arguments = [
+  "--max-generations",
   "200",
   "--population-size",
   "10"

@@ -1,8 +1,5 @@
 use std::iter;
 
-use anyhow::{anyhow, Result};
-use itertools::Itertools;
-
 use super::Composable;
 use crate::operator::Operator;
 
@@ -23,21 +20,28 @@ impl<F, Input, const N: usize> Operator<Input> for RepeatWith<F, N>
 where
     Input: Clone,
     F: Operator<Input>,
+    anyhow::Error: From<F::Error>,
 {
     type Output = [F::Output; N];
+    type Error = anyhow::Error;
 
-    fn apply(&self, input: Input, rng: &mut rand::rngs::ThreadRng) -> Result<Self::Output> {
-        iter::repeat_with(|| self.f.apply(input.clone(), rng))
+    fn apply(
+        &self,
+        input: Input,
+        rng: &mut rand::rngs::ThreadRng,
+    ) -> Result<Self::Output, Self::Error> {
+        #[allow(clippy::panic)]
+        Ok(iter::repeat_with(|| self.f.apply(input.clone(), rng))
             .take(N)
-            .try_collect::<_, Vec<<F as Operator<Input>>::Output>, anyhow::Error>()?
+            .collect::<Result<Vec<_>, _>>()?
             .try_into()
-            .map_err(|v: Vec<<F as Operator<Input>>::Output>| {
-                anyhow!(
+            .unwrap_or_else(|v: Vec<_>| {
+                panic!(
                     "The vector had incorrect length; expected {} and got {}",
                     N,
                     v.len()
                 )
-            })
+            }))
     }
 }
 
@@ -46,7 +50,7 @@ impl<F, const N: usize> Composable for RepeatWith<F, N> {}
 #[cfg(test)]
 #[allow(clippy::arithmetic_side_effects)]
 mod tests {
-    use std::ops::Range;
+    use std::{convert::Infallible, ops::Range};
 
     use rand::{thread_rng, Rng};
 
@@ -55,8 +59,13 @@ mod tests {
     struct AddOne;
     impl Operator<i32> for AddOne {
         type Output = i32;
+        type Error = Infallible;
 
-        fn apply(&self, input: i32, _: &mut rand::rngs::ThreadRng) -> Result<Self::Output> {
+        fn apply(
+            &self,
+            input: i32,
+            _: &mut rand::rngs::ThreadRng,
+        ) -> Result<Self::Output, Self::Error> {
             Ok(input + 1)
         }
     }
@@ -77,12 +86,13 @@ mod tests {
     struct UniformRange;
     impl Operator<Range<i32>> for UniformRange {
         type Output = i32;
+        type Error = Infallible;
 
         fn apply(
             &self,
             range: Range<i32>,
             rng: &mut rand::rngs::ThreadRng,
-        ) -> Result<Self::Output> {
+        ) -> Result<Self::Output, Self::Error> {
             Ok(rng.gen_range(range))
         }
     }
