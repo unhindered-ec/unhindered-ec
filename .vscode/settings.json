@@ -38,6 +38,7 @@
     ],
     "rust-analyzer.check.overrideCommand": [
         "cargo",
+        "+nightly",
         "clippy",
         "--all-targets",
         "--workspace",
