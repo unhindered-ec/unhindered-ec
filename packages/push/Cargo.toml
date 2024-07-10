@@ -33,6 +33,7 @@ ordered-float = { version = "4.2.1", features = ["proptest"] }
 easy-cast = "0.5.2"
 macro_railroad_annotation = { workspace = true }
 test-strategy = { workspace = true }
+criterion = { workspace = true, features = ["html_reports"] }
 
 [dev-dependencies]
 clap = { version = "4.5.1", features = ["derive"] }
@@ -55,3 +56,7 @@ smallest = [
   { template = "big_population_v2" },
   { template = "many_generations_v2" }
 ]
+
+[[bench]]
+name = "regression-evaluation"
+harness = false
