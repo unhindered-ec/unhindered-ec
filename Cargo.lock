@@ -815,6 +815,7 @@ dependencies = [
  "anyhow",
  "clap",
  "collectable",
+ "criterion",
  "easy-cast",
  "ec-core",
  "ec-linear",
