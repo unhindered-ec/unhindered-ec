@@ -77,8 +77,14 @@ where
 {
     type Error = PushInstructionError;
 
-    #[allow(clippy::too_many_lines, clippy::cognitive_complexity)]
-    #[allow(unreachable_code, clippy::let_unit_value)] // Remove this
+    #[rustversion::attr(before(1.81), allow(clippy::too_many_lines))]
+    #[rustversion::attr(
+        since(1.81),
+        expect(
+            clippy::too_many_lines,
+            reason = "This is legacy and arguably should be changed. Tracked in #227."
+        )
+    )]
     fn perform(&self, mut state: S) -> InstructionResult<S, Self::Error> {
         match self {
             Self::Negate(negate) => negate.perform(state),

@@ -46,7 +46,7 @@ macro_rules! uniform_distribution_of {
      (<$output_type:ty>  $($items:expr),+ $(,)?) => {
           // FIXME: is unwrap_unchecked a performance gain here?
           {
-               #[allow(clippy::unwrap_used)]
+               // The macro pattern guarantees that there is at least one item ($(...)+) and into_distribution for all types only errors if no element is present.
                let val = ::std::result::Result::unwrap(
                     $crate::distributions::conversion
                          ::IntoDistribution::<$output_type>::into_distribution([
@@ -60,7 +60,7 @@ macro_rules! uniform_distribution_of {
      ($($items:expr),+ $(,)?) => {
           // FIXME: is unwrap_unchecked a performance gain here?
           {
-               #[allow(clippy::unwrap_used)]
+               // The macro pattern guarantees that there is at least one item ($(...)+) and into_distribution for all types only errors if no element is present.
                let val = ::std::result::Result::unwrap(
                     $crate::distributions::conversion::IntoDistribution::into_distribution([
                          $($items),+
@@ -73,7 +73,14 @@ macro_rules! uniform_distribution_of {
 }
 
 #[cfg(test)]
-#[allow(clippy::unwrap_used)]
+#[rustversion::attr(before(1.81), allow(clippy::unwrap_used))]
+#[rustversion::attr(
+    since(1.81),
+    expect(
+        clippy::unwrap_used,
+        reason = "Panicking is the best way to deal with errors in unit tests"
+    )
+)]
 mod test {
     use crate::distributions::conversion::IntoDistribution;
 

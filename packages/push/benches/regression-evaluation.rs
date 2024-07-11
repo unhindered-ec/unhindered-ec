@@ -1,3 +1,16 @@
+// TODO: since inner attributes are unstable, we can't use rustversion here.
+// Once we revert this commit, this is proper again.
+#![allow(clippy::allow_attributes_without_reason)]
+#![allow(
+    clippy::unwrap_used,
+    // reason = "Panicking is the best way to deal with errors in integration tests"
+)]
+#![allow(
+    clippy::arithmetic_side_effects,
+    // reason = "The tradeoff safety <> ease of writing arguably lies on the ease of writing side \
+    //           for test code."
+)]
+
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use ordered_float::OrderedFloat;
 use push::{
@@ -44,7 +57,6 @@ pub fn sample_program() -> Vec<PushProgram> {
 }
 
 /// The target polynomial, (x^3+1)^3 + 1.
-#[allow(clippy::arithmetic_side_effects)]
 #[must_use]
 pub fn expected(x: OrderedFloat<f64>) -> OrderedFloat<f64> {
     let term = x * x * x + 1.0;
@@ -64,7 +76,6 @@ const INPUT_VALUE: OrderedFloat<f64> = OrderedFloat(0.25);
 #[must_use]
 pub fn build_state(program: Vec<PushProgram>) -> PushState {
     const MAX_STACK_SIZE: usize = 100;
-    #[allow(clippy::unwrap_used)]
     PushState::builder()
         .with_max_stack_size(MAX_STACK_SIZE)
         .with_program(program)
@@ -84,7 +95,6 @@ pub fn evaluate_regression(c: &mut Criterion) {
     let state = build_state(sample_program());
     let expected_result = expected(INPUT_VALUE);
     c.bench_function("Run symbolic regression function", |b| {
-        #[allow(clippy::unwrap_used)]
         b.iter(|| {
             let final_state = &black_box(&state).clone().run_to_completion().unwrap();
             let answer = final_state.stack::<OrderedFloat<f64>>().top().unwrap();

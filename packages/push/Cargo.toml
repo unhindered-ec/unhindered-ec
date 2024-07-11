@@ -34,6 +34,7 @@ easy-cast = "0.5.2"
 macro_railroad_annotation = { workspace = true }
 test-strategy = { workspace = true }
 criterion = { workspace = true, features = ["html_reports"] }
+rustversion = { workspace = true }
 
 [dev-dependencies]
 clap = { version = "4.5.1", features = ["derive"] }

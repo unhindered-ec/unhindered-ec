@@ -30,13 +30,12 @@ where
         input: Input,
         rng: &mut rand::rngs::ThreadRng,
     ) -> Result<Self::Output, Self::Error> {
-        #[allow(clippy::panic)]
         Ok(iter::repeat_with(|| self.f.apply(input.clone(), rng))
             .take(N)
             .collect::<Result<Vec<_>, _>>()?
             .try_into()
             .unwrap_or_else(|v: Vec<_>| {
-                panic!(
+                unreachable!(
                     "The vector had incorrect length; expected {} and got {}",
                     N,
                     v.len()
@@ -48,7 +47,23 @@ where
 impl<F, const N: usize> Composable for RepeatWith<F, N> {}
 
 #[cfg(test)]
-#[allow(clippy::arithmetic_side_effects)]
+#[rustversion::attr(before(1.81), allow(clippy::arithmetic_side_effects))]
+#[rustversion::attr(
+    since(1.81),
+    expect(
+        clippy::arithmetic_side_effects,
+        reason = "The tradeoff safety <> ease of writing arguably lies on the ease of writing \
+                  side for test code."
+    )
+)]
+#[rustversion::attr(before(1.81), allow(clippy::unwrap_used))]
+#[rustversion::attr(
+    since(1.81),
+    expect(
+        clippy::unwrap_used,
+        reason = "Panicking is the best way to deal with errors in unit tests"
+    )
+)]
 mod tests {
     use std::{convert::Infallible, ops::Range};
 
@@ -77,7 +92,6 @@ mod tests {
         let desired_value = 7;
         let mut rng = thread_rng();
         let repeater: RepeatWith<AddOne, LENGTH> = RepeatWith::new(AddOne);
-        #[allow(clippy::unwrap_used)]
         let result = repeater.apply(desired_value, &mut rng).unwrap();
         assert_eq!(LENGTH, result.len());
         result.into_iter().all(|x| x == desired_value);
@@ -104,7 +118,6 @@ mod tests {
         let range = 0..7;
         let mut rng = thread_rng();
         let repeater: RepeatWith<UniformRange, LENGTH> = RepeatWith::new(UniformRange);
-        #[allow(clippy::unwrap_used)]
         let result = repeater.apply(range.clone(), &mut rng).unwrap();
         assert_eq!(LENGTH, result.len());
         result.iter().all(|x| range.contains(x));

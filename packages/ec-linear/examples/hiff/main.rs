@@ -1,5 +1,11 @@
-#![allow(clippy::use_debug)]
-#![allow(clippy::arithmetic_side_effects)]
+// TODO: since inner attributes are unstable, we can't use rustversion here.
+// Once we revert this commit, this is proper again.
+#![allow(
+    clippy::allow_attributes_without_reason,
+    clippy::arithmetic_side_effects,
+    // reason = "The tradeoff safety <> ease of writing arguably lies on the ease of writing side \
+    //           for example code."
+)]
 
 pub mod args;
 
@@ -82,8 +88,6 @@ fn main() -> Result<()> {
         .sample(&mut rng);
 
     ensure!(population.is_empty().not());
-
-    println!("{population:?}");
 
     // Let's assume the process will be generational, i.e., we replace the entire
     // population with newly created/selected individuals every generation.

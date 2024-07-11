@@ -40,9 +40,17 @@ use crate::args::{CliArgs, RunModel};
 struct Input([i64; 4]);
 
 impl Input {
+    #[rustversion::attr(before(1.81), allow(clippy::unwrap_used))]
+    #[rustversion::attr(
+        since(1.81),
+        expect(
+            clippy::unwrap_used,
+            reason = "Because the iterator has a guaranteed length of 4 (because of the array \
+                      size) it can never not have a minimum value."
+        )
+    )]
     fn smallest(&self) -> Output {
         let Self(input) = self;
-        #[allow(clippy::unwrap_used)]
         Output(*input.iter().min().unwrap())
     }
 }
