@@ -2,7 +2,7 @@ use std::fmt::Display;
 
 use anyhow::bail;
 use ec_core::{
-    distributions::collection::{CollectionGenerator, ConvertToCollectionGenerator},
+    distributions::collection::{self, ConvertToCollectionGenerator},
     genome::Genome,
 };
 use rand::{distributions::Standard, prelude::Distribution, rngs::ThreadRng, Rng};
@@ -35,7 +35,7 @@ pub struct Bitstring {
     pub bits: Vec<bool>,
 }
 
-impl<BG> Distribution<Bitstring> for CollectionGenerator<BG>
+impl<BG> Distribution<Bitstring> for collection::Generator<BG>
 where
     BG: Distribution<bool>,
 {

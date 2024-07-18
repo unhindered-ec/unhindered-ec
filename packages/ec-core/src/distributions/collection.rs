@@ -19,20 +19,12 @@ use rand::prelude::Distribution;
 ///
 /// `size` indicates how many elements to generate.
 /// `element_generator` is used to generate individual elements.
-#[rustversion::attr(before(1.81), allow(clippy::module_name_repetitions))]
-#[rustversion::attr(
-    since(1.81),
-    expect(
-        clippy::module_name_repetitions,
-        reason = "This is legacy and arguably should be changed. Tracked in #220"
-    )
-)]
-pub struct CollectionGenerator<C> {
+pub struct Generator<C> {
     pub element_generator: C,
     pub size: usize,
 }
 
-impl<C> CollectionGenerator<C> {
+impl<C> Generator<C> {
     /// Create a new `CollectionGenerator` with the given element generator and
     /// size.
     pub const fn new(element_generator: C, size: usize) -> Self {
@@ -50,7 +42,7 @@ pub trait ConvertToCollectionGenerator {
     /// Convert the type into a `CollectionGenerator` that generates collections
     /// of the specified size, using `self` to generate the individual elements.
     /// This takes ownership of the type.
-    fn into_collection_generator(self, size: usize) -> CollectionGenerator<Self>
+    fn into_collection_generator(self, size: usize) -> Generator<Self>
     where
         Self: Sized;
 
@@ -58,7 +50,7 @@ pub trait ConvertToCollectionGenerator {
     /// generates collections of the specified size, using `self` to
     /// generate the individual elements. This takes a reference to the type
     /// so the type can be used elsewhere when necessary.
-    fn to_collection_generator(&self, size: usize) -> CollectionGenerator<&Self>;
+    fn to_collection_generator(&self, size: usize) -> Generator<&Self>;
 }
 
 impl<C> ConvertToCollectionGenerator for C
@@ -67,18 +59,18 @@ where
 {
     /// Convert the type into a `CollectionGenerator` that generates collections
     /// of the specified size, using `self` to generate the individual elements.
-    fn into_collection_generator(self, size: usize) -> CollectionGenerator<Self>
+    fn into_collection_generator(self, size: usize) -> Generator<Self>
     where
         Self: Sized,
     {
-        CollectionGenerator::new(self, size)
+        Generator::new(self, size)
     }
 
     /// Convert a reference to the type into a `CollectionGenerator` that
     /// generates collections of the specified size, using `&self` to
     /// generate the individual elements.
-    fn to_collection_generator(&self, size: usize) -> CollectionGenerator<&Self> {
-        CollectionGenerator::new(self, size)
+    fn to_collection_generator(&self, size: usize) -> Generator<&Self> {
+        Generator::new(self, size)
     }
 }
 
@@ -92,7 +84,7 @@ where
 ///
 /// This returns an `anyhow::Error` generating any of
 /// the elements returns an error.
-impl<T, C> Distribution<Vec<T>> for CollectionGenerator<C>
+impl<T, C> Distribution<Vec<T>> for Generator<C>
 where
     C: Distribution<T>,
 {

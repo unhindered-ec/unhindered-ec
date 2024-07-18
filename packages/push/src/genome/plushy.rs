@@ -2,7 +2,7 @@ use std::fmt::Display;
 
 use easy_cast::ConvApprox;
 use ec_core::{
-    distributions::{choices::ChoicesDistribution, collection::CollectionGenerator},
+    distributions::{choices::ChoicesDistribution, collection},
     genome::Genome,
 };
 use ec_linear::genome::Linear;
@@ -215,7 +215,7 @@ impl Linear for Plushy {
     }
 }
 
-impl<GG> Distribution<Plushy> for CollectionGenerator<GG>
+impl<GG> Distribution<Plushy> for collection::Generator<GG>
 where
     GG: Distribution<PushGene>,
 {
