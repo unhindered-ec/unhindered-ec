@@ -95,3 +95,181 @@ where
             .context("The pool of candidates was empty")
     }
 }
+
+#[cfg(test)]
+#[rustversion::attr(before(1.81), allow(clippy::unwrap_used))]
+#[rustversion::attr(
+    since(1.81),
+    expect(
+        clippy::unwrap_used,
+        reason = "Panicking is the best way to deal with errors in unit tests"
+    )
+)]
+mod tests {
+    use prop::collection;
+    use proptest::prelude::*;
+
+    use super::*;
+    use crate::individual::ec::EcIndividual;
+
+    #[test]
+    fn single_best_single_error() {
+        // 9 is the sole winner
+        let population = vec![5, 8, 9, 6, 3, 2, 0]
+            .into_iter()
+            .enumerate()
+            .map(|(id, e)| EcIndividual::<usize, TestResults<i32>>::new(id, TestResults::from([e])))
+            .collect::<Vec<_>>();
+
+        let lexicase = Lexicase::new(1);
+        let mut rng = rand::thread_rng();
+
+        assert_eq!(&2, lexicase.select(&population, &mut rng).unwrap().genome());
+    }
+
+    #[test]
+    fn multiple_copies_best() {
+        // The two 9s are the possible winners
+        let population = vec![5, 8, 9, 6, 3, 2, 0, 9]
+            .into_iter()
+            .enumerate()
+            .map(|(id, e)| EcIndividual::<usize, TestResults<i32>>::new(id, TestResults::from([e])))
+            .collect::<Vec<_>>();
+
+        let lexicase = Lexicase::new(1);
+        let mut rng = rand::thread_rng();
+
+        let selected = *lexicase.select(&population, &mut rng).unwrap().genome();
+        assert!(
+            selected == 2usize || selected == 7usize,
+            "genome {selected} should have been 2 or 7"
+        );
+    }
+
+    #[test]
+    fn single_best_multiple_errors() {
+        // [9, 8] is the sole winner
+        let population = vec![[5, 3], [8, 2], [9, 8], [6, 2], [3, 8], [2, 8], [0, 6]]
+            .into_iter()
+            .enumerate()
+            .map(|(id, es)| EcIndividual::<usize, TestResults<i32>>::new(id, TestResults::from(es)))
+            .collect::<Vec<_>>();
+
+        let lexicase = Lexicase::new(2);
+        let mut rng = rand::thread_rng();
+
+        assert_eq!(&2, lexicase.select(&population, &mut rng).unwrap().genome());
+    }
+
+    #[test]
+    fn multiple_best_multiple_errors() {
+        let population = vec![
+            [5, 3],
+            [8, 2],
+            [9, 8], // A possible winner
+            [6, 2],
+            [3, 8],
+            [2, 8],
+            [0, 6],
+            [7, 9], // A possible winner
+        ]
+        .into_iter()
+        .enumerate()
+        .map(|(id, es)| EcIndividual::<usize, TestResults<i32>>::new(id, TestResults::from(es)))
+        .collect::<Vec<_>>();
+
+        let lexicase = Lexicase::new(2);
+        let mut rng = rand::thread_rng();
+
+        let selected = *lexicase.select(&population, &mut rng).unwrap().genome();
+        assert!(
+            selected == 2usize || selected == 7usize,
+            "genome {selected} should have been 2 or 7"
+        );
+    }
+
+    // A name for this type to simplify things in the `proptest` test
+    // below.
+    type TestIndividual = EcIndividual<String, TestResults<u16>>;
+
+    // This test uses `proptest` to generate a random set of between 1 and 20
+    // vectors of two scores, and then converts those into a vector of
+    // `EcIndividual`s (i.e., a population). I then determine the largest of the
+    // first values (i.e., the highest score on the first test case), and then the
+    // largest of the second values. I make a new set of results that is those
+    // highest values with one (randomly chosen by proptest) incremented by 1.
+    // This new result is guaranteed to be "better" than any other in the list,
+    // so it should be what is selected after I add it to the population.
+    //
+    // There are several helper functions that exist just to support the somewhat
+    // complex logic of this test.
+    #[test_strategy::proptest]
+    fn selects_sole_best(
+        #[strategy(1..20usize)] pop_size: usize,
+        #[strategy(make_pop(#pop_size))] mut population: Vec<TestIndividual>,
+        #[strategy(0..1usize)] score_to_increase: usize,
+    ) {
+        prop_assert!(pop_size > 0);
+        prop_assert_eq!(pop_size, population.len());
+
+        let (winning_label, winning_individual) =
+            make_winning_individual(&population, score_to_increase);
+
+        population.push(winning_individual);
+
+        let num_test_cases = population[0].test_results.results.len();
+        let lexicase = Lexicase::new(num_test_cases);
+        let mut rng = rand::thread_rng();
+
+        let selected = lexicase.select(&population, &mut rng).unwrap().genome();
+        prop_assert_eq!(selected, &winning_label);
+    }
+
+    // A function that creates a `proptest` `Strategy`` that creates a random
+    // population of individuals, each with two scores. The "genome" of each
+    // individual is just a string version of their pair of scores, i.e.,
+    // "[2, 3]".
+    fn make_pop(pop_size: usize) -> impl Strategy<Value = Vec<TestIndividual>> {
+        collection::vec([any::<u8>(), any::<u8>()], pop_size).prop_map(|pop_scores| {
+            pop_scores
+                .into_iter()
+                .map(|scores| EcIndividual::new(format!("{scores:?}"), TestResults::from(scores)))
+                .collect::<Vec<_>>()
+        })
+    }
+
+    // Constructs what is guaranteed to be the "winning" individual
+    // that lexicase selection will return regardless of the ordering
+    // of the test cases. This is generated by finding the largest
+    // values for each of the test cases, and incrementing one of
+    // them (as determined by `score_to_increase`) by one. This
+    // ensures that this individual will tie with the best on
+    // one score, and win on the other.
+    fn make_winning_individual(
+        population: &[TestIndividual],
+        score_to_increase: usize,
+    ) -> (String, TestIndividual) {
+        let first_max = largest_test_case_value(population, 0);
+        let second_max = largest_test_case_value(population, 1);
+        // After incrementing one of the values by 1, this is guaranteed to
+        // be "better" than any other score, and will thus be the value
+        // selected.
+        let mut winning_scores = [first_max, second_max];
+        winning_scores[score_to_increase] =
+            winning_scores[score_to_increase].checked_add(1).unwrap();
+        let winning_label = format!("{winning_scores:?}");
+        let winning_individual: TestIndividual =
+            EcIndividual::new(winning_label.clone(), TestResults::from(winning_scores));
+        (winning_label, winning_individual)
+    }
+
+    // Get the largest test case value in the given population from the test case
+    // specified by `index`.
+    fn largest_test_case_value(population: &[TestIndividual], index: usize) -> u16 {
+        population
+            .iter()
+            .map(|i| i.test_results.results[index])
+            .max()
+            .unwrap()
+    }
+}
