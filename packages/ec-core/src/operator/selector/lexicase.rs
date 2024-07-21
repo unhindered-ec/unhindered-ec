@@ -34,15 +34,6 @@ where
     P::Individual: Individual<TestResults = TestResults<R>>,
     R: Ord,
 {
-    #[rustversion::attr(before(1.81), allow(clippy::comparison_chain))]
-    #[rustversion::attr(
-        since(1.81),
-        expect(
-            clippy::comparison_chain,
-            reason = "@NicMcPhee finds the `if-else` to be easier to read than Clippy's preferred \
-                      use of `match`. Tracked in #231."
-        )
-    )]
     fn select<'pop>(
         &self,
         population: &'pop P,
@@ -74,15 +65,25 @@ where
             winners.clear();
             winners.push(candidates[0]);
             for c in &candidates[1..] {
-                if c.test_results().results[test_case_index]
-                    > winners[0].test_results().results[test_case_index]
+                match c.test_results().results[test_case_index]
+                    .cmp(&winners[0].test_results().results[test_case_index])
                 {
-                    winners.clear();
-                    winners.push(c);
-                } else if c.test_results().results[test_case_index]
-                    == winners[0].test_results().results[test_case_index]
-                {
-                    winners.push(c);
+                    // If `c` is strictly less (worse) than the current winner
+                    // it's removed from consideration by not doing
+                    // anything with it (i.e., not adding it to the
+                    // set of `winners`).
+                    std::cmp::Ordering::Less => {}
+                    // If `c` is equal (on this test case) to the
+                    // current winner, then it is added to the
+                    // set of potential `winners`.
+                    std::cmp::Ordering::Equal => winners.push(c),
+                    // If `c` is greater (better) than the current winner
+                    // then we clear the current set of winners (since they're
+                    // "worse" than `c`), and add `c` to the set of `winners`.
+                    std::cmp::Ordering::Greater => {
+                        winners.clear();
+                        winners.push(c);
+                    }
                 }
             }
             swap(&mut candidates, &mut winners);
