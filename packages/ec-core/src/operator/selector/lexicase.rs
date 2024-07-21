@@ -1,4 +1,4 @@
-use std::{mem::swap, ops::Not};
+use std::{cmp::Ordering, mem::swap, ops::Not};
 
 use anyhow::{Context, Result};
 use rand::{prelude::SliceRandom, rngs::ThreadRng};
@@ -64,25 +64,29 @@ where
             }
             winners.clear();
             winners.push(candidates[0]);
+            let mut current_best_result = &winners[0].test_results().results[test_case_index];
+
             for c in &candidates[1..] {
-                match c.test_results().results[test_case_index]
-                    .cmp(&winners[0].test_results().results[test_case_index])
-                {
+                let this_result = &c.test_results().results[test_case_index];
+                match this_result.cmp(current_best_result) {
                     // If `c` is strictly less (worse) than the current winner
                     // it's removed from consideration by not doing
                     // anything with it (i.e., not adding it to the
                     // set of `winners`).
-                    std::cmp::Ordering::Less => {}
+                    Ordering::Less => {}
                     // If `c` is equal (on this test case) to the
                     // current winner, then it is added to the
                     // set of potential `winners`.
-                    std::cmp::Ordering::Equal => winners.push(c),
+                    Ordering::Equal => winners.push(c),
                     // If `c` is greater (better) than the current winner
                     // then we clear the current set of winners (since they're
                     // "worse" than `c`), and add `c` to the set of `winners`.
-                    std::cmp::Ordering::Greater => {
+                    // We also have to update `current_best_result` to now
+                    // be `this_result` since it's the new best.
+                    Ordering::Greater => {
                         winners.clear();
                         winners.push(c);
+                        current_best_result = this_result;
                     }
                 }
             }
