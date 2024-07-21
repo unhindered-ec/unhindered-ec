@@ -34,6 +34,15 @@ where
     P::Individual: Individual<TestResults = TestResults<R>>,
     R: Ord,
 {
+    #[rustversion::attr(before(1.81), allow(clippy::comparison_chain))]
+    #[rustversion::attr(
+        since(1.81),
+        expect(
+            clippy::comparison_chain,
+            reason = "@NicMcPhee finds the `if-else` to be easier to read than Clippy's preferred \
+                      use of `match`. Tracked in #231."
+        )
+    )]
     fn select<'pop>(
         &self,
         population: &'pop P,
@@ -65,9 +74,6 @@ where
             winners.clear();
             winners.push(candidates[0]);
             for c in &candidates[1..] {
-                // I find the `if-else` to be easier to read than Clippy's preferred
-                // use of `match`.
-                #[allow(clippy::comparison_chain)]
                 if c.test_results().results[test_case_index]
                     > winners[0].test_results().results[test_case_index]
                 {

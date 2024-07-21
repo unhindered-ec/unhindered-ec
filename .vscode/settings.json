@@ -18,6 +18,7 @@
         "Recombinator",
         "recombinators",
         "rngs",
+        "rustversion",
         "Scorable",
         "scottmcm's",
         "Spector",
@@ -32,6 +33,16 @@
     "rust-analyzer.rustfmt.overrideCommand": [
         "rustfmt-unstable",
         "--",
-        "rustfmt"
-    ]
+        "rustfmt",
+        "--edition",
+        "2021"
+    ],
+    "rust-analyzer.check.overrideCommand": [
+        "cargo",
+        "+nightly",
+        "clippy",
+        "--all-targets",
+        "--workspace",
+        "--message-format=json-diagnostic-rendered-ansi"
+    ],
 }

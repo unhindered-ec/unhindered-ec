@@ -89,11 +89,7 @@ where
                 // only called when `add_gene` is true
                 let delete_new_gene = add_gene && rng.gen_bool(self.deletion_rate);
 
-                #[allow(clippy::match_bool)]
-                let old_gene = match delete_gene {
-                    false => Some(gene),
-                    true => None,
-                };
+                let old_gene = (!delete_gene).then_some(gene);
 
                 let new_gene = match (add_gene, delete_new_gene) {
                     (true, false) => Some(self.new_gene::<G>(rng)),
@@ -108,7 +104,23 @@ where
 }
 
 #[cfg(test)]
-#[allow(clippy::arithmetic_side_effects)]
+#[rustversion::attr(before(1.81), allow(clippy::arithmetic_side_effects))]
+#[rustversion::attr(
+    since(1.81),
+    expect(
+        clippy::arithmetic_side_effects,
+        reason = "The tradeoff safety <> ease of writing arguably lies on the ease of writing \
+                  side for test code."
+    )
+)]
+#[rustversion::attr(before(1.81), allow(clippy::unwrap_used))]
+#[rustversion::attr(
+    since(1.81),
+    expect(
+        clippy::unwrap_used,
+        reason = "Panicking is the best way to deal with errors in unit tests"
+    )
+)]
 mod test {
     use ec_core::uniform_distribution_of;
     use rand::thread_rng;
@@ -132,7 +144,6 @@ mod test {
     }
 
     #[test]
-    #[allow(clippy::unwrap_used)]
     #[ignore = "This is stochastic, and it will fail sometimes"]
     fn umad_test() {
         let mut rng = thread_rng();
