@@ -103,8 +103,9 @@ mod tests {
     use proptest::prop_assert_eq;
     use test_strategy::proptest;
 
+    use super::Negate;
     use crate::{
-        instruction::{Instruction, IntInstruction},
+        instruction::Instruction,
         push_vm::{push_state::PushState, HasStack},
     };
 
@@ -124,7 +125,7 @@ mod tests {
             .unwrap()
             .with_no_program()
             .build();
-        let result = IntInstruction::negate().perform(state).unwrap();
+        let result = Negate.perform(state).unwrap();
         assert_eq!(result.stack::<i64>().size(), 1);
         assert_eq!(*result.stack::<i64>().top().unwrap(), i64::MAX);
     }
@@ -140,7 +141,7 @@ mod tests {
             .unwrap()
             .with_no_program()
             .build();
-        let result = IntInstruction::negate().perform(state).unwrap();
+        let result = Negate.perform(state).unwrap();
         prop_assert_eq!(result.stack::<i64>().size(), 1);
         prop_assert_eq!(
             *result.stack::<i64>().top().unwrap(),

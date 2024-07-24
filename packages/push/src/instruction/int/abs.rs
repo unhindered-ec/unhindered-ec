@@ -103,8 +103,9 @@ mod tests {
     use proptest::prop_assert_eq;
     use test_strategy::proptest;
 
+    use super::Abs;
     use crate::{
-        instruction::{Instruction, IntInstruction},
+        instruction::Instruction,
         push_vm::{push_state::PushState, HasStack},
     };
 
