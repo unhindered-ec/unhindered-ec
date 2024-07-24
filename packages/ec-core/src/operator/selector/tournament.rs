@@ -18,7 +18,13 @@ impl Tournament {
     pub const fn new(size: NonZeroUsize) -> Self {
         Self { size }
     }
-
+#[must_use]
+pub const fn  of_size<const N: usize>() -> Self {
+   Self::new(const { match NonZeroUsize::new(N) {
+       Some(x) => x,
+       None => panic!("only positive tournament sizes are permitted");
+   } }))    
+}
     /// Construct a binary tournament selector, i.e., a tournament
     /// selector that selects two random individuals from the population
     /// and returns the "better" of the two.
