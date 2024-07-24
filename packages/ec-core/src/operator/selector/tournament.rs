@@ -1,3 +1,5 @@
+use std::num::NonZeroUsize;
+
 use anyhow::{ensure, Context, Result};
 use rand::{prelude::IndexedRandom, rngs::ThreadRng};
 
@@ -5,13 +7,24 @@ use super::Selector;
 use crate::population::Population;
 
 pub struct Tournament {
-    size: usize,
+    size: NonZeroUsize,
 }
 
 impl Tournament {
+    /// Construct a tournament selector with the given size. This
+    /// will select `size` individuals from the population, randomly
+    /// without replacement, and return the "best" from that set.
     #[must_use]
-    pub const fn new(size: usize) -> Self {
+    pub const fn new(size: NonZeroUsize) -> Self {
         Self { size }
+    }
+
+    /// Construct a binary tournament selector, i.e., a tournament
+    /// selector that selects two random individuals from the population
+    /// and returns the "better" of the two.
+    #[must_use]
+    pub const fn binary() -> Self {
+        Self::new(NonZeroUsize::MIN.saturating_add(1))
     }
 }
 
@@ -26,20 +39,29 @@ where
         rng: &mut ThreadRng,
     ) -> Result<&'pop P::Individual> {
         ensure!(
-            population.size() >= self.size,
+            population.size() >= self.size.into(),
             "The population had size {} and we wanted a tournament of size {}",
             population.size(),
             self.size
         );
         population
             .as_ref()
-            .choose_multiple(rng, self.size)
+            .choose_multiple(rng, self.size.into())
             .max()
             .with_context(|| format!("The tournament was empty; should have been {}", self.size))
     }
 }
 
 #[cfg(test)]
+#[rustversion::attr(before(1.81), allow(clippy::unwrap_used))]
+#[rustversion::attr(
+    since(1.81),
+    expect(
+        clippy::unwrap_used,
+        reason = "`max()` can fail if the list of individuals is empty, but we know that can't \
+                  happen so we'll unwrap"
+    )
+)]
 #[rustversion::attr(before(1.81), allow(clippy::arithmetic_side_effects))]
 #[rustversion::attr(
     since(1.81),
@@ -49,15 +71,9 @@ where
                   side for test code."
     )
 )]
-#[rustversion::attr(before(1.81), allow(clippy::unwrap_used))]
-#[rustversion::attr(
-    since(1.81),
-    expect(
-        clippy::unwrap_used,
-        reason = "Panicking is the best way to deal with errors in unit tests"
-    )
-)]
 mod tests {
+    use std::num::NonZeroUsize;
+
     use rand::thread_rng;
     use test_strategy::proptest;
 
@@ -73,7 +89,7 @@ mod tests {
             .enumerate()
             .map(|(genome, score)| EcIndividual::new(genome, score))
             .collect::<Vec<_>>();
-        let selector = Tournament::new(1);
+        let selector = Tournament::new(NonZeroUsize::MIN);
         let winner = selector.select(&population, &mut rng).unwrap();
         assert!(scores.contains(winner.test_results));
     }
@@ -87,7 +103,7 @@ mod tests {
             .enumerate()
             .map(|(genome, score)| EcIndividual::new(genome, score))
             .collect::<Vec<_>>();
-        let selector = Tournament::new(2);
+        let selector = Tournament::binary();
         let winner = selector.select(&population, &mut rng).unwrap();
         assert_eq!(winner.test_results, &x.max(y));
     }
@@ -105,7 +121,7 @@ mod tests {
             .enumerate()
             .map(|(genome, score)| EcIndividual::new(genome, score))
             .collect::<Vec<_>>();
-        let selector = Tournament::new(2);
+        let selector = Tournament::binary();
         let winner = selector.select(&population, &mut rng).unwrap();
         assert!(scores.contains(winner.test_results));
         assert!(winner.test_results > scores.iter().min().unwrap());
