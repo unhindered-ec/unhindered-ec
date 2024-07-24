@@ -1,8 +1,9 @@
+mod abs;
 mod negate;
 
 use strum_macros::EnumIter;
 
-use self::negate::Negate;
+use self::{abs::Abs, negate::Negate};
 use super::{Instruction, PushInstruction, PushInstructionError};
 use crate::{
     error::{Error, InstructionResult, MapInstructionError},
@@ -16,7 +17,7 @@ pub enum IntInstruction {
     Push(i64),
 
     Negate(Negate),
-    Abs,
+    Abs(Abs),
     Min,
     Max,
     Inc,
@@ -50,6 +51,10 @@ pub enum IntInstruction {
 impl IntInstruction {
     pub const fn negate() -> Self {
         Self::Negate(Negate)
+    }
+
+    pub const fn abs() -> Self {
+        Self::Abs(Abs)
     }
 }
 
@@ -88,8 +93,8 @@ where
     fn perform(&self, mut state: S) -> InstructionResult<S, Self::Error> {
         match self {
             Self::Negate(negate) => negate.perform(state),
+            Self::Abs(abs) => abs.perform(state),
             Self::Push(_)
-            | Self::Abs
             | Self::Inc
             | Self::Dec
             | Self::Square
@@ -108,7 +113,6 @@ where
                 let int_stack = state.stack_mut::<i64>();
                 match self {
                     Self::Push(i) => state.with_push(*i).map_err_into(),
-                    Self::Abs => int_stack.top().copied().map(i64::abs).replace_on(1, state),
 
                     // This works, but is going to be nasty after we repeat a lot. There should
                     // perhaps be another trait method somewhere that eliminates a lot of this
