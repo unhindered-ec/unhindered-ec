@@ -83,7 +83,10 @@ where
 
     fn perform(&self, state: S) -> InstructionResult<S, Self::Error> {
         let int_stack = state.stack::<i64>();
-        int_stack.top().map(|x| x.abs()).replace_on(1, state)
+        int_stack
+            .top()
+            .map(|x| x.saturating_abs())
+            .replace_on(1, state)
     }
 }
 
