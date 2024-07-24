@@ -11,26 +11,49 @@ pub struct Tournament {
 }
 
 impl Tournament {
-    /// Construct a tournament selector with the given size. This
+    /// Construct a tournament selector with the given tournament size. This
     /// will select `size` individuals from the population, randomly
     /// without replacement, and return the "best" from that set.
     #[must_use]
     pub const fn new(size: NonZeroUsize) -> Self {
         Self { size }
     }
-#[must_use]
-pub const fn  of_size<const N: usize>() -> Self {
-   Self::new(const { match NonZeroUsize::new(N) {
-       Some(x) => x,
-       None => panic!("only positive tournament sizes are permitted");
-   } }))    
-}
+
+    /// Construct a tournament selector with the given _constant_
+    /// tournament size, allowing for compile-time checks that the
+    /// tournament size `N` is greater than zero. This selector
+    /// will select `size` individuals from the population, randomly
+    /// without replacement, and return the "best" from that set.
+    ///
+    /// # Examples
+    ///
+    /// Create a tournament selector with tournament size 3:
+    /// ```
+    /// # use ec_core::operator::selector::tournament::Tournament;
+    /// let selector = Tournament::of_size::<3>();
+    /// ```
+    ///
+    /// # Panics
+    ///
+    /// Panics if the provided tournament size `N` is 0.
+    #[must_use]
+    pub const fn of_size<const N: usize>() -> Self {
+        Self::new(
+            const {
+                match NonZeroUsize::new(N) {
+                    Some(x) => x,
+                    None => panic!("only positive tournament sizes are permitted"),
+                }
+            },
+        )
+    }
+
     /// Construct a binary tournament selector, i.e., a tournament
     /// selector that selects two random individuals from the population
     /// and returns the "better" of the two.
     #[must_use]
     pub const fn binary() -> Self {
-        Self::new(NonZeroUsize::MIN.saturating_add(1))
+        Self::of_size::<2>()
     }
 }
 
