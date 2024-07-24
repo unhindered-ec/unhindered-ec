@@ -133,7 +133,7 @@ mod tests {
     // We need to make sure that `x` is greater than `i64::MIN` since
     // we handle that case differently. This is described in the documentation
     // for `Negate`, and handled in the preceding test.
-    fn negate(#[strategy(((i64::MIN+1)..=i64::MAX))] x: i64) {
+    fn negate(#[strategy((i64::MIN+1)..=i64::MAX)] x: i64) {
         let state = PushState::builder()
             .with_max_stack_size(1)
             .with_int_values(std::iter::once(x))
