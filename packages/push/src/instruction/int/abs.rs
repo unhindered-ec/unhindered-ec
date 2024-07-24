@@ -124,7 +124,7 @@ mod tests {
             .unwrap()
             .with_no_program()
             .build();
-        let result = IntInstruction::abs().perform(state).unwrap();
+        let result = Abs.perform(state).unwrap();
         assert_eq!(result.stack::<i64>().size(), 1);
         assert_eq!(*result.stack::<i64>().top().unwrap(), i64::MAX);
     }
@@ -140,7 +140,7 @@ mod tests {
             .unwrap()
             .with_no_program()
             .build();
-        let result = IntInstruction::abs().perform(state).unwrap();
+        let result = Abs.perform(state).unwrap();
         prop_assert_eq!(result.stack::<i64>().size(), 1);
         prop_assert_eq!(
             *result.stack::<i64>().top().unwrap(),
