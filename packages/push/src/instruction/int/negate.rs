@@ -110,10 +110,13 @@ mod tests {
 
     // We need to make sure `Negate` properly handles the
     // case where the value being negated is `i64::MIN`.
-    // Simply negating that value will wrap around to
-    // `i64::MAX_VALUE`, which is definitely not what we want.
+    // Simply negating that value will generate an overflow
+    // error because `i64::MIN` has a larger magnitude than
+    // the largest representable positive value (`i64::MAX`).
+    // We want to using a saturating version of negation
+    // that converts `i64::MIN` to `i64::MAX`.
     #[test]
-    fn handle_i64_min() {
+    fn negate_with_i64_min() {
         let input = i64::MIN;
         let state = PushState::builder()
             .with_max_stack_size(1)
@@ -130,7 +133,7 @@ mod tests {
     // We need to make sure that `x` is greater than `i64::MIN` since
     // we handle that case differently. This is described in the documentation
     // for `Negate`, and handled in the preceding test.
-    fn negate(#[filter(#x > i64::MIN)] x: i64) {
+    fn negate(#[strategy(((i64::MIN+1)..=i64::MAX))] x: i64) {
         let state = PushState::builder()
             .with_max_stack_size(1)
             .with_int_values(std::iter::once(x))
