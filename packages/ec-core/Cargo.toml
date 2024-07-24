@@ -34,7 +34,7 @@ criterion = { workspace = true }
 miette = { workspace = true, features = ["fancy"] }
 thiserror = { workspace = true }
 proptest.workspace = true
-test-strategy = "0.4.0"
+test-strategy.workspace = true
 
 [lints]
 workspace = true
