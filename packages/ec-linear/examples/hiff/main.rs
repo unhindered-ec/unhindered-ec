@@ -1,10 +1,10 @@
 // TODO: since inner attributes are unstable, we can't use rustversion here.
 // Once we revert this commit, this is proper again.
-#![allow(clippy::allow_attributes_without_reason)]
 #![allow(
+    clippy::allow_attributes_without_reason,
     clippy::arithmetic_side_effects,
-//     reason = "The tradeoff safety <> ease of writing arguably lies on the ease of writing side \
-//               for example code."
+    // reason = "The tradeoff safety <> ease of writing arguably lies on the ease of writing side \
+    //           for example code."
 )]
 
 pub mod args;
