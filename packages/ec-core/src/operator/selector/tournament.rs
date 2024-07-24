@@ -115,6 +115,9 @@ mod tests {
         #[strategy(-1000..1000)] z: i32,
     ) {
         let mut rng = thread_rng();
+        // By making all three of the values be different `mod 3`,
+        // this ensures that all three values are distinct, which means that we
+        // can use `>` (instead of `>=`) in the assertion below.
         let scores = &[3 * x, 3 * y + 1, 3 * z + 2];
         let population = scores
             .iter()
