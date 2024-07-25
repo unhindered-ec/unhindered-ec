@@ -14,8 +14,8 @@ use crate::{
 #[non_exhaustive]
 #[must_use]
 pub enum IntInstruction {
+    #[strum(to_string = "Push({0})")]
     Push(i64),
-
     Negate(Negate),
     Abs(Abs),
     Min,
