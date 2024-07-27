@@ -111,20 +111,50 @@ where
     )
 )]
 mod tests {
-    use prop::collection;
-    use proptest::prelude::*;
+    use std::iter::once;
+
+    use proptest::{
+        collection,
+        prelude::{any, Strategy},
+        prop_assert, prop_assert_eq,
+    };
+    use test_strategy::proptest;
 
     use super::*;
     use crate::individual::ec::EcIndividual;
 
+    // Generate a population from a vector of single scores, one per individual.
+    // These have to be converted to iterators using `once` so they're "like"
+    // arrays of scores.
+    fn population_from_single_scores<I>(scores: I) -> Vec<EcIndividual<usize, TestResults<i32>>>
+    where
+        I: IntoIterator<Item = i32>,
+    {
+        // Mapping `once` here converts each single `i32` value into
+        // an iterator over `i32`s.
+        population_from_scores(scores.into_iter().map(once))
+    }
+
+    // Generate a population from a collection of score collections (e.g., arrays),
+    // one per individual.
+    fn population_from_scores<I, J>(scores: I) -> Vec<EcIndividual<usize, TestResults<i32>>>
+    where
+        I: IntoIterator<Item = J>,
+        J: IntoIterator<Item = i32>,
+    {
+        scores
+            .into_iter()
+            .map(TestResults::<i32>::from)
+            // We'll use the index as the "genome".
+            .enumerate()
+            .map(EcIndividual::from)
+            .collect::<Vec<_>>()
+    }
+
     #[test]
     fn single_best_single_error() {
-        // 9 is the sole winner
-        let population = vec![5, 8, 9, 6, 3, 2, 0]
-            .into_iter()
-            .enumerate()
-            .map(|(id, e)| EcIndividual::<usize, TestResults<i32>>::new(id, TestResults::from([e])))
-            .collect::<Vec<_>>();
+        // 9 is the sole winner in this population
+        let population = population_from_single_scores([5, 8, 9, 6, 3, 2, 0]);
 
         let lexicase = Lexicase::new(1);
         let mut rng = rand::thread_rng();
@@ -135,11 +165,7 @@ mod tests {
     #[test]
     fn multiple_copies_best() {
         // The two 9s are the possible winners
-        let population = vec![5, 8, 9, 6, 3, 2, 0, 9]
-            .into_iter()
-            .enumerate()
-            .map(|(id, e)| EcIndividual::<usize, TestResults<i32>>::new(id, TestResults::from([e])))
-            .collect::<Vec<_>>();
+        let population = population_from_single_scores([5, 8, 9, 6, 3, 2, 0, 9]);
 
         let lexicase = Lexicase::new(1);
         let mut rng = rand::thread_rng();
@@ -154,11 +180,8 @@ mod tests {
     #[test]
     fn single_best_multiple_errors() {
         // [9, 8] is the sole winner
-        let population = vec![[5, 3], [8, 2], [9, 8], [6, 2], [3, 8], [2, 8], [0, 6]]
-            .into_iter()
-            .enumerate()
-            .map(|(id, es)| EcIndividual::<usize, TestResults<i32>>::new(id, TestResults::from(es)))
-            .collect::<Vec<_>>();
+        let population =
+            population_from_scores([[5, 3], [8, 2], [9, 8], [6, 2], [3, 8], [2, 8], [0, 6]]);
 
         let lexicase = Lexicase::new(2);
         let mut rng = rand::thread_rng();
@@ -168,7 +191,7 @@ mod tests {
 
     #[test]
     fn multiple_best_multiple_errors() {
-        let population = vec![
+        let population = population_from_scores([
             [5, 3],
             [8, 2],
             [9, 8], // A possible winner
@@ -177,11 +200,7 @@ mod tests {
             [2, 8],
             [0, 6],
             [7, 9], // A possible winner
-        ]
-        .into_iter()
-        .enumerate()
-        .map(|(id, es)| EcIndividual::<usize, TestResults<i32>>::new(id, TestResults::from(es)))
-        .collect::<Vec<_>>();
+        ]);
 
         let lexicase = Lexicase::new(2);
         let mut rng = rand::thread_rng();
@@ -208,7 +227,7 @@ mod tests {
     //
     // There are several helper functions that exist just to support the somewhat
     // complex logic of this test.
-    #[test_strategy::proptest]
+    #[proptest]
     fn selects_sole_best(
         #[strategy(1..20usize)] pop_size: usize,
         #[strategy(make_pop(#pop_size))] mut population: Vec<TestIndividual>,
