@@ -1,13 +1,14 @@
 // TODO: since inner attributes are unstable, we can't use rustversion here.
 // Once we revert this commit, this is proper again.
 #![allow(clippy::allow_attributes_without_reason)]
-#![allow(clippy::use_debug
-//    , reason = "Debug printing is useful for examples."
+#![allow(
+    clippy::use_debug,
+    // reason = "Debug printing is useful for examples."
 )]
 #![allow(
     clippy::arithmetic_side_effects,
-//     reason = "The tradeoff safety <> ease of writing arguably lies on the ease of writing side \
-//               for example code."
+    // reason = "The tradeoff safety <> ease of writing arguably lies on the ease of writing side \
+    //           for example code."
 )]
 
 pub mod args;
@@ -65,7 +66,7 @@ fn main() -> Result<()> {
 
     let selector = Weighted::new(Best, 1)
         .with_selector(Lexicase::new(num_test_cases), 5)
-        .with_selector(Tournament::new(2), population_size - 1);
+        .with_selector(Tournament::binary(), population_size - 1);
 
     let population = Standard
         .to_collection_generator(bit_length)
