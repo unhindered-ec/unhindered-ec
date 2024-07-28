@@ -83,21 +83,12 @@ where
     since(1.81),
     expect(
         clippy::unwrap_used,
-        reason = "`max()` can fail if the list of individuals is empty, but we know that can't \
-                  happen so we'll unwrap"
-    )
-)]
-#[rustversion::attr(before(1.81), allow(clippy::arithmetic_side_effects))]
-#[rustversion::attr(
-    since(1.81),
-    expect(
-        clippy::arithmetic_side_effects,
-        reason = "The tradeoff safety <> ease of writing arguably lies on the ease of writing \
-                  side for test code."
+        reason = "`max()` and `min()` can fail if the list of individuals is empty, but we know \
+                  that can't happen so we'll unwrap"
     )
 )]
 mod tests {
-    use std::num::NonZeroUsize;
+    use std::{num::NonZeroUsize, ops::Not};
 
     use rand::thread_rng;
     use test_strategy::proptest;
@@ -135,23 +126,22 @@ mod tests {
 
     #[proptest]
     fn tournament_size_2_pop_size_3(
-        #[strategy(-1000..1000)] x: i32,
-        #[strategy(-1000..1000)] y: i32,
-        #[strategy(-1000..1000)] z: i32,
+        #[any] x: i32,
+        #[filter(|v| *v != #x)] y: i32,
+        #[filter(|v| [#x, #y].contains(v).not())] z: i32,
     ) {
         let mut rng = thread_rng();
-        // By making all three of the values be different `mod 3`,
-        // this ensures that all three values are distinct, which means that we
-        // can use `>` (instead of `>=`) in the assertion below.
-        let scores = &[3 * x, 3 * y + 1, 3 * z + 2];
+        // We know from the filters that all the scores are unique, so the selected
+        // score should always be better than the smallest score.
+        let scores = &[x, y, z];
         let population = scores
             .iter()
             .enumerate()
             .map(|(genome, score)| EcIndividual::new(genome, score))
             .collect::<Vec<_>>();
         let selector = Tournament::binary();
-        let winner = selector.select(&population, &mut rng).unwrap();
-        assert!(scores.contains(winner.test_results));
-        assert!(winner.test_results > scores.iter().min().unwrap());
+        let selected = selector.select(&population, &mut rng).unwrap();
+        assert!(scores.contains(selected.test_results));
+        assert!(selected.test_results > scores.iter().min().unwrap());
     }
 }
