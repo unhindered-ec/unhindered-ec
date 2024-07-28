@@ -104,19 +104,6 @@ fn all_instructions() -> Vec<IntInstruction> {
 }
 
 #[proptest]
-fn abs(#[any] x: i64) {
-    let state = PushState::builder()
-        .with_max_stack_size(1)
-        .with_int_values(std::iter::once(x))
-        .unwrap()
-        .with_no_program()
-        .build();
-    let result = IntInstruction::Abs.perform(state).unwrap();
-    prop_assert_eq!(result.stack::<i64>().size(), 1);
-    prop_assert_eq!(*result.stack::<i64>().top().unwrap(), x.abs());
-}
-
-#[proptest]
 fn sqr(#[any] x: i64) {
     let state = PushState::builder()
         .with_max_stack_size(1)

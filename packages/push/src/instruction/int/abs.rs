@@ -1,10 +1,10 @@
 use crate::{
     error::InstructionResult,
-    instruction::{Instruction, PushInstructionError},
+    instruction::{instruction_error::PushInstructionError, Instruction},
     push_vm::{stack::PushOnto, HasStack},
 };
 
-/// An instruction that negates the top
+/// An instruction that takes the absolute value of the top
 /// value on the `i64` stack.
 ///
 /// There's an edge case when the value is `i64::MIN` since
@@ -14,7 +14,8 @@ use crate::{
 /// See <https://en.wikipedia.org/wiki/Two%27s_complement#Most_negative_number>
 /// for additional details and examples.
 ///
-/// In our implementation, `Negate` returns `i64::MAX` when it negates
+/// In our implementation, `Abs` returns `i64::MAX` when taking the absolute
+/// value of
 /// `i64::MIN`. This isn't mathematically accurate, but is semantically
 /// plausible since it converts the smallest negative number into the largest
 /// positive number.
@@ -30,15 +31,15 @@ use crate::{
 ///
 /// # Inputs
 ///
-/// The `IntInstruction::Negate` instruction takes the following inputs:
+/// The `IntInstruction::Abs` instruction takes the following inputs:
 ///    - `i64` stack
 ///      - One value
 ///
 /// # Behavior
 ///
-/// The `IntInstruction::Negate` instruction negates the top value of
-/// the `i64` stack. The one exception (as described above) is when
-/// the value is `i64::MIN`, where `Negate` removes it and pushes
+/// The `IntInstruction::Abs` instruction takes the absolute value of the top
+/// value of the `i64` stack. The one exception (as described above) is when
+/// the value is `i64::MIN`, where `Abs` removes it and pushes
 /// on `i64::MAX` in its place.
 ///
 /// ## Action Table
@@ -58,7 +59,7 @@ use crate::{
 /// | `i64` stack  |  Success | Note |
 /// | ------------- | ------------- | ------------- |
 /// | `i64::MIN`    | ✅ | `i64::MIN` is replaced with `i64::MAX` |
-/// | exists, not `i64::MIN` | ✅ | Negates top value of the `i64` stack |
+/// | exists, not `i64::MIN` | ✅ | Takes the absolute value of the top value of the `i64` stack |
 /// | missing | [❗..](crate::push_vm::stack::StackError::Underflow) | State is unchanged |
 ///
 /// # Errors
@@ -72,9 +73,9 @@ use crate::{
 /// or Propeller) or Python (e.g. `PyshGP`) won't have the wrapping issue
 /// because they act on arbitrary precision integers.
 #[derive(Debug, Default, Copy, Clone, PartialEq, Eq)]
-pub struct Negate;
+pub struct Abs;
 
-impl<S> Instruction<S> for Negate
+impl<S> Instruction<S> for Abs
 where
     S: Clone + HasStack<i64>,
 {
@@ -84,7 +85,7 @@ where
         let int_stack = state.stack::<i64>();
         int_stack
             .top()
-            .map(|x| x.saturating_neg())
+            .map(|x| x.saturating_abs())
             .replace_on(1, state)
     }
 }
@@ -99,25 +100,24 @@ where
     )
 )]
 mod tests {
-
     use proptest::prop_assert_eq;
     use test_strategy::proptest;
 
-    use super::Negate;
+    use super::Abs;
     use crate::{
         instruction::Instruction,
         push_vm::{push_state::PushState, HasStack},
     };
 
-    // We need to make sure `Negate` properly handles the
-    // case where the value being negated is `i64::MIN`.
-    // Simply negating that value will generate an overflow
+    // We need to make sure `Abs` properly handles the
+    // case where the value we're the absolute value of is `i64::MIN`.
+    // Simply taking the absolute value of `i64::MIN` will generate an overflow
     // error because `i64::MIN` has a larger magnitude than
     // the largest representable positive value (`i64::MAX`).
-    // We want to using a saturating version of negation
+    // We want to using a saturating version of absolute value
     // that converts `i64::MIN` to `i64::MAX`.
     #[test]
-    fn negate_with_i64_min() {
+    fn abs_with_i64_min() {
         let input = i64::MIN;
         let state = PushState::builder()
             .with_max_stack_size(1)
@@ -125,7 +125,7 @@ mod tests {
             .unwrap()
             .with_no_program()
             .build();
-        let result = Negate.perform(state).unwrap();
+        let result = Abs.perform(state).unwrap();
         assert_eq!(result.stack::<i64>().size(), 1);
         assert_eq!(*result.stack::<i64>().top().unwrap(), i64::MAX);
     }
@@ -133,19 +133,19 @@ mod tests {
     #[proptest]
     // We need to make sure that `x` is greater than `i64::MIN` since
     // we handle that case differently. This is described in the documentation
-    // for `Negate`, and handled in the preceding test.
-    fn negate(#[strategy((i64::MIN+1)..=i64::MAX)] x: i64) {
+    // for `Abs`, and handled in the preceding test.
+    fn abs(#[strategy((i64::MIN+1)..=i64::MAX)] x: i64) {
         let state = PushState::builder()
             .with_max_stack_size(1)
             .with_int_values(std::iter::once(x))
             .unwrap()
             .with_no_program()
             .build();
-        let result = Negate.perform(state).unwrap();
+        let result = Abs.perform(state).unwrap();
         prop_assert_eq!(result.stack::<i64>().size(), 1);
         prop_assert_eq!(
             *result.stack::<i64>().top().unwrap(),
-            x.checked_neg().unwrap()
+            x.checked_abs().unwrap()
         );
     }
 }
