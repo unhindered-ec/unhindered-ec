@@ -261,10 +261,13 @@ impl<T> Stack<T> {
     /// Returns `StackError::Underflow` error if the stack has less than
     /// two elements.
     pub fn top2(&self) -> Result<(&T, &T), StackError> {
-        let index_second_to_top = self.size().checked_sub(2).ok_or(StackError::Underflow {
-            num_requested: 2,
-            num_present: self.size(),
-        })?;
+        let index_second_to_top =
+            self.size()
+                .checked_sub(2)
+                .ok_or_else(|| StackError::Underflow {
+                    num_requested: 2,
+                    num_present: self.size(),
+                })?;
         let x = self.top()?;
         let y = self
             .values
