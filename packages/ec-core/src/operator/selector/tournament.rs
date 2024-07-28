@@ -32,10 +32,6 @@ impl Tournament {
     /// # use ec_core::operator::selector::tournament::Tournament;
     /// let selector = Tournament::of_size::<3>();
     /// ```
-    ///
-    /// # Panics
-    ///
-    /// Panics if the provided tournament size `N` is 0.
     #[must_use]
     pub const fn of_size<const N: usize>() -> Self {
         Self::new(
