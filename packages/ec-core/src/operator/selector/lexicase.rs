@@ -172,7 +172,7 @@ mod tests {
 
         let selected = *lexicase.select(&population, &mut rng).unwrap().genome();
         assert!(
-            selected == 2usize || selected == 7usize,
+            [2usize, 7usize].contains(&selected),
             "genome {selected} should have been 2 or 7"
         );
     }
@@ -207,7 +207,7 @@ mod tests {
 
         let selected = *lexicase.select(&population, &mut rng).unwrap().genome();
         assert!(
-            selected == 2usize || selected == 7usize,
+            [2usize, 7usize].contains(&selected),
             "genome {selected} should have been 2 or 7"
         );
     }
