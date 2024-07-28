@@ -229,9 +229,9 @@ mod tests {
     // complex logic of this test.
     #[proptest]
     fn selects_sole_best(
-        #[strategy(1..20usize)] pop_size: usize,
+        #[strategy(1..=20usize)] pop_size: usize,
         #[strategy(make_pop(#pop_size))] mut population: Vec<TestIndividual>,
-        #[strategy(0..1usize)] score_to_increase: usize,
+        #[strategy(0..=1usize)] score_to_increase: usize,
     ) {
         prop_assert!(pop_size > 0);
         prop_assert_eq!(pop_size, population.len());
