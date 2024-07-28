@@ -126,10 +126,9 @@ mod tests {
     // Generate a population from a vector of single scores, one per individual.
     // These have to be converted to iterators using `once` so they're "like"
     // arrays of scores.
-    fn population_from_single_scores<I>(scores: I) -> Vec<EcIndividual<usize, TestResults<i32>>>
-    where
-        I: IntoIterator<Item = i32>,
-    {
+    fn population_from_single_scores(
+        scores: impl IntoIterator<Item = i32>,
+    ) -> Vec<EcIndividual<usize, TestResults<i32>>> {
         // Mapping `once` here converts each single `i32` value into
         // an iterator over `i32`s.
         population_from_scores(scores.into_iter().map(once))
@@ -137,11 +136,9 @@ mod tests {
 
     // Generate a population from a collection of score collections (e.g., arrays),
     // one per individual.
-    fn population_from_scores<I, J>(scores: I) -> Vec<EcIndividual<usize, TestResults<i32>>>
-    where
-        I: IntoIterator<Item = J>,
-        J: IntoIterator<Item = i32>,
-    {
+    fn population_from_scores(
+        scores: impl IntoIterator<Item: IntoIterator<Item = i32>>,
+    ) -> Vec<EcIndividual<usize, TestResults<i32>>> {
         scores
             .into_iter()
             .map(TestResults::<i32>::from)
