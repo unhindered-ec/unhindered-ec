@@ -369,6 +369,31 @@ impl<Input, Output> Cases<Input, Output> {
         self.cases.iter().map(|c| &c.input)
     }
 
+    /// Creates an iterator over mutable references to the inputs for this set
+    /// of cases.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use push::evaluation::cases::Cases;
+    /// #
+    /// let inputs: Vec<String> = ["this", "and", "those"]
+    ///     .iter()
+    ///     .map(|s| s.to_string())
+    ///     .collect();
+    /// let mut cases = Cases::from_inputs(inputs, |s| s.len());
+    ///
+    /// for input in cases.inputs_mut() {
+    ///     *input = input.to_uppercase();
+    /// }
+    ///
+    /// assert!(cases.inputs().eq(&["THIS", "AND", "THOSE"]));
+    /// assert!(cases.outputs().eq(&[4, 3, 5]));
+    /// ```
+    pub fn inputs_mut(&mut self) -> impl Iterator<Item = &mut Input> {
+        self.cases.iter_mut().map(|c| &mut c.input)
+    }
+
     /// Creates an iterator over the outputs for this set of cases.
     ///
     /// # Examples
@@ -383,6 +408,28 @@ impl<Input, Output> Cases<Input, Output> {
     /// ```
     pub fn outputs(&self) -> impl Iterator<Item = &Output> {
         self.cases.iter().map(|c| &c.output)
+    }
+
+    /// Creates an iterator over mutable references to the outputs for this set
+    /// of cases.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use push::evaluation::cases::Cases;
+    /// #
+    /// let inputs = ["this", "and", "those"];
+    /// let mut cases = Cases::from_inputs(inputs, |s| s.len());
+    ///
+    /// for output in cases.outputs_mut() {
+    ///     *output *= 2;
+    /// }
+    ///
+    /// assert!(cases.inputs().eq(&["this", "and", "those"]));
+    /// assert!(cases.outputs().eq(&[8, 6, 10]));
+    /// ```
+    pub fn outputs_mut(&mut self) -> impl Iterator<Item = &mut Output> {
+        self.cases.iter_mut().map(|c| &mut c.output)
     }
 }
 
