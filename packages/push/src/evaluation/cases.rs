@@ -394,6 +394,23 @@ impl<Input, Output> Cases<Input, Output> {
         self.cases.iter_mut().map(|c| &mut c.input)
     }
 
+    /// Convert this set of cases into an iterator over the inputs. This
+    /// takes ownership of the cases.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use push::evaluation::cases::Cases;
+    /// #
+    /// let inputs = ["this", "and", "those"];
+    /// let cases = Cases::from_inputs(inputs, |s| s.len());
+    ///
+    /// assert!(cases.into_inputs().eq(["this", "and", "those"]));
+    /// ```
+    pub fn into_inputs(self) -> impl Iterator<Item = Input> {
+        self.cases.into_iter().map(|c| c.input)
+    }
+
     /// Creates an iterator over the outputs for this set of cases.
     ///
     /// # Examples
@@ -430,6 +447,23 @@ impl<Input, Output> Cases<Input, Output> {
     /// ```
     pub fn outputs_mut(&mut self) -> impl Iterator<Item = &mut Output> {
         self.cases.iter_mut().map(|c| &mut c.output)
+    }
+
+    /// Convert this set of cases into an iterator over the outputs. This
+    /// takes ownership of the cases.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use push::evaluation::cases::Cases;
+    /// #
+    /// let inputs = ["this", "and", "those"];
+    /// let cases = Cases::from_inputs(inputs, |s| s.len());
+    ///
+    /// assert!(cases.into_outputs().eq([4, 3, 5]));
+    /// ```
+    pub fn into_outputs(self) -> impl Iterator<Item = Output> {
+        self.cases.into_iter().map(|c| c.output)
     }
 }
 
