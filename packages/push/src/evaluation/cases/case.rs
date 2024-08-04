@@ -1,7 +1,7 @@
 /// Simple pair of input and (expected) output used
 /// for testing evolved systems.
 ///
-/// See also [`Cases`].
+/// See also [`Cases`](crate::evaluation::Cases).
 ///
 /// # Examples
 ///
