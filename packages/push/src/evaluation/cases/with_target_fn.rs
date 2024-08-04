@@ -51,3 +51,27 @@ where
         Cases::from_inputs(self, target_fn)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use test_strategy::proptest;
+
+    use crate::evaluation::WithTargetFn;
+
+    #[proptest]
+    fn with_identity(#[any] inputs: Vec<i32>) {
+        let cases = inputs.into_iter().with_target_fn(i32::to_owned);
+        assert_eq!(
+            cases.inputs().collect::<Vec<_>>(),
+            cases.outputs().collect::<Vec<_>>()
+        );
+    }
+
+    #[proptest]
+    fn with_string_length(#[any] inputs: Vec<String>) {
+        let cases = inputs.into_iter().with_target_fn(String::len);
+        for c in cases {
+            assert_eq!(c.input.len(), c.output);
+        }
+    }
+}
