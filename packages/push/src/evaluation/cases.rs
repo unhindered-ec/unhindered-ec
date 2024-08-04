@@ -6,7 +6,7 @@
 /// # Examples
 ///
 /// ```
-/// # use push::evaluation::cases::Case;
+/// # use push::evaluation::Case;
 /// #
 /// let case = Case::new("Hello", 5);
 ///
@@ -24,7 +24,7 @@ pub struct Case<Input, Output = Input> {
 /// # Examples
 ///
 /// ```
-/// # use push::evaluation::cases::Case;
+/// # use push::evaluation::Case;
 /// #
 /// let case = Case::from(("this", 4));
 ///
@@ -42,7 +42,7 @@ impl<Input, Output> From<(Input, Output)> for Case<Input, Output> {
 /// # Examples
 ///
 /// ```
-/// # use push::evaluation::cases::Case;
+/// # use push::evaluation::Case;
 /// #
 /// let case = Case::new(true, 17);
 /// let (x, y): (bool, i32) = case.into();
@@ -72,7 +72,7 @@ impl<Input, Output> Case<Input, Output> {
 /// # Examples
 ///
 /// ```
-/// # use push::evaluation::cases::{Case, Cases, WithTargetFn};
+/// # use push::evaluation::{Case, Cases, WithTargetFn};
 /// #
 /// let inputs = ["this", "and", "those"];
 /// // Pair strings (inputs) with their lengths (outputs).
@@ -96,7 +96,7 @@ impl<Input, Output> Default for Cases<Input, Output> {
     /// # Examples
     ///
     /// ```
-    /// # use push::evaluation::cases::Cases;
+    /// # use push::evaluation::Cases;
     /// #
     /// let cases = Cases::<String, usize>::default();
     ///
@@ -113,7 +113,7 @@ impl<Input, Output> Cases<Input, Output> {
     /// # Examples
     ///
     /// ```
-    /// # use push::evaluation::cases::Cases;
+    /// # use push::evaluation::Cases;
     /// #
     /// let cases = Cases::<String, usize>::new();
     ///
@@ -128,7 +128,7 @@ impl<Input, Output> Cases<Input, Output> {
     /// a function mapping inputs to outputs.
     ///
     /// ```
-    /// # use push::evaluation::cases::Cases;
+    /// # use push::evaluation::Cases;
     /// #
     /// let inputs = ["this", "and", "those"];
     /// let cases = Cases::from_inputs(inputs, |s| s.len());
@@ -154,7 +154,7 @@ impl<Input, Output> Cases<Input, Output> {
     /// # Examples
     ///
     /// ```
-    /// # use push::evaluation::cases::{Case, Cases};
+    /// # use push::evaluation::{Case, Cases};
     /// #
     /// let mut cases = Cases::new();
     /// let case = Case::new("Hello", 5);
@@ -172,7 +172,7 @@ impl<Input, Output> Cases<Input, Output> {
     /// # Examples
     ///
     /// ```
-    /// # use push::evaluation::cases::{Case, Cases};
+    /// # use push::evaluation::{Case, Cases};
     /// #
     /// let first_case = Case::new("Hello", 5);
     /// let second_case = Case::new("People", 6);
@@ -197,7 +197,7 @@ where
     /// # Examples
     ///
     /// ```
-    /// # use push::evaluation::cases::{Case, Cases};
+    /// # use push::evaluation::{Case, Cases};
     /// #
     /// let items = [("Hello", 5), ("People", 6)];
     /// let cases = Cases::from_iter(items);
@@ -218,7 +218,7 @@ where
 /// # Examples
 ///
 /// ```
-/// # use push::evaluation::cases::{Case, Cases, WithTargetFn};
+/// # use push::evaluation::{Case, Cases, WithTargetFn};
 /// #
 /// let inputs = ["this", "and", "those"];
 /// let cases = inputs.with_target_fn(|s| s.len());
@@ -248,7 +248,7 @@ where
     /// # Examples
     ///
     /// ```
-    /// # use push::evaluation::cases::{Cases, WithTargetFn};
+    /// # use push::evaluation::{Cases, WithTargetFn};
     /// let inputs = ["this", "and", "those"];
     /// let cases = inputs.with_target_fn(|s| s.len());
     ///
@@ -273,7 +273,7 @@ impl<Input, Output> Cases<Input, Output> {
     /// # Examples
     ///
     /// ```
-    /// # use push::evaluation::cases::Cases;
+    /// # use push::evaluation::Cases;
     /// #
     /// let cases = Cases::<String, usize>::new();
     ///
@@ -289,7 +289,7 @@ impl<Input, Output> Cases<Input, Output> {
     /// # Examples
     ///
     /// ```
-    /// # use push::evaluation::cases::Cases;
+    /// # use push::evaluation::Cases;
     /// #
     /// let inputs = ["this", "and", "those"];
     /// let cases = Cases::from_inputs(inputs, |s| s.len());
@@ -312,7 +312,7 @@ impl<Input, Output> Cases<Input, Output> {
     /// # Examples
     ///
     /// ```
-    /// # use push::evaluation::cases::{Case, Cases, WithTargetFn};
+    /// # use push::evaluation::{Case, Cases, WithTargetFn};
     /// #
     /// let inputs = ["Hello", "People"];
     /// let cases = inputs.with_target_fn(|s| s.len());
@@ -333,7 +333,7 @@ impl<Input, Output> Cases<Input, Output> {
     /// # Examples
     ///
     /// ```
-    /// # use push::evaluation::cases::{Case, Cases};
+    /// # use push::evaluation::{Case, Cases};
     /// #
     /// let first_case = Case::new("Hello", 5);
     /// let mut second_case = Case::new("People", 6);
@@ -358,7 +358,7 @@ impl<Input, Output> Cases<Input, Output> {
     /// # Examples
     ///
     /// ```
-    /// # use push::evaluation::cases::Cases;
+    /// # use push::evaluation::Cases;
     /// #
     /// let inputs = ["this", "and", "those"];
     /// let cases = Cases::from_inputs(inputs, |s| s.len());
@@ -375,7 +375,7 @@ impl<Input, Output> Cases<Input, Output> {
     /// # Examples
     ///
     /// ```
-    /// # use push::evaluation::cases::Cases;
+    /// # use push::evaluation::Cases;
     /// #
     /// let inputs: Vec<String> = ["this", "and", "those"]
     ///     .iter()
@@ -400,7 +400,7 @@ impl<Input, Output> Cases<Input, Output> {
     /// # Examples
     ///
     /// ```
-    /// # use push::evaluation::cases::Cases;
+    /// # use push::evaluation::Cases;
     /// #
     /// let inputs = ["this", "and", "those"];
     /// let cases = Cases::from_inputs(inputs, |s| s.len());
@@ -416,7 +416,7 @@ impl<Input, Output> Cases<Input, Output> {
     /// # Examples
     ///
     /// ```
-    /// # use push::evaluation::cases::Cases;
+    /// # use push::evaluation::Cases;
     /// #
     /// let inputs = ["this", "and", "those"];
     /// let cases = Cases::from_inputs(inputs, |s| s.len());
@@ -433,7 +433,7 @@ impl<Input, Output> Cases<Input, Output> {
     /// # Examples
     ///
     /// ```
-    /// # use push::evaluation::cases::Cases;
+    /// # use push::evaluation::Cases;
     /// #
     /// let inputs = ["this", "and", "those"];
     /// let mut cases = Cases::from_inputs(inputs, |s| s.len());
@@ -455,7 +455,7 @@ impl<Input, Output> Cases<Input, Output> {
     /// # Examples
     ///
     /// ```
-    /// # use push::evaluation::cases::Cases;
+    /// # use push::evaluation::Cases;
     /// #
     /// let inputs = ["this", "and", "those"];
     /// let cases = Cases::from_inputs(inputs, |s| s.len());
@@ -476,7 +476,7 @@ impl<Input, Output> IntoIterator for Cases<Input, Output> {
     /// # Examples
     ///
     /// ```
-    /// # use push::evaluation::cases::{Case, Cases, WithTargetFn};
+    /// # use push::evaluation::{Case, Cases, WithTargetFn};
     /// #
     /// let inputs = ["Hello", "People"];
     /// let cases = inputs.with_target_fn(|s| s.len());
@@ -502,7 +502,7 @@ impl<'a, Input, Output> IntoIterator for &'a Cases<Input, Output> {
     /// # Examples
     ///
     /// ```
-    /// # use push::evaluation::cases::{Case, Cases};
+    /// # use push::evaluation::{Case, Cases};
     /// #
     /// let cases = Cases::new()
     ///     .with_case(Case::new("Hello", 5))
@@ -532,7 +532,7 @@ impl<'a, Input, Output> IntoIterator for &'a mut Cases<Input, Output> {
     /// # Examples
     ///
     /// ```
-    /// # use push::evaluation::cases::{Case, Cases};
+    /// # use push::evaluation::{Case, Cases};
     /// #
     /// let mut cases = Cases::new()
     ///     .with_case(Case::new("Hello", 5))
