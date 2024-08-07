@@ -34,7 +34,7 @@ use ec_linear::{
     genome::bitstring::Bitstring, mutator::with_one_over_length::WithOneOverLength,
     recombinator::two_point_xo::TwoPointXo,
 };
-use rand::{distributions::Standard, prelude::Distribution, thread_rng};
+use rand::{distr::Standard, prelude::Distribution, thread_rng};
 
 use crate::args::{Args, RunModel};
 

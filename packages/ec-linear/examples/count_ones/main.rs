@@ -39,7 +39,7 @@ use ec_linear::{
     recombinator::two_point_xo::TwoPointXo,
 };
 use rand::{
-    distributions::{Distribution, Standard},
+    distr::{Distribution, Standard},
     thread_rng,
 };
 
