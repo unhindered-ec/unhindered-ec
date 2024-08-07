@@ -28,7 +28,7 @@ use push::{
     push_vm::{program::PushProgram, push_state::PushState, stack::StackError, HasStack, State},
 };
 use rand::{
-    distributions::{Distribution, Uniform},
+    distr::{Distribution, Uniform},
     thread_rng,
 };
 use strum::IntoEnumIterator;
