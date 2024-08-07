@@ -62,3 +62,26 @@ impl<Input, Output> Case<Input, Output> {
         Self { input, output }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::Case;
+
+    #[test]
+    fn from_pair_to_case() {
+        let pair = ("Hello", 5);
+        let case = Case::from(pair);
+
+        assert_eq!(case.input, "Hello");
+        assert_eq!(case.output, 5);
+    }
+
+    #[test]
+    fn from_case_to_pair() {
+        let case = Case::new("Hello", 5);
+        let pair: (&str, i32) = case.into();
+
+        assert_eq!(pair.0, "Hello");
+        assert_eq!(pair.1, 5);
+    }
+}
