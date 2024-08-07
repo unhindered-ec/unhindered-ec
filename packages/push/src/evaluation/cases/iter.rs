@@ -113,3 +113,23 @@ where
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use std::iter::zip;
+
+    use test_strategy::proptest;
+
+    use crate::evaluation::{Case, Cases};
+
+    #[proptest]
+    fn from_iterator(#[any] pairs: Vec<(String, i32)>) {
+        let cases = pairs.clone().into_iter().collect::<Cases<_, _>>();
+
+        assert_eq!(cases.len(), pairs.len());
+
+        assert!(
+            zip(pairs, cases).all(|((s, x), Case { input, output })| s == input && x == output)
+        );
+    }
+}
