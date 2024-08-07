@@ -1,3 +1,6 @@
+//! `Case` represents a input-output pair used in testing
+//! systems being evolved.
+
 /// Simple pair of input and (expected) output used
 /// for testing evolved systems.
 ///

@@ -1,3 +1,7 @@
+//! `WithTargetFn` allows for the creation of `Cases`
+//! from an iterator of inputs and a target function
+//! that maps inputs to expected output.
+
 use super::super::Cases;
 
 /// Create a set of cases from a set of inputs (`self`) and a target
@@ -38,6 +42,7 @@ where
     ///
     /// ```
     /// # use push::evaluation::{Cases, WithTargetFn};
+    /// #
     /// let inputs = ["this", "and", "those"];
     /// let cases = inputs.with_target_fn(|s| s.len());
     ///

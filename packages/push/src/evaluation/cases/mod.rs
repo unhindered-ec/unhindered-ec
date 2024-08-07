@@ -1,3 +1,6 @@
+//! `Cases` is a a collection of input-output pairs
+//! used to test systems being evolved.
+
 mod case;
 mod iter;
 mod with_target_fn;
