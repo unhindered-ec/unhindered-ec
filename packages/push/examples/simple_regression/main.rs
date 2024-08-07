@@ -39,7 +39,7 @@ use push::{
     instruction::{variable_name::VariableName, FloatInstruction, PushInstruction},
     push_vm::{program::PushProgram, push_state::PushState, HasStack, State},
 };
-use rand::{distributions::Distribution, thread_rng};
+use rand::{distr::Distribution, thread_rng};
 
 use crate::args::{Args, RunModel};
 
