@@ -75,7 +75,7 @@ impl<'a, Input, Output> IntoIterator for &'a mut Cases<Input, Output> {
     ///     .with_case(Case::new("People", 6));
     ///
     /// for c in &mut cases {
-    ///     (*c).output *= 2
+    ///     c.output *= 2
     /// }
     ///
     /// let mut iter = cases.into_iter();
@@ -116,10 +116,47 @@ where
 
 #[cfg(test)]
 mod tests {
-    use super::Cases;
+    use super::{Case, Cases};
 
     #[test]
-    fn empty_iterator() {
+    fn into_iterator() {
+        let items = [Case::new("Hello", 5), Case::new("you", 3)];
+        let cases = Cases::from_iter(items);
+
+        assert!(cases.into_iter().eq(items));
+    }
+
+    #[test]
+    fn ref_into_iterator() {
+        let cases = Cases::new()
+            .with_case(Case::new("Hello", 5))
+            .with_case(Case::new("People", 6));
+
+        let mut iter = (&cases).into_iter();
+
+        assert_eq!(iter.next(), Some(&Case::new("Hello", 5)));
+        assert_eq!(iter.next(), Some(&Case::new("People", 6)));
+        assert_eq!(iter.next(), None);
+    }
+
+    #[test]
+    fn mut_ref_into_iterator() {
+        let mut cases = Cases::new()
+            .with_case(Case::new("Hello", 5))
+            .with_case(Case::new("People", 6));
+
+        for c in &mut cases {
+            c.output *= 2;
+        }
+
+        let mut iter = cases.into_iter();
+        assert_eq!(iter.next(), Some(Case::new("Hello", 10)));
+        assert_eq!(iter.next(), Some(Case::new("People", 12)));
+        assert_eq!(iter.next(), None);
+    }
+
+    #[test]
+    fn from_empty_iterator() {
         let empty: [(String, usize); 0] = [];
         let cases = Cases::from_iter(empty);
 
@@ -127,7 +164,7 @@ mod tests {
     }
 
     #[test]
-    fn non_empty_iterator() {
+    fn from_non_empty_iterator() {
         let items = [
             ("Hello", 5),
             ("to", 2),
