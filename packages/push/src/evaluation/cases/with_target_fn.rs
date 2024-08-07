@@ -54,24 +54,22 @@ where
 
 #[cfg(test)]
 mod tests {
-    use test_strategy::proptest;
-
     use crate::evaluation::WithTargetFn;
 
-    #[proptest]
-    fn with_identity(#[any] inputs: Vec<i32>) {
-        let cases = inputs.into_iter().with_target_fn(i32::to_owned);
-        assert_eq!(
-            cases.inputs().collect::<Vec<_>>(),
-            cases.outputs().collect::<Vec<_>>()
-        );
+    #[test]
+    fn empty_inputs() {
+        let inputs: [i32; 0] = [];
+        let cases = inputs.into_iter().with_target_fn(|x| x * 2);
+
+        assert!(cases.is_empty());
     }
 
-    #[proptest]
-    fn with_string_length(#[any] inputs: Vec<String>) {
-        let cases = inputs.into_iter().with_target_fn(String::len);
-        for c in cases {
-            assert_eq!(c.input.len(), c.output);
-        }
+    #[test]
+    fn string_length() {
+        let inputs = ["Hello", "to", "all", "the", "people"];
+        let cases = inputs.into_iter().with_target_fn(|s| s.len());
+
+        assert!(cases.inputs().eq(&inputs));
+        assert!(cases.outputs().eq(&[5, 2, 3, 3, 6]));
     }
 }

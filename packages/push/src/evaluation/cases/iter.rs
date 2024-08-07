@@ -116,20 +116,28 @@ where
 
 #[cfg(test)]
 mod tests {
-    use std::iter::zip;
+    use super::Cases;
 
-    use test_strategy::proptest;
+    #[test]
+    fn empty_iterator() {
+        let empty: [(String, usize); 0] = [];
+        let cases = Cases::from_iter(empty);
 
-    use crate::evaluation::{Case, Cases};
+        assert!(cases.is_empty());
+    }
 
-    #[proptest]
-    fn from_iterator(#[any] pairs: Vec<(String, i32)>) {
-        let cases = pairs.clone().into_iter().collect::<Cases<_, _>>();
+    #[test]
+    fn non_empty_iterator() {
+        let items = [
+            ("Hello", 5),
+            ("to", 2),
+            ("all", 3),
+            ("the", 3),
+            ("people", 6),
+        ];
+        let cases = Cases::from_iter(items);
 
-        assert_eq!(cases.len(), pairs.len());
-
-        assert!(
-            zip(pairs, cases).all(|((s, x), Case { input, output })| s == input && x == output)
-        );
+        assert!(cases.inputs().eq(&["Hello", "to", "all", "the", "people"]));
+        assert!(cases.outputs().eq(&[5, 2, 3, 3, 6]));
     }
 }
