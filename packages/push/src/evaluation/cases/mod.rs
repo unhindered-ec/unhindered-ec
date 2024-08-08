@@ -178,9 +178,7 @@ impl<Input, Output> Cases<Input, Output> {
     /// let mut second_case = Case::new("People", 6);
     /// let mut cases = Cases::new().with_case(first_case).with_case(second_case);
     ///
-    /// for c in cases.iter_mut() {
-    ///     (*c).output *= 2;
-    /// }
+    /// cases.iter_mut().for_each(|c| c.output *= 2);
     ///
     /// let mut iter = cases.iter();
     ///
@@ -218,9 +216,9 @@ impl<Input, Output> Cases<Input, Output> {
     /// #
     /// let inputs: Vec<String> = ["this", "and", "those"]
     ///     .iter()
-    ///     .map(|s| s.to_string())
+    ///     .map(ToString::to_string)
     ///     .collect();
-    /// let mut cases = Cases::from_inputs(inputs, |s| s.len());
+    /// let mut cases = Cases::from_inputs(inputs, String::len);
     ///
     /// for input in cases.inputs_mut() {
     ///     *input = input.to_uppercase();
@@ -391,5 +389,79 @@ mod tests {
             cases.into_iter().collect::<Vec<_>>(),
             (0..10).map(|x| Case::new(x, x * 2)).collect::<Vec<_>>()
         );
+    }
+
+    #[test]
+    fn test_iter() {
+        let cases = Cases::new()
+            .with_case(("Hello", 5))
+            .with_case(("People", 6));
+
+        let mut iter = cases.iter();
+
+        assert_eq!(iter.next(), Some(&Case::new("Hello", 5)));
+        assert_eq!(iter.next(), Some(&Case::new("People", 6)));
+        assert_eq!(iter.next(), None);
+    }
+
+    #[test]
+    fn test_iter_mut() {
+        let mut cases = Cases::new()
+            .with_case(("Hello", 5))
+            .with_case(("People", 6));
+
+        cases.iter_mut().for_each(|c| c.output *= 2);
+
+        let mut iter = cases.iter();
+
+        assert_eq!(iter.next(), Some(&Case::new("Hello", 10)));
+        assert_eq!(iter.next(), Some(&Case::new("People", 12)));
+        assert_eq!(iter.next(), None);
+    }
+
+    #[test]
+    fn test_inputs_mut() {
+        let inputs: Vec<String> = ["this", "and", "those"]
+            .iter()
+            .map(ToString::to_string)
+            .collect();
+        let mut cases = Cases::from_inputs(inputs, String::len);
+
+        for input in cases.inputs_mut() {
+            *input = input.to_uppercase();
+        }
+
+        assert!(cases.inputs().eq(&["THIS", "AND", "THOSE"]));
+        assert!(cases.outputs().eq(&[4, 3, 5]));
+    }
+
+    #[test]
+    fn test_into_inputs() {
+        let inputs = ["this", "and", "those"];
+        let cases = Cases::from_inputs(inputs, |s| s.len());
+        assert!(cases.into_inputs().eq(["this", "and", "those"]));
+    }
+
+    #[test]
+    fn test_outputs_mut() {
+        let inputs: Vec<String> = ["this", "and", "those"]
+            .iter()
+            .map(ToString::to_string)
+            .collect();
+        let mut cases = Cases::from_inputs(inputs, String::len);
+
+        for output in cases.outputs_mut() {
+            *output *= 2;
+        }
+
+        assert!(cases.inputs().eq(&["this", "and", "those"]));
+        assert!(cases.outputs().eq(&[8, 6, 10]));
+    }
+
+    #[test]
+    fn test_into_outputs() {
+        let inputs = ["this", "and", "those"];
+        let cases = Cases::from_inputs(inputs, |s| s.len());
+        assert!(cases.into_outputs().eq([4, 3, 5]));
     }
 }
