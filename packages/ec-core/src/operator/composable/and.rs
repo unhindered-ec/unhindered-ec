@@ -1,4 +1,4 @@
-use anyhow::{Context, Result};
+use anyhow::Context;
 use rand::rngs::ThreadRng;
 
 use super::{super::Operator, Composable};
@@ -22,12 +22,22 @@ where
     A: Clone,
     F: Operator<A>,
     G: Operator<A>,
+    anyhow::Error: From<F::Error> + From<G::Error>,
 {
     type Output = (F::Output, G::Output);
+    type Error = anyhow::Error;
 
-    fn apply(&self, x: A, rng: &mut ThreadRng) -> Result<Self::Output> {
-        let f_value = self.f.apply(x.clone(), rng).context("f in `And` failed")?;
-        let g_value = self.g.apply(x, rng).context("g in `And` failed")?;
+    fn apply(&self, x: A, rng: &mut ThreadRng) -> Result<Self::Output, Self::Error> {
+        let f_value = self
+            .f
+            .apply(x.clone(), rng)
+            .map_err(anyhow::Error::from)
+            .context("f in `And` failed")?;
+        let g_value = self
+            .g
+            .apply(x, rng)
+            .map_err(anyhow::Error::from)
+            .context("g in `And` failed")?;
         Ok((f_value, g_value))
     }
 }

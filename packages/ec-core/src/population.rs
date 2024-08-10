@@ -37,7 +37,6 @@ mod tests {
     }
 
     #[test]
-    #[allow(clippy::unwrap_used)]
     fn generator_works() {
         let mut rng = thread_rng();
         let population_size = 10;

@@ -40,7 +40,7 @@ impl<S, E, Severity: ErrorSeverity> StatefulError<S, E, Severity> {
         Self::new_boxed(Box::new(state), error)
     }
 
-    pub fn new_boxed(state: Box<S>, error: E) -> Self {
+    pub const fn new_boxed(state: Box<S>, error: E) -> Self {
         Self {
             state,
             error,

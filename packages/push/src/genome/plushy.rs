@@ -2,7 +2,7 @@ use std::fmt::Display;
 
 use easy_cast::ConvApprox;
 use ec_core::{
-    distributions::{choices::ChoicesDistribution, collection::CollectionGenerator},
+    distributions::{choices::ChoicesDistribution, collection},
     genome::Genome,
 };
 use ec_linear::genome::Linear;
@@ -155,7 +155,7 @@ where
     T: Distribution<PushInstruction>,
 {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> PushGene {
-        if rng.gen::<f32>() < self.close_probability {
+        if rng.random::<f32>() < self.close_probability {
             PushGene::Close
         } else {
             // this is safe since we check that the slice is not empty in the constructor
@@ -215,7 +215,7 @@ impl Linear for Plushy {
     }
 }
 
-impl<GG> Distribution<Plushy> for CollectionGenerator<GG>
+impl<GG> Distribution<Plushy> for collection::Generator<GG>
 where
     GG: Distribution<PushGene>,
 {
@@ -244,8 +244,15 @@ impl FromIterator<PushGene> for Plushy {
     }
 }
 
-#[allow(clippy::unwrap_used)]
 #[cfg(test)]
+#[rustversion::attr(before(1.81), allow(clippy::unwrap_used))]
+#[rustversion::attr(
+    since(1.81),
+    expect(
+        clippy::unwrap_used,
+        reason = "Panicking is the best way to deal with errors in unit tests"
+    )
+)]
 mod test {
     use ec_core::{
         distributions::collection::ConvertToCollectionGenerator, operator::mutator::Mutator,
@@ -261,7 +268,6 @@ mod test {
     };
 
     #[test]
-    #[allow(clippy::unwrap_used)]
     fn generator() {
         let mut rng = thread_rng();
         let plushy: Plushy = uniform_distribution_of![<PushInstruction>
@@ -314,7 +320,6 @@ mod test {
 
         let child = umad.mutate(parent, &mut rng);
 
-        #[allow(clippy::unwrap_used)]
         let num_inputs = child
             .unwrap()
             .genes

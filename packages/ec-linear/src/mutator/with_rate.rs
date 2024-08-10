@@ -20,7 +20,7 @@ where
         Ok(genome
             .into_iter()
             .map(|bit| {
-                let r: f32 = rng.gen();
+                let r: f32 = rng.random();
                 if r < self.mutation_rate { !bit } else { bit }
             })
             .collect())
@@ -39,7 +39,7 @@ where
         Ok(genome
             .into_iter()
             .map(|bit| {
-                let r: f32 = rng.gen();
+                let r: f32 = rng.random();
                 if r < self.mutation_rate { !bit } else { bit }
             })
             .collect())
@@ -54,6 +54,14 @@ impl WithRate {
 }
 
 #[cfg(test)]
+#[rustversion::attr(before(1.81), allow(clippy::unwrap_used))]
+#[rustversion::attr(
+    since(1.81),
+    expect(
+        clippy::unwrap_used,
+        reason = "Panicking is the best way to deal with errors in unit tests"
+    )
+)]
 mod tests {
     use std::iter::zip;
 
@@ -61,10 +69,8 @@ mod tests {
 
     use crate::{genome::bitstring::Bitstring, mutator::with_rate::WithRate};
 
-    // This test is stochastic, so I'm going to ignore it most of the time.
     #[test]
-    #[ignore]
-    #[allow(clippy::unwrap_used)]
+    #[ignore = "This test is stochastic, so I'm going to ignore it most of the time."]
     fn mutate_using_generator_with_rate_does_not_change_much() {
         let mutator = WithRate {
             mutation_rate: 0.05,
@@ -90,10 +96,8 @@ mod tests {
         );
     }
 
-    // This test is stochastic, so I'm going to ignore it most of the time.
     #[test]
-    #[ignore]
-    #[allow(clippy::unwrap_used)]
+    #[ignore = "This test is stochastic, so I'm going to ignore it most of the time."]
     fn mutate_bitstring_with_rate_does_not_change_much() {
         let mutator = WithRate {
             mutation_rate: 0.05,

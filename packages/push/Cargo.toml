@@ -23,19 +23,21 @@ thiserror = { workspace = true }
 ec-core = { workspace = true }
 ec-linear = { workspace = true }
 
-proptest = { workspace = true }
 strum = "0.26.2"
 strum_macros = "0.26.2"
 embed-doc-image = "0.1.4"
 push_macros = { workspace = true, optional = true }
 collectable = "0.0.2"
-ordered-float = { version = "4.1.1", features = ["proptest"] }
+ordered-float = { version = "4.2.2", features = ["proptest"] }
 easy-cast = "0.5.2"
 macro_railroad_annotation = { workspace = true }
-test-strategy = { workspace = true }
+criterion = { workspace = true, features = ["html_reports"] }
+rustversion = { workspace = true }
 
 [dev-dependencies]
 clap = { version = "4.5.1", features = ["derive"] }
+proptest = { workspace = true }
+test-strategy = { workspace = true }
 
 [features]
 default = ["macros"]
@@ -44,29 +46,18 @@ macros = ["dep:push_macros"]
 [lints]
 workspace = true
 
-[[package.metadata.example_runner.examples.smallest]]
-template = "balanced"
-arguments = [
-  "--max-generations",
-  "10",
-  "--population-size",
-  "200"
+[package.metadata.example_runner.examples]
+median = [
+  { template = "balanced_v2" },
+  { template = "big_population_v2" },
+  { template = "many_generations_v2" }
+]
+smallest = [
+  { template = "balanced_v2" },
+  { template = "big_population_v2" },
+  { template = "many_generations_v2" }
 ]
 
-[[package.metadata.example_runner.examples.smallest]]
-template = "big_population"
-arguments = [
-  "--max-generations",
-  "1",
-  "--population-size",
-  "2000"
-]
-
-[[package.metadata.example_runner.examples.smallest]]
-template = "many_generations"
-arguments = [
-  "--max-generations",
-  "200",
-  "--population-size",
-  "10"
-]
+[[bench]]
+name = "regression-evaluation"
+harness = false

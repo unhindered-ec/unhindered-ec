@@ -21,11 +21,18 @@ where
 }
 
 #[cfg(test)]
+#[rustversion::attr(before(1.81), allow(clippy::unwrap_used))]
+#[rustversion::attr(
+    since(1.81),
+    expect(
+        clippy::unwrap_used,
+        reason = "Panicking is the best way to deal with errors in unit tests"
+    )
+)]
 mod tests {
     use super::*;
 
     #[test]
-    #[allow(clippy::unwrap_used)]
     fn can_select_twice() {
         let pop = vec![5, 8, 9, 6, 3, 2, 0];
         let mut rng = rand::thread_rng();

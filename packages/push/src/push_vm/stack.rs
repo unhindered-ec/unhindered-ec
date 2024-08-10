@@ -181,17 +181,21 @@ where
 impl<A> TryExtend<A> for Stack<A> {
     type Error = StackError;
 
+    #[rustversion::attr(before(1.81), allow(clippy::needless_collect))]
+    #[rustversion::attr(
+        since(1.81),
+        expect(
+            clippy::needless_collect,
+            reason = "The collect is neccessary to turn a arbitary iterator into one that \
+                      implements ExactSizeIterator (to support .len()) and DoubleEndedIterator \
+                      (to support .rev()), which TryExtend doesn't guarantee and isn't able to \
+                      guarantee."
+        )
+    )]
     fn try_extend<T>(&mut self, iter: &mut T) -> Result<(), Self::Error>
     where
         T: Iterator<Item = A>,
     {
-        // We need the call to `.collect()` to effectively convert the iterable into
-        // something that implements both `ExactSizeIterator` (needed so that `.len()`
-        // doesn't consume the iterator) and `DoubleEndedIterator` (so that `.rev()`
-        // works) in the `self.extend()` call. We can't add those constraints
-        // here because we're implementing their `TryExtend`, which doesn't
-        // include those constraints.
-        #[allow(clippy::needless_collect)]
         self.try_extend(iter.into_iter().collect::<Vec<_>>())
     }
 }
@@ -257,10 +261,13 @@ impl<T> Stack<T> {
     /// Returns `StackError::Underflow` error if the stack has less than
     /// two elements.
     pub fn top2(&self) -> Result<(&T, &T), StackError> {
-        let index_second_to_top = self.size().checked_sub(2).ok_or(StackError::Underflow {
-            num_requested: 2,
-            num_present: self.size(),
-        })?;
+        let index_second_to_top =
+            self.size()
+                .checked_sub(2)
+                .ok_or_else(|| StackError::Underflow {
+                    num_requested: 2,
+                    num_present: self.size(),
+                })?;
         let x = self.top()?;
         let y = self
             .values
@@ -542,11 +549,18 @@ where
 // correct `Underflow` and `Overflow` errors.
 
 #[cfg(test)]
+#[rustversion::attr(before(1.81), allow(clippy::unwrap_used))]
+#[rustversion::attr(
+    since(1.81),
+    expect(
+        clippy::unwrap_used,
+        reason = "Panicking is the best way to deal with errors in unit tests"
+    )
+)]
 mod test {
     use super::{Stack, StackError};
 
     #[test]
-    #[allow(clippy::unwrap_used)]
     fn top_from_empty_fails() {
         let stack: Stack<bool> = Stack::default();
         let result = stack.top().unwrap_err();

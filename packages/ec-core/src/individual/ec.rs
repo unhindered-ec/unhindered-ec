@@ -18,7 +18,14 @@ use super::{
 /// computation system. It contains a genome and the results of scoring the
 /// genome.
 #[derive(Debug, Eq, PartialEq, Clone)]
-#[allow(clippy::module_name_repetitions)]
+#[rustversion::attr(before(1.81), allow(clippy::module_name_repetitions))]
+#[rustversion::attr(
+    since(1.81),
+    expect(
+        clippy::module_name_repetitions,
+        reason = "This is legacy and arguably should be changed. Tracked in #221"
+    )
+)]
 pub struct EcIndividual<G, R> {
     pub genome: G,
     pub test_results: R,
@@ -46,6 +53,12 @@ impl<G, R> EcIndividual<G, R> {
             genome,
             test_results,
         }
+    }
+}
+
+impl<G, R> From<(G, R)> for EcIndividual<G, R> {
+    fn from((genome, test_results): (G, R)) -> Self {
+        Self::new(genome, test_results)
     }
 }
 

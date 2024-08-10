@@ -1,6 +1,6 @@
 use std::num::NonZeroUsize;
 
-use rand::distributions::Slice;
+use rand::distr::Slice;
 
 /// A Distribution which knows how many choices are selcted from
 pub trait ChoicesDistribution {

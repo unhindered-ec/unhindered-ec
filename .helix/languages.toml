@@ -1,5 +1,5 @@
 [language-server.rust-analyzer.config.rustfmt]
-overrideCommand = ["rustfmt-unstable", "--", "rustfmt"]
+overrideCommand = ["rustfmt-unstable", "--", "rustfmt", "--edition", "2021"]
 
 [language-server.rust-analyzer.config.check]
 overrideCommand = ["cargo","+nightly","clippy","--all-targets","--workspace","--message-format=json-diagnostic-rendered-ansi"]

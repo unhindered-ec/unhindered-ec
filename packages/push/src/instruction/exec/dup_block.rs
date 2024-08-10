@@ -4,7 +4,7 @@ use crate::{
     push_vm::{program::PushProgram, stack::PushOnto, HasStack},
 };
 
-/// An instructions that duplicates (clones) the top
+/// An instruction that duplicates (clones) the top
 /// _block_ of the `Exec` stack, adding an implied "open"
 /// to crate a block from here to the corresponding `Close`.
 ///
@@ -82,7 +82,14 @@ where
 }
 
 #[cfg(test)]
-#[allow(clippy::unwrap_used)]
+#[rustversion::attr(before(1.81), allow(clippy::unwrap_used))]
+#[rustversion::attr(
+    since(1.81),
+    expect(
+        clippy::unwrap_used,
+        reason = "Panicking is the best way to deal with errors in unit tests"
+    )
+)]
 mod tests {
     use super::DupBlock;
     use crate::{

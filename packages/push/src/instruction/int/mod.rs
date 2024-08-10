@@ -1,7 +1,9 @@
-use std::ops::Neg;
+mod abs;
+mod negate;
 
 use strum_macros::EnumIter;
 
+use self::{abs::Abs, negate::Negate};
 use super::{Instruction, PushInstruction, PushInstructionError};
 use crate::{
     error::{Error, InstructionResult, MapInstructionError},
@@ -10,11 +12,12 @@ use crate::{
 
 #[derive(Debug, strum_macros::Display, Copy, Clone, PartialEq, Eq, EnumIter)]
 #[non_exhaustive]
+#[must_use]
 pub enum IntInstruction {
     Push(i64),
 
-    Negate,
-    Abs,
+    Negate(Negate),
+    Abs(Abs),
     Min,
     Max,
     Inc,
@@ -45,6 +48,16 @@ pub enum IntInstruction {
     FromBoolean,
 }
 
+impl IntInstruction {
+    pub const fn negate() -> Self {
+        Self::Negate(Negate)
+    }
+
+    pub const fn abs() -> Self {
+        Self::Abs(Abs)
+    }
+}
+
 impl From<IntInstruction> for PushInstruction {
     fn from(instr: IntInstruction) -> Self {
         Self::IntInstruction(instr)
@@ -69,13 +82,19 @@ where
 {
     type Error = PushInstructionError;
 
-    #[allow(clippy::too_many_lines, clippy::cognitive_complexity)]
-    #[allow(unreachable_code, clippy::let_unit_value)] // Remove this
+    #[rustversion::attr(before(1.81), allow(clippy::too_many_lines))]
+    #[rustversion::attr(
+        since(1.81),
+        expect(
+            clippy::too_many_lines,
+            reason = "This is legacy and arguably should be changed. Tracked in #227."
+        )
+    )]
     fn perform(&self, mut state: S) -> InstructionResult<S, Self::Error> {
         match self {
+            Self::Negate(negate) => negate.perform(state),
+            Self::Abs(abs) => abs.perform(state),
             Self::Push(_)
-            | Self::Negate
-            | Self::Abs
             | Self::Inc
             | Self::Dec
             | Self::Square
@@ -94,8 +113,6 @@ where
                 let int_stack = state.stack_mut::<i64>();
                 match self {
                     Self::Push(i) => state.with_push(*i).map_err_into(),
-                    Self::Negate => int_stack.top().map(Neg::neg).replace_on(1, state),
-                    Self::Abs => int_stack.top().copied().map(i64::abs).replace_on(1, state),
 
                     // This works, but is going to be nasty after we repeat a lot. There should
                     // perhaps be another trait method somewhere that eliminates a lot of this

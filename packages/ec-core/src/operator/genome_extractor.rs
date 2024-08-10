@@ -1,5 +1,3 @@
-use anyhow::Result;
-
 use super::{Composable, Operator};
 use crate::individual::Individual;
 
@@ -16,8 +14,13 @@ where
     <I as Individual>::Genome: Clone,
 {
     type Output = I::Genome;
+    type Error = anyhow::Error;
 
-    fn apply(&self, individual: &I, _: &mut rand::rngs::ThreadRng) -> Result<Self::Output> {
+    fn apply(
+        &self,
+        individual: &I,
+        _: &mut rand::rngs::ThreadRng,
+    ) -> Result<Self::Output, Self::Error> {
         Ok(individual.genome().clone())
     }
 }

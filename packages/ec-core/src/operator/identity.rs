@@ -1,4 +1,3 @@
-use anyhow::Result;
 use rand::rngs::ThreadRng;
 
 use super::{Composable, Operator};
@@ -18,8 +17,9 @@ where
     T: Clone,
 {
     type Output = T;
+    type Error = anyhow::Error;
 
-    fn apply(&self, (): (), _: &mut ThreadRng) -> Result<Self::Output> {
+    fn apply(&self, (): (), _: &mut ThreadRng) -> Result<Self::Output, Self::Error> {
         Ok(self.value.clone())
     }
 }

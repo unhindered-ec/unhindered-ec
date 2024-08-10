@@ -39,8 +39,9 @@ where
     S: Selector<P>,
 {
     type Output = &'pop P::Individual;
+    type Error = anyhow::Error;
 
-    fn apply(&self, population: &'pop P, rng: &mut ThreadRng) -> Result<Self::Output> {
+    fn apply(&self, population: &'pop P, rng: &mut ThreadRng) -> Result<Self::Output, Self::Error> {
         self.selector.select(population, rng)
     }
 }

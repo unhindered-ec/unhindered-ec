@@ -1,6 +1,4 @@
 #![cfg(test)]
-#![allow(clippy::unwrap_used)]
-#![allow(clippy::tuple_array_conversions)]
 use std::ops::Not;
 
 use push::{
