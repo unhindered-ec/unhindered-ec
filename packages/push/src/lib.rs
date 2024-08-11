@@ -1,3 +1,5 @@
+#![doc(test(attr(warn(unused))))]
+
 pub mod error;
 pub mod evaluation;
 pub mod genome;
