@@ -32,6 +32,7 @@ jobs:
       - run: cargo test --all-targets --verbose
       - run: cargo test --doc --verbose
       - run: cargo clippy --all-targets
+      - run: chmod +x scripts/cargo-rustdoc-clippy && export PATH="$(pwd)/scripts/:$PATH" && cargo rustdoc-clippy -- -Dwarnings
       - run: cargo install rustfmt-unstable
       # Currently (v1.x) rustfmt accepts unstable features as
       # arguments only, this wrapper reads the file and passes
