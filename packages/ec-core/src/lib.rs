@@ -1,3 +1,5 @@
+#![doc(test(attr(warn(unused))))]
+
 pub mod child_maker;
 pub mod distributions;
 pub mod generation;
