@@ -19,7 +19,7 @@ use ec_core::{
 };
 use ec_linear::mutator::umad::Umad;
 use push::{
-    evaluation::cases::{Case, Cases, WithTargetFn},
+    evaluation::{Case, Cases, WithTargetFn},
     genome::plushy::{GeneGenerator, Plushy},
     instruction::{
         variable_name::VariableName, BoolInstruction, ExecInstruction, IntInstruction,

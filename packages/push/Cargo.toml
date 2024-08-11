@@ -38,6 +38,7 @@ rustversion = { workspace = true }
 clap = { version = "4.5.1", features = ["derive"] }
 proptest = { workspace = true }
 test-strategy = { workspace = true }
+test-case = { workspace = true }
 
 [features]
 default = ["macros"]
