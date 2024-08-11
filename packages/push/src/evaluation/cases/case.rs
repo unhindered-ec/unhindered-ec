@@ -50,7 +50,7 @@ impl<Input, Output> From<(Input, Output)> for Case<Input, Output> {
 /// let case = Case::new(true, 17);
 /// let (x, y): (bool, i32) = case.into();
 ///
-/// assert_eq!(x, true);
+/// assert!(x);
 /// assert_eq!(y, 17);
 /// ```
 impl<Input, Output> From<Case<Input, Output>> for (Input, Output) {

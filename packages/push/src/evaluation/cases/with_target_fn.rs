@@ -10,7 +10,7 @@ use super::super::Cases;
 /// # Examples
 ///
 /// ```
-/// # use push::evaluation::{Case, Cases, WithTargetFn};
+/// # use push::evaluation::WithTargetFn;
 /// #
 /// let inputs = ["this", "and", "those"];
 /// let cases = inputs.with_target_fn(|s| s.len());
@@ -41,7 +41,7 @@ where
     /// # Examples
     ///
     /// ```
-    /// # use push::evaluation::{Cases, WithTargetFn};
+    /// # use push::evaluation::WithTargetFn;
     /// #
     /// let inputs = ["this", "and", "those"];
     /// let cases = inputs.with_target_fn(|s| s.len());
@@ -59,22 +59,18 @@ where
 
 #[cfg(test)]
 mod tests {
+    use test_case::test_case;
+
     use crate::evaluation::WithTargetFn;
 
-    #[test]
-    fn empty_inputs() {
-        let inputs: [i32; 0] = [];
-        let cases = inputs.into_iter().with_target_fn(|x| x * 2);
+    #[test_case(&[], &[] ; "empty set of inputs")]
+    #[test_case(&["Hello", "to", "all", "the", "people"],
+                &[5, 2, 3, 3, 6]
+                ; "Multiple string inputs")]
+    fn test_with_target_fn(inputs: &[&str], outputs: &[usize]) {
+        let cases = inputs.iter().copied().with_target_fn(|s| s.len());
 
-        assert!(cases.is_empty());
-    }
-
-    #[test]
-    fn string_length() {
-        let inputs = ["Hello", "to", "all", "the", "people"];
-        let cases = inputs.into_iter().with_target_fn(|s| s.len());
-
-        assert!(cases.inputs().eq(&inputs));
-        assert!(cases.outputs().eq(&[5, 2, 3, 3, 6]));
+        assert!(cases.inputs().eq(inputs));
+        assert!(cases.outputs().eq(outputs));
     }
 }

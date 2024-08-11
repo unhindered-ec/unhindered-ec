@@ -17,11 +17,9 @@ impl<Input, Output> IntoIterator for Cases<Input, Output> {
     /// let inputs = ["Hello", "People"];
     /// let cases = inputs.with_target_fn(|s| s.len());
     ///
-    /// let mut iter = cases.into_iter();
+    /// let iter = cases.into_iter();
     ///
-    /// assert_eq!(iter.next(), Some(Case::new("Hello", 5)));
-    /// assert_eq!(iter.next(), Some(Case::new("People", 6)));
-    /// assert_eq!(iter.next(), None);
+    /// assert!(iter.eq([Case::new("Hello", 5), Case::new("People", 6)]));
     /// ```
     fn into_iter(self) -> Self::IntoIter {
         self.cases.into_iter()
@@ -44,11 +42,9 @@ impl<'a, Input, Output> IntoIterator for &'a Cases<Input, Output> {
     ///     .with_case(Case::new("Hello", 5))
     ///     .with_case(Case::new("People", 6));
     ///
-    /// let mut iter = (&cases).into_iter();
+    /// let iter = (&cases).into_iter();
     ///
-    /// assert_eq!(iter.next(), Some(&Case::new("Hello", 5)));
-    /// assert_eq!(iter.next(), Some(&Case::new("People", 6)));
-    /// assert_eq!(iter.next(), None);
+    /// assert!(iter.eq(&[Case::new("Hello", 5), Case::new("People", 6)]));
     /// ```
     fn into_iter(self) -> Self::IntoIter {
         self.cases.iter()
@@ -78,11 +74,9 @@ impl<'a, Input, Output> IntoIterator for &'a mut Cases<Input, Output> {
     ///     c.output *= 2
     /// }
     ///
-    /// let mut iter = cases.into_iter();
+    /// let iter = cases.into_iter();
     ///
-    /// assert_eq!(iter.next(), Some(Case::new("Hello", 10)));
-    /// assert_eq!(iter.next(), Some(Case::new("People", 12)));
-    /// assert_eq!(iter.next(), None);
+    /// assert!(iter.eq([Case::new("Hello", 10), Case::new("People", 12)]));
     /// ```
     fn into_iter(self) -> Self::IntoIter {
         self.cases.iter_mut()
@@ -132,11 +126,9 @@ mod tests {
             .with_case(Case::new("Hello", 5))
             .with_case(Case::new("People", 6));
 
-        let mut iter = (&cases).into_iter();
+        let iter = (&cases).into_iter();
 
-        assert_eq!(iter.next(), Some(&Case::new("Hello", 5)));
-        assert_eq!(iter.next(), Some(&Case::new("People", 6)));
-        assert_eq!(iter.next(), None);
+        assert!(iter.eq(&[Case::new("Hello", 5), Case::new("People", 6)]));
     }
 
     #[test]
@@ -149,10 +141,9 @@ mod tests {
             c.output *= 2;
         }
 
-        let mut iter = cases.into_iter();
-        assert_eq!(iter.next(), Some(Case::new("Hello", 10)));
-        assert_eq!(iter.next(), Some(Case::new("People", 12)));
-        assert_eq!(iter.next(), None);
+        let iter = cases.into_iter();
+
+        assert!(iter.eq([Case::new("Hello", 10), Case::new("People", 12)]));
     }
 
     #[test]
