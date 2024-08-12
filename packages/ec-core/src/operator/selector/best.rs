@@ -32,7 +32,7 @@ where
 mod tests {
     use test_strategy::proptest;
 
-    use super::*;
+    use super::{Best, Selector};
 
     #[test]
     fn can_select_twice() {

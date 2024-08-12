@@ -21,3 +21,26 @@ where
             .context("The population was empty")
     }
 }
+
+#[cfg(test)]
+#[rustversion::attr(before(1.81), allow(clippy::unwrap_used))]
+#[rustversion::attr(
+    since(1.81),
+    expect(
+        clippy::unwrap_used,
+        reason = "Panicking is the best way to deal with errors in unit tests"
+    )
+)]
+mod tests {
+    use test_strategy::proptest;
+
+    use super::{Random, Selector};
+
+    #[proptest]
+    fn test_random(#[any] values: [i32; 10]) {
+        let pop: Vec<i32> = values.into();
+        let mut rng = rand::thread_rng();
+        let selection = Random.select(&pop, &mut rng).unwrap();
+        assert!(values.contains(selection));
+    }
+}
