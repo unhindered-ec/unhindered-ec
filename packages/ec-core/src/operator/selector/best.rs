@@ -30,6 +30,8 @@ where
     )
 )]
 mod tests {
+    use test_strategy::proptest;
+
     use super::*;
 
     #[test]
@@ -38,5 +40,13 @@ mod tests {
         let mut rng = rand::thread_rng();
         assert_eq!(&9, Best.select(&pop, &mut rng).unwrap());
         assert_eq!(&9, Best.select(&pop, &mut rng).unwrap());
+    }
+
+    #[proptest]
+    fn test_best_select(#[any] values: [i32; 10]) {
+        let pop: Vec<i32> = values.into();
+        let mut rng = rand::thread_rng();
+        let largest = pop.iter().max().unwrap();
+        assert_eq!(largest, Best.select(&pop, &mut rng).unwrap());
     }
 }
