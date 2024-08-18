@@ -59,6 +59,7 @@ where
     )
 )]
 mod tests {
+    use itertools::Itertools;
     use test_strategy::proptest;
 
     use super::Weighted;
@@ -72,8 +73,7 @@ mod tests {
         // or lowest value.
         let weighted = Weighted::new(Best, 1).with_selector(Worst, 1);
         let selection = weighted.select(&pop, &mut rng).unwrap();
-        let smallest = values.iter().min().unwrap();
-        let largest = values.iter().max().unwrap();
-        assert!([smallest, largest].contains(&selection));
+        let extremes: [&i32; 2] = pop.iter().minmax().into_option().unwrap().into();
+        assert!(extremes.contains(&selection));
     }
 }
