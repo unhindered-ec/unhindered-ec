@@ -1,3 +1,5 @@
+#![doc(test(attr(warn(unused))))]
+
 use push_state::printing::generate_builder::generate_builder;
 use quote::quote;
 use syn::{spanned::Spanned, DeriveInput};

@@ -40,3 +40,13 @@ jobs:
       - run: rustfmt-unstable --config-file rustfmt.toml -- cargo fmt --check -- --config error_on_line_overflow=true
       - run: cargo install example-runner-cli
       - run: example-runner-cli --error-on-unconfigured --error-on-unknown --parallel
+  doctest-clippy:
+    name: clippy doctests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          components: clippy
+          toolchain: nightly
+      - run: chmod +x scripts/cargo-rustdoc-clippy && export PATH="$(pwd)/scripts/:$PATH" && cargo rustdoc-clippy -- -Dwarnings
