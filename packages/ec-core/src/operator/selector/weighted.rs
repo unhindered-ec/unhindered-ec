@@ -48,3 +48,31 @@ where
         selector.select(population, rng)
     }
 }
+
+#[cfg(test)]
+#[rustversion::attr(before(1.81), allow(clippy::unwrap_used))]
+#[rustversion::attr(
+    since(1.81),
+    expect(
+        clippy::unwrap_used,
+        reason = "Panicking is the best way to deal with errors in unit tests"
+    )
+)]
+mod tests {
+    use itertools::Itertools;
+    use test_strategy::proptest;
+
+    use super::Weighted;
+    use crate::operator::selector::{best::Best, worst::Worst, Selector};
+
+    #[proptest]
+    fn test_random(#[map(|v: [i32;10]| v.into())] pop: Vec<i32>) {
+        let mut rng = rand::thread_rng();
+        // We'll make a selector that has a 50/50 chance of choosing the highest
+        // or lowest value.
+        let weighted = Weighted::new(Best, 1).with_selector(Worst, 1);
+        let selection = weighted.select(&pop, &mut rng).unwrap();
+        let extremes: [&i32; 2] = pop.iter().minmax().into_option().unwrap().into();
+        assert!(extremes.contains(&selection));
+    }
+}
