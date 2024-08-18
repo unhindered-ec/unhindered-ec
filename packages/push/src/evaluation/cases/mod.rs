@@ -17,7 +17,7 @@ pub use with_target_fn::WithTargetFn;
 /// # Examples
 ///
 /// ```
-/// # use push::evaluation::{Case, Cases, WithTargetFn};
+/// # use push::evaluation::WithTargetFn;
 /// #
 /// let inputs = ["this", "and", "those"];
 /// // Pair strings (inputs) with their lengths (outputs).
@@ -151,7 +151,7 @@ impl<Input, Output> Cases<Input, Output> {
     /// # Examples
     ///
     /// ```
-    /// # use push::evaluation::{Case, Cases, WithTargetFn};
+    /// # use push::evaluation::{Case, WithTargetFn};
     /// #
     /// let inputs = ["Hello", "People"];
     /// let cases = inputs.with_target_fn(|s| s.len());
@@ -173,7 +173,7 @@ impl<Input, Output> Cases<Input, Output> {
     /// # use push::evaluation::{Case, Cases};
     /// #
     /// let first_case = Case::new("Hello", 5);
-    /// let mut second_case = Case::new("People", 6);
+    /// let second_case = Case::new("People", 6);
     /// let mut cases = Cases::new().with_case(first_case).with_case(second_case);
     ///
     /// cases.iter_mut().for_each(|c| c.output *= 2);

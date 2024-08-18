@@ -30,7 +30,7 @@ impl Tournament {
     /// Create a tournament selector with tournament size 3:
     /// ```
     /// # use ec_core::operator::selector::tournament::Tournament;
-    /// let selector = Tournament::of_size::<3>();
+    /// let _selector = Tournament::of_size::<3>();
     /// ```
     #[must_use]
     pub const fn of_size<const N: usize>() -> Self {

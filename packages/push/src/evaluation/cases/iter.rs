@@ -12,7 +12,7 @@ impl<Input, Output> IntoIterator for Cases<Input, Output> {
     /// # Examples
     ///
     /// ```
-    /// # use push::evaluation::{Case, Cases, WithTargetFn};
+    /// # use push::evaluation::{Case, WithTargetFn};
     /// #
     /// let inputs = ["Hello", "People"];
     /// let cases = inputs.with_target_fn(|s| s.len());
@@ -93,7 +93,7 @@ where
     /// # Examples
     ///
     /// ```
-    /// # use push::evaluation::{Case, Cases};
+    /// # use push::evaluation::Cases;
     /// #
     /// let items = [("Hello", 5), ("People", 6)];
     /// let cases = Cases::from_iter(items);
