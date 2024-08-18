@@ -66,8 +66,7 @@ mod tests {
     use crate::operator::selector::{best::Best, worst::Worst, Selector};
 
     #[proptest]
-    fn test_random(#[any] values: [i32; 10]) {
-        let pop: Vec<i32> = values.into();
+    fn test_random(#[map(|v: [i32;10]| v.into())] pop: Vec<i32>) {
         let mut rng = rand::thread_rng();
         // We'll make a selector that has a 50/50 chance of choosing the highest
         // or lowest value.

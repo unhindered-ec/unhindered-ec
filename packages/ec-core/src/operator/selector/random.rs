@@ -37,10 +37,9 @@ mod tests {
     use super::{Random, Selector};
 
     #[proptest]
-    fn test_random(#[any] values: [i32; 10]) {
-        let pop: Vec<i32> = values.into();
+    fn test_random(#[map(|v: [i32;10]| v.into())] pop: Vec<i32>) {
         let mut rng = rand::thread_rng();
         let selection = Random.select(&pop, &mut rng).unwrap();
-        assert!(values.contains(selection));
+        assert!(pop.contains(selection));
     }
 }
