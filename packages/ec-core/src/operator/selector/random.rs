@@ -1,7 +1,6 @@
-use anyhow::{Context, Result};
 use rand::{prelude::IndexedRandom, rngs::ThreadRng};
 
-use super::Selector;
+use super::{error::SelectionError, Selector};
 use crate::population::Population;
 
 pub struct Random;
@@ -10,15 +9,17 @@ impl<P> Selector<P> for Random
 where
     P: Population + AsRef<[P::Individual]>,
 {
+    type Error = SelectionError;
+
     fn select<'pop>(
         &self,
         population: &'pop P,
         rng: &mut ThreadRng,
-    ) -> Result<&'pop P::Individual> {
+    ) -> Result<&'pop P::Individual, Self::Error> {
         population
             .as_ref()
             .choose(rng)
-            .context("The population was empty")
+            .ok_or(SelectionError::EmptyPopulation)
     }
 }
 
@@ -35,6 +36,17 @@ mod tests {
     use test_strategy::proptest;
 
     use super::{Random, Selector};
+    use crate::operator::selector::error::SelectionError;
+
+    #[test]
+    fn empty_population() {
+        let pop: Vec<i32> = Vec::new();
+        let mut rng = rand::thread_rng();
+        assert!(matches!(
+            Random.select(&pop, &mut rng),
+            Err(SelectionError::EmptyPopulation)
+        ));
+    }
 
     #[proptest]
     fn test_random(#[map(|v: [i32;10]| v.into())] pop: Vec<i32>) {
