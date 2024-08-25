@@ -9,11 +9,33 @@ use rand::{
 use super::{error::SelectionError, Selector};
 use crate::population::Population;
 
+trait DynSelector<P>
+where
+    P: Population,
+{
+    fn dyn_select<'pop>(
+        &self,
+        population: &'pop P,
+        rng: &mut ThreadRng,
+    ) -> Result<&'pop P::Individual, Box<dyn Error>>;
+}
+
+impl<T, P> DynSelector<P> for T
+where
+    P: Population,
+    T: Selector<P, Error: Error + 'static>,
+{
+    fn dyn_select<'pop>(
+        &self,
+        population: &'pop P,
+        rng: &mut ThreadRng,
+    ) -> Result<&'pop P::Individual, Box<dyn Error>> {
+        self.select(population, rng).map_err(|e| Box::new(e).into())
+    }
+}
+
 pub struct Weighted<P: Population> {
-    selectors: Vec<(
-        Box<dyn Selector<P, Error = Box<dyn Error>> + Send + Sync>,
-        usize,
-    )>,
+    selectors: Vec<(Box<dyn DynSelector<P> + Send + Sync>, usize)>,
 }
 
 #[derive(Debug, thiserror::Error, Diagnostic)]
@@ -37,10 +59,7 @@ impl<P: Population> Weighted<P> {
     #[must_use]
     pub fn new<S>(selector: S, weight: usize) -> Self
     where
-        S: Selector<P, Error = std::boxed::Box<(dyn std::error::Error + 'static)>>
-            + Send
-            + Sync
-            + 'static,
+        S: Selector<P, Error: Error + 'static> + Send + Sync + 'static,
     {
         Self {
             selectors: vec![(Box::new(selector), weight)],
@@ -50,10 +69,7 @@ impl<P: Population> Weighted<P> {
     #[must_use]
     pub fn with_selector<S>(mut self, selector: S, weight: usize) -> Self
     where
-        S: Selector<P, Error = std::boxed::Box<(dyn std::error::Error + 'static)>>
-            + Send
-            + Sync
-            + 'static,
+        S: Selector<P, Error: Error + 'static> + Send + Sync + 'static,
     {
         self.selectors.push((Box::new(selector), weight));
         self
@@ -73,27 +89,8 @@ where
     ) -> Result<&'pop P::Individual, Self::Error> {
         let (selector, _) = self.selectors.choose_weighted(rng, |(_, w)| *w)?;
         selector
-            .select(population, rng)
+            .dyn_select(population, rng)
             .map_err(WeightedError::Other)
-    }
-}
-
-impl<P, S> Selector<P> for Box<S>
-where
-    P: Population,
-    S: Selector<P>,
-    S::Error: Error + 'static,
-{
-    type Error = Box<dyn Error>;
-
-    fn select<'pop>(
-        &self,
-        population: &'pop P,
-        rng: &mut ThreadRng,
-    ) -> Result<&'pop <P as Population>::Individual, Self::Error> {
-        (**self)
-            .select(population, rng)
-            .map_err(|e| Box::new(e).into())
     }
 }
 
@@ -118,7 +115,7 @@ mod tests {
         let mut rng = rand::thread_rng();
         // We'll make a selector that has a 50/50 chance of choosing the highest
         // or lowest value.
-        let weighted = Weighted::new(Box::new(Best), 1).with_selector(Box::new(Worst), 1);
+        let weighted = Weighted::new(Best, 1).with_selector(Worst, 1);
         let selection = weighted.select(&pop, &mut rng).unwrap();
         let extremes: [&i32; 2] = pop.iter().minmax().into_option().unwrap().into();
         assert!(extremes.contains(&selection));
