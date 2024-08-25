@@ -1,10 +1,10 @@
-use anyhow::Result;
 use rand::rngs::ThreadRng;
 
 use super::{Composable, Operator};
 use crate::population::Population;
 
 pub mod best;
+pub mod error;
 pub mod lexicase;
 pub mod random;
 pub mod tournament;
@@ -15,12 +15,17 @@ pub trait Selector<P>
 where
     P: Population,
 {
+    type Error;
+
     /// # Errors
     /// This will return an error if there's some problem selecting. That will
     /// usually be because the population is empty or not large enough for
     /// the desired selector.
-    fn select<'pop>(&self, population: &'pop P, rng: &mut ThreadRng)
-    -> Result<&'pop P::Individual>;
+    fn select<'pop>(
+        &self,
+        population: &'pop P,
+        rng: &mut ThreadRng,
+    ) -> Result<&'pop P::Individual, Self::Error>;
 }
 
 #[derive(Clone)]
@@ -40,7 +45,7 @@ where
     S: Selector<P>,
 {
     type Output = &'pop P::Individual;
-    type Error = anyhow::Error;
+    type Error = S::Error;
 
     fn apply(&self, population: &'pop P, rng: &mut ThreadRng) -> Result<Self::Output, Self::Error> {
         self.selector.select(population, rng)
@@ -48,16 +53,18 @@ where
 }
 impl<S> Composable for Select<S> {}
 
-impl<T, P> Selector<P> for &T
+impl<S, P> Selector<P> for &S
 where
     P: Population,
-    T: Selector<P>,
+    S: Selector<P>,
 {
+    type Error = S::Error;
+
     fn select<'pop>(
         &self,
         population: &'pop P,
         rng: &mut ThreadRng,
-    ) -> Result<&'pop P::Individual> {
+    ) -> Result<&'pop P::Individual, Self::Error> {
         (*self).select(population, rng)
     }
 }
