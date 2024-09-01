@@ -46,7 +46,7 @@ pub enum WeightedError {
 
     #[error(transparent)]
     #[diagnostic(help = "Ensure that the weights are all non-negative and add to more than zero")]
-    Weight(#[from] WeightError),
+    ZeroWeightSum(#[from] WeightError),
 
     #[error(transparent)]
     Other(Box<dyn Error>),
@@ -111,7 +111,7 @@ mod tests {
     use crate::operator::selector::{best::Best, worst::Worst, Selector};
 
     #[proptest]
-    fn test_random(#[map(|v: [i32;10]| v.into())] pop: Vec<i32>) {
+    fn best_or_worst(#[map(|v: [i32;10]| v.into())] pop: Vec<i32>) {
         let mut rng = rand::thread_rng();
         // We'll make a selector that has a 50/50 chance of choosing the highest
         // or lowest value.

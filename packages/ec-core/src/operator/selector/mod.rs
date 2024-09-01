@@ -12,6 +12,8 @@ pub mod tournament;
 pub mod weighted;
 pub mod worst;
 
+pub use error::SelectionError;
+
 pub trait Selector<P>
 where
     P: Population,
