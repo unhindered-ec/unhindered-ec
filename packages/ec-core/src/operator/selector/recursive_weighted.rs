@@ -2,8 +2,13 @@ use std::marker::PhantomData;
 
 use rand::Rng;
 
-use super::Selector;
+use super::{weighted, Selector};
 use crate::population::Population;
+
+#[derive(Debug)]
+pub enum WeightedSelectorCreationError {
+    WeightSumOverflows(usize, usize),
+}
 
 pub trait WeightedSelector<P>: Selector<P>
 where
@@ -90,6 +95,7 @@ where
 {
     a: A,
     b: B,
+    // weight: usize,
     _p: PhantomData<P>,
 }
 
@@ -184,18 +190,13 @@ where
     A: Selector<P>,
     B: Selector<P>,
 {
-    pub const fn new_with_weights(a: A, weight_a: usize, b: B, weight_b: usize) -> Self {
-        Self {
-            a: Weighted {
-                selector: a,
-                weight: weight_a,
-            },
-            b: Weighted {
-                selector: b,
-                weight: weight_b,
-            },
-            _p: PhantomData,
-        }
+    pub fn new_with_weights(
+        a: A,
+        weight_a: usize,
+        b: B,
+        weight_b: usize,
+    ) -> Result<Self, WeightedSelectorCreationError> {
+        Self::new(Weighted::new(a, weight_a), Weighted::new(b, weight_b))
     }
 }
 
@@ -205,35 +206,34 @@ where
     A: WeightedSelector<P>,
     B: WeightedSelector<P>,
 {
-    pub const fn new(a: A, b: B) -> Self {
-        Self {
+    pub fn new(a: A, b: B) -> Result<Self, WeightedSelectorCreationError> {
+        let a_weight = a.weight();
+        let b_weight = b.weight();
+        let Some(weight) = a_weight.checked_add(b_weight) else {
+            return Err(WeightedSelectorCreationError::WeightSumOverflows(
+                a_weight, b_weight,
+            ));
+        };
+        Ok(Self {
             a,
             b,
             _p: PhantomData,
-        }
+        })
     }
 
-    pub const fn with_selector_and_weight<S: Selector<P>>(
+    pub fn with_selector_and_weight<S: Selector<P>>(
         self,
         selector: S,
         weight: usize,
-    ) -> WeightedSelectorPair<P, Self, Weighted<S>> {
-        WeightedSelectorPair {
-            a: self,
-            b: Weighted { selector, weight },
-            _p: PhantomData,
-        }
+    ) -> Result<WeightedSelectorPair<P, Self, Weighted<S>>, WeightedSelectorCreationError> {
+        Self::with_weighted_selector(self, Weighted::new(selector, weight))
     }
 
-    pub const fn with_weighted_selector<WS: WeightedSelector<P>>(
+    pub fn with_weighted_selector<WS: WeightedSelector<P>>(
         self,
         weighted_selector: WS,
-    ) -> WeightedSelectorPair<P, Self, WS> {
-        WeightedSelectorPair {
-            a: self,
-            b: weighted_selector,
-            _p: PhantomData,
-        }
+    ) -> Result<WeightedSelectorPair<P, Self, WS>, WeightedSelectorCreationError> {
+        WeightedSelectorPair::new(self, weighted_selector)
     }
 }
 
@@ -274,7 +274,9 @@ mod tests {
         let weighted = Weighted::new(Best, 1)
             .with_selector_and_weight(Worst, 1)
             .with_selector_and_weight(Random, 0)
-            .with_selector_and_weight(Tournament::of_size::<3>(), 2);
+            .unwrap()
+            .with_selector_and_weight(Tournament::of_size::<3>(), 2)
+            .unwrap();
         let selection = weighted.select(&pop, &mut rng).unwrap();
         assert!(pop.contains(selection));
     }
