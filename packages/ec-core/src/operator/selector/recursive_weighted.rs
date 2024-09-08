@@ -1,72 +1,115 @@
-use std::marker::PhantomData;
+use rand::distr::{Bernoulli, Distribution};
 
-use rand::Rng;
-
-use super::{weighted, Selector};
+use super::Selector;
 use crate::population::Population;
 
-#[derive(Debug)]
-pub enum WeightedSelectorCreationError {
-    WeightSumOverflows(usize, usize),
-}
+#[derive(Debug, thiserror::Error)]
+#[error("Overflow while trying to calculate the sum of the weights {0} and {1}.")]
+pub struct WeightSumOverflow(u32, u32);
 
-pub trait WeightedSelector<P>: Selector<P>
-where
-    P: Population,
-{
-    fn weight(&self) -> usize;
+pub trait WeightedSelector {
+    fn weight(&self) -> u32;
 }
 
 pub struct Weighted<T> {
     selector: T,
-    weight: usize,
+    weight: u32,
+}
+
+pub trait WithWeightedSelector
+where
+    Self: Sized,
+{
+    type Inner;
+
+    /// # Errors
+    /// - [`WeightSumOverflow`] if trying to add this new selector with the
+    ///   given weight to the existing chain would overflow the total weight
+    ///   (i.e. weight sum `> u32::MAX`)
+    fn with_selector_and_weight<S>(
+        self,
+        selector: S,
+        weight: u32,
+    ) -> Result<WeightedSelectorPair<Self::Inner, Weighted<S>>, WeightSumOverflow> {
+        self.with_weighted_selector(Weighted::new(selector, weight))
+    }
+
+    /// # Errors
+    /// - [`WeightSumOverflow`] if trying to add this new selector to the
+    ///   existing chain would overflow the total weight (i.e. weight sum `>
+    ///   u32::MAX`)
+    fn with_weighted_selector<WS>(
+        self,
+        weighted_selector: WS,
+    ) -> Result<WeightedSelectorPair<Self::Inner, WS>, WeightSumOverflow>
+    where
+        WS: WeightedSelector;
+}
+
+impl<T> WithWeightedSelector for Weighted<T> {
+    type Inner = Self;
+
+    fn with_weighted_selector<WS>(
+        self,
+        weighted_selector: WS,
+    ) -> Result<WeightedSelectorPair<Self::Inner, WS>, WeightSumOverflow>
+    where
+        WS: WeightedSelector,
+    {
+        WeightedSelectorPair::new(self, weighted_selector)
+    }
+}
+
+impl<A, B> WithWeightedSelector for WeightedSelectorPair<A, B> {
+    type Inner = Self;
+
+    fn with_weighted_selector<WS>(
+        self,
+        weighted_selector: WS,
+    ) -> Result<WeightedSelectorPair<Self::Inner, WS>, WeightSumOverflow>
+    where
+        WS: WeightedSelector,
+    {
+        WeightedSelectorPair::new(self, weighted_selector)
+    }
+}
+
+impl<T> WithWeightedSelector for Result<Weighted<T>, WeightSumOverflow> {
+    type Inner = Weighted<T>;
+
+    fn with_weighted_selector<WS>(
+        self,
+        weighted_selector: WS,
+    ) -> Result<WeightedSelectorPair<Self::Inner, WS>, WeightSumOverflow>
+    where
+        WS: WeightedSelector,
+    {
+        WeightedSelectorPair::new(self?, weighted_selector)
+    }
+}
+
+impl<A, B> WithWeightedSelector for Result<WeightedSelectorPair<A, B>, WeightSumOverflow> {
+    type Inner = WeightedSelectorPair<A, B>;
+
+    fn with_weighted_selector<WS>(
+        self,
+        weighted_selector: WS,
+    ) -> Result<WeightedSelectorPair<Self::Inner, WS>, WeightSumOverflow>
+    where
+        WS: WeightedSelector,
+    {
+        WeightedSelectorPair::new(self?, weighted_selector)
+    }
 }
 
 impl<T> Weighted<T> {
-    pub const fn new(selector: T, weight: usize) -> Self {
+    pub const fn new(selector: T, weight: u32) -> Self {
         Self { selector, weight }
-    }
-
-    pub const fn with_selector_and_weight<P, S>(
-        self,
-        selector: S,
-        weight: usize,
-    ) -> WeightedSelectorPair<P, Self, Weighted<S>>
-    where
-        P: Population,
-        S: Selector<P>,
-        T: Selector<P>,
-    {
-        WeightedSelectorPair {
-            a: self,
-            b: Weighted { selector, weight },
-            _p: PhantomData,
-        }
-    }
-
-    pub const fn with_weighted_selector<P, WS>(
-        self,
-        weighted_selector: WS,
-    ) -> WeightedSelectorPair<P, Self, WS>
-    where
-        P: Population,
-        WS: WeightedSelector<P>,
-        T: Selector<P>,
-    {
-        WeightedSelectorPair {
-            a: self,
-            b: weighted_selector,
-            _p: PhantomData,
-        }
     }
 }
 
-impl<P, T> WeightedSelector<P> for Weighted<T>
-where
-    P: Population,
-    T: Selector<P>,
-{
-    fn weight(&self) -> usize {
+impl<T> WeightedSelector for Weighted<T> {
+    fn weight(&self) -> u32 {
         self.weight
     }
 }
@@ -87,153 +130,94 @@ where
     }
 }
 
-pub struct WeightedSelectorPair<P, A, B>
-where
-    P: Population,
-    A: WeightedSelector<P>,
-    B: WeightedSelector<P>,
-{
+pub struct WeightedSelectorPair<A, B> {
     a: A,
     b: B,
-    // weight: usize,
-    _p: PhantomData<P>,
+    distr: Option<Bernoulli>,
+    weight_sum: u32,
 }
 
-pub enum WeightedSelectorsError<P, A, B>
-where
-    P: Population,
-    A: Selector<P>,
-    B: Selector<P>,
-{
-    A(A::Error),
-    B(B::Error),
+#[derive(Debug)]
+pub enum WeightedSelectorsError<A, B> {
+    A(A),
+    B(B),
 
     ZeroWeightSum,
 
     // #[error("Adding the weights {0} and {1} overflows")]
-    WeightSumOverflows(usize, usize),
+    WeightSumOverflows(u32, u32),
 }
 
-impl<P, A, B> std::fmt::Debug for WeightedSelectorsError<P, A, B>
+impl<P, A, B> Selector<P> for WeightedSelectorPair<A, B>
 where
     P: Population,
-    A: Selector<P>,
-    A::Error: std::fmt::Debug,
-    B: Selector<P>,
-    B::Error: std::fmt::Debug,
+    A: WeightedSelector + Selector<P>,
+    B: WeightedSelector + Selector<P>,
 {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::A(arg0) => f.debug_tuple("A").field(arg0).finish(),
-            Self::B(arg0) => f.debug_tuple("B").field(arg0).finish(),
-            Self::ZeroWeightSum => write!(f, "ZeroWeightSum"),
-            Self::WeightSumOverflows(arg0, arg1) => f
-                .debug_tuple("WeightSumOverflows")
-                .field(arg0)
-                .field(arg1)
-                .finish(),
-        }
-    }
-}
-
-impl<P, A, B> Selector<P> for WeightedSelectorPair<P, A, B>
-where
-    P: Population,
-    A: WeightedSelector<P>,
-    B: WeightedSelector<P>,
-{
-    type Error = WeightedSelectorsError<P, A, B>;
+    type Error = WeightedSelectorsError<A::Error, B::Error>;
 
     fn select<'pop>(
         &self,
         population: &'pop P,
         rng: &mut rand::prelude::ThreadRng,
     ) -> Result<&'pop <P as Population>::Individual, Self::Error> {
-        let a_weight = self.a.weight();
-        let b_weight = self.b.weight();
-        // For performance reasons, it would be nice to check that the sum works
-        // and is > 0 at construction time so we don't have to do it here.
-        let weight_sum = a_weight
-            .checked_add(b_weight)
-            .ok_or_else(|| WeightedSelectorsError::WeightSumOverflows(a_weight, b_weight))?;
-        if weight_sum == 0 {
+        let Some(distr) = self.distr else {
             return Err(WeightedSelectorsError::ZeroWeightSum);
-        }
-        //------------------
-        let choose_a = rng.gen_range(0..weight_sum) < a_weight;
-        if choose_a {
+        };
+        if distr.sample(rng) {
             self.a
                 .select(population, rng)
-                .map_err(|e| WeightedSelectorsError::A(e))
+                .map_err(WeightedSelectorsError::A)
         } else {
             self.b
                 .select(population, rng)
-                .map_err(|e| WeightedSelectorsError::B(e))
+                .map_err(WeightedSelectorsError::B)
         }
     }
 }
 
-impl<P, A, B> WeightedSelector<P> for WeightedSelectorPair<P, A, B>
-where
-    P: Population,
-    A: WeightedSelector<P>,
-    B: WeightedSelector<P>,
-{
-    fn weight(&self) -> usize {
-        self.a.weight() + self.b.weight()
+impl<A, B> WeightedSelector for WeightedSelectorPair<A, B> {
+    fn weight(&self) -> u32 {
+        self.weight_sum
     }
 }
 
-impl<P, A, B> WeightedSelectorPair<P, Weighted<A>, Weighted<B>>
-where
-    P: Population,
-    A: Selector<P>,
-    B: Selector<P>,
-{
+impl<A, B> WeightedSelectorPair<Weighted<A>, Weighted<B>> {
+    /// # Errors
+    /// - [`WeightSumOverflow`] if the total sum of `weight_a` and `weight_b`
+    ///   would overflow `u32::MAX`
     pub fn new_with_weights(
         a: A,
-        weight_a: usize,
+        weight_a: u32,
         b: B,
-        weight_b: usize,
-    ) -> Result<Self, WeightedSelectorCreationError> {
+        weight_b: u32,
+    ) -> Result<Self, WeightSumOverflow> {
         Self::new(Weighted::new(a, weight_a), Weighted::new(b, weight_b))
     }
 }
 
-impl<P, A, B> WeightedSelectorPair<P, A, B>
-where
-    P: Population,
-    A: WeightedSelector<P>,
-    B: WeightedSelector<P>,
-{
-    pub fn new(a: A, b: B) -> Result<Self, WeightedSelectorCreationError> {
+impl<A, B> WeightedSelectorPair<A, B> {
+    /// # Errors
+    /// - [`WeightSumOverflow`] if the total sum of the weights of a and b would
+    ///   overflow `u32::MAX`
+    pub fn new(a: A, b: B) -> Result<Self, WeightSumOverflow>
+    where
+        A: WeightedSelector,
+        B: WeightedSelector,
+    {
         let a_weight = a.weight();
         let b_weight = b.weight();
-        let Some(weight) = a_weight.checked_add(b_weight) else {
-            return Err(WeightedSelectorCreationError::WeightSumOverflows(
-                a_weight, b_weight,
-            ));
+        let Some(weight_sum) = a_weight.checked_add(b_weight) else {
+            return Err(WeightSumOverflow(a_weight, b_weight));
         };
+
+        let distr = Bernoulli::from_ratio(a_weight, weight_sum).ok();
         Ok(Self {
             a,
             b,
-            _p: PhantomData,
+            distr,
+            weight_sum,
         })
-    }
-
-    pub fn with_selector_and_weight<S: Selector<P>>(
-        self,
-        selector: S,
-        weight: usize,
-    ) -> Result<WeightedSelectorPair<P, Self, Weighted<S>>, WeightedSelectorCreationError> {
-        Self::with_weighted_selector(self, Weighted::new(selector, weight))
-    }
-
-    pub fn with_weighted_selector<WS: WeightedSelector<P>>(
-        self,
-        weighted_selector: WS,
-    ) -> Result<WeightedSelectorPair<P, Self, WS>, WeightedSelectorCreationError> {
-        WeightedSelectorPair::new(self, weighted_selector)
     }
 }
 
@@ -251,8 +235,12 @@ mod tests {
     use test_strategy::proptest;
 
     use crate::operator::selector::{
-        best::Best, random::Random, recursive_weighted::Weighted, tournament::Tournament,
-        worst::Worst, Selector,
+        best::Best,
+        random::Random,
+        recursive_weighted::{Weighted, WithWeightedSelector},
+        tournament::Tournament,
+        worst::Worst,
+        Selector,
     };
 
     #[proptest]
@@ -260,7 +248,9 @@ mod tests {
         let mut rng = rand::thread_rng();
         // We'll make a selector that has a 50/50 chance of choosing the highest
         // or lowest value.
-        let weighted = Weighted::new(Best, 1).with_selector_and_weight(Worst, 1);
+        let weighted = Weighted::new(Best, 1)
+            .with_selector_and_weight(Worst, 1)
+            .unwrap();
         let selection = weighted.select(&pop, &mut rng).unwrap();
         let extremes: [&i32; 2] = pop.iter().minmax().into_option().unwrap().into();
         assert!(extremes.contains(&selection));
@@ -274,7 +264,6 @@ mod tests {
         let weighted = Weighted::new(Best, 1)
             .with_selector_and_weight(Worst, 1)
             .with_selector_and_weight(Random, 0)
-            .unwrap()
             .with_selector_and_weight(Tournament::of_size::<3>(), 2)
             .unwrap();
         let selection = weighted.select(&pop, &mut rng).unwrap();

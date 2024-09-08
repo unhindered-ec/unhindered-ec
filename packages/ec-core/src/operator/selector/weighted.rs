@@ -17,19 +17,19 @@ where
         &self,
         population: &'pop P,
         rng: &mut ThreadRng,
-    ) -> Result<&'pop P::Individual, Box<dyn Error>>;
+    ) -> Result<&'pop P::Individual, Box<dyn Error + Send + Sync>>;
 }
 
 impl<T, P> DynSelector<P> for T
 where
     P: Population,
-    T: Selector<P, Error: Error + 'static>,
+    T: Selector<P, Error: Error + Send + Sync + 'static>,
 {
     fn dyn_select<'pop>(
         &self,
         population: &'pop P,
         rng: &mut ThreadRng,
-    ) -> Result<&'pop P::Individual, Box<dyn Error>> {
+    ) -> Result<&'pop P::Individual, Box<dyn Error + Send + Sync>> {
         self.select(population, rng).map_err(|e| Box::new(e).into())
     }
 }
@@ -49,7 +49,7 @@ pub enum WeightedError {
     ZeroWeightSum(#[from] WeightError),
 
     #[error(transparent)]
-    Other(Box<dyn Error>),
+    Other(Box<dyn Error + Send + Sync>),
 }
 
 impl<P: Population> Weighted<P> {
@@ -59,7 +59,7 @@ impl<P: Population> Weighted<P> {
     #[must_use]
     pub fn new<S>(selector: S, weight: usize) -> Self
     where
-        S: Selector<P, Error: Error + 'static> + Send + Sync + 'static,
+        S: Selector<P, Error: Error + Send + Sync + 'static> + Send + Sync + 'static,
     {
         Self {
             selectors: vec![(Box::new(selector), weight)],
@@ -69,7 +69,7 @@ impl<P: Population> Weighted<P> {
     #[must_use]
     pub fn with_selector<S>(mut self, selector: S, weight: usize) -> Self
     where
-        S: Selector<P, Error: Error + 'static> + Send + Sync + 'static,
+        S: Selector<P, Error: Error + Send + Sync + 'static> + Send + Sync + 'static,
     {
         self.selectors.push((Box::new(selector), weight));
         self
