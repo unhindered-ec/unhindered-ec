@@ -20,16 +20,7 @@ pub trait WithWeightedSelector
 where
     Self: Sized,
 {
-    /// The type of the selector being extended
-    /// through the addition of a new weighted selector.
-    ///
-    /// `InnerSelector` is often just `Self`, but in cases we
-    /// implement this trait for a `Result` type, `InnerSelector`
-    /// allows us to specify the type of the value for that `Result`.
-    /// This allows us to chain the construction of
-    /// complex weighted selectors ignoring the possibility of errors
-    /// until the end of the chain.
-    type InnerSelector;
+    type OutputSelector<WS>;
 
     /// # Errors
     /// - [`WeightSumOverflow`] if trying to add this new selector with the
@@ -39,7 +30,7 @@ where
         self,
         selector: S,
         weight: u32,
-    ) -> Result<WeightedSelectorPair<Self::InnerSelector, Weighted<S>>, WeightSumOverflow> {
+    ) -> Result<Self::OutputSelector<Weighted<S>>, WeightSumOverflow> {
         self.with_weighted_selector(Weighted::new(selector, weight))
     }
 
@@ -50,18 +41,18 @@ where
     fn with_weighted_selector<WS>(
         self,
         weighted_selector: WS,
-    ) -> Result<WeightedSelectorPair<Self::InnerSelector, WS>, WeightSumOverflow>
+    ) -> Result<Self::OutputSelector<WS>, WeightSumOverflow>
     where
         WS: WithWeight;
 }
 
 impl<T> WithWeightedSelector for Weighted<T> {
-    type InnerSelector = Self;
+    type OutputSelector<WS> = WeightedSelectorPair<Self, WS>;
 
     fn with_weighted_selector<WS>(
         self,
         weighted_selector: WS,
-    ) -> Result<WeightedSelectorPair<Self::InnerSelector, WS>, WeightSumOverflow>
+    ) -> Result<Self::OutputSelector<WS>, WeightSumOverflow>
     where
         WS: WithWeight,
     {
@@ -70,12 +61,12 @@ impl<T> WithWeightedSelector for Weighted<T> {
 }
 
 impl<A, B> WithWeightedSelector for WeightedSelectorPair<A, B> {
-    type InnerSelector = Self;
+    type OutputSelector<WS> = WeightedSelectorPair<Self, WS>;
 
     fn with_weighted_selector<WS>(
         self,
         weighted_selector: WS,
-    ) -> Result<WeightedSelectorPair<Self::InnerSelector, WS>, WeightSumOverflow>
+    ) -> Result<Self::OutputSelector<WS>, WeightSumOverflow>
     where
         WS: WithWeight,
     {
@@ -87,16 +78,12 @@ impl<T> WithWeightedSelector for Result<T, WeightSumOverflow>
 where
     T: WithWeightedSelector,
 {
-    // Since we're implementing the trait for a `Result` type,
-    // the type of the inner selector comes from the value type
-    // `T`. Since `T` implements `WithWeightedSelect`, we need
-    // to use `T::InnerSelector` to access `T`'s selector type.
-    type InnerSelector = T::InnerSelector;
+    type OutputSelector<WS> = T::OutputSelector<WS>;
 
     fn with_weighted_selector<WS>(
         self,
         weighted_selector: WS,
-    ) -> Result<WeightedSelectorPair<Self::InnerSelector, WS>, WeightSumOverflow>
+    ) -> Result<Self::OutputSelector<WS>, WeightSumOverflow>
     where
         WS: WithWeight,
     {
@@ -236,7 +223,6 @@ mod tests {
     use itertools::Itertools;
     use test_strategy::proptest;
 
-    use super::WeightSumOverflow;
     use crate::operator::selector::{
         best::Best,
         random::Random,
