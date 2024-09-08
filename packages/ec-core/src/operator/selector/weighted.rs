@@ -223,13 +223,9 @@ mod tests {
     use itertools::Itertools;
     use test_strategy::proptest;
 
+    use super::{Weighted, WithWeightedSelector};
     use crate::operator::selector::{
-        best::Best,
-        random::Random,
-        recursive_weighted::{Weighted, WithWeightedSelector},
-        tournament::Tournament,
-        worst::Worst,
-        Selector,
+        best::Best, random::Random, tournament::Tournament, worst::Worst, Selector,
     };
 
     #[proptest]
