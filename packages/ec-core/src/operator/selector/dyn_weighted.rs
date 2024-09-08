@@ -34,7 +34,7 @@ where
     }
 }
 
-pub struct Weighted<P: Population> {
+pub struct DynWeighted<P: Population> {
     selectors: Vec<(Box<dyn DynSelector<P> + Send + Sync>, usize)>,
 }
 
@@ -52,7 +52,7 @@ pub enum WeightedError {
     Other(Box<dyn Error + Send + Sync>),
 }
 
-impl<P: Population> Weighted<P> {
+impl<P: Population> DynWeighted<P> {
     // Since we should never have an empty collection of weighted selectors,
     // the `new` implementation takes an initial selector so `selectors` is
     // guaranteed to never be empty.
@@ -76,7 +76,7 @@ impl<P: Population> Weighted<P> {
     }
 }
 
-impl<P> Selector<P> for Weighted<P>
+impl<P> Selector<P> for DynWeighted<P>
 where
     P: Population,
 {
@@ -107,7 +107,7 @@ mod tests {
     use itertools::Itertools;
     use test_strategy::proptest;
 
-    use super::Weighted;
+    use super::DynWeighted;
     use crate::operator::selector::{best::Best, worst::Worst, Selector};
 
     #[proptest]
@@ -115,7 +115,7 @@ mod tests {
         let mut rng = rand::thread_rng();
         // We'll make a selector that has a 50/50 chance of choosing the highest
         // or lowest value.
-        let weighted = Weighted::new(Best, 1).with_selector(Worst, 1);
+        let weighted = DynWeighted::new(Best, 1).with_selector(Worst, 1);
         let selection = weighted.select(&pop, &mut rng).unwrap();
         let extremes: [&i32; 2] = pop.iter().minmax().into_option().unwrap().into();
         assert!(extremes.contains(&selection));

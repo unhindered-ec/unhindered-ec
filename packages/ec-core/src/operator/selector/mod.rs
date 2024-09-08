@@ -4,12 +4,12 @@ use super::{Composable, Operator};
 use crate::population::Population;
 
 pub mod best;
+pub mod dyn_weighted;
 pub mod error;
 pub mod lexicase;
 pub mod random;
 pub mod recursive_weighted;
 pub mod tournament;
-pub mod weighted;
 pub mod worst;
 
 pub use error::SelectionError;

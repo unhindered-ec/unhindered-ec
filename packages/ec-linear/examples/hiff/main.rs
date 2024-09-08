@@ -23,8 +23,8 @@ use ec_core::{
         mutator::Mutate,
         recombinator::Recombine,
         selector::{
-            best::Best, lexicase::Lexicase, tournament::Tournament, weighted::Weighted, Select,
-            Selector,
+            best::Best, dyn_weighted::DynWeighted, lexicase::Lexicase, tournament::Tournament,
+            Select, Selector,
         },
         Composable,
     },
@@ -77,7 +77,7 @@ fn main() -> Result<()> {
 
     let num_test_cases = 2 * bit_length - 1;
 
-    let selector = Weighted::new(Best, 1)
+    let selector = DynWeighted::new(Best, 1)
         .with_selector(Lexicase::new(num_test_cases), 5)
         .with_selector(Tournament::binary(), population_size - 1);
 
