@@ -1,6 +1,6 @@
 use rand::distr::{Bernoulli, Distribution};
 
-use super::{weighted::Weighted, WeightSumOverflow, WithWeight};
+use super::{WeightSumOverflow, WithWeight};
 use crate::{operator::selector::Selector, population::Population};
 
 #[derive(Debug)]
@@ -11,16 +11,44 @@ pub struct WeightedSelectorPair<A, B> {
     pub(crate) weight_sum: u32,
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum WeightedSelectorsError<A, B> {
     A(A),
     B(B),
 
     ZeroWeightSum,
-
-    // #[error("Adding the weights {0} and {1} overflows")]
-    WeightSumOverflows(u32, u32),
 }
+
+impl<A, B> std::error::Error for WeightedSelectorsError<A, B>
+where
+    A: std::error::Error + 'static,
+    B: std::error::Error + 'static,
+{
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        match self {
+            Self::A(a) => Some(a),
+            Self::B(b) => Some(b),
+            Self::ZeroWeightSum => None,
+        }
+    }
+}
+
+impl<A, B> std::fmt::Display for WeightedSelectorsError<A, B>
+where
+    A: std::fmt::Display,
+    B: std::fmt::Display,
+{
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::A(a) => a.fmt(f),
+            Self::B(b) => b.fmt(f),
+            Self::ZeroWeightSum => f.write_str("Tried to select from a zero-weight selector"),
+        }
+    }
+}
+
+// impl miette::Diagnostic for WeightedSelectorsError
+// "Selection requires at least one non-zero weight"
 
 impl<P, A, B> Selector<P> for WeightedSelectorPair<A, B>
 where

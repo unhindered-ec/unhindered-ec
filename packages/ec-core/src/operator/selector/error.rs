@@ -1,6 +1,6 @@
 use miette::Diagnostic;
 
-#[derive(Debug, thiserror::Error, Diagnostic)]
+#[derive(Debug, thiserror::Error, Diagnostic, PartialEq, Eq)]
 pub enum SelectionError {
     #[error("Can't select from an empty population")]
     #[diagnostic(
