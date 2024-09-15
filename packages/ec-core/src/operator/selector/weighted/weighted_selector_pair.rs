@@ -81,10 +81,9 @@ impl<A, B> WeightedSelectorPair<A, B> {
     {
         let a_weight = a.weight();
         let b_weight = b.weight();
-        let Some(weight_sum) = a_weight.checked_add(b_weight) else {
-            return Err(WeightSumOverflow(a_weight, b_weight));
-        };
-
+        let weight_sum = a_weight
+            .checked_add(b_weight)
+            .ok_or(WeightSumOverflow(a_weight, b_weight))?;
         let distr = Bernoulli::from_ratio(a_weight, weight_sum).ok();
         Ok(Self {
             a,
