@@ -56,20 +56,6 @@ impl<A, B> WithWeight for WeightedSelectorPair<A, B> {
     }
 }
 
-impl<A, B> WeightedSelectorPair<Weighted<A>, Weighted<B>> {
-    /// # Errors
-    /// - [`WeightSumOverflow`] if the total sum of `weight_a` and `weight_b`
-    ///   would overflow `u32::MAX`
-    pub fn new_with_weights(
-        a: A,
-        weight_a: u32,
-        b: B,
-        weight_b: u32,
-    ) -> Result<Self, WeightSumOverflow> {
-        Self::new(Weighted::new(a, weight_a), Weighted::new(b, weight_b))
-    }
-}
-
 impl<A, B> WeightedSelectorPair<A, B> {
     /// # Errors
     /// - [`WeightSumOverflow`] if the total sum of the weights of a and b would
