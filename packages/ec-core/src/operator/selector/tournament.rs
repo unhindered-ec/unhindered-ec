@@ -6,6 +6,7 @@ use rand::{prelude::IndexedRandom, rngs::ThreadRng};
 use super::Selector;
 use crate::population::Population;
 
+#[derive(Debug)]
 pub struct Tournament {
     size: NonZeroUsize,
 }

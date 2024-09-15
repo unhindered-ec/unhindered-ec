@@ -5,6 +5,7 @@ use rand::{prelude::SliceRandom, rngs::ThreadRng};
 use super::{error::SelectionError, Selector};
 use crate::{individual::Individual, population::Population, test_results::TestResults};
 
+#[derive(Debug)]
 pub struct Lexicase {
     num_test_cases: usize,
 }

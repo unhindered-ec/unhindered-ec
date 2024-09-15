@@ -3,6 +3,7 @@ use rand::rngs::ThreadRng;
 use super::{error::SelectionError, Selector};
 use crate::population::Population;
 
+#[derive(Debug)]
 pub struct Worst;
 
 impl<P> Selector<P> for Worst

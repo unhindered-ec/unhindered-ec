@@ -38,6 +38,14 @@ pub struct DynWeighted<P: Population> {
     selectors: Vec<(Box<dyn DynSelector<P> + Send + Sync>, usize)>,
 }
 
+impl<P: Population> std::fmt::Debug for DynWeighted<P> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("DynWeighted")
+            .field("selectors", &self.selectors.len())
+            .finish_non_exhaustive()
+    }
+}
+
 #[derive(Debug, thiserror::Error, Diagnostic)]
 pub enum WeightedError {
     #[error(transparent)]

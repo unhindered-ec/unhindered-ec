@@ -3,6 +3,7 @@ use rand::distr::{Bernoulli, Distribution};
 use super::{weighted::Weighted, WeightSumOverflow, WithWeight};
 use crate::{operator::selector::Selector, population::Population};
 
+#[derive(Debug)]
 pub struct WeightedSelectorPair<A, B> {
     pub(crate) a: A,
     pub(crate) b: B,

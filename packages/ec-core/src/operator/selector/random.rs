@@ -3,6 +3,7 @@ use rand::{prelude::IndexedRandom, rngs::ThreadRng};
 use super::{error::SelectionError, Selector};
 use crate::population::Population;
 
+#[derive(Debug)]
 pub struct Random;
 
 impl<P> Selector<P> for Random

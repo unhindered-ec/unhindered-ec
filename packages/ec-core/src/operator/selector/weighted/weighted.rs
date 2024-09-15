@@ -1,6 +1,7 @@
 use super::WithWeight;
 use crate::{operator::selector::Selector, population::Population};
 
+#[derive(Debug)]
 pub struct Weighted<T> {
     pub(crate) selector: T,
     pub(crate) weight: u32,
