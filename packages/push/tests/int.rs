@@ -7,7 +7,7 @@
     // reason = "Panicking is the best way to deal with errors in integration tests"
 )]
 
-use proptest::prop_assert_eq;
+use proptest::{prop_assert, prop_assert_eq};
 use push::{
     instruction::{
         instruction_error::PushInstructionError, Instruction, IntInstruction, IntInstructionError,
@@ -16,6 +16,16 @@ use push::{
 };
 use strum::IntoEnumIterator;
 use test_strategy::proptest;
+
+#[proptest]
+fn to_string_contains_value(#[any] x: i64) {
+    let instruction = IntInstruction::Push(x);
+    let s = instruction.to_string();
+    prop_assert!(
+        s.contains(&x.to_string()),
+        "String version of instruction (\"{s}\") doesn't contain value (\"{x}\")"
+    );
+}
 
 #[test]
 fn add() {
