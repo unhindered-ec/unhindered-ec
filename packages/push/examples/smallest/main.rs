@@ -19,7 +19,7 @@ use ec_core::{
 };
 use ec_linear::mutator::umad::Umad;
 use push::{
-    evaluation::cases::{Case, Cases, WithTargetFn},
+    evaluation::{Case, Cases, WithTargetFn},
     genome::plushy::{GeneGenerator, Plushy},
     instruction::{
         variable_name::VariableName, BoolInstruction, ExecInstruction, IntInstruction,
@@ -28,7 +28,7 @@ use push::{
     push_vm::{program::PushProgram, push_state::PushState, stack::StackError, HasStack, State},
 };
 use rand::{
-    distributions::{Distribution, Uniform},
+    distr::{Distribution, Uniform},
     thread_rng,
 };
 use strum::IntoEnumIterator;

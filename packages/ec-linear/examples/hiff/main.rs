@@ -34,7 +34,7 @@ use ec_linear::{
     genome::bitstring::Bitstring, mutator::with_one_over_length::WithOneOverLength,
     recombinator::two_point_xo::TwoPointXo,
 };
-use rand::{distributions::Standard, prelude::Distribution, thread_rng};
+use rand::{distr::Standard, prelude::Distribution, thread_rng};
 
 use crate::args::{Args, RunModel};
 
@@ -79,7 +79,7 @@ fn main() -> Result<()> {
 
     let selector = Weighted::new(Best, 1)
         .with_selector(Lexicase::new(num_test_cases), 5)
-        .with_selector(Tournament::new(2), population_size - 1);
+        .with_selector(Tournament::binary(), population_size - 1);
 
     let population = Standard
         .into_collection_generator(bit_length)

@@ -20,7 +20,7 @@ where
         Ok(genome
             .into_iter()
             .map(|bit| {
-                let r: f32 = rng.gen();
+                let r: f32 = rng.random();
                 if r < self.mutation_rate { !bit } else { bit }
             })
             .collect())
@@ -39,7 +39,7 @@ where
         Ok(genome
             .into_iter()
             .map(|bit| {
-                let r: f32 = rng.gen();
+                let r: f32 = rng.random();
                 if r < self.mutation_rate { !bit } else { bit }
             })
             .collect())

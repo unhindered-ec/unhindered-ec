@@ -25,7 +25,7 @@ impl<T: Clone> Recombinator<[Vec<T>; 2]> for UniformXo {
         let len = first_genome.len();
         Ok((0..len)
             .map(|pos| {
-                if rng.gen::<bool>() {
+                if rng.random::<bool>() {
                     first_genome[pos].clone()
                 } else {
                     second_genome[pos].clone()
@@ -62,7 +62,7 @@ where
         );
         let len = first_genome.size();
         for i in 0..len {
-            if rng.gen::<bool>() {
+            if rng.random::<bool>() {
                 first_genome.crossover_gene(&mut second_genome, i)?;
             }
         }

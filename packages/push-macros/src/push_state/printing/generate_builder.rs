@@ -238,7 +238,7 @@ pub fn generate_builder(
                     let outtro = "# Ok::<(), StackError>(())";
 
                     let doctest_code = quote! {
-                        let mut state = #struct_ident::builder()
+                        let state = #struct_ident::builder()
                             .with_max_stack_size(#max_stack_size)
                             .with_no_program()
                             .#fn_ident([#sample_values])?
@@ -419,7 +419,7 @@ pub fn generate_builder(
             let outtro = "# Ok::<(), StackError>(())";
 
             let doctest_code = quote! {
-                let mut state = #struct_ident::builder()
+                let state = #struct_ident::builder()
                     .with_max_stack_size(100)
                     .with_no_program()
                     .build();

@@ -127,7 +127,7 @@ we did last week:
   a builder) for `Population`, and then just have a `get_parent()`
   method there.
 - Extend `PopulationSelector` to a `WeightedParentSelector` that
-  is essentially a wrapper around `rand::distributions::WeightedChoice`
+  is essentially a wrapper around `rand::distr::WeightedChoice`
   so we can provide weights on the different selectors.
 - If those get done quickly, then we can look at the problem of
   pipelining mutation and recombination operators.
@@ -164,7 +164,7 @@ including the ability to choose things like the `TargetProblem`.
 Things to work on this week:
 
 - Extend `PopulationSelector` to a `WeightedParentSelector` that
-  is essentially a wrapper around `rand::distributions::WeightedChoice`
+  is essentially a wrapper around `rand::distr::WeightedChoice`
   so we can provide weights on the different selectors.
 - Implement Lexicase Selection.
 - If that get done quickly, then we can look at the problem of

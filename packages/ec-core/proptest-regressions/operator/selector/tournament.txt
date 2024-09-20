@@ -1,0 +1,7 @@
+# Seeds for failure cases proptest has generated in the past. It is
+# automatically read and these particular cases re-run before any
+# novel cases are generated.
+#
+# It is recommended to check this file in to source control so that
+# everyone who runs the test benefits from these saved cases.
+cc 85f24bcb1b57eb22eaa895d4ef3fb00279b2f18de551155d6473921ef6f89c52 # shrinks to input = _TournamentSize2PopSize3Args { x: 0, y: 0, z: 715827882 }

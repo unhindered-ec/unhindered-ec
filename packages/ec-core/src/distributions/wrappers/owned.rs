@@ -1,6 +1,6 @@
 use std::{borrow::Borrow, marker::PhantomData, num::NonZeroUsize};
 
-use rand::{distributions::Uniform, prelude::Distribution};
+use rand::{distr::Uniform, prelude::Distribution};
 
 use crate::distributions::{choices::ChoicesDistribution, wrappers::slice_cloning::EmptySlice};
 
@@ -35,7 +35,7 @@ where
     /// selected value.
     ///
     /// ```
-    /// # use rand::distributions::Distribution;
+    /// # use rand::distr::Distribution;
     /// # use ec_core::distributions::{
     /// #    choices::ChoicesDistribution,
     /// #    wrappers::{

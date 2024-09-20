@@ -1,6 +1,6 @@
 use std::num::NonZeroUsize;
 
-use rand::{distributions::Slice, prelude::Distribution};
+use rand::{distr::Slice, prelude::Distribution};
 
 use crate::distributions::choices::ChoicesDistribution;
 

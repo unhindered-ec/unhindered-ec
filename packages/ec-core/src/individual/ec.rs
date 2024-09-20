@@ -56,6 +56,12 @@ impl<G, R> EcIndividual<G, R> {
     }
 }
 
+impl<G, R> From<(G, R)> for EcIndividual<G, R> {
+    fn from((genome, test_results): (G, R)) -> Self {
+        Self::new(genome, test_results)
+    }
+}
+
 impl<G: Eq, R: Ord> Ord for EcIndividual<G, R> {
     /// Compare two individuals based on their test results.
     fn cmp(&self, other: &Self) -> Ordering {

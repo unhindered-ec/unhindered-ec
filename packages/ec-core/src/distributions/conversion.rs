@@ -1,4 +1,4 @@
-use rand::{distributions::Slice, prelude::Distribution};
+use rand::{distr::Slice, prelude::Distribution};
 
 use super::wrappers::{
     owned::OneOfCloning,

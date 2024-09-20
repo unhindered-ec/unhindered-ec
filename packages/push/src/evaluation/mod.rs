@@ -1,1 +1,3 @@
-pub mod cases;
+mod cases;
+
+pub use cases::{Case, Cases, WithTargetFn};

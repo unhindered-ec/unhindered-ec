@@ -155,7 +155,7 @@ where
     T: Distribution<PushInstruction>,
 {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> PushGene {
-        if rng.gen::<f32>() < self.close_probability {
+        if rng.random::<f32>() < self.close_probability {
             PushGene::Close
         } else {
             // this is safe since we check that the slice is not empty in the constructor

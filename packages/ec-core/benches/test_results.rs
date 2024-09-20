@@ -1,7 +1,7 @@
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use ec_core::{distributions::collection::ConvertToCollectionGenerator, test_results::TestResults};
 use rand::{
-    distributions::{Distribution, Standard},
+    distr::{Distribution, Standard},
     thread_rng,
 };
 
@@ -23,7 +23,10 @@ pub fn from_iterator(c: &mut Criterion) {
 pub fn find_smallest(c: &mut Criterion) {
     const NUM_VALUES: usize = 100;
     const NUM_RESULTS: usize = 1_000;
-    let test_results: Vec<TestResults<i64>> = Distribution::<Vec<i64>>::sample_iter(
+    // We need the random values to be smaller (`i32`) than the type used
+    // in `TestResults` (`i64`) so that the sum of the values in a vector
+    // won't overflow the largest possible value in the `TestResults` type.
+    let test_results: Vec<TestResults<i64>> = Distribution::<Vec<i32>>::sample_iter(
         Standard.into_collection_generator(NUM_VALUES),
         &mut thread_rng(),
     )
