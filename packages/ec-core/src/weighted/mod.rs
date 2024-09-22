@@ -1,4 +1,11 @@
-use crate::{operator::selector::Selector, population::Population, with_weight::WithWeight};
+use with_weight::WithWeight;
+
+use crate::{operator::selector::Selector, population::Population};
+
+pub mod error;
+pub mod weighted_pair;
+pub mod with_weight;
+pub mod with_weighted_selector;
 
 #[derive(Debug)]
 pub struct Weighted<T> {

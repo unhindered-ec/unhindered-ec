@@ -1,13 +1,10 @@
 use rand::distr::{Bernoulli, Distribution};
 
-use crate::{
-    operator::selector::{
-        weighted::error::{WeightSumOverflow, WeightedSelectorsError},
-        Selector,
-    },
-    population::Population,
+use super::{
+    error::{WeightSumOverflow, WeightedSelectorsError},
     with_weight::WithWeight,
 };
+use crate::{operator::selector::Selector, population::Population};
 
 #[derive(Debug)]
 pub struct WeightedPair<A, B> {
@@ -90,19 +87,15 @@ mod tests {
 
     use crate::{
         operator::selector::{
-            best::Best,
-            random::Random,
-            tournament::Tournament,
-            weighted::{
-                error::{WeightSumOverflow, WeightedSelectorsError},
-                with_weighted_selector::WithWeightedSelector,
-            },
-            worst::Worst,
-            Selector,
+            best::Best, random::Random, tournament::Tournament, worst::Worst, Selector,
         },
-        weighted::Weighted,
-        weighted_pair::WeightedPair,
-        with_weight::WithWeight,
+        weighted::{
+            error::{WeightSumOverflow, WeightedSelectorsError},
+            weighted_pair::WeightedPair,
+            with_weight::WithWeight,
+            with_weighted_selector::WithWeightedSelector,
+            Weighted,
+        },
     };
 
     #[test]

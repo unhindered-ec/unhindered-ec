@@ -9,7 +9,6 @@ pub mod error;
 pub mod lexicase;
 pub mod random;
 pub mod tournament;
-pub mod weighted;
 pub mod worst;
 
 pub use error::SelectionError;
