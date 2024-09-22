@@ -1,5 +1,7 @@
 /// Create a Distribution of a specified type, calling `.into()` on all
-/// elements. Similar to the `[...]` syntax of rust optionally allowing the
+/// elements.
+///
+/// Similar to the `[...]` syntax of rust optionally allowing the
 /// specification of the target type using `uniform_distribution_of![<T> ...]`.
 /// To sample from the Distribution, the elements are cloned.
 ///
