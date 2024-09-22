@@ -9,3 +9,4 @@ pub mod operator;
 pub mod population;
 pub mod test_results;
 pub mod weighted;
+pub mod with_weight;

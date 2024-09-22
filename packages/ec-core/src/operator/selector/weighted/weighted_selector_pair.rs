@@ -1,7 +1,7 @@
 use rand::distr::{Bernoulli, Distribution};
 
-use super::{WeightSumOverflow, WithWeight};
-use crate::{operator::selector::Selector, population::Population};
+use super::WeightSumOverflow;
+use crate::{operator::selector::Selector, population::Population, with_weight::WithWeight};
 
 #[derive(Debug)]
 pub struct WeightedSelectorPair<A, B> {
@@ -198,12 +198,13 @@ mod tests {
             weighted::{
                 weighted_selector_pair::{WeightedSelectorPair, WeightedSelectorsError},
                 with_weighted_selector::WithWeightedSelector,
-                WeightSumOverflow, WithWeight,
+                WeightSumOverflow,
             },
             worst::Worst,
             Selector,
         },
         weighted::Weighted,
+        with_weight::WithWeight,
     };
 
     #[test]

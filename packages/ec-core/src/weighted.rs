@@ -1,7 +1,4 @@
-use crate::{
-    operator::selector::{weighted::WithWeight, Selector},
-    population::Population,
-};
+use crate::{operator::selector::Selector, population::Population, with_weight::WithWeight};
 
 #[derive(Debug)]
 pub struct Weighted<T> {
