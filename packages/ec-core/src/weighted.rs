@@ -1,15 +1,20 @@
-use super::WithWeight;
-use crate::{operator::selector::Selector, population::Population};
+use crate::{
+    operator::selector::{weighted::WithWeight, Selector},
+    population::Population,
+};
 
 #[derive(Debug)]
 pub struct Weighted<T> {
-    pub(crate) selector: T,
+    pub(crate) item: T,
     pub(crate) weight: u32,
 }
 
 impl<T> Weighted<T> {
     pub const fn new(selector: T, weight: u32) -> Self {
-        Self { selector, weight }
+        Self {
+            item: selector,
+            weight,
+        }
     }
 }
 
@@ -31,6 +36,6 @@ where
         population: &'pop P,
         rng: &mut rand::prelude::ThreadRng,
     ) -> Result<&'pop <P as Population>::Individual, Self::Error> {
-        self.selector.select(population, rng)
+        self.item.select(population, rng)
     }
 }

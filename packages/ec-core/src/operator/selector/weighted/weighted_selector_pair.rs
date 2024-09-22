@@ -190,18 +190,20 @@ mod tests {
     use itertools::Itertools;
     use test_strategy::proptest;
 
-    use crate::operator::selector::{
-        best::Best,
-        random::Random,
-        tournament::Tournament,
-        weighted::{
-            weighted::Weighted,
-            weighted_selector_pair::{WeightedSelectorPair, WeightedSelectorsError},
-            with_weighted_selector::WithWeightedSelector,
-            WeightSumOverflow, WithWeight,
+    use crate::{
+        operator::selector::{
+            best::Best,
+            random::Random,
+            tournament::Tournament,
+            weighted::{
+                weighted_selector_pair::{WeightedSelectorPair, WeightedSelectorsError},
+                with_weighted_selector::WithWeightedSelector,
+                WeightSumOverflow, WithWeight,
+            },
+            worst::Worst,
+            Selector,
         },
-        worst::Worst,
-        Selector,
+        weighted::Weighted,
     };
 
     #[test]
@@ -211,11 +213,11 @@ mod tests {
             weighted,
             Ok(WeightedSelectorPair {
                 a: Weighted {
-                    selector: Best,
+                    item: Best,
                     weight: 5
                 },
                 b: Weighted {
-                    selector: Worst,
+                    item: Worst,
                     weight: 8
                 },
                 distr: Some(_),
