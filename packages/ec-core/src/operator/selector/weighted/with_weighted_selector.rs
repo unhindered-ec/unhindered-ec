@@ -1,5 +1,8 @@
-use super::{weighted_selector_pair::WeightedSelectorPair, WeightSumOverflow};
-use crate::{weighted::Weighted, with_weight::WithWeight};
+use super::weighted_selector_pair::WeightedSelectorPair;
+use crate::{
+    operator::selector::weighted::error::WeightSumOverflow, weighted::Weighted,
+    with_weight::WithWeight,
+};
 
 pub trait WithWeightedSelector
 where
