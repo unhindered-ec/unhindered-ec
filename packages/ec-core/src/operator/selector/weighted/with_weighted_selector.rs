@@ -1,7 +1,6 @@
-use super::weighted_selector_pair::WeightedSelectorPair;
 use crate::{
     operator::selector::weighted::error::WeightSumOverflow, weighted::Weighted,
-    with_weight::WithWeight,
+    weighted_pair::WeightedPair, with_weight::WithWeight,
 };
 
 pub trait WithWeightedSelector
@@ -35,7 +34,7 @@ where
 }
 
 impl<T> WithWeightedSelector for Weighted<T> {
-    type OutputSelector<WS> = WeightedSelectorPair<Self, WS>;
+    type OutputSelector<WS> = WeightedPair<Self, WS>;
 
     fn with_weighted_selector<WS>(
         self,
@@ -44,12 +43,12 @@ impl<T> WithWeightedSelector for Weighted<T> {
     where
         WS: WithWeight,
     {
-        WeightedSelectorPair::new(self, weighted_selector)
+        WeightedPair::new(self, weighted_selector)
     }
 }
 
-impl<A, B> WithWeightedSelector for WeightedSelectorPair<A, B> {
-    type OutputSelector<WS> = WeightedSelectorPair<Self, WS>;
+impl<A, B> WithWeightedSelector for WeightedPair<A, B> {
+    type OutputSelector<WS> = WeightedPair<Self, WS>;
 
     fn with_weighted_selector<WS>(
         self,
@@ -58,7 +57,7 @@ impl<A, B> WithWeightedSelector for WeightedSelectorPair<A, B> {
     where
         WS: WithWeight,
     {
-        WeightedSelectorPair::new(self, weighted_selector)
+        WeightedPair::new(self, weighted_selector)
     }
 }
 
