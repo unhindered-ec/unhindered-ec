@@ -93,14 +93,14 @@ mod tests {
             error::{WeightSumOverflow, WeightedSelectorsError},
             weighted_pair::WeightedPair,
             with_weight::WithWeight,
-            with_weighted_selector::WithWeightedSelector,
+            with_weighted_item::WithWeightedItem,
             Weighted,
         },
     };
 
     #[test]
     fn can_construct_pair() {
-        let weighted = Weighted::new(Best, 5).with_selector_and_weight(Worst, 8);
+        let weighted = Weighted::new(Best, 5).with_item_and_weight(Worst, 8);
         assert!(matches!(
             weighted,
             Ok(WeightedPair {
@@ -125,7 +125,7 @@ mod tests {
         // We'll make a selector that has a 50/50 chance of choosing the highest
         // or lowest value.
         let weighted = Weighted::new(Best, 1)
-            .with_selector_and_weight(Worst, 1)
+            .with_item_and_weight(Worst, 1)
             .unwrap();
         let selection = weighted.select(&pop, &mut rng).unwrap();
         let extremes: [&i32; 2] = pop.iter().minmax().into_option().unwrap().into();
@@ -138,9 +138,9 @@ mod tests {
         // We'll make a selector that has a 50/50 chance of choosing the highest
         // or lowest value.
         let weighted = Weighted::new(Best, 1)
-            .with_selector_and_weight(Worst, 1)
-            .with_selector_and_weight(Random, 0)
-            .with_selector_and_weight(Tournament::of_size::<3>(), 2)
+            .with_item_and_weight(Worst, 1)
+            .with_item_and_weight(Random, 0)
+            .with_item_and_weight(Tournament::of_size::<3>(), 2)
             .unwrap();
         let selection = weighted.select(&pop, &mut rng).unwrap();
         assert!(pop.contains(selection));
@@ -151,8 +151,8 @@ mod tests {
         let pop = vec![5, 8, 9, 6, 3, 2, 0];
         let mut rng = rand::thread_rng();
         let weighted = Weighted::new(Best, 0)
-            .with_selector_and_weight(Worst, 0)
-            .with_selector_and_weight(Random, 0)
+            .with_item_and_weight(Worst, 0)
+            .with_item_and_weight(Random, 0)
             .unwrap();
         // If all the weights are zero, then selection should return an appropriate
         // error type.
@@ -164,19 +164,19 @@ mod tests {
 
     #[test]
     fn weight_sum_overflow_error() {
-        let weighted = Weighted::new(Best, u32::MAX).with_selector_and_weight(Worst, 0);
+        let weighted = Weighted::new(Best, u32::MAX).with_item_and_weight(Worst, 0);
         assert!(weighted.is_ok());
         let weighted = weighted
-            .with_selector_and_weight(Random, u32::MAX - 1)
+            .with_item_and_weight(Random, u32::MAX - 1)
             .unwrap_err();
         assert_eq!(weighted, WeightSumOverflow(u32::MAX, u32::MAX - 1));
     }
 
     #[test]
     fn weight_sum_overflow_error_chaining() {
-        let weighted = Weighted::new(Best, u32::MAX).with_selector_and_weight(Random, u32::MAX - 1);
+        let weighted = Weighted::new(Best, u32::MAX).with_item_and_weight(Random, u32::MAX - 1);
         assert!(weighted.is_err());
-        let weighted = weighted.with_selector_and_weight(Worst, 0).unwrap_err();
+        let weighted = weighted.with_item_and_weight(Worst, 0).unwrap_err();
         assert_eq!(weighted, WeightSumOverflow(u32::MAX, u32::MAX - 1));
     }
 }

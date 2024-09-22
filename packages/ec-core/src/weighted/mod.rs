@@ -5,7 +5,7 @@ use crate::{operator::selector::Selector, population::Population};
 pub mod error;
 pub mod weighted_pair;
 pub mod with_weight;
-pub mod with_weighted_selector;
+pub mod with_weighted_item;
 
 #[derive(Debug)]
 pub struct Weighted<T> {
