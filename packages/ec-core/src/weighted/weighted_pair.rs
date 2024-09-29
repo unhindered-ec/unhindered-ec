@@ -1,7 +1,7 @@
 use rand::distr::{Bernoulli, Distribution};
 
 use super::{
-    error::{WeightSumOverflow, WeightedSelectorsError},
+    error::{WeightSumOverflow, WeightedPairError},
     with_weight::WithWeight,
 };
 use crate::{operator::selector::Selector, population::Population};
@@ -50,7 +50,7 @@ where
     A: WithWeight + Selector<P>,
     B: WithWeight + Selector<P>,
 {
-    type Error = WeightedSelectorsError<A::Error, B::Error>;
+    type Error = WeightedPairError<A::Error, B::Error>;
 
     fn select<'pop>(
         &self,
@@ -58,16 +58,12 @@ where
         rng: &mut rand::prelude::ThreadRng,
     ) -> Result<&'pop <P as Population>::Individual, Self::Error> {
         let Some(distr) = self.distr else {
-            return Err(WeightedSelectorsError::ZeroWeightSum);
+            return Err(WeightedPairError::ZeroWeight);
         };
         if distr.sample(rng) {
-            self.a
-                .select(population, rng)
-                .map_err(WeightedSelectorsError::A)
+            self.a.select(population, rng).map_err(WeightedPairError::A)
         } else {
-            self.b
-                .select(population, rng)
-                .map_err(WeightedSelectorsError::B)
+            self.b.select(population, rng).map_err(WeightedPairError::B)
         }
     }
 }
@@ -90,7 +86,7 @@ mod tests {
             best::Best, random::Random, tournament::Tournament, worst::Worst, Selector,
         },
         weighted::{
-            error::{WeightSumOverflow, WeightedSelectorsError},
+            error::{WeightSumOverflow, WeightedPairError},
             weighted_pair::WeightedPair,
             with_weight::WithWeight,
             with_weighted_item::WithWeightedItem,
@@ -158,7 +154,7 @@ mod tests {
         // error type.
         assert_eq!(
             weighted.select(&pop, &mut rng).unwrap_err(),
-            WeightedSelectorsError::ZeroWeightSum
+            WeightedPairError::ZeroWeight
         );
     }
 

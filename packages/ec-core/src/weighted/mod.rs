@@ -14,11 +14,8 @@ pub struct Weighted<T> {
 }
 
 impl<T> Weighted<T> {
-    pub const fn new(selector: T, weight: u32) -> Self {
-        Self {
-            item: selector,
-            weight,
-        }
+    pub const fn new(item: T, weight: u32) -> Self {
+        Self { item, weight }
     }
 }
 
