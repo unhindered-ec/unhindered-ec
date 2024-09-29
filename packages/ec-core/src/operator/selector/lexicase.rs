@@ -2,7 +2,7 @@ use std::{cmp::Ordering, mem::swap, ops::Not};
 
 use rand::{prelude::SliceRandom, rngs::ThreadRng};
 
-use super::{error::SelectionError, Selector};
+use super::{error::EmptyPopulation, Selector};
 use crate::{individual::Individual, population::Population, test_results::TestResults};
 
 #[derive(Debug)]
@@ -34,7 +34,7 @@ where
     P::Individual: Individual<TestResults = TestResults<R>>,
     R: Ord,
 {
-    type Error = SelectionError;
+    type Error = EmptyPopulation;
 
     fn select<'pop>(
         &self,
@@ -96,10 +96,7 @@ where
         }
 
         candidates.shuffle(rng);
-        candidates
-            .first()
-            .copied()
-            .ok_or(SelectionError::EmptyPopulation)
+        candidates.first().copied().ok_or(EmptyPopulation)
     }
 }
 
@@ -132,7 +129,7 @@ mod tests {
         let selector = Lexicase::new(0);
         assert!(matches!(
             selector.select(&pop, &mut rng),
-            Err(SelectionError::EmptyPopulation)
+            Err(EmptyPopulation)
         ));
     }
 

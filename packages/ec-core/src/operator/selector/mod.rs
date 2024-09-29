@@ -11,7 +11,7 @@ pub mod random;
 pub mod tournament;
 pub mod worst;
 
-pub use error::SelectionError;
+pub use error::EmptyPopulation;
 
 pub trait Selector<P>
 where

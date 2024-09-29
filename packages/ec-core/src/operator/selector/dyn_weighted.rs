@@ -6,7 +6,7 @@ use rand::{
     seq::{IndexedRandom, WeightError},
 };
 
-use super::{error::SelectionError, Selector};
+use super::{error::EmptyPopulation, Selector};
 use crate::population::Population;
 
 trait DynSelector<P>
@@ -47,10 +47,10 @@ impl<P: Population> std::fmt::Debug for DynWeighted<P> {
 }
 
 #[derive(Debug, thiserror::Error, Diagnostic)]
-pub enum WeightedError {
+pub enum DynWeightedError {
     #[error(transparent)]
     #[diagnostic(transparent)]
-    Selector(#[from] SelectionError),
+    EmptyPopulation(#[from] EmptyPopulation),
 
     #[error(transparent)]
     #[diagnostic(help = "Ensure that the weights are all non-negative and add to more than zero")]
@@ -88,7 +88,7 @@ impl<P> Selector<P> for DynWeighted<P>
 where
     P: Population,
 {
-    type Error = WeightedError;
+    type Error = DynWeightedError;
 
     fn select<'pop>(
         &self,
@@ -98,7 +98,7 @@ where
         let (selector, _) = self.selectors.choose_weighted(rng, |(_, w)| *w)?;
         selector
             .dyn_select(population, rng)
-            .map_err(WeightedError::Other)
+            .map_err(DynWeightedError::Other)
     }
 }
 
