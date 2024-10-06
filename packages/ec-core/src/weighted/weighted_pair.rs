@@ -1,0 +1,179 @@
+use rand::distr::{Bernoulli, Distribution};
+
+use super::{
+    error::{SelectionError, WeightSumOverflow, WeightedPairError, ZeroWeight},
+    with_weight::WithWeight,
+};
+use crate::{operator::selector::Selector, population::Population};
+
+#[derive(Debug)]
+pub struct WeightedPair<A, B> {
+    pub(crate) a: A,
+    pub(crate) b: B,
+    pub(crate) distr: Option<Bernoulli>,
+    pub(crate) weight_sum: u32,
+}
+
+impl<A, B> WeightedPair<A, B> {
+    /// # Errors
+    /// - [`WeightSumOverflow`] if the total sum of the weights of a and b would
+    ///   overflow `u32::MAX`
+    pub fn new(a: A, b: B) -> Result<Self, WeightSumOverflow>
+    where
+        A: WithWeight,
+        B: WithWeight,
+    {
+        let a_weight = a.weight();
+        let b_weight = b.weight();
+        let weight_sum = a_weight
+            .checked_add(b_weight)
+            .ok_or(WeightSumOverflow(a_weight, b_weight))?;
+        let distr = Bernoulli::from_ratio(a_weight, weight_sum).ok();
+        Ok(Self {
+            a,
+            b,
+            distr,
+            weight_sum,
+        })
+    }
+}
+
+impl<A, B> WithWeight for WeightedPair<A, B> {
+    fn weight(&self) -> u32 {
+        self.weight_sum
+    }
+}
+
+impl<P, A, B> Selector<P> for WeightedPair<A, B>
+where
+    P: Population,
+    A: WithWeight + Selector<P>,
+    B: WithWeight + Selector<P>,
+{
+    type Error = SelectionError<WeightedPairError<A::Error, B::Error>>;
+
+    fn select<'pop>(
+        &self,
+        population: &'pop P,
+        rng: &mut rand::prelude::ThreadRng,
+    ) -> Result<&'pop <P as Population>::Individual, Self::Error> {
+        let Some(distr) = self.distr else {
+            return Err(ZeroWeight.into());
+        };
+        if distr.sample(rng) {
+            self.a.select(population, rng).map_err(WeightedPairError::A)
+        } else {
+            self.b.select(population, rng).map_err(WeightedPairError::B)
+        }
+        .map_err(SelectionError::Selector)
+    }
+}
+
+#[cfg(test)]
+#[rustversion::attr(before(1.81), allow(clippy::unwrap_used))]
+#[rustversion::attr(
+    since(1.81),
+    expect(
+        clippy::unwrap_used,
+        reason = "Panicking is the best way to deal with errors in unit tests"
+    )
+)]
+mod tests {
+    use itertools::Itertools;
+    use test_strategy::proptest;
+
+    use crate::{
+        operator::selector::{
+            best::Best, random::Random, tournament::Tournament, worst::Worst, Selector,
+        },
+        weighted::{
+            error::{SelectionError, WeightSumOverflow, ZeroWeight},
+            weighted_pair::WeightedPair,
+            with_weight::WithWeight,
+            with_weighted_item::WithWeightedItem,
+            Weighted,
+        },
+    };
+
+    #[test]
+    fn can_construct_pair() {
+        let weighted = Weighted::new(Best, 5).with_item_and_weight(Worst, 8);
+        assert!(matches!(
+            weighted,
+            Ok(WeightedPair {
+                a: Weighted {
+                    item: Best,
+                    weight: 5
+                },
+                b: Weighted {
+                    item: Worst,
+                    weight: 8
+                },
+                distr: Some(_),
+                weight_sum: 13,
+            })
+        ));
+        assert_eq!(13, weighted.unwrap().weight());
+    }
+
+    #[proptest]
+    fn best_or_worst(#[map(|v: [i32;10]| v.into())] pop: Vec<i32>) {
+        let mut rng = rand::thread_rng();
+        // We'll make a selector that has a 50/50 chance of choosing the highest
+        // or lowest value.
+        let weighted = Weighted::new(Best, 1)
+            .with_item_and_weight(Worst, 1)
+            .unwrap();
+        let selection = weighted.select(&pop, &mut rng).unwrap();
+        let extremes: [&i32; 2] = pop.iter().minmax().into_option().unwrap().into();
+        assert!(extremes.contains(&selection));
+    }
+
+    #[proptest]
+    fn several_selectors(#[map(|v: [i32;10]| v.into())] pop: Vec<i32>) {
+        let mut rng = rand::thread_rng();
+        // We'll make a selector that has a 50/50 chance of choosing the highest
+        // or lowest value.
+        let weighted = Weighted::new(Best, 1)
+            .with_item_and_weight(Worst, 1)
+            .with_item_and_weight(Random, 0)
+            .with_item_and_weight(Tournament::of_size::<3>(), 2)
+            .unwrap();
+        let selection = weighted.select(&pop, &mut rng).unwrap();
+        assert!(pop.contains(selection));
+    }
+
+    #[test]
+    fn zero_weight_sum_error() {
+        let pop = vec![5, 8, 9, 6, 3, 2, 0];
+        let mut rng = rand::thread_rng();
+        let weighted = Weighted::new(Best, 0)
+            .with_item_and_weight(Worst, 0)
+            .with_item_and_weight(Random, 0)
+            .unwrap();
+        // If all the weights are zero, then selection should return an appropriate
+        // error type.
+        assert_eq!(
+            weighted.select(&pop, &mut rng).unwrap_err(),
+            SelectionError::from(ZeroWeight)
+        );
+    }
+
+    #[test]
+    fn weight_sum_overflow_error() {
+        let weighted = Weighted::new(Best, u32::MAX).with_item_and_weight(Worst, 0);
+        assert!(weighted.is_ok());
+        let weighted = weighted
+            .with_item_and_weight(Random, u32::MAX - 1)
+            .unwrap_err();
+        assert_eq!(weighted, WeightSumOverflow(u32::MAX, u32::MAX - 1));
+    }
+
+    #[test]
+    fn weight_sum_overflow_error_chaining() {
+        let weighted = Weighted::new(Best, u32::MAX).with_item_and_weight(Random, u32::MAX - 1);
+        assert!(weighted.is_err());
+        let weighted = weighted.with_item_and_weight(Worst, 0).unwrap_err();
+        assert_eq!(weighted, WeightSumOverflow(u32::MAX, u32::MAX - 1));
+    }
+}

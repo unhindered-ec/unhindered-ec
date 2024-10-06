@@ -5,5 +5,15 @@ allowed-duplicate-crates = [
   "base64",
   "itertools",
   "syn",
-  "heck"
+  "heck",
+  # https://github.com/eminence/terminal-size/pull/62
+  "windows-sys",
+  "windows-targets",
+  "windows_aarch64_gnullvm",
+  "windows_aarch64_msvc",
+  "windows_i686_gnu",
+  "windows_i686_msvc",
+  "windows_x86_64_gnu",
+  "windows_x86_64_gnullvm",
+  "windows_x86_64_msvc"
 ]

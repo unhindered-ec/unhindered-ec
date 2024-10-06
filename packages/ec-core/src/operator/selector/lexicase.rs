@@ -1,11 +1,11 @@
 use std::{cmp::Ordering, mem::swap, ops::Not};
 
-use anyhow::{Context, Result};
 use rand::{prelude::SliceRandom, rngs::ThreadRng};
 
-use super::Selector;
+use super::{error::EmptyPopulation, Selector};
 use crate::{individual::Individual, population::Population, test_results::TestResults};
 
+#[derive(Debug)]
 pub struct Lexicase {
     num_test_cases: usize,
 }
@@ -34,11 +34,13 @@ where
     P::Individual: Individual<TestResults = TestResults<R>>,
     R: Ord,
 {
+    type Error = EmptyPopulation;
+
     fn select<'pop>(
         &self,
         population: &'pop P,
         rng: &mut ThreadRng,
-    ) -> Result<&'pop P::Individual> {
+    ) -> Result<&'pop P::Individual, Self::Error> {
         // Candidate set is initially the whole population.
         // Shuffle the (indices of the) test cases.
         // For each test in turn:
@@ -94,10 +96,7 @@ where
         }
 
         candidates.shuffle(rng);
-        candidates
-            .first()
-            .copied()
-            .context("The pool of candidates was empty")
+        candidates.first().copied().ok_or(EmptyPopulation)
     }
 }
 
@@ -122,6 +121,17 @@ mod tests {
 
     use super::*;
     use crate::individual::ec::EcIndividual;
+
+    #[test]
+    fn empty_population() {
+        let pop = population_from_single_scores([]);
+        let mut rng = rand::thread_rng();
+        let selector = Lexicase::new(0);
+        assert!(matches!(
+            selector.select(&pop, &mut rng),
+            Err(EmptyPopulation)
+        ));
+    }
 
     // Generate a population from a vector of single scores, one per individual.
     // These have to be converted to iterators using `once` so they're "like"

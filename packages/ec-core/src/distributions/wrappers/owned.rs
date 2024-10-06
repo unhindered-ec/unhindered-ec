@@ -5,7 +5,9 @@ use rand::{distr::Uniform, prelude::Distribution};
 use crate::distributions::{choices::ChoicesDistribution, wrappers::slice_cloning::EmptySlice};
 
 /// Generate a random element from a collection of options, cloning the chosen
-/// element. The [`OneOfCloning`] struct takes ownership of the collection; the
+/// element.
+///
+/// The [`OneOfCloning`] struct takes ownership of the collection; the
 /// [`SliceCloning`](super::slice_cloning::SliceCloning) struct allows one to
 /// borrow the collection.
 #[derive(Debug, PartialEq, Eq)]
