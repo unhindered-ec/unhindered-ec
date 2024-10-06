@@ -11,11 +11,22 @@ pub struct Tournament {
     size: NonZeroUsize,
 }
 
-#[derive(Debug, thiserror::Error, Diagnostic)]
-pub enum TournamentError {
-    #[error("Tournament size {0} was larger than population size {1}")]
-    #[diagnostic(help = "Ensure that the population has at least {0} individuals")]
-    LargerThanPopulation(usize, NonZeroUsize),
+#[derive(Debug, thiserror::Error, Diagnostic, PartialEq, Eq)]
+#[error("Tournament size {tournament_size} was larger than population size {population_size}")]
+#[diagnostic(help = "Ensure that the population has at least {tournament_size} individuals")]
+pub struct TournamentSizeError {
+    tournament_size: NonZeroUsize,
+    population_size: usize,
+}
+
+impl TournamentSizeError {
+    #[must_use]
+    pub const fn new(tournament_size: NonZeroUsize, population_size: usize) -> Self {
+        Self {
+            tournament_size,
+            population_size,
+        }
+    }
 }
 
 impl Tournament {
@@ -66,7 +77,7 @@ where
     P: Population + AsRef<[P::Individual]>,
     P::Individual: Ord,
 {
-    type Error = TournamentError;
+    type Error = TournamentSizeError;
 
     fn select<'pop>(
         &self,
@@ -74,10 +85,7 @@ where
         rng: &mut ThreadRng,
     ) -> Result<&'pop P::Individual, Self::Error> {
         if population.size() < self.size.into() {
-            return Err(TournamentError::LargerThanPopulation(
-                population.size(),
-                self.size,
-            ));
+            return Err(TournamentSizeError::new(self.size, population.size()));
         }
         population
             .as_ref()
@@ -109,7 +117,7 @@ mod tests {
     use super::Tournament;
     use crate::{
         individual::ec::EcIndividual,
-        operator::selector::{tournament::TournamentError, Selector},
+        operator::selector::{tournament::TournamentSizeError, Selector},
     };
 
     #[test]
@@ -117,9 +125,14 @@ mod tests {
         let pop: Vec<i32> = Vec::new();
         let mut rng = rand::thread_rng();
         let selector = Tournament::new(NonZeroUsize::MIN);
+        let expected_error = TournamentSizeError::new(NonZeroUsize::MIN, 0);
+        assert_eq!(selector.select(&pop, &mut rng), Err(expected_error));
         assert!(matches!(
             selector.select(&pop, &mut rng),
-            Err(TournamentError::LargerThanPopulation(0, NonZeroUsize::MIN))
+            Err(TournamentSizeError {
+                tournament_size: NonZeroUsize::MIN,
+                population_size: 0
+            })
         ));
     }
 
@@ -130,11 +143,10 @@ mod tests {
         let selector = Tournament::of_size::<2>();
         assert!(matches!(
             selector.select(&pop, &mut rng),
-            Err(TournamentError::LargerThanPopulation(
-                1,
-               tournament_size
-            ))
-            if tournament_size == NonZeroUsize::new(2).unwrap()));
+            Err(TournamentSizeError {
+               tournament_size,
+               population_size: 1
+            }) if tournament_size == NonZeroUsize::new(2).unwrap()));
     }
 
     #[test]
