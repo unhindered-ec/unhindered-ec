@@ -17,6 +17,7 @@ pub enum Error<S, E> {
 pub type InstructionResult<S, E> = core::result::Result<S, Error<S, E>>;
 
 /// Maps a (presumably error) type into an `InstructionResult`.
+///
 /// This is used to convert `InstructionResult<S, E1>`
 /// into `InstructionResult<S, E2>`, i.e. do `map_err()` on
 /// the inner error types of an `InstructionResult`, preserving

@@ -1,13 +1,32 @@
 use std::num::NonZeroUsize;
 
-use anyhow::{ensure, Context, Result};
+use miette::Diagnostic;
 use rand::{prelude::IndexedRandom, rngs::ThreadRng};
 
 use super::Selector;
 use crate::population::Population;
 
+#[derive(Debug)]
 pub struct Tournament {
     size: NonZeroUsize,
+}
+
+#[derive(Debug, thiserror::Error, Diagnostic, PartialEq, Eq)]
+#[error("Tournament size {tournament_size} was larger than population size {population_size}")]
+#[diagnostic(help = "Ensure that the population has at least {tournament_size} individuals")]
+pub struct TournamentSizeError {
+    tournament_size: NonZeroUsize,
+    population_size: usize,
+}
+
+impl TournamentSizeError {
+    #[must_use]
+    pub const fn new(tournament_size: NonZeroUsize, population_size: usize) -> Self {
+        Self {
+            tournament_size,
+            population_size,
+        }
+    }
 }
 
 impl Tournament {
@@ -58,22 +77,24 @@ where
     P: Population + AsRef<[P::Individual]>,
     P::Individual: Ord,
 {
+    type Error = TournamentSizeError;
+
     fn select<'pop>(
         &self,
         population: &'pop P,
         rng: &mut ThreadRng,
-    ) -> Result<&'pop P::Individual> {
-        ensure!(
-            population.size() >= self.size.into(),
-            "The population had size {} and we wanted a tournament of size {}",
-            population.size(),
-            self.size
-        );
+    ) -> Result<&'pop P::Individual, Self::Error> {
+        if population.size() < self.size.into() {
+            return Err(TournamentSizeError::new(self.size, population.size()));
+        }
         population
             .as_ref()
             .choose_multiple(rng, self.size.into())
             .max()
-            .with_context(|| format!("The tournament was empty; should have been {}", self.size))
+            // This should never happen, because an empty population will cause the
+            // `if` test test to return an `Err` since `self.size` is guaranteed to
+            // be greater than zero.
+            .ok_or_else(|| unreachable!("Population can't be empty here"))
     }
 }
 
@@ -94,7 +115,39 @@ mod tests {
     use test_strategy::proptest;
 
     use super::Tournament;
-    use crate::{individual::ec::EcIndividual, operator::selector::Selector};
+    use crate::{
+        individual::ec::EcIndividual,
+        operator::selector::{tournament::TournamentSizeError, Selector},
+    };
+
+    #[test]
+    fn empty_population() {
+        let pop: Vec<i32> = Vec::new();
+        let mut rng = rand::thread_rng();
+        let selector = Tournament::new(NonZeroUsize::MIN);
+        let expected_error = TournamentSizeError::new(NonZeroUsize::MIN, 0);
+        assert_eq!(selector.select(&pop, &mut rng), Err(expected_error));
+        assert!(matches!(
+            selector.select(&pop, &mut rng),
+            Err(TournamentSizeError {
+                tournament_size: NonZeroUsize::MIN,
+                population_size: 0
+            })
+        ));
+    }
+
+    #[test]
+    fn tournament_size_larger_than_population() {
+        let pop: Vec<i32> = vec![0];
+        let mut rng = rand::thread_rng();
+        let selector = Tournament::of_size::<2>();
+        assert!(matches!(
+            selector.select(&pop, &mut rng),
+            Err(TournamentSizeError {
+               tournament_size,
+               population_size: 1
+            }) if tournament_size == NonZeroUsize::new(2).unwrap()));
+    }
 
     #[test]
     fn tournament_size_1() {
