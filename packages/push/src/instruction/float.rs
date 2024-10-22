@@ -13,6 +13,7 @@ use crate::{
 #[derive(Debug, strum_macros::Display, Copy, Clone, EnumIter, Eq, PartialEq)]
 #[non_exhaustive]
 pub enum FloatInstruction {
+    #[strum(to_string = "Push({0})")]
     Push(OrderedFloat<f64>),
     Add,
     Subtract,

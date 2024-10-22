@@ -13,12 +13,22 @@
 )]
 
 use ordered_float::OrderedFloat;
-use proptest::prop_assert_eq;
+use proptest::{prop_assert, prop_assert_eq};
 use push::{
     instruction::{FloatInstruction, Instruction, PushInstruction},
     push_vm::{push_state::PushState, stack::StackError, HasStack},
 };
 use test_strategy::proptest;
+
+#[proptest]
+fn to_string_contains_value(#[any] x: OrderedFloat<f64>) {
+    let instruction = FloatInstruction::Push(x);
+    let s = instruction.to_string();
+    prop_assert!(
+        s.contains(&x.to_string()),
+        "String version of instruction (\"{s}\") doesn't contain value (\"{x}\")"
+    );
+}
 
 #[test]
 fn to_push_instruction() {
