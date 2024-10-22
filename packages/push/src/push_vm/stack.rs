@@ -411,10 +411,10 @@ impl<T> Stack<T> {
     {
         let iter = iter.into_iter();
         // Check that adding these items won't overflow the stack.
-        if !iter
+        if iter
             .len()
             .checked_add(self.size())
-            .is_some_and(|x| x <= self.max_stack_size)
+            .is_none_or(|x| x > self.max_stack_size)
         {
             return Err(StackError::Overflow {
                 stack_type: std::any::type_name::<T>(),
