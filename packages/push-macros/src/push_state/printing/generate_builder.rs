@@ -1,12 +1,12 @@
 use ident_case_conversions::CaseConversions;
 use proc_macro2::{Span, TokenStream};
 use quote::quote;
-use syn::{ext::IdentExt, Generics, Ident, Visibility};
+use syn::{Generics, Ident, Visibility, ext::IdentExt};
 
 use crate::{
-    doctest_tokenstream::{doctest, Import},
+    doctest_tokenstream::{Import, doctest},
     push_state::parsing::{
-        stack_attribute_args::StackMarkerFlags, ExecStackInput, InputInstructionsInput, StacksInput,
+        ExecStackInput, InputInstructionsInput, StacksInput, stack_attribute_args::StackMarkerFlags,
     },
 };
 

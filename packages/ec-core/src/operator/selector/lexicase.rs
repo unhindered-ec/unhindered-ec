@@ -2,7 +2,7 @@ use std::{cmp::Ordering, mem::swap, ops::Not};
 
 use rand::{prelude::SliceRandom, rngs::ThreadRng};
 
-use super::{error::EmptyPopulation, Selector};
+use super::{Selector, error::EmptyPopulation};
 use crate::{individual::Individual, population::Population, test_results::TestResults};
 
 #[derive(Debug)]
@@ -114,7 +114,7 @@ mod tests {
 
     use proptest::{
         collection,
-        prelude::{any, Strategy},
+        prelude::{Strategy, any},
         prop_assert, prop_assert_eq,
     };
     use test_strategy::proptest;

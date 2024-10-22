@@ -1,5 +1,5 @@
 use crate::{
-    error::{stateful::FatalError, InstructionResult},
+    error::{InstructionResult, stateful::FatalError},
     instruction::Instruction,
 };
 

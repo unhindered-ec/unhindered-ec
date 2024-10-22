@@ -22,13 +22,10 @@ pub trait HasStack<T> {
         Self: Sized,
     {
         if self.stack::<U>().is_full() {
-            Err(Error::fatal(
-                self,
-                StackError::Overflow {
-                    // TODO: Should make sure to overflow a stack so we know what this looks like.
-                    stack_type: std::any::type_name::<T>(),
-                },
-            ))
+            Err(Error::fatal(self, StackError::Overflow {
+                // TODO: Should make sure to overflow a stack so we know what this looks like.
+                stack_type: std::any::type_name::<T>(),
+            }))
         } else {
             Ok(self)
         }
@@ -564,12 +561,9 @@ mod test {
     fn top_from_empty_fails() {
         let stack: Stack<bool> = Stack::default();
         let result = stack.top().unwrap_err();
-        assert_eq!(
-            result,
-            StackError::Underflow {
-                num_requested: 1,
-                num_present: 0
-            }
-        );
+        assert_eq!(result, StackError::Underflow {
+            num_requested: 1,
+            num_present: 0
+        });
     }
 }

@@ -2,9 +2,9 @@ use std::collections::BTreeMap;
 
 use proc_macro2::Span;
 use syn::{
+    Field, Ident, Token, Type,
     parse::{Parse, ParseStream},
     punctuated::Punctuated,
-    Field, Ident, Token, Type,
 };
 
 use self::{macro_args::PushStateFlags, stack_attribute_args::StackMarkerFlags};

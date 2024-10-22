@@ -11,22 +11,22 @@ pub mod args;
 
 use std::{iter::once, ops::Not};
 
-use anyhow::{ensure, Result};
+use anyhow::{Result, ensure};
 use clap::Parser;
 use ec_core::{
     distributions::collection::ConvertToCollectionGenerator,
     generation::Generation,
     individual::{ec::WithScorer, scorer::FnScorer},
     operator::{
+        Composable,
         genome_extractor::GenomeExtractor,
         genome_scorer::GenomeScorer,
         mutator::Mutate,
         recombinator::Recombine,
         selector::{
-            best::Best, dyn_weighted::DynWeighted, lexicase::Lexicase, tournament::Tournament,
-            Select, Selector,
+            Select, Selector, best::Best, dyn_weighted::DynWeighted, lexicase::Lexicase,
+            tournament::Tournament,
         },
-        Composable,
     },
     test_results::{Score, TestResults},
 };
