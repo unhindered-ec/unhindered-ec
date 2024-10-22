@@ -8,13 +8,13 @@ pub trait ChoicesDistribution {
     fn num_choices(&self) -> NonZeroUsize;
 }
 
-impl<'a, T> ChoicesDistribution for Slice<'a, T> {
+impl<T> ChoicesDistribution for Slice<'_, T> {
     fn num_choices(&self) -> NonZeroUsize {
         self.num_choices()
     }
 }
 
-impl<'a, T> ChoicesDistribution for &'a T
+impl<T> ChoicesDistribution for &T
 where
     T: ChoicesDistribution + ?Sized,
 {
@@ -23,7 +23,7 @@ where
     }
 }
 
-impl<'a, T> ChoicesDistribution for &'a mut T
+impl<T> ChoicesDistribution for &mut T
 where
     T: ChoicesDistribution + ?Sized,
 {
