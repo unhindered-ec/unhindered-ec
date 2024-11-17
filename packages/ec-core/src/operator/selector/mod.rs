@@ -13,12 +13,59 @@ pub mod worst;
 
 pub use error::EmptyPopulation;
 
+/// Select an individual from a `Population`
+///
+/// # Examples
+///
+/// In this example we use the `[Best]` selector to choose the
+/// "best" (maximal) value from a list.
+///
+/// ```
+/// # use ec_core::operator::selector::{best::Best, Selector};
+/// # use rand::thread_rng;
+/// #
+/// let population = vec![5, 8, 9, 2, 3, 6];
+/// let winner = Best.select(&population, &mut thread_rng()).unwrap();
+/// assert_eq!(*winner, 9);
+/// ```
+///
+/// Here we implement a `First` selector that always returns the first
+/// element in a vector.
+///
+/// ```
+/// # use rand::thread_rng;
+/// # use rand::rngs::ThreadRng;
+/// # use anyhow::Context;
+/// # use ec_core::operator::selector::Selector;
+/// #
+/// struct First;
+///
+/// impl Selector<Vec<u8>> for First {
+///     type Error = anyhow::Error;
+///
+///     fn select<'pop>(
+///         &self,
+///         population: &'pop Vec<u8>,
+///         _: &mut ThreadRng,
+///     ) -> anyhow::Result<&'pop u8> {
+///         population
+///             .get(0)
+///             .context("Should be at least one individual in the population")
+///     }
+/// }
+///
+/// let population = vec![5, 8, 9];
+/// let choice = First.select(&population, &mut thread_rng()).unwrap();
+/// assert_eq!(*choice, 5);
+/// ```
 pub trait Selector<P>
 where
     P: Population,
 {
     type Error;
 
+    /// Select an individual from the given `population`
+    ///
     /// # Errors
     /// This will return an error if there's some problem selecting. That will
     /// usually be because the population is empty or not large enough for
@@ -53,12 +100,14 @@ where
     type Output = &'pop P::Individual;
     type Error = S::Error;
 
+    /// Apply this `Selector` as an `Operator`
     fn apply(&self, population: &'pop P, rng: &mut ThreadRng) -> Result<Self::Output, Self::Error> {
         self.selector.select(population, rng)
     }
 }
 impl<S> Composable for Select<S> {}
 
+/// Implement `Selector` for a reference to a `Selector`
 impl<S, P> Selector<P> for &S
 where
     P: Population,
@@ -71,6 +120,6 @@ where
         population: &'pop P,
         rng: &mut ThreadRng,
     ) -> Result<&'pop P::Individual, Self::Error> {
-        (*self).select(population, rng)
+        (**self).select(population, rng)
     }
 }
