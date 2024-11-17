@@ -21,6 +21,10 @@ pub trait Recombinator<GS> {
     fn recombine(&self, genomes: GS, rng: &mut ThreadRng) -> anyhow::Result<Self::Output>;
 }
 
+/// A wrapper that converts a `Mutator` into an `Operator`
+///
+/// See [the `operator` module docs](crate::operator#wrappers) for more on
+/// the design decisions behind using wrappers.
 pub struct Recombine<R> {
     recombinator: R,
 }

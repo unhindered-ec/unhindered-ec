@@ -30,6 +30,10 @@ where
     ) -> Result<&'pop P::Individual, Self::Error>;
 }
 
+/// A wrapper that converts a `Selector` into an `Operator`
+///
+/// See [the `operator` module docs](crate::operator#wrappers) for more on the
+/// design decisions behind using wrappers.
 #[derive(Clone)]
 pub struct Select<S> {
     selector: S,

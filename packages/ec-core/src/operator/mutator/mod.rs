@@ -9,6 +9,10 @@ pub trait Mutator<G> {
     fn mutate(&self, genome: G, rng: &mut ThreadRng) -> anyhow::Result<G>;
 }
 
+/// A wrapper that converts a `Mutator` into an `Operator`
+///
+/// See [the `operator` module docs](crate::operator#wrappers) for more on the
+/// design decisions behind using wrappers.
 pub struct Mutate<M> {
     mutator: M,
 }

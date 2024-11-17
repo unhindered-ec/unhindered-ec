@@ -1,3 +1,10 @@
+//! Documentation on the `operator` module...
+//!
+//! # Wrappers
+//!
+//! Explain the use of wrappers, and why blanket
+//! implementations weren't feasible.
+
 use rand::rngs::ThreadRng;
 
 pub mod composable;
