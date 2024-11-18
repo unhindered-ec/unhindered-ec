@@ -226,7 +226,6 @@ where
 /// let choice_length: usize = chain.apply(&population, &mut rand::thread_rng()).unwrap();
 /// assert_eq!(choice_length, 5);
 /// ```
-
 #[derive(Clone)]
 pub struct Select<S> {
     /// The wrapped [`Selector`] that this [`Select`] will apply
