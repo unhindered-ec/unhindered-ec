@@ -15,6 +15,9 @@ pub use error::EmptyPopulation;
 
 /// Select an individual from a `Population`
 ///
+/// See [`Select`] for a wrapper that converts a `Selector` into an
+/// [`Operator`], allowing selectors to be used in chains of operators.
+///
 /// # Examples
 ///
 /// In this example we use the `[Best]` selector to choose the
@@ -97,7 +100,7 @@ where
 /// # use rand::rngs::ThreadRng;
 /// #
 /// # use ec_core::operator::selector::{Select, Selector};
-/// # use ec_core::operator::{Composable, Operator};
+/// # use ec_core::operator::Operator;
 /// #
 /// struct First; // Simple selector that always returns the first element in a vector.
 ///
@@ -115,6 +118,7 @@ where
 ///     }
 /// }
 ///
+/// // Create a `Select` operator from the `First` selector
 /// let select = Select::new(First);
 /// let population: Vec<u8> = vec![5, 8, 9];
 /// // Selectors return references to the individuals they choose, so we
@@ -125,7 +129,7 @@ where
 /// assert_eq!(selector_result, operator_result);
 /// ```
 ///
-/// Because both [`Selector`] and [`Operator`] are [`Composable`], we can chain
+/// Because both [`Select`] and [`Operator`] are [`Composable`], we can chain
 /// them using the [`Composable::then()`] method, and then [`Operator::apply`]
 /// the resulting chain to an input. In the examples below we apply the chain
 /// to a "population" that is a vector of `String`s. The `First` selector will
@@ -183,7 +187,7 @@ where
 ///
 /// We can also pass a _reference_ to a [`Selector`] (i.e., `&Selector`) to
 /// [`Select`], allowing us to pass references to selectors into chains of
-/// operators without requiring or giving up ownership.
+/// operators without requiring or giving up ownership of the selector.
 ///
 /// ```
 /// # use anyhow::Context;
@@ -254,6 +258,9 @@ where
 }
 impl<S> Composable for Select<S> {}
 
+/// Implement [`Selector`] for a reference to a [`Selector`].
+/// This allows us to wrap a reference to a selector in a [`Select`] operator
+/// and use it in chains of operators.
 impl<S, P> Selector<P> for &S
 where
     P: Population,
