@@ -13,7 +13,7 @@ pub mod worst;
 
 pub use error::EmptyPopulation;
 
-/// Select an individual from a `Population`
+/// Select an individual from a `Population`.
 ///
 /// See [`Select`] for a wrapper that converts a `Selector` into an
 /// [`Operator`], allowing selectors to be used in chains of operators.
@@ -70,6 +70,7 @@ where
     /// Select an individual from the given `population`
     ///
     /// # Errors
+    ///
     /// This will return an error if there's some problem selecting. That will
     /// usually be because the population is empty or not large enough for
     /// the desired selector.
@@ -80,7 +81,7 @@ where
     ) -> Result<&'pop P::Individual, Self::Error>;
 }
 
-/// A wrapper that converts a `Selector` into an `Operator`
+/// A wrapper that converts a `Selector` into an `Operator`.
 ///
 /// This allows the inclusion of `Selector`s in chains of operators.
 ///

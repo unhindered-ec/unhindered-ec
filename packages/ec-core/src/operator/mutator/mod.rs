@@ -5,6 +5,10 @@ use super::{Composable, Operator};
 /// Mutate a genome of type `G` generating a new
 /// genome of the same type (`G`).
 ///
+/// Implementations of this trait are typically representation dependent,
+/// so see crates like [`ec_linear`](../../../ec_linear/mutator/index.html) for
+/// examples of mutators on linear genomes.
+///
 /// # See also
 ///
 /// See [`Mutate`] for a wrapper that converts a `Mutator` into an [`Operator`],
@@ -45,13 +49,14 @@ pub trait Mutator<G> {
     /// Mutate the given `genome` returning a new genome of the same type (`G`)
     ///
     /// # Errors
-    /// This can return an error if there is an error mutating the given
+    ///
+    /// This will return an error if there is an error mutating the given
     /// genome. This will usually be because the given `genome` is invalid in
     /// some way, thus making the mutation impossible.
     fn mutate(&self, genome: G, rng: &mut ThreadRng) -> anyhow::Result<G>;
 }
 
-/// A wrapper that converts a [`Mutator`] into an [`Operator`]
+/// A wrapper that converts a [`Mutator`] into an [`Operator`].
 ///
 /// This allows the inclusion of `Mutator`s in chains of operators.
 ///
@@ -182,8 +187,8 @@ pub trait Mutator<G> {
 /// // If we flip exactly one of these, we should have exactly one `true`.
 /// let genome = vec![false, false, false, false];
 /// // Wrap a reference to the mutator in a `Mutate` operator so we can chain it with `CountTrue`
-/// let operator = Mutate::new(&FlipOne);
-/// let chain = operator.then(CountTrue);
+/// let mutate = Mutate::new(&FlipOne);
+/// let chain = mutate.then(CountTrue);
 /// assert_eq!(chain.apply(genome, &mut thread_rng()).unwrap(), 1);
 /// ```
 pub struct Mutate<M> {
@@ -289,7 +294,7 @@ mod tests {
     fn can_wrap_mutator_reference() {
         let genome = vec![true, false, false, true];
         let mutator = FlipOne;
-        // Use a reference to the mutator to create a `Mutate` operator
+        // Wrap a reference to the mutator in a `Mutate` to make it an `Operator`.
         let operator = Mutate::new(&mutator);
         let child_genome = operator.apply(genome.clone(), &mut thread_rng()).unwrap();
         assert_eq!(count_differences(&genome, &child_genome), 1);
@@ -311,7 +316,7 @@ mod tests {
         // If we flip exactly one of these, we should have exactly one `true`.
         let genome = vec![false, false, false, false];
         let mutator = FlipOne;
-        // Wrap a reference to the mutator in a `Mutate` operator
+        // Wrap a reference to the mutator in a `Mutate` to make it an `Operator`.
         let operator = Mutate::new(&mutator);
         let count_true = CountTrue;
         let chain = operator.then(count_true);
