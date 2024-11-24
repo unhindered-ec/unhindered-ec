@@ -1,6 +1,7 @@
 use rand::rngs::ThreadRng;
 
 pub mod composable;
+pub mod constant;
 pub mod genome_extractor;
 pub mod genome_scorer;
 pub mod identity;

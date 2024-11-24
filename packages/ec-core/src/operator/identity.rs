@@ -1,26 +1,18 @@
+use std::convert::Infallible;
+
 use rand::rngs::ThreadRng;
 
 use super::{Composable, Operator};
 
-pub struct Identity<T> {
-    value: T,
-}
+pub struct Identity;
 
-impl<T> Identity<T> {
-    pub const fn new(value: T) -> Self {
-        Self { value }
-    }
-}
-
-impl<T> Operator<()> for Identity<T>
-where
-    T: Clone,
-{
+impl<T> Operator<T> for Identity {
     type Output = T;
-    type Error = anyhow::Error;
+    type Error = Infallible;
 
-    fn apply(&self, (): (), _: &mut ThreadRng) -> Result<Self::Output, Self::Error> {
-        Ok(self.value.clone())
+    fn apply(&self, input: T, _: &mut ThreadRng) -> Result<Self::Output, Self::Error> {
+        Ok(input)
     }
 }
-impl<T> Composable for Identity<T> {}
+
+impl Composable for Identity {}
