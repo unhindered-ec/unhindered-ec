@@ -1,3 +1,5 @@
+use std::convert::Infallible;
+
 use rand::rngs::ThreadRng;
 
 use super::{Composable, Operator};
@@ -17,7 +19,7 @@ where
     T: Clone,
 {
     type Output = T;
-    type Error = anyhow::Error;
+    type Error = Infallible;
 
     fn apply(&self, (): (), _: &mut ThreadRng) -> Result<Self::Output, Self::Error> {
         Ok(self.value.clone())
