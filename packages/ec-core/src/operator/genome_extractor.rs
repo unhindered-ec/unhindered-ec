@@ -1,3 +1,5 @@
+use std::convert::Infallible;
+
 use super::{Composable, Operator};
 use crate::individual::Individual;
 
@@ -59,7 +61,7 @@ where
     <I as Individual>::Genome: Clone,
 {
     type Output = I::Genome;
-    type Error = anyhow::Error;
+    type Error = Infallible;
 
     fn apply(
         &self,
