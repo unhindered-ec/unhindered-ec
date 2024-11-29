@@ -22,13 +22,10 @@ pub trait HasStack<T> {
         Self: Sized,
     {
         if self.stack::<U>().is_full() {
-            Err(Error::fatal(
-                self,
-                StackError::Overflow {
-                    // TODO: Should make sure to overflow a stack so we know what this looks like.
-                    stack_type: std::any::type_name::<T>(),
-                },
-            ))
+            Err(Error::fatal(self, StackError::Overflow {
+                // TODO: Should make sure to overflow a stack so we know what this looks like.
+                stack_type: std::any::type_name::<T>(),
+            }))
         } else {
             Ok(self)
         }
@@ -411,10 +408,10 @@ impl<T> Stack<T> {
     {
         let iter = iter.into_iter();
         // Check that adding these items won't overflow the stack.
-        if !iter
+        if iter
             .len()
             .checked_add(self.size())
-            .is_some_and(|x| x <= self.max_stack_size)
+            .is_none_or(|x| x > self.max_stack_size)
         {
             return Err(StackError::Overflow {
                 stack_type: std::any::type_name::<T>(),
@@ -564,12 +561,9 @@ mod test {
     fn top_from_empty_fails() {
         let stack: Stack<bool> = Stack::default();
         let result = stack.top().unwrap_err();
-        assert_eq!(
-            result,
-            StackError::Underflow {
-                num_requested: 1,
-                num_present: 0
-            }
-        );
+        assert_eq!(result, StackError::Underflow {
+            num_requested: 1,
+            num_present: 0
+        });
     }
 }

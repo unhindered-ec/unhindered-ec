@@ -1,5 +1,5 @@
 use ec_core::{genome::Genome, operator::mutator::Mutator};
-use rand::{prelude::Distribution, rngs::ThreadRng, Rng};
+use rand::{Rng, prelude::Distribution, rngs::ThreadRng};
 
 use crate::genome::Linear;
 

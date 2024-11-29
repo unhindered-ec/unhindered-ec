@@ -20,7 +20,7 @@ impl<I> Population for Vec<I> {
 mod tests {
     use core::ops::Range;
 
-    use rand::{prelude::Distribution, thread_rng, Rng};
+    use rand::{Rng, prelude::Distribution, thread_rng};
 
     use crate::{distributions::collection::ConvertToCollectionGenerator, population::Population};
 

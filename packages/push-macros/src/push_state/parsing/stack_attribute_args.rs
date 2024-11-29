@@ -1,11 +1,10 @@
 use proc_macro2::TokenStream;
 use quote::ToTokens;
 use syn::{
-    bracketed,
+    Expr, Ident, Path, Token, bracketed,
     parse::{Parse, ParseStream},
     punctuated::Punctuated,
     spanned::Spanned,
-    Expr, Ident, Path, Token,
 };
 
 use super::spanned_value::SpannedValue;

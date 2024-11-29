@@ -1,4 +1,4 @@
-use criterion::{black_box, criterion_group, criterion_main, Criterion};
+use criterion::{Criterion, black_box, criterion_group, criterion_main};
 use ec_core::{distributions::collection::ConvertToCollectionGenerator, test_results::TestResults};
 use rand::{
     distr::{Distribution, Standard},

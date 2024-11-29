@@ -16,7 +16,7 @@ use ordered_float::OrderedFloat;
 use proptest::prop_assert_eq;
 use push::{
     instruction::{FloatInstruction, Instruction, PushInstruction},
-    push_vm::{push_state::PushState, stack::StackError, HasStack},
+    push_vm::{HasStack, push_state::PushState, stack::StackError},
 };
 use test_strategy::proptest;
 

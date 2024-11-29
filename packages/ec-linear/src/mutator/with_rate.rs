@@ -2,7 +2,7 @@ use std::ops::Not;
 
 use anyhow::Result;
 use ec_core::operator::mutator::Mutator;
-use rand::{rngs::ThreadRng, Rng};
+use rand::{Rng, rngs::ThreadRng};
 
 use crate::genome::Linear;
 

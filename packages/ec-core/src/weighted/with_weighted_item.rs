@@ -1,5 +1,5 @@
 use super::{
-    error::WeightSumOverflow, weighted_pair::WeightedPair, with_weight::WithWeight, Weighted,
+    Weighted, error::WeightSumOverflow, weighted_pair::WeightedPair, with_weight::WithWeight,
 };
 
 pub trait WithWeightedItem

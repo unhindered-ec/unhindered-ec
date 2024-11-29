@@ -84,14 +84,14 @@ mod tests {
 
     use crate::{
         operator::selector::{
-            best::Best, random::Random, tournament::Tournament, worst::Worst, Selector,
+            Selector, best::Best, random::Random, tournament::Tournament, worst::Worst,
         },
         weighted::{
+            Weighted,
             error::{SelectionError, WeightSumOverflow, ZeroWeight},
             weighted_pair::WeightedPair,
             with_weight::WithWeight,
             with_weighted_item::WithWeightedItem,
-            Weighted,
         },
     };
 

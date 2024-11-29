@@ -1,10 +1,10 @@
 use crate::{
     error::{Error, InstructionResult},
-    instruction::{instruction_error::PushInstructionError, Instruction, NumOpens},
+    instruction::{Instruction, NumOpens, instruction_error::PushInstructionError},
     push_vm::{
+        HasStack,
         program::PushProgram,
         stack::{StackDiscard, StackError},
-        HasStack,
     },
 };
 

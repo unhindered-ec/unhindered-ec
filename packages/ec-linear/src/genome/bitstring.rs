@@ -5,7 +5,7 @@ use ec_core::{
     distributions::collection::{self, ConvertToCollectionGenerator},
     genome::Genome,
 };
-use rand::{distr::Standard, prelude::Distribution, rngs::ThreadRng, Rng};
+use rand::{Rng, distr::Standard, prelude::Distribution, rngs::ThreadRng};
 
 use super::Linear;
 use crate::recombinator::crossover::Crossover;
