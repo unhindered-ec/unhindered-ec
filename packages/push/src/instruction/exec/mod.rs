@@ -7,10 +7,10 @@ mod when;
 use strum_macros::EnumIter;
 
 use self::{dup_block::DupBlock, ifelse::IfElse, noop::Noop, unless::Unless, when::When};
-use super::{instruction_error::PushInstructionError, Instruction, NumOpens, PushInstruction};
+use super::{Instruction, NumOpens, PushInstruction, instruction_error::PushInstructionError};
 use crate::{
     error::InstructionResult,
-    push_vm::{program::PushProgram, HasStack},
+    push_vm::{HasStack, program::PushProgram},
 };
 
 #[derive(Debug, strum_macros::Display, Copy, Clone, Eq, PartialEq, EnumIter)]

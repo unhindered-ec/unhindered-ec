@@ -3,12 +3,12 @@ use std::collections::HashMap;
 pub use ordered_float::OrderedFloat;
 
 use crate::{
-    error::{stateful::FatalError, try_recover::TryRecover, InstructionResult},
+    error::{InstructionResult, stateful::FatalError, try_recover::TryRecover},
     instruction::{
-        instruction_error::PushInstructionError, variable_name::VariableName, Instruction,
-        PushInstruction,
+        Instruction, PushInstruction, instruction_error::PushInstructionError,
+        variable_name::VariableName,
     },
-    push_vm::{program::PushProgram, stack::Stack, State},
+    push_vm::{State, program::PushProgram, stack::Stack},
 };
 
 // TODO: It might make sense to separate out the specification of
@@ -126,8 +126,8 @@ mod simple_check {
     use crate::{
         genome::plushy::{Plushy, PushGene},
         instruction::{
-            variable_name::VariableName, BoolInstruction, FloatInstruction, IntInstruction,
-            PushInstruction,
+            BoolInstruction, FloatInstruction, IntInstruction, PushInstruction,
+            variable_name::VariableName,
         },
         list_into::vec_into,
         push_vm::{program::PushProgram, push_state::PushState},

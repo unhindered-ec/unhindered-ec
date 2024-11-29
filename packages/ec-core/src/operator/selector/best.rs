@@ -1,6 +1,6 @@
 use rand::rngs::ThreadRng;
 
-use super::{error::EmptyPopulation, Selector};
+use super::{Selector, error::EmptyPopulation};
 use crate::population::Population;
 
 #[derive(Debug)]

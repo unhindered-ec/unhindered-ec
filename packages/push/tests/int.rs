@@ -10,9 +10,9 @@
 use proptest::prop_assert_eq;
 use push::{
     instruction::{
-        instruction_error::PushInstructionError, Instruction, IntInstruction, IntInstructionError,
+        Instruction, IntInstruction, IntInstructionError, instruction_error::PushInstructionError,
     },
-    push_vm::{push_state::PushState, HasStack},
+    push_vm::{HasStack, push_state::PushState},
 };
 use strum::IntoEnumIterator;
 use test_strategy::proptest;

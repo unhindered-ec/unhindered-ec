@@ -117,7 +117,7 @@ mod tests {
     use super::Tournament;
     use crate::{
         individual::ec::EcIndividual,
-        operator::selector::{tournament::TournamentSizeError, Selector},
+        operator::selector::{Selector, tournament::TournamentSizeError},
     };
 
     #[test]

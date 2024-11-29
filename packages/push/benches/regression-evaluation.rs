@@ -11,12 +11,12 @@
     //           for test code."
 )]
 
-use criterion::{black_box, criterion_group, criterion_main, Criterion};
+use criterion::{Criterion, black_box, criterion_group, criterion_main};
 use ordered_float::OrderedFloat;
 use push::{
     genome::plushy::{Plushy, PushGene},
     instruction::{FloatInstruction, PushInstruction},
-    push_vm::{program::PushProgram, push_state::PushState, HasStack, State},
+    push_vm::{HasStack, State, program::PushProgram, push_state::PushState},
     vec_into,
 };
 

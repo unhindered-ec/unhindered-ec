@@ -6,7 +6,7 @@ use ec_core::{
     genome::Genome,
 };
 use ec_linear::genome::Linear;
-use rand::{prelude::Distribution, Rng};
+use rand::{Rng, prelude::Distribution};
 
 use crate::instruction::{NumOpens, PushInstruction};
 
@@ -263,7 +263,7 @@ mod test {
 
     use super::*;
     use crate::{
-        instruction::{variable_name::VariableName, BoolInstruction, IntInstruction},
+        instruction::{BoolInstruction, IntInstruction, variable_name::VariableName},
         list_into::vec_into,
     };
 

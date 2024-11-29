@@ -1,4 +1,4 @@
-use super::{composable::Wrappable, Composable, Operator};
+use super::{Composable, Operator, composable::Wrappable};
 use crate::{
     individual::{ec::EcIndividual, scorer::Scorer},
     population::Population,

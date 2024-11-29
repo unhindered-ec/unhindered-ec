@@ -10,8 +10,8 @@ use std::{
 use rand::prelude::Distribution;
 
 use super::{
-    scorer::{FnScorer, Scorer},
     Individual,
+    scorer::{FnScorer, Scorer},
 };
 
 /// `EcIndividual` is a struct that represents an individual in an evolutionary
