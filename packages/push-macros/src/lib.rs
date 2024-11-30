@@ -2,7 +2,7 @@
 
 use push_state::printing::generate_builder::generate_builder;
 use quote::quote;
-use syn::{spanned::Spanned, DeriveInput};
+use syn::{DeriveInput, spanned::Spanned};
 
 use crate::push_state::{parsing::parse_fields, printing::derive_has_stack::derive_has_stack};
 

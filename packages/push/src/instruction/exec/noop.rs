@@ -1,4 +1,4 @@
-use crate::instruction::{instruction_error::PushInstructionError, Instruction, NumOpens};
+use crate::instruction::{Instruction, NumOpens, instruction_error::PushInstructionError};
 
 /// A "no-op" instruction that does nothing, i.e., always
 /// runs successfully and makes no changes to the stacks.

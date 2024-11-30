@@ -1,7 +1,7 @@
 use crate::{
     error::InstructionResult,
-    instruction::{instruction_error::PushInstructionError, Instruction},
-    push_vm::{stack::PushOnto, HasStack},
+    instruction::{Instruction, instruction_error::PushInstructionError},
+    push_vm::{HasStack, stack::PushOnto},
 };
 
 /// An instruction that takes the absolute value of the top
@@ -106,7 +106,7 @@ mod tests {
     use super::Abs;
     use crate::{
         instruction::Instruction,
-        push_vm::{push_state::PushState, HasStack},
+        push_vm::{HasStack, push_state::PushState},
     };
 
     // We need to make sure `Abs` properly handles the

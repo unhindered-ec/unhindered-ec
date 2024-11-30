@@ -1,5 +1,5 @@
 use quote::ToTokens;
-use syn::{parse::Parse, punctuated::Punctuated, Token};
+use syn::{Token, parse::Parse, punctuated::Punctuated};
 
 use super::FlagsValue;
 

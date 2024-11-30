@@ -2,18 +2,18 @@ pub mod args;
 
 use std::ops::Not;
 
-use anyhow::{ensure, Result};
+use anyhow::{Result, ensure};
 use clap::Parser;
 use ec_core::{
     distributions::{collection::ConvertToCollectionGenerator, conversion::IntoDistribution},
     generation::Generation,
     individual::{ec::WithScorer, scorer::FnScorer},
     operator::{
+        Composable,
         genome_extractor::GenomeExtractor,
         genome_scorer::GenomeScorer,
         mutator::Mutate,
-        selector::{best::Best, lexicase::Lexicase, Select, Selector},
-        Composable,
+        selector::{Select, Selector, best::Best, lexicase::Lexicase},
     },
     test_results::{self, TestResults},
 };
@@ -22,10 +22,10 @@ use push::{
     evaluation::{Case, Cases, WithTargetFn},
     genome::plushy::{GeneGenerator, Plushy},
     instruction::{
-        variable_name::VariableName, BoolInstruction, ExecInstruction, IntInstruction,
-        PushInstruction,
+        BoolInstruction, ExecInstruction, IntInstruction, PushInstruction,
+        variable_name::VariableName,
     },
-    push_vm::{program::PushProgram, push_state::PushState, stack::StackError, HasStack, State},
+    push_vm::{HasStack, State, program::PushProgram, push_state::PushState, stack::StackError},
 };
 use rand::{
     distr::{Distribution, Uniform},

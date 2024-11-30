@@ -1,7 +1,7 @@
 use crate::{
     error::InstructionResult,
-    instruction::{instruction_error::PushInstructionError, Instruction, NumOpens},
-    push_vm::{program::PushProgram, stack::PushOnto, HasStack},
+    instruction::{Instruction, NumOpens, instruction_error::PushInstructionError},
+    push_vm::{HasStack, program::PushProgram, stack::PushOnto},
 };
 
 /// An instruction that duplicates (clones) the top

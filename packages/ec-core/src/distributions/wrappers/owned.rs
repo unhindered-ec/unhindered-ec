@@ -78,10 +78,10 @@ impl<T, U> ChoicesDistribution for OneOfCloning<T, U> {
     }
 }
 
-impl<'a, T, U> Distribution<U> for OneOfCloning<T, U>
+impl<T, U> Distribution<U> for OneOfCloning<T, U>
 where
     T: Borrow<[U]>,
-    U: 'a + Clone,
+    U: Clone,
 {
     #[rustversion::attr(before(1.81), allow(clippy::unwrap_used))]
     #[rustversion::attr(

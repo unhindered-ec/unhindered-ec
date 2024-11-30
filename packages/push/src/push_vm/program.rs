@@ -1,9 +1,9 @@
-use super::{push_state::PushState, stack::StackError, HasStack};
+use super::{HasStack, push_state::PushState, stack::StackError};
 use crate::{
     error::{Error, InstructionResult},
     genome::plushy::{Plushy, PushGene},
     instruction::{
-        instruction_error::PushInstructionError, Instruction, NumOpens, PushInstruction,
+        Instruction, NumOpens, PushInstruction, instruction_error::PushInstructionError,
     },
 };
 
@@ -113,7 +113,7 @@ mod test {
             BoolInstruction, ExecInstruction, FloatInstruction, Instruction, IntInstruction,
         },
         list_into::{arr_into, vec_into},
-        push_vm::{push_state::PushState, HasStack},
+        push_vm::{HasStack, push_state::PushState},
     };
 
     #[test]
@@ -131,18 +131,15 @@ mod test {
         // [Instruction(Int-Add), Instruction(Exec-IfElse),
         // Block([Instruction(Int-Multiply)]), Block([Instruction(Exec-Dup),
         // Block([Instruction(Int-Subtract)])])]
-        assert_eq!(
-            program,
-            vec_into![
-                IntInstruction::Add,
-                ExecInstruction::if_else(),
-                PushProgram::Block(vec_into![IntInstruction::Multiply]),
-                PushProgram::Block(vec_into![
-                    ExecInstruction::dup_block(),
-                    PushProgram::Block(vec_into![IntInstruction::Subtract])
-                ])
-            ]
-        );
+        assert_eq!(program, vec_into![
+            IntInstruction::Add,
+            ExecInstruction::if_else(),
+            PushProgram::Block(vec_into![IntInstruction::Multiply]),
+            PushProgram::Block(vec_into![
+                ExecInstruction::dup_block(),
+                PushProgram::Block(vec_into![IntInstruction::Subtract])
+            ])
+        ]);
     }
 
     #[test]

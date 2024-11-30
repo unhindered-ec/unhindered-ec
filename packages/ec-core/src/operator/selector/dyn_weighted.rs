@@ -6,7 +6,7 @@ use rand::{
     seq::{IndexedRandom, WeightError},
 };
 
-use super::{error::EmptyPopulation, Selector};
+use super::{Selector, error::EmptyPopulation};
 use crate::population::Population;
 
 trait DynSelector<P>
@@ -116,7 +116,7 @@ mod tests {
     use test_strategy::proptest;
 
     use super::DynWeighted;
-    use crate::operator::selector::{best::Best, worst::Worst, Selector};
+    use crate::operator::selector::{Selector, best::Best, worst::Worst};
 
     #[proptest]
     fn best_or_worst(#[map(|v: [i32;10]| v.into())] pop: Vec<i32>) {

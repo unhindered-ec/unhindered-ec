@@ -1,7 +1,7 @@
 use crate::{
     error::InstructionResult,
     instruction::{Instruction, PushInstructionError},
-    push_vm::{stack::PushOnto, HasStack},
+    push_vm::{HasStack, stack::PushOnto},
 };
 
 /// An instruction that negates the top
@@ -106,7 +106,7 @@ mod tests {
     use super::Negate;
     use crate::{
         instruction::Instruction,
-        push_vm::{push_state::PushState, HasStack},
+        push_vm::{HasStack, push_state::PushState},
     };
 
     // We need to make sure `Negate` properly handles the

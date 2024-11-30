@@ -34,13 +34,13 @@ impl<'a, T> SliceCloning<'a, T> {
     }
 }
 
-impl<'a, T> ChoicesDistribution for SliceCloning<'a, T> {
+impl<T> ChoicesDistribution for SliceCloning<'_, T> {
     fn num_choices(&self) -> NonZeroUsize {
         self.0.num_choices()
     }
 }
 
-impl<'a, T> Distribution<T> for SliceCloning<'a, T>
+impl<T> Distribution<T> for SliceCloning<'_, T>
 where
     T: Clone,
 {

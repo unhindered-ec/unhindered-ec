@@ -67,7 +67,7 @@ impl<F, const N: usize> Composable for RepeatWith<F, N> {}
 mod tests {
     use std::{convert::Infallible, ops::Range};
 
-    use rand::{thread_rng, Rng};
+    use rand::{Rng, thread_rng};
 
     use super::*;
 

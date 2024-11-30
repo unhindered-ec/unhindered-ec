@@ -1,11 +1,11 @@
 use super::when::When;
 use crate::{
     error::{Error, InstructionResult},
-    instruction::{instruction_error::PushInstructionError, Instruction, NumOpens},
+    instruction::{Instruction, NumOpens, instruction_error::PushInstructionError},
     push_vm::{
+        HasStack,
         program::PushProgram,
         stack::{StackDiscard, StackError, StackPush},
-        HasStack,
     },
 };
 
@@ -163,7 +163,7 @@ mod tests {
     use crate::{
         error::into_state::IntoState,
         instruction::{
-            instruction_error::PushInstructionError, ExecInstruction, Instruction, IntInstruction,
+            ExecInstruction, Instruction, IntInstruction, instruction_error::PushInstructionError,
         },
         list_into::arr_into,
         push_vm::{program::PushProgram, push_state::PushState, stack::StackError},
