@@ -77,14 +77,14 @@ impl Composable for GenomeExtractor {}
 #[expect(clippy::unwrap_used, reason = "panicking is appropriate in tests")]
 #[cfg(test)]
 mod tests {
-    use rand::{rngs::ThreadRng, thread_rng, Rng};
+    use rand::{Rng, rngs::ThreadRng, thread_rng};
 
     use super::GenomeExtractor;
     use crate::{
         individual::ec::EcIndividual,
         operator::{
-            mutator::{Mutate, Mutator},
             Composable, Operator,
+            mutator::{Mutate, Mutator},
         },
     };
 

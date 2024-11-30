@@ -234,10 +234,10 @@ where
 )]
 #[cfg(test)]
 mod tests {
-    use rand::{rngs::ThreadRng, thread_rng, Rng};
+    use rand::{Rng, rngs::ThreadRng, thread_rng};
 
     use super::Mutator;
-    use crate::operator::{mutator::Mutate, Composable, Operator};
+    use crate::operator::{Composable, Operator, mutator::Mutate};
 
     struct FlipOne;
 
