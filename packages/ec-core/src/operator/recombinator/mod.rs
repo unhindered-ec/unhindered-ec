@@ -34,22 +34,21 @@ use super::{Composable, Operator};
 /// second parent.
 ///
 /// ```
-/// # use rand::thread_rng;
-/// # use rand::rngs::ThreadRng;
-/// # use rand::Rng;
+/// # use rand::{rngs::ThreadRng, thread_rng, Rng};
 /// # use ec_core::operator::recombinator::Recombinator;
 /// #
 /// struct SwapOne;
-/// type Parents = (Vec<u8>, Vec<u8>);
+/// type Genome<T> = [T; 4];
+/// type Parents<T> = (Genome<T>, Genome<T>);
 ///
-/// impl Recombinator<Parents> for SwapOne {
-///     type Output = Vec<u8>;
+/// impl<T: Copy> Recombinator<Parents<T>> for SwapOne {
+///     type Output = Genome<T>;
 ///
 ///     fn recombine(
 ///         &self,
-///         (mut first_parent, second_parent): Parents,
+///         (mut first_parent, second_parent): Parents<T>,
 ///         rng: &mut ThreadRng,
-///     ) -> anyhow::Result<Vec<u8>> {
+///     ) -> anyhow::Result<Genome<T>> {
 ///         let index = rng.gen_range(0..first_parent.len());
 ///         first_parent[index] = second_parent[index];
 ///         Ok(first_parent)
@@ -58,15 +57,14 @@ use super::{Composable, Operator};
 ///
 /// // Swpapping one element from the first parent with the second parent
 /// // should result in a child with three zeros and a single one.
-/// let first_parent = vec![0, 0, 0, 0];
-/// let second_parent = vec![1, 1, 1, 1];
-/// let child = SwapOne
-///     .recombine((first_parent, second_parent), &mut thread_rng())
-///     .unwrap();
+/// let first_parent = [0, 0, 0, 0];
+/// let second_parent = [1, 1, 1, 1];
+/// let child = SwapOne.recombine((first_parent, second_parent), &mut thread_rng())?;
 /// let num_zeros = child.iter().filter(|&&x| x == 0).count();
 /// let num_ones = child.iter().filter(|&&x| x == 1).count();
 /// assert_eq!(num_zeros, 3);
 /// assert_eq!(num_ones, 1);
+/// # Ok::<(), anyhow::Error>(())
 /// ```
 pub trait Recombinator<GS> {
     /// The type of the output genome after recombination. This is typically
@@ -83,8 +81,6 @@ pub trait Recombinator<GS> {
     /// invalid in some way, thus making recombination impossible.
     fn recombine(&self, genomes: GS, rng: &mut ThreadRng) -> anyhow::Result<Self::Output>;
 }
-
-// TODO: Why does `rustfmt` mangle the `CountTree::apply()` method?
 
 /// A wrapper that converts a `Recombinator` into an `Operator`,
 ///
@@ -115,37 +111,36 @@ pub trait Recombinator<GS> {
 /// // into the corresponding position in the first parent.
 /// struct SwapFirst;
 ///
-/// impl<T: Copy> Recombinator<(Vec<T>, Vec<T>)> for SwapFirst {
-///     type Output = Vec<T>;
+/// type Genome<T> = [T; 4];
+/// type Parents<T> = (Genome<T>, Genome<T>);
+/// impl<T: Copy> Recombinator<Parents<T>> for SwapFirst {
+///     type Output = Genome<T>;
 ///
 ///     fn recombine(
 ///         &self,
-///         (mut first_parent, second_parent): (Vec<T>, Vec<T>),
+///         (mut first_parent, second_parent): Parents<T>,
 ///         _: &mut ThreadRng,
-///     ) -> anyhow::Result<Vec<T>> {
+///     ) -> anyhow::Result<Genome<T>> {
 ///         first_parent[0] = second_parent[0];
 ///         Ok(first_parent)
 ///     }
 /// }
 ///
-/// let first_parent = vec![0, 0, 0, 0];
-/// let second_parent = vec![1, 1, 1, 1];
+/// let first_parent = [0, 0, 0, 0];
+/// let second_parent = [1, 1, 1, 1];
 ///
 /// let recombinator = SwapFirst;
-/// let recombinator_result = recombinator
-///     .recombine(
-///         (first_parent.clone(), second_parent.clone()),
-///         &mut thread_rng(),
-///     )
-///     .unwrap();
+/// let recombinator_result = recombinator.recombine(
+///     (first_parent.clone(), second_parent.clone()),
+///     &mut thread_rng(),
+/// )?;
 ///
 /// // Wrap the recombinator in a `Recombine` to make it an `Operator`.
 /// let recombine = Recombine::new(recombinator);
-/// let operator_result = recombine
-///     .apply((first_parent, second_parent), &mut thread_rng())
-///     .unwrap();
+/// let operator_result = recombine.apply((first_parent, second_parent), &mut thread_rng())?;
 ///
 /// assert_eq!(recombinator_result, operator_result);
+/// # Ok::<(), anyhow::Error>(())
 /// ```
 ///
 /// Because [`Recombine`] and [`Operator`] are both [`Composable`], you can
@@ -158,23 +153,25 @@ pub trait Recombinator<GS> {
 /// which should be 3.
 ///
 /// ```
+/// # use std::convert::Infallible;
 /// # use rand::{rngs::ThreadRng, thread_rng, Rng};
 /// #
-/// # use ec_core::operator::recombinator::{Recombinator, Recombine};
-/// # use ec_core::operator::{Composable, Operator};
+/// # use ec_core::operator::{recombinator::{Recombinator, Recombine}, Composable, Operator};
 /// #
 /// // A simple `Recombinator` that swaps one element from the second parent
 /// // into the corresponding position in the first parent.
 /// struct SwapOne;
 ///
-/// impl<T: Copy> Recombinator<(Vec<T>, Vec<T>)> for SwapOne {
-///     type Output = Vec<T>;
+/// type Genome<T> = [T; 4];
+/// type Parents<T> = (Genome<T>, Genome<T>);
+/// impl<T: Copy> Recombinator<Parents<T>> for SwapOne {
+///     type Output = Genome<T>;
 ///
 ///     fn recombine(
 ///         &self,
-///         (mut first_parent, second_parent): (Vec<T>, Vec<T>),
+///         (mut first_parent, second_parent): Parents<T>,
 ///         rng: &mut ThreadRng,
-///     ) -> anyhow::Result<Vec<T>> {
+///     ) -> anyhow::Result<Genome<T>> {
 ///         let index = rng.gen_range(0..first_parent.len());
 ///         first_parent[index] = second_parent[index];
 ///         Ok(first_parent)
@@ -185,11 +182,15 @@ pub trait Recombinator<GS> {
 /// // of `true` values in the genome.
 /// struct CountTrue;
 ///
-/// impl Operator<Vec<bool>> for CountTrue {
+/// impl Operator<Genome<bool>> for CountTrue {
 ///     type Output = usize;
-///     type Error = anyhow::Error;
+///     type Error = Infallible;
 ///
-///     fn apply(&self, genome: Vec<bool>, _: &mut ThreadRng) -> Result<Self::Output, Self::Error> {
+///     fn apply(
+///         &self,
+///         genome: Genome<bool>,
+///         _: &mut ThreadRng,
+///     ) -> Result<Self::Output, Self::Error> {
 ///         Ok(genome.iter().filter(|&&x| x).count())
 ///     }
 /// }
@@ -197,18 +198,17 @@ pub trait Recombinator<GS> {
 ///
 /// // If we swap in exactly one value from the `second_parent` we
 /// // should have 3 `true` values in the resulting genome.
-/// let first_parent = vec![true, true, true, true];
-/// let second_parent = vec![false, false, false, false];
+/// let first_parent = [true, true, true, true];
+/// let second_parent = [false, false, false, false];
 ///
 /// let recombinator = SwapOne;
 /// let recombine = Recombine::new(recombinator);
 /// let count_true = CountTrue;
 /// let chain = recombine.then(count_true);
 ///
-/// let count = chain
-///     .apply((first_parent, second_parent), &mut thread_rng())
-///     .unwrap();
+/// let count = chain.apply((first_parent, second_parent), &mut thread_rng())?;
 /// assert_eq!(count, 3);
+/// # Ok::<(), anyhow::Error>(())
 /// ```
 ///
 /// We can also pass a _reference_ to a [`Recombinator`] (i.e.,
@@ -219,21 +219,23 @@ pub trait Recombinator<GS> {
 /// ```
 /// # use rand::{rngs::ThreadRng, thread_rng, Rng};
 /// #
-/// # use ec_core::operator::recombinator::{Recombinator, Recombine};
-/// # use ec_core::operator::{Composable, Operator};
+/// # use ec_core::operator::{recombinator::{Recombinator, Recombine}, Composable, Operator};
 /// #
 /// # // A simple `Recombinator` that swaps one element from the second parent
 /// # // into the corresponding position in the first parent.
 /// # struct SwapOne;
 /// #
-/// # impl<T: Copy> Recombinator<(Vec<T>, Vec<T>)> for SwapOne {
-/// #     type Output = Vec<T>;
+/// # type Genome<T> = [T; 4];
+/// # type Parents<T> = (Genome<T>, Genome<T>);
+/// #
+/// # impl<T: Copy> Recombinator<Parents<T>> for SwapOne {
+/// #     type Output = Genome<T>;
 /// #
 /// #     fn recombine(
 /// #         &self,
-/// #         (mut first_parent, second_parent): (Vec<T>, Vec<T>),
+/// #         (mut first_parent, second_parent): Parents<T>,
 /// #         rng: &mut ThreadRng,
-/// #     ) -> anyhow::Result<Vec<T>> {
+/// #     ) -> anyhow::Result<Genome<T>> {
 /// #         let index = rng.gen_range(0..first_parent.len());
 /// #         first_parent[index] = second_parent[index];
 /// #         Ok(first_parent)
@@ -244,28 +246,28 @@ pub trait Recombinator<GS> {
 /// # // of `true` values in the genome.
 /// # struct CountTrue;
 /// #
-/// # impl Operator<Vec<bool>> for CountTrue {
+/// # impl Operator<Genome<bool>> for CountTrue {
 /// #     type Output = usize;
 /// #     type Error = anyhow::Error;
 /// #
-/// #     fn apply(&self, genome: Vec<bool>, _: &mut ThreadRng) ->
-/// # Result<Self::Output, Self::Error> {         Ok(genome.iter().filter(|&&x|
-/// # x).count())     }
+/// #     fn apply(&self, genome: Genome<bool>, _: &mut ThreadRng) -> Result<Self::Output, Self::Error> {
+/// #         Ok(genome.iter().filter(|&&x| x).count())
+/// #     }
 /// # }
 /// # impl Composable for CountTrue {}
 /// #
 /// # // If we swap in exactly one value from the `second_parent` we
 /// # // should have 3 `true` values in the resulting genome.
-/// let first_parent = vec![true, true, true, true];
-/// let second_parent = vec![false, false, false, false];
+/// let first_parent = [true, true, true, true];
+/// let second_parent = [false, false, false, false];
 ///
 /// let recombine = Recombine::new(&SwapOne);
 /// let chain = recombine.then(CountTrue);
 ///
 /// let count = chain
-///     .apply((first_parent, second_parent), &mut thread_rng())
-///     .unwrap();
+///     .apply((first_parent, second_parent), &mut thread_rng())?;
 /// assert_eq!(count, 3);
+/// # Ok::<(), anyhow::Error>(())
 /// ```
 pub struct Recombine<R> {
     /// The wrapped [`Recombinator`] that this [`Recombine`] will apply
@@ -313,23 +315,28 @@ where
 )]
 #[cfg(test)]
 mod tests {
+    use std::convert::Infallible;
+
     use rand::{Rng, rngs::ThreadRng, thread_rng};
 
     use super::{Recombinator, Recombine};
     use crate::operator::{Composable, Operator};
 
+    type Genome<T> = [T; 4];
+    type Parents<T> = (Genome<T>, Genome<T>);
+
     // A simple `Recombinator` that swaps one element from the second parent
     // into the corresponding position in the first parent.
     struct SwapOne;
 
-    impl<T: Copy> Recombinator<(Vec<T>, Vec<T>)> for SwapOne {
-        type Output = Vec<T>;
+    impl<T: Copy> Recombinator<Parents<T>> for SwapOne {
+        type Output = Genome<T>;
 
         fn recombine(
             &self,
-            (mut first_parent, second_parent): (Vec<T>, Vec<T>),
+            (mut first_parent, second_parent): Parents<T>,
             rng: &mut ThreadRng,
-        ) -> anyhow::Result<Vec<T>> {
+        ) -> anyhow::Result<Genome<T>> {
             let index = rng.gen_range(0..first_parent.len());
             first_parent[index] = second_parent[index];
             Ok(first_parent)
@@ -340,11 +347,15 @@ mod tests {
     // of `true` values in the genome.
     struct CountTrue;
 
-    impl Operator<Vec<bool>> for CountTrue {
+    impl Operator<Genome<bool>> for CountTrue {
         type Output = usize;
-        type Error = anyhow::Error;
+        type Error = Infallible;
 
-        fn apply(&self, genome: Vec<bool>, _: &mut ThreadRng) -> Result<Self::Output, Self::Error> {
+        fn apply(
+            &self,
+            genome: Genome<bool>,
+            _: &mut ThreadRng,
+        ) -> Result<Self::Output, Self::Error> {
             Ok(genome.iter().filter(|&&x| x).count())
         }
     }
@@ -352,8 +363,8 @@ mod tests {
 
     #[test]
     fn swap_one() {
-        let first_parent = vec![0, 0, 0, 0];
-        let second_parent = vec![1, 1, 1, 1];
+        let first_parent = [0, 0, 0, 0];
+        let second_parent = [1, 1, 1, 1];
         let child = SwapOne
             .recombine((first_parent, second_parent), &mut thread_rng())
             .unwrap();
@@ -367,8 +378,8 @@ mod tests {
 
     #[test]
     fn can_wrap_recombinator() {
-        let first_parent = vec![0, 0, 0, 0];
-        let second_parent = vec![1, 1, 1, 1];
+        let first_parent = [0, 0, 0, 0];
+        let second_parent = [1, 1, 1, 1];
 
         let recombinator = SwapOne;
         // Wrap the recombinator in a `Recombine` to make it an `Operator`.
@@ -385,8 +396,8 @@ mod tests {
 
     #[test]
     fn can_wrap_recombinator_reference() {
-        let first_parent = vec![0, 0, 0, 0];
-        let second_parent = vec![1, 1, 1, 1];
+        let first_parent = [0, 0, 0, 0];
+        let second_parent = [1, 1, 1, 1];
 
         let recombinator = SwapOne;
         // Wrap a reference to the recombinator in a `Recombine` to make it an
@@ -406,8 +417,8 @@ mod tests {
     fn can_chain_recombinator_and_operator() {
         // If we swap in exactly one value from the `second_parent` we
         // should have 3 `true` values in the resulting genome.
-        let first_parent = vec![true, true, true, true];
-        let second_parent = vec![false, false, false, false];
+        let first_parent = [true, true, true, true];
+        let second_parent = [false, false, false, false];
 
         let recombinator = SwapOne;
         let recombine = Recombine::new(recombinator);
@@ -424,8 +435,8 @@ mod tests {
     fn can_chain_with_recombinator_reference() {
         // If we swap in exactly one value from the `second_parent` we
         // should have 3 `true` values in the resulting genome.
-        let first_parent = vec![true, true, true, true];
-        let second_parent = vec![false, false, false, false];
+        let first_parent = [true, true, true, true];
+        let second_parent = [false, false, false, false];
 
         let recombinator = SwapOne;
         // Wrap a reference to the recombinator in a `Recombine` to make it an

@@ -17,26 +17,30 @@ use super::{Composable, Operator};
 /// # Examples
 ///
 /// In this example, we define a `Mutator` that flips one random bit in a
-/// `Vec<bool>`. We then use this `Mutator` to mutate a genome, and check that
-/// exactly one bit has changed.
+/// `Genome<bool>`. We then use this `Mutator` to mutate a genome, and check
+/// that exactly one bit has changed.
 ///
 /// ```
-/// # use rand::thread_rng;
-/// # use rand::rngs::ThreadRng;
-/// # use rand::Rng;
+/// # use rand::{rngs::ThreadRng, thread_rng, Rng};
 /// # use ec_core::operator::mutator::Mutator;
 /// #
+/// type Genome<T> = [T; 4];
+///
 /// struct FlipOne;
 ///
-/// impl Mutator<Vec<bool>> for FlipOne {
-///     fn mutate(&self, mut genome: Vec<bool>, rng: &mut ThreadRng) -> anyhow::Result<Vec<bool>> {
+/// impl Mutator<Genome<bool>> for FlipOne {
+///     fn mutate(
+///         &self,
+///         mut genome: Genome<bool>,
+///         rng: &mut ThreadRng,
+///     ) -> anyhow::Result<Genome<bool>> {
 ///         let index = rng.gen_range(0..genome.len());
 ///         genome[index] = !genome[index];
 ///         Ok(genome)
 ///     }
 /// }
 ///
-/// let genome = vec![true, false, false, true];
+/// let genome = [true, false, false, true];
 /// let child_genome = FlipOne.mutate(genome.clone(), &mut thread_rng()).unwrap();
 /// let num_diffs = genome
 ///     .iter()
@@ -71,7 +75,7 @@ pub trait Mutator<G> {
 /// # Examples
 ///
 /// Here we illustrate the implementation of a simple [`Mutator`],
-/// `FlipFirst`, which flips the first `bool` in a `Vec<bool>`. We then wrap
+/// `FlipFirst`, which flips the first `bool` in a `Genome<bool>`. We then wrap
 /// that in a [`Mutate`] to create an operator. Then calling [`Operator::apply`]
 /// on the operator is the same as calling [`Mutator::mutate`] directly on the
 /// mutator.
@@ -79,19 +83,28 @@ pub trait Mutator<G> {
 /// ```
 /// # use rand::{rngs::ThreadRng, thread_rng};
 /// #
-/// # use ec_core::operator::mutator::{Mutate, Mutator};
-/// # use ec_core::operator::Operator;
+/// # use ec_core::operator::{
+/// #     mutator::{Mutate, Mutator},
+/// #     Operator,
+/// # };
 /// #
+/// type Genome<T> = [T; 4];
+///
+/// // A simple mutator that flips the first `bool` in a `Genome<bool>`.
 /// struct FlipFirst;
 ///
-/// impl Mutator<Vec<bool>> for FlipFirst {
-///     fn mutate(&self, mut genome: Vec<bool>, _: &mut ThreadRng) -> anyhow::Result<Vec<bool>> {
+/// impl Mutator<Genome<bool>> for FlipFirst {
+///     fn mutate(
+///         &self,
+///         mut genome: Genome<bool>,
+///         _: &mut ThreadRng,
+///     ) -> anyhow::Result<Genome<bool>> {
 ///         genome[0] = !genome[0];
 ///         Ok(genome)
 ///     }
 /// }
 ///
-/// let genome = vec![true, false, false, true];
+/// let genome = [true, false, false, true];
 /// let mutator_result = FlipFirst.mutate(genome.clone(), &mut thread_rng()).unwrap();
 ///
 /// // Create a `Mutate` operator from the `FlipFirst` mutator
@@ -109,43 +122,55 @@ pub trait Mutator<G> {
 /// `true` values in the resulting genome, which should then be 1.
 ///
 /// ```
+/// # use std::convert::Infallible;
 /// # use ec_core::operator::{
 /// #     mutator::{Mutate, Mutator},
 /// #     Composable, Operator,
 /// # };
 /// # use rand::{rngs::ThreadRng, thread_rng, Rng};
 /// #
-/// // A simple mutator that flips a random `bool` in a `Vec<bool>`.
+/// type Genome<T> = [T; 4];
+///
+/// // A simple mutator that flips a random `bool` in a `Genome<bool>`.
 /// struct FlipOne;
 ///
-/// impl Mutator<Vec<bool>> for FlipOne {
-///     fn mutate(&self, mut genome: Vec<bool>, rng: &mut ThreadRng) -> anyhow::Result<Vec<bool>> {
+/// impl Mutator<Genome<bool>> for FlipOne {
+///     fn mutate(
+///         &self,
+///         mut genome: Genome<bool>,
+///         rng: &mut ThreadRng,
+///     ) -> anyhow::Result<Genome<bool>> {
 ///         let index = rng.gen_range(0..genome.len());
 ///         genome[index] = !genome[index];
 ///         Ok(genome)
 ///     }
 /// }
 ///
-/// // A simple `Operator` that takes a `Vec<bool>` and returns the number
+/// // A simple `Operator` that takes a `Genome<bool>` and returns the number
 /// // of `true` values in the genome.
 /// struct CountTrue;
 ///
-/// impl Operator<Vec<bool>> for CountTrue {
+/// impl Operator<Genome<bool>> for CountTrue {
 ///     type Output = usize;
-///     type Error = anyhow::Error;
+///     type Error = Infallible;
 ///
-///     fn apply(&self, genome: Vec<bool>, _: &mut ThreadRng) -> Result<Self::Output, Self::Error> {
+///     fn apply(
+///         &self,
+///         genome: Genome<bool>,
+///         _: &mut ThreadRng,
+///     ) -> Result<Self::Output, Self::Error> {
 ///         Ok(genome.iter().filter(|&&x| x).count())
 ///     }
 /// }
 /// impl Composable for CountTrue {}
 ///
 /// // If we flip exactly one of these, we should have exactly one `true`.
-/// let genome = vec![false, false, false, false];
+/// let genome = [false, false, false, false];
 /// // Wrap the mutator in a `Mutate` operator so we can chain it with `CountTrue`
 /// let operator = Mutate::new(FlipOne);
 /// let chain = operator.then(CountTrue);
-/// assert_eq!(chain.apply(genome, &mut thread_rng()).unwrap(), 1);
+/// assert_eq!(chain.apply(genome, &mut thread_rng())?, 1);
+/// # Ok::<(), anyhow::Error>(())
 /// ```
 ///
 /// We can also pass a _reference_ to a [`Mutator`] (i.e., `&Mutator`) to
@@ -159,37 +184,40 @@ pub trait Mutator<G> {
 /// # };
 /// # use rand::{rngs::ThreadRng, thread_rng, Rng};
 /// #
-/// # // A simple mutator that flips a random `bool` in a `Vec<bool>`.
+/// # type Genome<T> = [T; 4];
+/// #
+/// # // A simple mutator that flips a random `bool` in a `Genome<bool>`.
 /// # struct FlipOne;
 /// #
-/// # impl Mutator<Vec<bool>> for FlipOne {
-/// #    fn mutate(&self, mut genome: Vec<bool>, rng: &mut ThreadRng) -> anyhow::Result<Vec<bool>> {
+/// # impl Mutator<Genome<bool>> for FlipOne {
+/// #    fn mutate(&self, mut genome: Genome<bool>, rng: &mut ThreadRng) -> anyhow::Result<Genome<bool>> {
 /// #        let index = rng.gen_range(0..genome.len());
 /// #        genome[index] = !genome[index];
 /// #        Ok(genome)
 /// #    }
 /// # }
 /// #
-/// # // A simple `Operator` that takes a `Vec<bool>` and returns the number
+/// # // A simple `Operator` that takes a `Genome<bool>` and returns the number
 /// # // of `true` values in the genome.
 /// # struct CountTrue;
 /// #
-/// # impl Operator<Vec<bool>> for CountTrue {
+/// # impl Operator<Genome<bool>> for CountTrue {
 /// #    type Output = usize;
 /// #    type Error = anyhow::Error;
 /// #
-/// #    fn apply(&self, genome: Vec<bool>, _: &mut ThreadRng) -> Result<Self::Output, Self::Error> {
+/// #    fn apply(&self, genome: Genome<bool>, _: &mut ThreadRng) -> Result<Self::Output, Self::Error> {
 /// #        Ok(genome.iter().filter(|&&x| x).count())
 /// #    }
 /// # }
 /// # impl Composable for CountTrue {}
 /// #
 /// // If we flip exactly one of these, we should have exactly one `true`.
-/// let genome = vec![false, false, false, false];
+/// let genome = [false, false, false, false];
 /// // Wrap a reference to the mutator in a `Mutate` operator so we can chain it with `CountTrue`
 /// let mutate = Mutate::new(&FlipOne);
 /// let chain = mutate.then(CountTrue);
-/// assert_eq!(chain.apply(genome, &mut thread_rng()).unwrap(), 1);
+/// assert_eq!(chain.apply(genome, &mut thread_rng())?, 1);
+/// # Ok::<(), anyhow::Error>(())
 /// ```
 pub struct Mutate<M> {
     /// The wrapped [`Mutator`] that this [`Mutate`] will apply
@@ -239,25 +267,35 @@ mod tests {
     use super::Mutator;
     use crate::operator::{Composable, Operator, mutator::Mutate};
 
+    type Genome<T> = [T; 4];
+
     struct FlipOne;
 
-    impl Mutator<Vec<bool>> for FlipOne {
-        fn mutate(&self, mut genome: Vec<bool>, rng: &mut ThreadRng) -> anyhow::Result<Vec<bool>> {
+    impl Mutator<Genome<bool>> for FlipOne {
+        fn mutate(
+            &self,
+            mut genome: Genome<bool>,
+            rng: &mut ThreadRng,
+        ) -> anyhow::Result<Genome<bool>> {
             let index = rng.gen_range(0..genome.len());
             genome[index] = !genome[index];
             Ok(genome)
         }
     }
 
-    // A simple `Operator` that takes a `Vec<bool>` and returns the number
+    // A simple `Operator` that takes a `Genome<bool>` and returns the number
     // of `true` values in the genome.
     struct CountTrue;
 
-    impl Operator<Vec<bool>> for CountTrue {
+    impl Operator<Genome<bool>> for CountTrue {
         type Output = usize;
         type Error = anyhow::Error;
 
-        fn apply(&self, genome: Vec<bool>, _: &mut ThreadRng) -> Result<Self::Output, Self::Error> {
+        fn apply(
+            &self,
+            genome: Genome<bool>,
+            _: &mut ThreadRng,
+        ) -> Result<Self::Output, Self::Error> {
             Ok(genome.iter().filter(|&&x| x).count())
         }
     }
@@ -275,35 +313,35 @@ mod tests {
 
     #[test]
     fn flip_one() {
-        let genome = vec![true, false, false, true];
-        let child_genome = FlipOne.mutate(genome.clone(), &mut thread_rng()).unwrap();
+        let genome = [true, false, false, true];
+        let child_genome = FlipOne.mutate(genome, &mut thread_rng()).unwrap();
         assert_eq!(count_differences(&genome, &child_genome), 1);
     }
 
     #[test]
     fn can_wrap_mutator() {
-        let genome = vec![true, false, false, true];
+        let genome = [true, false, false, true];
         let mutator = FlipOne;
         // Wrap the mutator in a `Mutate` operator
         let operator = Mutate::new(mutator);
-        let child_genome = operator.apply(genome.clone(), &mut thread_rng()).unwrap();
+        let child_genome = operator.apply(genome, &mut thread_rng()).unwrap();
         assert_eq!(count_differences(&genome, &child_genome), 1);
     }
 
     #[test]
     fn can_wrap_mutator_reference() {
-        let genome = vec![true, false, false, true];
+        let genome = [true, false, false, true];
         let mutator = FlipOne;
         // Wrap a reference to the mutator in a `Mutate` to make it an `Operator`.
         let operator = Mutate::new(&mutator);
-        let child_genome = operator.apply(genome.clone(), &mut thread_rng()).unwrap();
+        let child_genome = operator.apply(genome, &mut thread_rng()).unwrap();
         assert_eq!(count_differences(&genome, &child_genome), 1);
     }
 
     #[test]
     fn can_chain_mutator_and_operator() {
         // If we flip exactly one of these, we should have exactly one `true`.
-        let genome = vec![false, false, false, false];
+        let genome = [false, false, false, false];
         let mutator = FlipOne;
         let operator = Mutate::new(mutator);
         let count_true = CountTrue;
@@ -314,7 +352,7 @@ mod tests {
     #[test]
     fn can_chain_with_mutator_reference() {
         // If we flip exactly one of these, we should have exactly one `true`.
-        let genome = vec![false, false, false, false];
+        let genome = [false, false, false, false];
         let mutator = FlipOne;
         // Wrap a reference to the mutator in a `Mutate` to make it an `Operator`.
         let operator = Mutate::new(&mutator);

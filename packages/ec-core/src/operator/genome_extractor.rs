@@ -25,11 +25,16 @@ use crate::individual::Individual;
 /// #         Composable, Operator,
 /// #     },
 /// # };
+/// type Genome<T> = [T; 4];
 /// // Flip a single bit in an array of booleans.
 /// struct FlipOne;
 ///
-/// impl Mutator<[bool; 4]> for FlipOne {
-///     fn mutate(&self, mut genome: [bool; 4], rng: &mut ThreadRng) -> anyhow::Result<[bool; 4]> {
+/// impl Mutator<Genome<bool>> for FlipOne {
+///     fn mutate(
+///         &self,
+///         mut genome: Genome<bool>,
+///         rng: &mut ThreadRng,
+///     ) -> anyhow::Result<Genome<bool>> {
 ///         let index = rng.gen_range(0..genome.len());
 ///         genome[index] = !genome[index];
 ///         Ok(genome)
@@ -42,7 +47,7 @@ use crate::individual::Individual;
 /// let mutate = Mutate::new(FlipOne);
 /// let chain = GenomeExtractor.then(mutate);
 ///
-/// let result = chain.apply(&individual, &mut thread_rng()).unwrap();
+/// let result = chain.apply(&individual, &mut thread_rng())?;
 ///
 /// // Count the number of genome values that have been changed, which should be 1.
 /// let num_different = result
@@ -52,6 +57,7 @@ use crate::individual::Individual;
 ///     .count();
 ///
 /// assert_eq!(num_different, 1);
+/// # Ok::<(), anyhow::Error>(())
 /// ```
 pub struct GenomeExtractor;
 
@@ -88,10 +94,15 @@ mod tests {
         },
     };
 
+    type Genome<T> = [T; 4];
     struct FlipOne;
 
-    impl Mutator<[bool; 4]> for FlipOne {
-        fn mutate(&self, mut genome: [bool; 4], rng: &mut ThreadRng) -> anyhow::Result<[bool; 4]> {
+    impl Mutator<Genome<bool>> for FlipOne {
+        fn mutate(
+            &self,
+            mut genome: Genome<bool>,
+            rng: &mut ThreadRng,
+        ) -> anyhow::Result<Genome<bool>> {
             let index = rng.gen_range(0..genome.len());
             genome[index] = !genome[index];
             Ok(genome)
