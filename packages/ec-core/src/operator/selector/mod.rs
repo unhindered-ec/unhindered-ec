@@ -28,16 +28,16 @@ pub use error::EmptyPopulation;
 /// # use rand::thread_rng;
 /// #
 /// let population = vec![5, 8, 9, 2, 3, 6];
-/// let winner = Best.select(&population, &mut thread_rng()).unwrap();
+/// let winner = Best.select(&population, &mut thread_rng())?;
 /// assert_eq!(*winner, 9);
+/// # Ok::<(), anyhow::Error>(())
 /// ```
 ///
 /// Here we implement a `First` selector that always returns the first
 /// element in a vector.
 ///
 /// ```
-/// # use rand::thread_rng;
-/// # use rand::rngs::ThreadRng;
+/// # use rand::{rngs::ThreadRng, thread_rng};
 /// # use anyhow::Context;
 /// # use ec_core::operator::selector::Selector;
 /// #
@@ -58,8 +58,9 @@ pub use error::EmptyPopulation;
 /// }
 ///
 /// let population = vec![5, 8, 9];
-/// let choice = First.select(&population, &mut thread_rng()).unwrap();
+/// let choice = First.select(&population, &mut thread_rng())?;
 /// assert_eq!(*choice, 5);
+/// # Ok::<(), anyhow::Error>(())
 /// ```
 pub trait Selector<P>
 where
@@ -98,10 +99,9 @@ where
 ///
 /// ```
 /// # use anyhow::Context;
-/// # use rand::rngs::ThreadRng;
+/// # use rand::{rngs::ThreadRng, thread_rng};
 /// #
-/// # use ec_core::operator::selector::{Select, Selector};
-/// # use ec_core::operator::Operator;
+/// # use ec_core::operator::{Operator, selector::{Select, Selector}};
 /// #
 /// struct First; // Simple selector that always returns the first element in a vector.
 ///
@@ -122,12 +122,15 @@ where
 /// // Create a `Select` operator from the `First` selector
 /// let select = Select::new(First);
 /// let population: Vec<u8> = vec![5, 8, 9];
+///
 /// // Selectors return references to the individuals they choose, so we
 /// // get a `&u8` back from `select` and `apply`.
-/// let selector_result: &u8 = First.select(&population, &mut rand::thread_rng()).unwrap();
+/// let selector_result: &u8 = First.select(&population, &mut thread_rng())?;
 /// assert_eq!(*selector_result, 5);
-/// let operator_result: &u8 = select.apply(&population, &mut rand::thread_rng()).unwrap();
+///
+/// let operator_result: &u8 = select.apply(&population, &mut thread_rng())?;
 /// assert_eq!(selector_result, operator_result);
+/// # Ok::<(), anyhow::Error>(())
 /// ```
 ///
 /// Because both [`Select`] and [`Operator`] are [`Composable`], we can chain
@@ -139,10 +142,10 @@ where
 ///
 /// ```
 /// # use anyhow::Context;
-/// # use rand::rngs::ThreadRng;
+/// # use rand::{rngs::ThreadRng, thread_rng};
+/// # use std::convert::Infallible;
 /// #
-/// # use ec_core::operator::selector::{Select, Selector};
-/// # use ec_core::operator::{Composable, Operator};
+/// # use ec_core::operator::{Composable, Operator, selector::{Select, Selector}};
 /// #
 /// # struct First; // Simple selector that always returns the first element in a vector.
 /// #
@@ -164,11 +167,11 @@ where
 ///
 /// impl Operator<&String> for StrLen {
 ///     type Output = usize;
-///     type Error = anyhow::Error;
+///     type Error = Infallible;
 ///
 ///     // The argument is a reference to a `String` because `Selector`s return
 ///     // references to the individuals they choose.
-///     fn apply(&self, input: &String, _: &mut ThreadRng) -> anyhow::Result<usize> {
+///     fn apply(&self, input: &String, _: &mut ThreadRng) -> Result<usize, Self::Error> {
 ///         Ok(input.len())
 ///     }
 /// }
@@ -180,10 +183,12 @@ where
 /// let select = Select::new(First);
 /// let chain = select.then(StrLen);
 /// let population: Vec<String> = vec!["Hello".to_string(), "World".to_string()];
+///
 /// // The `StrLen` operator will take the `&String` returned by the `First`
 /// // selector and return its length.
-/// let choice_length: usize = chain.apply(&population, &mut rand::thread_rng()).unwrap();
+/// let choice_length: usize = chain.apply(&population, &mut thread_rng())?;
 /// assert_eq!(choice_length, 5);
+/// # Ok::<(), anyhow::Error>(())
 /// ```
 ///
 /// We can also pass a _reference_ to a [`Selector`] (i.e., `&Selector`) to
@@ -192,10 +197,9 @@ where
 ///
 /// ```
 /// # use anyhow::Context;
-/// # use rand::rngs::ThreadRng;
+/// # use rand::{rngs::ThreadRng, thread_rng};
 /// #
-/// # use ec_core::operator::selector::{Select, Selector};
-/// # use ec_core::operator::{Composable, Operator};
+/// # use ec_core::operator::{Composable, Operator, selector::{Select, Selector}};
 /// #
 /// # struct First; // Simple selector that always returns the first element in a vector.
 /// #
@@ -228,8 +232,9 @@ where
 /// let ref_select = Select::new(&First);
 /// let chain = ref_select.then(StrLen);
 /// let population: Vec<String> = vec!["Hello".to_string(), "World".to_string()];
-/// let choice_length: usize = chain.apply(&population, &mut rand::thread_rng()).unwrap();
+/// let choice_length: usize = chain.apply(&population, &mut thread_rng())?;
 /// assert_eq!(choice_length, 5);
+/// # Ok::<(), anyhow::Error>(())
 /// ```
 #[derive(Clone)]
 pub struct Select<S> {
@@ -285,7 +290,7 @@ where
 #[cfg(test)]
 mod tests {
     use anyhow::Context;
-    use rand::rngs::ThreadRng;
+    use rand::{rngs::ThreadRng, thread_rng};
 
     use super::{Select, Selector};
     use crate::operator::{Composable, Operator};
@@ -327,7 +332,7 @@ mod tests {
     #[test]
     fn can_implement_simple_selector() {
         let population = vec![5, 8, 9];
-        let choice = First.select(&population, &mut rand::thread_rng()).unwrap();
+        let choice = First.select(&population, &mut thread_rng()).unwrap();
         assert_eq!(*choice, 5);
     }
 
@@ -335,7 +340,7 @@ mod tests {
     fn can_wrap_selector() {
         let select = Select::new(First);
         let population = vec![5, 8, 9];
-        let choice = select.apply(&population, &mut rand::thread_rng()).unwrap();
+        let choice = select.apply(&population, &mut thread_rng()).unwrap();
         assert_eq!(*choice, 5);
     }
 
@@ -345,7 +350,7 @@ mod tests {
         // still successfully select values.
         let select = Select::new(&First);
         let population = vec![5, 8, 9];
-        let choice = select.apply(&population, &mut rand::thread_rng()).unwrap();
+        let choice = select.apply(&population, &mut thread_rng()).unwrap();
         assert_eq!(*choice, 5);
     }
 
@@ -355,7 +360,7 @@ mod tests {
         let double = StrLen;
         let chain = select.then(double);
         let population: Vec<String> = vec!["Hello".to_string(), "World!".to_string()];
-        let length_of_choice: usize = chain.apply(&population, &mut rand::thread_rng()).unwrap();
+        let length_of_choice: usize = chain.apply(&population, &mut thread_rng()).unwrap();
         assert_eq!(length_of_choice, 5);
     }
 
@@ -367,7 +372,7 @@ mod tests {
         let double = StrLen;
         let chain = select.then(double);
         let population: Vec<String> = vec!["Hello".to_string(), "World!".to_string()];
-        let length_of_choice: usize = chain.apply(&population, &mut rand::thread_rng()).unwrap();
+        let length_of_choice: usize = chain.apply(&population, &mut thread_rng()).unwrap();
         assert_eq!(length_of_choice, 5);
     }
 }
