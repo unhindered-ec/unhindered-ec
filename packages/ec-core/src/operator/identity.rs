@@ -27,9 +27,13 @@ use super::{Composable, Operator};
 pub struct Identity;
 
 impl<T> Operator<T> for Identity {
+    /// The output type (and value) of this [`Operator`] is the same as that of
+    /// whatever input is passed in.
     type Output = T;
+    /// This [`Operator`] can't fail
     type Error = Infallible;
 
+    /// Always return the input value.
     fn apply(&self, input: T, _: &mut ThreadRng) -> Result<Self::Output, Self::Error> {
         Ok(input)
     }
@@ -46,7 +50,7 @@ mod tests {
     #[test]
     fn is_constant() {
         let mut rng = thread_rng();
-        // This should always return 5 regardless of the input.
+        // This should always return its input.
         let identity = Identity;
 
         assert_eq!(identity.apply(3, &mut rng).unwrap(), 3);
