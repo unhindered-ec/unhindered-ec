@@ -4,7 +4,7 @@ use rand::rngs::ThreadRng;
 
 use super::{Composable, Operator};
 
-/// An [`Operator`] that always returns it's input value.
+/// An [`Operator`] that always returns its input value.
 ///
 /// # See also
 ///
