@@ -47,18 +47,6 @@ macros = ["dep:push_macros"]
 [lints]
 workspace = true
 
-[package.metadata.example_runner.examples]
-median = [
-  { template = "balanced_v2" },
-  { template = "big_population_v2" },
-  { template = "many_generations_v2" }
-]
-smallest = [
-  { template = "balanced_v2" },
-  { template = "big_population_v2" },
-  { template = "many_generations_v2" }
-]
-
 [[bench]]
 name = "regression-evaluation"
 harness = false
