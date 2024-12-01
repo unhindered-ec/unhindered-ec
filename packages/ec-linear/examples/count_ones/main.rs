@@ -43,7 +43,7 @@ use rand::{
     thread_rng,
 };
 
-use crate::args::{Args, RunModel};
+use crate::args::{CliArgs, RunModel};
 
 #[must_use]
 pub fn count_ones(bits: &[bool]) -> TestResults<Score<i64>> {
@@ -51,12 +51,12 @@ pub fn count_ones(bits: &[bool]) -> TestResults<Score<i64>> {
 }
 
 fn main() -> Result<()> {
-    let Args {
+    let CliArgs {
         run_model,
         population_size,
         bit_length,
-        num_generations,
-    } = Args::parse();
+        max_generations,
+    } = CliArgs::parse();
 
     let mut rng = thread_rng();
 
@@ -100,7 +100,7 @@ fn main() -> Result<()> {
     // TODO: It might be useful to insert some kind of logging system so we can
     //   make this less imperative in nature.
 
-    for generation_number in 0..num_generations {
+    for generation_number in 0..max_generations {
         match run_model {
             RunModel::Serial => generation.serial_next()?,
             RunModel::Parallel => generation.par_next()?,
@@ -108,7 +108,7 @@ fn main() -> Result<()> {
 
         let best = Best.select(generation.population(), &mut rng)?;
         // TODO: Change 2 to be the smallest number of digits needed for
-        //  num_generations-1.
+        //  max_generations-1.
         println!("Generation {generation_number:2} best is {best}");
     }
 

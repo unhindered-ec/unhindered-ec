@@ -38,7 +38,7 @@ use push::{
 };
 use rand::{prelude::Distribution, thread_rng};
 
-use crate::args::{Args, RunModel};
+use crate::args::{CliArgs, RunModel};
 
 /*
  * This is an implementation of the "complex regression" problem from the
@@ -112,13 +112,13 @@ fn score_genome(
 
 fn main() -> Result<()> {
     // FIXME: Respect the max_genome_length input
-    let Args {
+    let CliArgs {
         run_model,
         population_size,
         max_initial_instructions,
-        num_generations,
+        max_generations,
         ..
-    } = Args::parse();
+    } = CliArgs::parse();
 
     let mut rng = thread_rng();
 
@@ -181,7 +181,7 @@ fn main() -> Result<()> {
     // TODO: It might be useful to insert some kind of logging system so we can
     // make this less imperative in nature.
 
-    for generation_number in 0..num_generations {
+    for generation_number in 0..max_generations {
         match run_model {
             RunModel::Serial => generation.serial_next()?,
             RunModel::Parallel => generation.par_next()?,
@@ -189,7 +189,7 @@ fn main() -> Result<()> {
 
         let best = Best.select(generation.population(), &mut rng)?;
         // TODO: Change 2 to be the smallest number of digits needed for
-        // num_generations-1.
+        // max_generations-1.
         println!("Generation {generation_number:2} best is {best}");
 
         if best.test_results.total_result.error == OrderedFloat(0.0) {
