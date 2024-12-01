@@ -32,10 +32,9 @@ where
     P: Population,
     GM: Operator<&'pop P>,
     S: Scorer<GM::Output, Score = R>,
-    anyhow::Error: From<GM::Error>,
 {
     type Output = EcIndividual<GM::Output, S::Score>;
-    type Error = anyhow::Error;
+    type Error = GM::Error;
 
     fn apply(
         &self,
@@ -44,8 +43,6 @@ where
     ) -> Result<Self::Output, Self::Error> {
         let genome = self.genome_maker.apply(population, rng)?;
         let score = self.scorer.score(&genome);
-        // TODO: We probably don't want to bake in `EcIndividual` here, but instead
-        //   have things be more general than that.
         Ok(EcIndividual::new(genome, score))
     }
 }
