@@ -1,10 +1,7 @@
-// TODO: since inner attributes are unstable, we can't use rustversion here.
-// Once we revert this commit, this is proper again.
-#![allow(clippy::allow_attributes_without_reason)]
-#![allow(
+#![expect(
     clippy::arithmetic_side_effects,
-    // reason = "The tradeoff safety <> ease of writing arguably lies on the ease of writing side \
-    //           for example code."
+    reason = "The tradeoff safety <> ease of writing arguably lies on the ease of writing side \
+              for example code."
 )]
 
 pub mod args;
@@ -58,19 +55,15 @@ fn target_fn(input: Of64) -> Of64 {
     input.powi(3) - Of64::from(2) * input.powi(2) - input
 }
 
-#[rustversion::attr(before(1.81), allow(clippy::unwrap_used))]
-#[rustversion::attr(
-    since(1.81),
-    expect(
-        clippy::unwrap_used,
-        reason = "This will panic if the program is longer than the allowed max stack size. We \
-                  arguably should check that and return an error here."
-    )
-)]
 fn build_push_state(
     program: impl DoubleEndedIterator<Item = PushProgram> + ExactSizeIterator,
     input: Of64,
 ) -> PushState {
+    #[expect(
+        clippy::unwrap_used,
+        reason = "This will panic if the program is longer than the allowed max stack size. We \
+                  arguably should check that and return an error here."
+    )]
     PushState::builder()
         .with_max_stack_size(1000)
         .with_program(program)

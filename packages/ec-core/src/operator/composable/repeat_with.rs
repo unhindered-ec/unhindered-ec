@@ -47,22 +47,14 @@ where
 impl<F, const N: usize> Composable for RepeatWith<F, N> {}
 
 #[cfg(test)]
-#[rustversion::attr(before(1.81), allow(clippy::arithmetic_side_effects))]
-#[rustversion::attr(
-    since(1.81),
-    expect(
-        clippy::arithmetic_side_effects,
-        reason = "The tradeoff safety <> ease of writing arguably lies on the ease of writing \
-                  side for test code."
-    )
+#[expect(
+    clippy::arithmetic_side_effects,
+    reason = "The tradeoff safety <> ease of writing arguably lies on the ease of writing side \
+              for test code."
 )]
-#[rustversion::attr(before(1.81), allow(clippy::unwrap_used))]
-#[rustversion::attr(
-    since(1.81),
-    expect(
-        clippy::unwrap_used,
-        reason = "Panicking is the best way to deal with errors in unit tests"
-    )
+#[expect(
+    clippy::unwrap_used,
+    reason = "Panicking is the best way to deal with errors in unit tests"
 )]
 mod tests {
     use std::{convert::Infallible, ops::Range};

@@ -1,15 +1,12 @@
 #![cfg(test)]
-// TODO: since inner attributes are unstable, we can't use rustversion here.
-// Once we revert this commit, this is proper again.
-#![allow(clippy::allow_attributes_without_reason)]
-#![allow(
+#![expect(
     clippy::unwrap_used,
-    // reason = "Panicking is the best way to deal with errors in integration tests"
+    reason = "Panicking is the best way to deal with errors in integration tests"
 )]
-#![allow(
+#![expect(
     clippy::arithmetic_side_effects,
-    // reason = "The tradeoff safety <> ease of writing arguably lies on the ease of writing side \
-    //           for test code."
+    reason = "The tradeoff safety <> ease of writing arguably lies on the ease of writing side \
+              for test code."
 )]
 
 use ordered_float::OrderedFloat;
