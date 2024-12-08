@@ -99,14 +99,10 @@ where
 }
 
 #[cfg(test)]
-#[rustversion::attr(before(1.81), allow(clippy::unwrap_used))]
-#[rustversion::attr(
-    since(1.81),
-    expect(
-        clippy::unwrap_used,
-        reason = "`max()` and `min()` can fail if the list of individuals is empty, but we know \
-                  that can't happen so we'll unwrap"
-    )
+#[expect(
+    clippy::unwrap_used,
+    reason = "`max()` and `min()` can fail if the list of individuals is empty, but we know that \
+              can't happen so we'll unwrap"
 )]
 mod tests {
     use std::{num::NonZeroUsize, ops::Not};
