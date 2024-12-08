@@ -26,7 +26,6 @@ num-traits = { workspace = true }
 rand = { workspace = true, features = ["alloc"] }
 rayon = "1.7.0"
 macro_railroad_annotation = { workspace = true }
-rustversion = { workspace = true }
 thiserror = { workspace = true }
 miette = { workspace = true }
 

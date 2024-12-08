@@ -91,13 +91,9 @@ where
 }
 
 #[cfg(test)]
-#[rustversion::attr(before(1.81), allow(clippy::unwrap_used))]
-#[rustversion::attr(
-    since(1.81),
-    expect(
-        clippy::unwrap_used,
-        reason = "Panicking is the best way to deal with errors in unit tests"
-    )
+#[expect(
+    clippy::unwrap_used,
+    reason = "Panicking is the best way to deal with errors in unit tests"
 )]
 mod tests {
     use proptest::prop_assert_eq;

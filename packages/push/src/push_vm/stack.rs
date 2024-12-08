@@ -178,21 +178,17 @@ where
 impl<A> TryExtend<A> for Stack<A> {
     type Error = StackError;
 
-    #[rustversion::attr(before(1.81), allow(clippy::needless_collect))]
-    #[rustversion::attr(
-        since(1.81),
-        expect(
+    fn try_extend<T>(&mut self, iter: &mut T) -> Result<(), Self::Error>
+    where
+        T: Iterator<Item = A>,
+    {
+        #[expect(
             clippy::needless_collect,
             reason = "The collect is neccessary to turn a arbitary iterator into one that \
                       implements ExactSizeIterator (to support .len()) and DoubleEndedIterator \
                       (to support .rev()), which TryExtend doesn't guarantee and isn't able to \
                       guarantee."
-        )
-    )]
-    fn try_extend<T>(&mut self, iter: &mut T) -> Result<(), Self::Error>
-    where
-        T: Iterator<Item = A>,
-    {
+        )]
         self.try_extend(iter.into_iter().collect::<Vec<_>>())
     }
 }
@@ -546,13 +542,9 @@ where
 // correct `Underflow` and `Overflow` errors.
 
 #[cfg(test)]
-#[rustversion::attr(before(1.81), allow(clippy::unwrap_used))]
-#[rustversion::attr(
-    since(1.81),
-    expect(
-        clippy::unwrap_used,
-        reason = "Panicking is the best way to deal with errors in unit tests"
-    )
+#[expect(
+    clippy::unwrap_used,
+    reason = "Panicking is the best way to deal with errors in unit tests"
 )]
 mod test {
     use super::{Stack, StackError};
