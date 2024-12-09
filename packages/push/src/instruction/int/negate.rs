@@ -68,9 +68,10 @@ use crate::{
 /// error when the `i64` stack is empty.
 ///
 /// # Differences
+#[expect(clippy::doc_markdown, reason = "False-positive lint.")]
 /// Implementations of integer negation instructions in Clojure (e.g., Clojush
-/// or Propeller) or Python (e.g. `PyshGP`) won't have the wrapping issue
-/// because they act on arbitrary precision integers.
+/// or Propeller) or Python (e.g., PyshGP) won't have the wrapping issue because
+/// they act on arbitrary precision integers.
 #[derive(Debug, Default, Copy, Clone, PartialEq, Eq)]
 pub struct Negate;
 
@@ -90,13 +91,9 @@ where
 }
 
 #[cfg(test)]
-#[rustversion::attr(before(1.81), allow(clippy::unwrap_used))]
-#[rustversion::attr(
-    since(1.81),
-    expect(
-        clippy::unwrap_used,
-        reason = "Panicking is the best way to deal with errors in unit tests"
-    )
+#[expect(
+    clippy::unwrap_used,
+    reason = "Panicking is the best way to deal with errors in unit tests"
 )]
 mod tests {
 
