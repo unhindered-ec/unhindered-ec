@@ -48,7 +48,7 @@ mod tests {
     use crate::operator::{Operator, identity::Identity};
 
     #[test]
-    fn is_constant() {
+    fn returns_input() {
         let mut rng = thread_rng();
         // This should always return its input.
         let identity = Identity;

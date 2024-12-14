@@ -83,16 +83,6 @@ where
     T: Borrow<[U]>,
     U: Clone,
 {
-    #[rustversion::attr(before(1.81), allow(clippy::unwrap_used))]
-    #[rustversion::attr(
-        since(1.81),
-        expect(
-            clippy::unwrap_used,
-            reason = "At construction time, it was ensured that the slice was non-empty, and that \
-                      the `Uniform` range produces values in range for the slice - this should \
-                      never occur"
-        )
-    )]
     fn sample<R: rand::Rng + ?Sized>(&self, rng: &mut R) -> U {
         let idx = self.range.sample(rng);
 
@@ -106,6 +96,12 @@ where
         // FIXME: Check the performance of this, and if neccessary replace with
         // let val = unsafe { slice.get_unchecked(idx) }
 
+        #[expect(
+            clippy::unwrap_used,
+            reason = "At construction time, it was ensured that the slice was non-empty, and that \
+                      the `Uniform` range produces values in range for the slice - this should \
+                      never occur"
+        )]
         let val = slice.get(idx).unwrap();
 
         val.clone()
