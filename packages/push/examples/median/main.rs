@@ -30,7 +30,7 @@ use push::{
 use rand::{
     Rng,
     distr::{Distribution, Uniform},
-    thread_rng,
+    rng,
 };
 use strum::IntoEnumIterator;
 
@@ -83,7 +83,7 @@ fn main() -> Result<()> {
         ..
     } = CliArgs::parse();
 
-    let mut rng = thread_rng();
+    let mut rng = rng();
 
     let training_cases = Uniform::new(lower_input_bound, upper_input_bound)?
         .sample_iter(&mut rng)

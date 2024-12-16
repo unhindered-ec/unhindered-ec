@@ -116,7 +116,7 @@ mod tests {
 
     #[proptest]
     fn best_or_worst(#[map(|v: [i32;10]| v.into())] pop: Vec<i32>) {
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         // We'll make a selector that has a 50/50 chance of choosing the highest
         // or lowest value.
         let weighted = DynWeighted::new(Best, 1).with_selector(Worst, 1);

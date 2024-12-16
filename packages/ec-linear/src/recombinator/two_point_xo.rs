@@ -1,8 +1,10 @@
-use anyhow::{Result, ensure};
 use ec_core::operator::recombinator::Recombinator;
 use rand::{Rng, rngs::ThreadRng};
 
-use super::crossover::Crossover;
+use super::{
+    crossover::Crossover,
+    errors::{CrossoverGeneError, DifferentGenomeLength},
+};
 
 pub struct TwoPointXo;
 
@@ -10,22 +12,20 @@ pub struct TwoPointXo;
 //   to the struct-based version of `Bitstring`.
 impl<T> Recombinator<[Vec<T>; 2]> for TwoPointXo {
     type Output = Vec<T>;
+    type Error = DifferentGenomeLength;
 
     fn recombine(
         &self,
         [mut first_genome, mut second_genome]: [Vec<T>; 2],
         rng: &mut ThreadRng,
-    ) -> Result<Self::Output> {
-        ensure!(
-            first_genome.len() == second_genome.len(),
-            "Attempted to perform TwoPointXo on genomes of different lengths {} and {}",
-            first_genome.len(),
-            second_genome.len()
-        );
+    ) -> Result<Self::Output, Self::Error> {
         let len = first_genome.len();
+        if len != second_genome.len() {
+            return Err(DifferentGenomeLength(len, second_genome.len()));
+        }
 
-        let mut first = rng.gen_range(0..len);
-        let mut second = rng.gen_range(0..len);
+        let mut first = rng.random_range(0..len);
+        let mut second = rng.random_range(0..len);
         if second < first {
             (first, second) = (second, first);
         }
@@ -37,8 +37,13 @@ impl<T> Recombinator<[Vec<T>; 2]> for TwoPointXo {
 
 impl<T> Recombinator<(Vec<T>, Vec<T>)> for TwoPointXo {
     type Output = Vec<T>;
+    type Error = <Self as Recombinator<[Vec<T>; 2]>>::Error;
 
-    fn recombine(&self, genomes: (Vec<T>, Vec<T>), rng: &mut ThreadRng) -> Result<Self::Output> {
+    fn recombine(
+        &self,
+        genomes: (Vec<T>, Vec<T>),
+        rng: &mut ThreadRng,
+    ) -> Result<Self::Output, Self::Error> {
         self.recombine(<[Vec<T>; 2]>::from(genomes), rng)
     }
 }
@@ -60,25 +65,26 @@ where
     G: Crossover,
 {
     type Output = G;
+    type Error = CrossoverGeneError<G::SegmentCrossoverError>;
 
     fn recombine(
         &self,
         [mut first_genome, mut second_genome]: [G; 2],
         rng: &mut ThreadRng,
-    ) -> Result<Self::Output> {
-        ensure!(
-            first_genome.size() == second_genome.size(),
-            "Attempted to perform TwoPointXo on genomes of different lengths {} and {}",
-            first_genome.size(),
-            second_genome.size()
-        );
+    ) -> Result<Self::Output, Self::Error> {
         let len = first_genome.size();
-        let mut first = rng.gen_range(0..len);
-        let mut second = rng.gen_range(0..len);
+        if len != second_genome.size() {
+            return Err(DifferentGenomeLength(len, second_genome.size()).into());
+        }
+
+        let mut first = rng.random_range(0..len);
+        let mut second = rng.random_range(0..len);
         if second < first {
             (first, second) = (second, first);
         }
-        first_genome.crossover_segment(&mut second_genome, first..second)?;
+        first_genome
+            .crossover_segment(&mut second_genome, first..second)
+            .map_err(CrossoverGeneError::Crossover)?;
 
         Ok(first_genome)
     }
@@ -89,8 +95,9 @@ where
     G: Crossover,
 {
     type Output = G;
+    type Error = <Self as Recombinator<[G; 2]>>::Error;
 
-    fn recombine(&self, genomes: (G, G), rng: &mut ThreadRng) -> Result<Self::Output> {
+    fn recombine(&self, genomes: (G, G), rng: &mut ThreadRng) -> Result<Self::Output, Self::Error> {
         self.recombine(<[G; 2]>::from(genomes), rng)
     }
 }

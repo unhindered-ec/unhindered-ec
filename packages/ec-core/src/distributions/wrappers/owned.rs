@@ -50,7 +50,7 @@ where
     /// let distr = OneOfCloning::new(options)?;
     /// assert_eq!(options.len(), distr.num_choices().get());
     ///
-    /// let val = distr.sample(&mut rand::thread_rng());
+    /// let val = distr.sample(&mut rand::rng());
     /// assert!(options.contains(&val));
     ///
     /// # Ok::<(), EmptySlice>(())

@@ -37,7 +37,7 @@ mod tests {
     #[test]
     fn empty_population() {
         let pop: Vec<i32> = Vec::new();
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         assert!(matches!(Worst.select(&pop, &mut rng), Err(EmptyPopulation)));
     }
 
@@ -47,14 +47,14 @@ mod tests {
         // Once we've generalized `.select()` appropriately we can change this to be
         // an array. See #259
         let pop = vec![5, 8, 9, 6, 3, 2, 10];
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         assert_eq!(&2, Worst.select(&pop, &mut rng).unwrap());
         assert_eq!(&2, Worst.select(&pop, &mut rng).unwrap());
     }
 
     #[proptest]
     fn test_worst_select(#[map(|v: [i32;10]| v.into())] pop: Vec<i32>) {
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let smallest = pop.iter().min().unwrap();
         assert_eq!(smallest, Worst.select(&pop, &mut rng).unwrap());
     }

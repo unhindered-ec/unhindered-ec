@@ -8,12 +8,9 @@ allowed-duplicate-crates = [
   "heck",
   # https://github.com/eminence/terminal-size/pull/62
   "windows-sys",
-  "windows-targets",
-  "windows_aarch64_gnullvm",
-  "windows_aarch64_msvc",
-  "windows_i686_gnu",
-  "windows_i686_msvc",
-  "windows_x86_64_gnu",
-  "windows_x86_64_gnullvm",
-  "windows_x86_64_msvc"
+  # Updated dependencies of rand@0.9.x-beta.x, which the current ecosystem is currently behind of
+  "zerocopy",
+  "zerocopy-derive",
+  "wasi",
+  "getrandom"
 ]

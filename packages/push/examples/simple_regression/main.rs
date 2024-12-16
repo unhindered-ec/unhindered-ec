@@ -36,7 +36,7 @@ use push::{
     instruction::{FloatInstruction, PushInstruction, variable_name::VariableName},
     push_vm::{HasStack, State, program::PushProgram, push_state::PushState},
 };
-use rand::{distr::Distribution, thread_rng};
+use rand::{distr::Distribution, rng};
 
 use crate::args::{CliArgs, RunModel};
 
@@ -116,7 +116,7 @@ fn main() -> Result<()> {
         ..
     } = CliArgs::parse();
 
-    let mut rng = thread_rng();
+    let mut rng = rng();
 
     // Inputs from -4 (inclusive) to 4 (exclusive) in increments of 0.25.
     let training_cases = (-4 * 4..4 * 4)

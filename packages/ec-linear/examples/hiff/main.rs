@@ -31,7 +31,7 @@ use ec_linear::{
     genome::bitstring::Bitstring, mutator::with_one_over_length::WithOneOverLength,
     recombinator::two_point_xo::TwoPointXo,
 };
-use rand::{distr::Standard, prelude::Distribution, thread_rng};
+use rand::{distr::StandardUniform, prelude::Distribution, rng};
 
 use crate::args::{CliArgs, RunModel};
 
@@ -68,7 +68,7 @@ fn main() -> Result<()> {
         max_generations,
     } = CliArgs::parse();
 
-    let mut rng = thread_rng();
+    let mut rng = rng();
 
     let scorer = FnScorer(|bitstring: &Bitstring| hiff(&bitstring.bits).1);
 
@@ -78,7 +78,7 @@ fn main() -> Result<()> {
         .with_selector(Lexicase::new(num_test_cases), 5)
         .with_selector(Tournament::binary(), population_size - 1);
 
-    let population = Standard
+    let population = StandardUniform
         .into_collection_generator(bit_length)
         .with_scorer(scorer)
         .into_collection_generator(population_size)

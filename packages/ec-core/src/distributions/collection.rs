@@ -79,11 +79,6 @@ where
 /// The number of element and the mechanism for generating
 /// random elements are specified in the `CollectionGenerator`
 /// struct.
-///
-/// # Errors
-///
-/// This returns an `anyhow::Error` generating any of
-/// the elements returns an error.
 impl<T, C> Distribution<Vec<T>> for Generator<C>
 where
     C: Distribution<T>,
