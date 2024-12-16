@@ -33,8 +33,8 @@ use ec_linear::{
     recombinator::two_point_xo::TwoPointXo,
 };
 use rand::{
-    distr::{Distribution, Standard},
-    thread_rng,
+    distr::{Distribution, StandardUniform},
+    rng,
 };
 
 use crate::args::{CliArgs, RunModel};
@@ -52,7 +52,7 @@ fn main() -> Result<()> {
         max_generations,
     } = CliArgs::parse();
 
-    let mut rng = thread_rng();
+    let mut rng = rng();
 
     let scorer = FnScorer(|bitstring: &Bitstring| count_ones(&bitstring.bits));
 
@@ -62,7 +62,7 @@ fn main() -> Result<()> {
         .with_selector(Lexicase::new(num_test_cases), 5)
         .with_selector(Tournament::binary(), population_size - 1);
 
-    let population = Standard
+    let population = StandardUniform
         .to_collection_generator(bit_length)
         .with_scorer(scorer)
         .into_collection_generator(population_size)

@@ -47,7 +47,7 @@ impl<F, G> Composable for Then<F, G> {}
 pub mod tests {
     use std::convert::Infallible;
 
-    use rand::thread_rng;
+    use rand::rng;
 
     use super::*;
 
@@ -76,7 +76,7 @@ pub mod tests {
     #[test]
     fn increment_then_double() {
         let combo = Increment.then(Double);
-        let result = combo.apply(7, &mut thread_rng()).unwrap();
+        let result = combo.apply(7, &mut rng()).unwrap();
         assert_eq!(16, result);
     }
 }

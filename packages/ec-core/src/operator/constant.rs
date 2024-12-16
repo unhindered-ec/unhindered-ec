@@ -15,9 +15,9 @@ use super::{Composable, Operator};
 ///
 /// ```
 /// # use ec_core::operator::{Operator, constant::Constant};
-/// # use rand::thread_rng;
+/// # use rand::rng;
 /// #
-/// let mut rng = thread_rng();
+/// let mut rng = rng();
 /// // This will always return 5 regardless of the input.
 /// let constant_five = Constant::new(5);
 ///
@@ -57,13 +57,13 @@ impl<T> Composable for Constant<T> {}
 
 #[cfg(test)]
 mod tests {
-    use rand::thread_rng;
+    use rand::rng;
 
     use crate::operator::{Operator, constant::Constant};
 
     #[test]
     fn is_constant() {
-        let mut rng = thread_rng();
+        let mut rng = rng();
         // This should always return 5 regardless of the input.
         let constant_five = Constant::new(5);
 

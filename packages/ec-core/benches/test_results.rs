@@ -1,8 +1,8 @@
 use criterion::{Criterion, black_box, criterion_group, criterion_main};
 use ec_core::{distributions::collection::ConvertToCollectionGenerator, test_results::TestResults};
 use rand::{
-    distr::{Distribution, Standard},
-    thread_rng,
+    distr::{Distribution, StandardUniform},
+    rng,
 };
 
 // Benchmark the time required to construct instances of `TestResults` from a
@@ -27,8 +27,8 @@ pub fn find_smallest(c: &mut Criterion) {
     // in `TestResults` (`i64`) so that the sum of the values in a vector
     // won't overflow the largest possible value in the `TestResults` type.
     let test_results: Vec<TestResults<i64>> = Distribution::<Vec<i32>>::sample_iter(
-        Standard.into_collection_generator(NUM_VALUES),
-        &mut thread_rng(),
+        StandardUniform.into_collection_generator(NUM_VALUES),
+        &mut rng(),
     )
     .map(Into::into)
     .take(NUM_RESULTS)

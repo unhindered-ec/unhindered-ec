@@ -30,6 +30,7 @@ proptest = "1.5.0"
 criterion = "0.5.1"
 miette = "7.4.0"
 test-case = "3.3.1"
+polonius-the-crab = "0.4.2"
 
 ec-core = { path = "packages/ec-core" }
 ec-linear = { path = "packages/ec-linear" }

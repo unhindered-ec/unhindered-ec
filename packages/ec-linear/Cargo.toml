@@ -20,6 +20,9 @@ rand = { workspace = true, features = ["alloc"] }
 
 ec-core = { workspace = true }
 
+thiserror = { workspace = true }
+miette = { workspace = true }
+
 [dev-dependencies]
 clap = { workspace = true, features = ["derive"] }
 
