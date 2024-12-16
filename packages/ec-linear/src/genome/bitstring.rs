@@ -1,11 +1,11 @@
 use std::fmt::Display;
 
-use anyhow::bail;
 use ec_core::{
     distributions::collection::{self, ConvertToCollectionGenerator},
     genome::Genome,
 };
-use rand::{Rng, distr::Standard, prelude::Distribution, rngs::ThreadRng};
+use miette::Diagnostic;
+use rand::{Rng, distr::StandardUniform, prelude::Distribution, rngs::ThreadRng};
 
 use super::Linear;
 use crate::recombinator::crossover::Crossover;
@@ -26,7 +26,7 @@ impl BoolGenerator {
 
 impl Distribution<bool> for BoolGenerator {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> bool {
-        rng.gen_bool(self.true_probability)
+        rng.random_bool(self.true_probability)
     }
 }
 
@@ -48,7 +48,9 @@ where
 
 impl Bitstring {
     pub fn random(num_bits: usize, rng: &mut ThreadRng) -> Self {
-        Standard.into_collection_generator(num_bits).sample(rng)
+        StandardUniform
+            .into_collection_generator(num_bits)
+            .sample(rng)
     }
 
     pub fn random_with_probability(num_bits: usize, probability: f64, rng: &mut ThreadRng) -> Self {
@@ -129,28 +131,46 @@ impl Linear for Bitstring {
     }
 }
 
+#[derive(Debug, thiserror::Error, Diagnostic)]
+#[error("Failed to access gene at position {0}")]
+#[diagnostic(help = "Check that the gene is long enough")]
+pub struct GeneAccess(usize);
+
+#[derive(Debug, thiserror::Error, Diagnostic)]
+#[error("Failed to access gene at range {}..{}", self.0.start, self.0.end)]
+#[diagnostic(help = "Check that the gene is long enough")]
+pub struct GeneAccessRange(std::ops::Range<usize>);
+
 impl Crossover for Bitstring {
-    fn crossover_gene(&mut self, other: &mut Self, index: usize) -> anyhow::Result<()> {
+    type GeneCrossoverError = GeneAccess;
+
+    fn crossover_gene(
+        &mut self,
+        other: &mut Self,
+        index: usize,
+    ) -> Result<(), Self::GeneCrossoverError> {
         if let (Some(lhs), Some(rhs)) = (self.gene_mut(index), other.gene_mut(index)) {
             std::mem::swap(lhs, rhs);
             Ok(())
         } else {
-            bail!("Crossing {self} and {other} at position {index} failed")
+            Err(GeneAccess(index))
         }
     }
+
+    type SegmentCrossoverError = GeneAccessRange;
 
     fn crossover_segment(
         &mut self,
         other: &mut Self,
         range: std::ops::Range<usize>,
-    ) -> anyhow::Result<()> {
+    ) -> Result<(), Self::SegmentCrossoverError> {
         let lhs = &mut self.bits[range.clone()];
         let rhs = &mut other.bits[range.clone()];
         if lhs.len() == rhs.len() {
             lhs.swap_with_slice(rhs);
             Ok(())
         } else {
-            bail!("Crossing {self} and {other} with range {range:?} failed")
+            Err(GeneAccessRange(range))
         }
     }
 }

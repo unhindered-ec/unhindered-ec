@@ -1,4 +1,3 @@
-use anyhow::Result;
 use rand::rngs::ThreadRng;
 
 use crate::{operator::selector::Selector, population::Population};
@@ -13,6 +12,8 @@ where
     P: Population,
     S: Selector<P>,
 {
+    type Error;
+
     // TODO: Instead of passing 2/3 of  Generation` to this function, is there a
     // trait  we can have `Generation` implement, and pass in a reference to
     // something implementing  that trait instead? The trait would presumably
@@ -27,53 +28,41 @@ where
         rng: &mut ThreadRng,
         population: &P,
         selector: &S,
-    ) -> Result<P::Individual>;
+    ) -> Result<P::Individual, Self::Error>;
 }
 
-// NOTE: These further impls aren't actually needed anymore because
-//   we (as of 19 Feb 2023) take ownership of the ChildMaker instead
-//   of storing a `& dyn ChildMaker` in `Generation`.
-impl<P, S> ChildMaker<P, S> for &dyn ChildMaker<P, S>
+impl<P, S, T> ChildMaker<P, S> for &T
 where
     P: Population,
     S: Selector<P>,
+    T: ChildMaker<P, S>,
 {
+    type Error = T::Error;
+
     fn make_child(
         &self,
         rng: &mut ThreadRng,
         population: &P,
         selector: &S,
-    ) -> Result<P::Individual> {
-        (*self).make_child(rng, population, selector)
+    ) -> Result<<P as Population>::Individual, Self::Error> {
+        (**self).make_child(rng, population, selector)
     }
 }
 
-impl<P, S> ChildMaker<P, S> for &(dyn ChildMaker<P, S> + Send)
+impl<P, S, T> ChildMaker<P, S> for &mut T
 where
     P: Population,
     S: Selector<P>,
+    T: ChildMaker<P, S>,
 {
-    fn make_child(
-        &self,
-        rng: &mut ThreadRng,
-        population: &P,
-        selector: &S,
-    ) -> Result<P::Individual> {
-        (*self).make_child(rng, population, selector)
-    }
-}
+    type Error = T::Error;
 
-impl<P, S> ChildMaker<P, S> for &(dyn ChildMaker<P, S> + Send + Sync)
-where
-    P: Population,
-    S: Selector<P>,
-{
     fn make_child(
         &self,
         rng: &mut ThreadRng,
         population: &P,
         selector: &S,
-    ) -> Result<P::Individual> {
-        (*self).make_child(rng, population, selector)
+    ) -> Result<<P as Population>::Individual, Self::Error> {
+        (**self).make_child(rng, population, selector)
     }
 }

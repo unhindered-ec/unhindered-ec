@@ -59,7 +59,7 @@ impl<F, const N: usize> Composable for RepeatWith<F, N> {}
 mod tests {
     use std::{convert::Infallible, ops::Range};
 
-    use rand::{Rng, thread_rng};
+    use rand::{Rng, rng};
 
     use super::*;
 
@@ -82,7 +82,7 @@ mod tests {
     fn deterministic() {
         const LENGTH: usize = 5;
         let desired_value = 7;
-        let mut rng = thread_rng();
+        let mut rng = rng();
         let repeater: RepeatWith<AddOne, LENGTH> = RepeatWith::new(AddOne);
         let result = repeater.apply(desired_value, &mut rng).unwrap();
         assert_eq!(LENGTH, result.len());
@@ -99,7 +99,7 @@ mod tests {
             range: Range<i32>,
             rng: &mut rand::rngs::ThreadRng,
         ) -> Result<Self::Output, Self::Error> {
-            Ok(rng.gen_range(range))
+            Ok(rng.random_range(range))
         }
     }
     impl Composable for UniformRange {}
@@ -108,7 +108,7 @@ mod tests {
     fn stochastic() {
         const LENGTH: usize = 5;
         let range = 0..7;
-        let mut rng = thread_rng();
+        let mut rng = rng();
         let repeater: RepeatWith<UniformRange, LENGTH> = RepeatWith::new(UniformRange);
         let result = repeater.apply(range.clone(), &mut rng).unwrap();
         assert_eq!(LENGTH, result.len());

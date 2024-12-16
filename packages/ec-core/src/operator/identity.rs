@@ -14,9 +14,9 @@ use super::{Composable, Operator};
 ///
 /// ```
 /// # use ec_core::operator::{Operator, identity::Identity};
-/// # use rand::thread_rng;
+/// # use rand::rng;
 /// #
-/// let mut rng = thread_rng();
+/// let mut rng = rng();
 /// // This will always return the value that is passed in.
 /// let identity = Identity;
 ///
@@ -43,13 +43,13 @@ impl Composable for Identity {}
 
 #[cfg(test)]
 mod tests {
-    use rand::thread_rng;
+    use rand::rng;
 
     use crate::operator::{Operator, identity::Identity};
 
     #[test]
     fn returns_input() {
-        let mut rng = thread_rng();
+        let mut rng = rng();
         // This should always return its input.
         let identity = Identity;
 
