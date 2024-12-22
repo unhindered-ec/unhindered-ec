@@ -23,10 +23,10 @@ jobs:
           - beta
           - nightly
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: /* tag: v4 */ actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           persist-credentials: false
-      - uses: dtolnay/rust-toolchain@a54c7afa936fefeb4456b2dd8068152669aa8203
+      - uses: /* date: 2024-12-16 */ dtolnay/rust-toolchain@a54c7afa936fefeb4456b2dd8068152669aa8203
         with:
           components: clippy, rustfmt
           toolchain: ${{ matrix.toolchain }}
@@ -46,10 +46,10 @@ jobs:
     name: clippy doctests
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: /* tag: v4 */ actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           persist-credentials: false
-      - uses: dtolnay/rust-toolchain@a54c7afa936fefeb4456b2dd8068152669aa8203
+      - uses: /* date: 2024-12-16 */ dtolnay/rust-toolchain@a54c7afa936fefeb4456b2dd8068152669aa8203
         with:
           components: clippy
           toolchain: nightly
