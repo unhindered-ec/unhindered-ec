@@ -6,9 +6,6 @@
 
 pub mod args;
 
-use std::ops::Not;
-
-use anyhow::{Result, ensure};
 use clap::Parser;
 use ec_core::{
     distributions::collection::ConvertToCollectionGenerator,
@@ -25,6 +22,7 @@ use ec_core::{
     uniform_distribution_of,
 };
 use ec_linear::mutator::umad::Umad;
+use miette::ensure;
 use num_traits::Float;
 use ordered_float::OrderedFloat;
 use push::{
@@ -103,7 +101,7 @@ fn score_genome(
         .collect()
 }
 
-fn main() -> Result<()> {
+fn main() -> miette::Result<()> {
     // FIXME: Respect the max_genome_length input
     let CliArgs {
         run_model,
@@ -157,7 +155,10 @@ fn main() -> Result<()> {
         .into_collection_generator(population_size)
         .sample(&mut rng);
 
-    ensure!(population.is_empty().not());
+    ensure!(
+        !population.is_empty(),
+        "An initial populaiton is always required"
+    );
 
     let best = Best.select(&population, &mut rng)?;
     println!("Best initial individual is {best}");

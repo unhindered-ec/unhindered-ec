@@ -18,6 +18,7 @@ readme = "README.md"
 num-traits = { workspace = true }
 rand = { workspace = true , features = ["alloc"] }
 thiserror = { workspace = true }
+miette = { workspace = true }
 
 ec-core = { workspace = true }
 ec-linear = { workspace = true }
@@ -33,7 +34,7 @@ macro_railroad_annotation = { workspace = true }
 criterion = { workspace = true, features = ["html_reports"] }
 
 [dev-dependencies]
-anyhow = { workspace = true }
+miette = { workspace = true, features = ["fancy"]}
 clap = { version = "4.5.1", features = ["derive"] }
 proptest = { workspace = true }
 test-strategy = { workspace = true }

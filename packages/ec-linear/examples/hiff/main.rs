@@ -6,9 +6,8 @@
 
 pub mod args;
 
-use std::{iter::once, ops::Not};
+use std::iter::once;
 
-use anyhow::{Result, ensure};
 use clap::Parser;
 use ec_core::{
     distributions::collection::ConvertToCollectionGenerator,
@@ -31,6 +30,7 @@ use ec_linear::{
     genome::bitstring::Bitstring, mutator::with_one_over_length::WithOneOverLength,
     recombinator::two_point_xo::TwoPointXo,
 };
+use miette::ensure;
 use rand::{distr::StandardUniform, prelude::Distribution, rng};
 
 use crate::args::{CliArgs, RunModel};
@@ -60,7 +60,7 @@ fn hiff(bits: &[bool]) -> (bool, TestResults<Score<usize>>) {
     }
 }
 
-fn main() -> Result<()> {
+fn main() -> miette::Result<()> {
     let CliArgs {
         run_model,
         population_size,
@@ -84,7 +84,10 @@ fn main() -> Result<()> {
         .into_collection_generator(population_size)
         .sample(&mut rng);
 
-    ensure!(population.is_empty().not());
+    ensure!(
+        !population.is_empty(),
+        "An initial populaiton is always required"
+    );
 
     // Let's assume the process will be generational, i.e., we replace the entire
     // population with newly created/selected individuals every generation.

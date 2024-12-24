@@ -23,7 +23,7 @@ thiserror = { workspace = true }
 miette = { workspace = true }
 
 [dev-dependencies]
-anyhow = { workspace = true }
+miette = { workspace = true, features = ["fancy"] }
 clap = { workspace = true, features = ["derive"] }
 
 [lints]

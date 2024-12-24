@@ -7,9 +7,6 @@
 
 pub mod args;
 
-use std::ops::Not;
-
-use anyhow::{Result, ensure};
 use clap::Parser;
 use ec_core::{
     distributions::collection::ConvertToCollectionGenerator,
@@ -32,6 +29,7 @@ use ec_linear::{
     genome::bitstring::Bitstring, mutator::with_one_over_length::WithOneOverLength,
     recombinator::two_point_xo::TwoPointXo,
 };
+use miette::ensure;
 use rand::{
     distr::{Distribution, StandardUniform},
     rng,
@@ -44,7 +42,7 @@ pub fn count_ones(bits: &[bool]) -> TestResults<Score<i64>> {
     bits.iter().copied().map(i64::from).collect()
 }
 
-fn main() -> Result<()> {
+fn main() -> miette::Result<()> {
     let CliArgs {
         run_model,
         population_size,
@@ -68,7 +66,10 @@ fn main() -> Result<()> {
         .into_collection_generator(population_size)
         .sample(&mut rng);
 
-    ensure!(population.is_empty().not());
+    ensure!(
+        !population.is_empty(),
+        "An initial populaiton is always required"
+    );
 
     println!("{population:?}");
 
