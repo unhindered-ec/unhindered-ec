@@ -61,7 +61,7 @@ use crate::individual::Individual;
 ///     .count();
 ///
 /// assert_eq!(num_different, 1);
-/// # Ok::<(), anyhow::Error>(())
+/// # Ok::<(), Box<dyn std::error::Error>>(())
 /// ```
 pub struct GenomeExtractor;
 

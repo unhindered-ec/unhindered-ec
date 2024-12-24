@@ -350,7 +350,6 @@ checksum = "72852736692ec862655eca398c9bb1b476161b563c9f80f45f4808b9629750d6"
 name = "ec-core"
 version = "0.1.0"
 dependencies = [
- "anyhow",
  "criterion",
  "itertools 0.13.0",
  "macro_railroad_annotation",

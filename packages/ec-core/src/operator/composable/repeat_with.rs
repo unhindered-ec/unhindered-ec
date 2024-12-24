@@ -20,10 +20,9 @@ impl<F, Input, const N: usize> Operator<Input> for RepeatWith<F, N>
 where
     Input: Clone,
     F: Operator<Input>,
-    anyhow::Error: From<F::Error>,
 {
     type Output = [F::Output; N];
-    type Error = anyhow::Error;
+    type Error = F::Error;
 
     fn apply(
         &self,
@@ -51,10 +50,6 @@ impl<F, const N: usize> Composable for RepeatWith<F, N> {}
     clippy::arithmetic_side_effects,
     reason = "The tradeoff safety <> ease of writing arguably lies on the ease of writing side \
               for test code."
-)]
-#[expect(
-    clippy::unwrap_used,
-    reason = "Panicking is the best way to deal with errors in unit tests"
 )]
 mod tests {
     use std::{convert::Infallible, ops::Range};
@@ -84,7 +79,7 @@ mod tests {
         let desired_value = 7;
         let mut rng = rng();
         let repeater: RepeatWith<AddOne, LENGTH> = RepeatWith::new(AddOne);
-        let result = repeater.apply(desired_value, &mut rng).unwrap();
+        let Ok(result) = repeater.apply(desired_value, &mut rng);
         assert_eq!(LENGTH, result.len());
         result.into_iter().all(|x| x == desired_value);
     }

@@ -180,7 +180,7 @@ pub trait Mutator<G> {
 /// let operator = Mutate::new(FlipOne);
 /// let chain = operator.then(CountTrue);
 /// assert_eq!(chain.apply(genome, &mut rng())?, 1);
-/// # Ok::<(), anyhow::Error>(())
+/// # Ok::<(), Box<dyn std::error::Error>>(())
 /// ```
 ///
 /// We can also pass a _reference_ to a [`Mutator`] (i.e., `&Mutator`) to
@@ -230,7 +230,7 @@ pub trait Mutator<G> {
 /// let mutate = Mutate::new(&FlipOne);
 /// let chain = mutate.then(CountTrue);
 /// assert_eq!(chain.apply(genome, &mut rng())?, 1);
-/// # Ok::<(), anyhow::Error>(())
+/// # Ok::<(), Box<dyn std::error::Error>>(())
 /// ```
 pub struct Mutate<M> {
     /// The wrapped [`Mutator`] that this [`Mutate`] will apply
