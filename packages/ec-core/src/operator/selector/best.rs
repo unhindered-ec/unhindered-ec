@@ -1,4 +1,4 @@
-use rand::rngs::ThreadRng;
+use rand::Rng;
 
 use super::{Selector, error::EmptyPopulation};
 use crate::population::Population;
@@ -14,10 +14,10 @@ where
 {
     type Error = EmptyPopulation;
 
-    fn select<'pop>(
+    fn select<'pop, R: Rng + ?Sized>(
         &self,
         population: &'pop P,
-        _: &mut ThreadRng,
+        _: &mut R,
     ) -> Result<&'pop P::Individual, Self::Error> {
         population.into_iter().max().ok_or(EmptyPopulation)
     }

@@ -47,6 +47,8 @@ pub trait Instruction<S> {
     fn perform(&self, state: S) -> InstructionResult<S, Self::Error>;
 }
 
+static_assertions::assert_obj_safe!(Instruction<(), Error = ()>);
+
 impl<S, E> Instruction<S> for Box<dyn Instruction<S, Error = E>> {
     type Error = E;
 
@@ -105,6 +107,8 @@ pub trait NumOpens {
         0
     }
 }
+
+static_assertions::assert_obj_safe!(NumOpens);
 
 impl NumOpens for PushInstruction {
     fn num_opens(&self) -> usize {

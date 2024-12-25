@@ -5,6 +5,8 @@ pub trait Scorer<G> {
     fn score(&self, genome: &G) -> Self::Score;
 }
 
+static_assertions::assert_obj_safe!(Scorer<(), Score = ()>);
+
 #[derive(Clone, Copy)]
 pub struct FnScorer<T>(pub T);
 

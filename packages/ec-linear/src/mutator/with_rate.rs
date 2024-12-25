@@ -1,7 +1,7 @@
 use std::{convert::Infallible, ops::Not};
 
 use ec_core::operator::mutator::Mutator;
-use rand::{Rng, rngs::ThreadRng};
+use rand::Rng;
 
 use crate::genome::Linear;
 
@@ -17,7 +17,7 @@ where
 {
     type Error = Infallible;
 
-    fn mutate(&self, genome: Vec<T>, rng: &mut ThreadRng) -> Result<Vec<T>, Self::Error> {
+    fn mutate<R: Rng + ?Sized>(&self, genome: Vec<T>, rng: &mut R) -> Result<Vec<T>, Self::Error> {
         Ok(genome
             .into_iter()
             .map(|bit| {
@@ -37,7 +37,8 @@ where
     T::Gene: Not<Output = T::Gene>,
 {
     type Error = Infallible;
-    fn mutate(&self, genome: T, rng: &mut ThreadRng) -> Result<T, Self::Error> {
+
+    fn mutate<R: Rng + ?Sized>(&self, genome: T, rng: &mut R) -> Result<T, Self::Error> {
         Ok(genome
             .into_iter()
             .map(|bit| {

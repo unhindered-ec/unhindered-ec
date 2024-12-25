@@ -1,3 +1,5 @@
+use rand::Rng;
+
 use super::Composable;
 use crate::operator::Operator;
 
@@ -50,10 +52,10 @@ where
     type Output = [F::Output; 2];
     type Error = MapError<F::Error>;
 
-    fn apply(
+    fn apply<R: Rng + ?Sized>(
         &self,
         [x, y]: [Input; 2],
-        rng: &mut rand::rngs::ThreadRng,
+        rng: &mut R,
     ) -> Result<Self::Output, Self::Error> {
         let first_result = self.f.apply(x, rng).map_err(|e| MapError(e, 0))?;
         let second_result = self.f.apply(y, rng).map_err(|e| MapError(e, 1))?;
@@ -68,10 +70,10 @@ where
     type Output = (F::Output, F::Output);
     type Error = MapError<F::Error>;
 
-    fn apply(
+    fn apply<R: Rng + ?Sized>(
         &self,
         (x, y): (Input, Input),
-        rng: &mut rand::rngs::ThreadRng,
+        rng: &mut R,
     ) -> Result<Self::Output, Self::Error> {
         let first_result = self.f.apply(x, rng).map_err(|e| MapError(e, 0))?;
         let second_result = self.f.apply(y, rng).map_err(|e| MapError(e, 1))?;
@@ -86,10 +88,10 @@ where
     type Output = Vec<F::Output>;
     type Error = MapError<F::Error>;
 
-    fn apply(
+    fn apply<R: Rng + ?Sized>(
         &self,
         input: Vec<Input>,
-        rng: &mut rand::rngs::ThreadRng,
+        rng: &mut R,
     ) -> Result<Self::Output, Self::Error> {
         input
             .into_iter()

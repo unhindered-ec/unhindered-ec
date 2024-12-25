@@ -19,6 +19,7 @@ num-traits = { workspace = true }
 rand = { workspace = true , features = ["alloc"] }
 thiserror = { workspace = true }
 miette = { workspace = true }
+static_assertions = { workspace = true }
 
 ec-core = { workspace = true }
 ec-linear = { workspace = true }

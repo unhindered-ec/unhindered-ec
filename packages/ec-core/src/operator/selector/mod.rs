@@ -1,9 +1,19 @@
-use rand::rngs::ThreadRng;
+#[cfg(feature = "erased")]
+use std::{
+    cell::{Ref, RefMut},
+    rc::Rc,
+    sync::Arc,
+};
+
+use rand::Rng;
+#[cfg(feature = "erased")]
+use rand::RngCore;
 
 use super::{Composable, Operator};
 use crate::population::Population;
 
 pub mod best;
+#[cfg(feature = "erased")]
 pub mod dyn_weighted;
 pub mod error;
 pub mod lexicase;
@@ -37,7 +47,7 @@ pub use error::EmptyPopulation;
 /// element in a vector.
 ///
 /// ```
-/// # use rand::{rngs::ThreadRng, rng};
+/// # use rand::{Rng, rng};
 /// # use ec_core::operator::selector::{error::EmptyPopulation, Selector};
 /// #
 /// struct First;
@@ -45,10 +55,10 @@ pub use error::EmptyPopulation;
 /// impl<const N: usize> Selector<[u8; N]> for First {
 ///     type Error = EmptyPopulation;
 ///
-///     fn select<'pop>(
+///     fn select<'pop, R: Rng + ?Sized>(
 ///         &self,
 ///         population: &'pop [u8; N],
-///         _: &mut ThreadRng,
+///         _: &mut R,
 ///     ) -> Result<&'pop u8, Self::Error> {
 ///         population.first().ok_or(EmptyPopulation)
 ///     }
@@ -72,12 +82,113 @@ where
     /// This will return an error if there's some problem selecting. That will
     /// usually be because the population is empty or not large enough for
     /// the desired selector.
-    fn select<'pop>(
+    fn select<'pop, R: Rng + ?Sized>(
         &self,
         population: &'pop P,
-        rng: &mut ThreadRng,
+        rng: &mut R,
     ) -> Result<&'pop P::Individual, Self::Error>;
 }
+
+#[cfg(feature = "erased")]
+/// Object-safe version of the [`Selector`] trait.
+pub trait DynSelector<P, Error = Box<dyn std::error::Error + Send + Sync>>
+where
+    P: Population,
+{
+    /// Select an individual from the given `population`, in a dyn compatible
+    /// fashion
+    ///
+    /// You should probably not use this directly and instead rely on the
+    /// `Selector` implementations on all common pointer types in rust
+    /// pointing to a object of this trait.
+    ///
+    /// # Errors
+    ///
+    /// This will return an error if there's some problem selecting. That will
+    /// usually be because the population is empty or not large enough for
+    /// the desired selector.
+    fn dyn_select<'pop>(
+        &self,
+        population: &'pop P,
+        rng: &mut dyn RngCore,
+    ) -> Result<&'pop P::Individual, Error>;
+}
+
+#[cfg(feature = "erased")]
+static_assertions::assert_obj_safe!(DynSelector<()>);
+
+#[cfg(feature = "erased")]
+impl<P, T, E> DynSelector<P, E> for T
+where
+    P: Population,
+    T: Selector<P, Error: Into<E>>,
+{
+    fn dyn_select<'pop>(
+        &self,
+        population: &'pop P,
+        rng: &mut dyn RngCore,
+    ) -> Result<&'pop <P as Population>::Individual, E> {
+        self.select(population, rng).map_err(Into::into)
+    }
+}
+
+#[cfg(feature = "erased")]
+macro_rules! dyn_selector_impl {
+    ($t: ty) => {
+        #[cfg(feature = "erased")]
+        impl<P, E> Selector<P> for $t
+        where
+            P: Population,
+        {
+            type Error = E;
+
+            fn select<'pop, R: Rng + ?Sized>(
+                &self,
+                population: &'pop P,
+                mut rng: &mut R,
+            ) -> Result<&'pop <P as Population>::Individual, Self::Error> {
+                (**self).dyn_select(population, &mut rng)
+            }
+        }
+    };
+    ($($t: ty),+ $(,)?) => {
+        $(dyn_selector_impl!($t);)+
+    }
+}
+
+#[cfg(feature = "erased")]
+// TODO: Create a macro to do this in a nicer way without needing to manually
+// repeat all the pointer types everywhere we provide a type erased trait
+dyn_selector_impl!(
+    &dyn DynSelector<P, E>,
+    &(dyn DynSelector<P, E> + Send),
+    &(dyn DynSelector<P, E> + Sync),
+    &(dyn DynSelector<P, E> + Send + Sync),
+    &mut dyn DynSelector<P, E>,
+    &mut (dyn DynSelector<P, E> + Send),
+    &mut (dyn DynSelector<P, E> + Sync),
+    &mut (dyn DynSelector<P, E> + Send + Sync),
+    Box<dyn DynSelector<P, E>>,
+    Box<dyn DynSelector<P, E> + Send>,
+    Box<dyn DynSelector<P, E> + Sync>,
+    Box<dyn DynSelector<P, E> + Send + Sync>,
+    Arc<dyn DynSelector<P, E>>,
+    Arc<dyn DynSelector<P, E> + Send>,
+    Arc<dyn DynSelector<P, E> + Sync>,
+    Arc<dyn DynSelector<P, E> + Send + Sync>,
+    Rc<dyn DynSelector<P, E>>,
+    Rc<dyn DynSelector<P, E> + Send>,
+    Rc<dyn DynSelector<P, E> + Sync>,
+    Rc<dyn DynSelector<P, E> + Send + Sync>,
+    Ref<'_, dyn DynSelector<P, E>>,
+    Ref<'_, dyn DynSelector<P, E> + Send>,
+    Ref<'_, dyn DynSelector<P, E> + Sync>,
+    Ref<'_, dyn DynSelector<P, E> + Send + Sync>,
+    RefMut<'_, dyn DynSelector<P, E>>,
+    RefMut<'_, dyn DynSelector<P, E> + Send>,
+    RefMut<'_, dyn DynSelector<P, E> + Sync>,
+    RefMut<'_, dyn DynSelector<P, E> + Send + Sync>,
+);
 
 /// A wrapper that converts a `Selector` into an `Operator`.
 ///
@@ -95,7 +206,7 @@ where
 /// selector.
 ///
 /// ```
-/// # use rand::{rngs::ThreadRng, rng};
+/// # use rand::{Rng, rng};
 /// #
 /// # use ec_core::operator::{Operator, selector::{error::EmptyPopulation, Select, Selector}};
 /// #
@@ -104,10 +215,10 @@ where
 /// impl<T, const N: usize> Selector<[T; N]> for First {
 ///     type Error = EmptyPopulation;
 ///
-///     fn select<'pop>(
+///     fn select<'pop, R: Rng + ?Sized>(
 ///         &self,
 ///         population: &'pop [T; N],
-///         _: &mut ThreadRng,
+///         _: &mut R,
 ///     ) -> Result<&'pop T, Self::Error> {
 ///         population.first().ok_or(EmptyPopulation)
 ///     }
@@ -135,7 +246,7 @@ where
 /// return the length of that string.
 ///
 /// ```
-/// # use rand::{rngs::ThreadRng, rng};
+/// # use rand::{Rng, rng};
 /// # use std::convert::Infallible;
 /// #
 /// # use ec_core::operator::{Composable, Operator, selector::{error::EmptyPopulation, Select, Selector}};
@@ -145,10 +256,10 @@ where
 /// # impl<T, const N: usize> Selector<[T;N]> for First {
 /// #    type Error = EmptyPopulation;
 /// #
-/// #    fn select<'pop>(
+/// #    fn select<'pop, R: Rng + ?Sized>(
 /// #        &self,
 /// #        population: &'pop [T;N],
-/// #        _: &mut ThreadRng,
+/// #        _: &mut R,
 /// #    ) -> Result<&'pop T, Self::Error> {
 /// #        population
 /// #            .first()
@@ -164,7 +275,7 @@ where
 ///
 ///     // The argument is a reference to a `String` because `Selector`s return
 ///     // references to the individuals they choose.
-///     fn apply(&self, input: &String, _: &mut ThreadRng) -> Result<usize, Self::Error> {
+///     fn apply<R: Rng + ?Sized>(&self, input: &String, _: &mut R) -> Result<usize, Self::Error> {
 ///         Ok(input.len())
 ///     }
 /// }
@@ -190,6 +301,7 @@ where
 ///
 /// ```
 /// # use std::convert::Infallible;
+/// # use rand::{Rng, thread_rng};
 /// #
 /// # use rand::{rngs::ThreadRng, rng};
 /// #
@@ -200,10 +312,10 @@ where
 /// # impl<T, const N:usize> Selector<[T;N]> for First {
 /// #    type Error = EmptyPopulation;
 /// #
-/// #    fn select<'pop>(
+/// #    fn select<'pop, R: Rng + ?Sized>(
 /// #        &self,
 /// #        population: &'pop [T;N],
-/// #        _: &mut ThreadRng,
+/// #        _: &mut R,
 /// #    ) -> Result<&'pop T, Self::Error> {
 /// #        population
 /// #            .first()
@@ -217,7 +329,7 @@ where
 /// #    type Output = usize;
 /// #    type Error = Infallible;
 /// #
-/// #    fn apply(&self, input: &String, _: &mut ThreadRng) -> Result<usize, Self::Error> {
+/// #    fn apply<R: Rng + ?Sized>(&self, input: &String, _: &mut R) -> Result<usize, Self::Error>{
 /// #        Ok(input.len())
 /// #    }
 /// # }
@@ -252,7 +364,11 @@ where
     type Error = S::Error;
 
     /// Apply this `Selector` as an `Operator`
-    fn apply(&self, population: &'pop P, rng: &mut ThreadRng) -> Result<Self::Output, Self::Error> {
+    fn apply<R: Rng + ?Sized>(
+        &self,
+        population: &'pop P,
+        rng: &mut R,
+    ) -> Result<Self::Output, Self::Error> {
         self.selector.select(population, rng)
     }
 }
@@ -268,10 +384,10 @@ where
 {
     type Error = S::Error;
 
-    fn select<'pop>(
+    fn select<'pop, R: Rng + ?Sized>(
         &self,
         population: &'pop P,
-        rng: &mut ThreadRng,
+        rng: &mut R,
     ) -> Result<&'pop P::Individual, Self::Error> {
         (**self).select(population, rng)
     }
@@ -281,7 +397,7 @@ where
 mod tests {
     use std::convert::Infallible;
 
-    use rand::{rng, rngs::ThreadRng};
+    use rand::{Rng, rng};
 
     use super::{Select, Selector, error::EmptyPopulation};
     use crate::operator::{Composable, Operator};
@@ -292,10 +408,10 @@ mod tests {
     impl<T, const N: usize> Selector<[T; N]> for First {
         type Error = EmptyPopulation;
 
-        fn select<'pop>(
+        fn select<'pop, R: Rng + ?Sized>(
             &self,
             population: &'pop [T; N],
-            _: &mut ThreadRng,
+            _: &mut R,
         ) -> Result<&'pop T, Self::Error> {
             population.first().ok_or(EmptyPopulation)
         }
@@ -312,7 +428,7 @@ mod tests {
         type Output = usize;
         type Error = Infallible;
 
-        fn apply(&self, input: T, _: &mut ThreadRng) -> Result<usize, Self::Error> {
+        fn apply<R: Rng + ?Sized>(&self, input: T, _: &mut R) -> Result<usize, Self::Error> {
             Ok(input.as_ref().len())
         }
     }

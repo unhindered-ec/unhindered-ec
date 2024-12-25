@@ -1,4 +1,13 @@
-use rand::rngs::ThreadRng;
+#[cfg(feature = "erased")]
+use std::{
+    cell::{Ref, RefMut},
+    rc::Rc,
+    sync::Arc,
+};
+
+use rand::Rng;
+#[cfg(feature = "erased")]
+use rand::RngCore;
 
 use super::{Composable, Operator};
 
@@ -21,7 +30,7 @@ use super::{Composable, Operator};
 /// that exactly one bit has changed.
 ///
 /// ```
-/// # use rand::{rngs::ThreadRng, rng, Rng};
+/// # use rand::{rng, Rng};
 /// # use ec_core::operator::mutator::Mutator;
 /// # use std::convert::Infallible;
 /// #
@@ -32,10 +41,10 @@ use super::{Composable, Operator};
 /// impl Mutator<Genome<bool>> for FlipOne {
 ///     type Error = Infallible;
 ///
-///     fn mutate(
+///     fn mutate<R: Rng + ?Sized>(
 ///         &self,
 ///         mut genome: Genome<bool>,
-///         rng: &mut ThreadRng,
+///         rng: &mut R,
 ///     ) -> Result<Genome<bool>, Self::Error> {
 ///         let index = rng.random_range(0..genome.len());
 ///         genome[index] = !genome[index];
@@ -62,8 +71,83 @@ pub trait Mutator<G> {
     /// This will return an error if there is an error mutating the given
     /// genome. This will usually be because the given `genome` is invalid in
     /// some way, thus making the mutation impossible.
-    fn mutate(&self, genome: G, rng: &mut ThreadRng) -> Result<G, Self::Error>;
+    fn mutate<R: Rng + ?Sized>(&self, genome: G, rng: &mut R) -> Result<G, Self::Error>;
 }
+
+#[cfg(feature = "erased")]
+pub trait DynMutator<G, E = Box<dyn std::error::Error + Send + Sync>> {
+    /// # Errors
+    ///
+    /// This will return an error if there is an error mutating the given
+    /// genome. This will usually be because the given `genome` is invalid in
+    /// some way, thus making the mutation impossible.
+    fn dyn_mutate(&self, genome: G, rng: &mut dyn RngCore) -> Result<G, E>;
+}
+
+#[cfg(feature = "erased")]
+static_assertions::assert_obj_safe!(DynMutator<()>);
+
+#[cfg(feature = "erased")]
+impl<T, G, E> DynMutator<G, E> for T
+where
+    T: Mutator<G, Error: Into<E>>,
+{
+    fn dyn_mutate(&self, genome: G, rng: &mut dyn RngCore) -> Result<G, E> {
+        self.mutate(genome, rng).map_err(Into::into)
+    }
+}
+
+#[cfg(feature = "erased")]
+macro_rules! dyn_mutator_impl {
+    ($t: ty) => {
+        #[cfg(feature = "erased")]
+        impl<G, E> Mutator<G> for $t
+        {
+            type Error = E;
+
+            fn mutate<R: Rng + ?Sized>(&self, genome: G, mut rng: &mut R) -> Result<G, E> {
+                (**self).dyn_mutate(genome, &mut rng)
+            }
+        }
+    };
+    ($($t: ty),+ $(,)?) => {
+        $(dyn_mutator_impl!($t);)+
+    }
+}
+
+#[cfg(feature = "erased")]
+// TODO: Create a macro to do this in a nicer way without needing to manually
+// repeat all the pointer types everywhere we provide a type erased trait
+dyn_mutator_impl!(
+    &dyn DynMutator<G, E>,
+    &(dyn DynMutator<G, E> + Send),
+    &(dyn DynMutator<G, E> + Sync),
+    &(dyn DynMutator<G, E> + Send + Sync),
+    &mut dyn DynMutator<G, E>,
+    &mut (dyn DynMutator<G, E> + Send),
+    &mut (dyn DynMutator<G, E> + Sync),
+    &mut (dyn DynMutator<G, E> + Send + Sync),
+    Box<dyn DynMutator<G, E>>,
+    Box<dyn DynMutator<G, E> + Send>,
+    Box<dyn DynMutator<G, E> + Sync>,
+    Box<dyn DynMutator<G, E> + Send + Sync>,
+    Arc<dyn DynMutator<G, E>>,
+    Arc<dyn DynMutator<G, E> + Send>,
+    Arc<dyn DynMutator<G, E> + Sync>,
+    Arc<dyn DynMutator<G, E> + Send + Sync>,
+    Rc<dyn DynMutator<G, E>>,
+    Rc<dyn DynMutator<G, E> + Send>,
+    Rc<dyn DynMutator<G, E> + Sync>,
+    Rc<dyn DynMutator<G, E> + Send + Sync>,
+    Ref<'_, dyn DynMutator<G, E>>,
+    Ref<'_, dyn DynMutator<G, E> + Send>,
+    Ref<'_, dyn DynMutator<G, E> + Sync>,
+    Ref<'_, dyn DynMutator<G, E> + Send + Sync>,
+    RefMut<'_, dyn DynMutator<G, E>>,
+    RefMut<'_, dyn DynMutator<G, E> + Send>,
+    RefMut<'_, dyn DynMutator<G, E> + Sync>,
+    RefMut<'_, dyn DynMutator<G, E> + Send + Sync>,
+);
 
 /// A wrapper that converts a [`Mutator`] into an [`Operator`].
 ///
@@ -86,7 +170,7 @@ pub trait Mutator<G> {
 /// mutator.
 ///
 /// ```
-/// # use rand::{rngs::ThreadRng, rng};
+/// # use rand::{Rng, rng};
 /// #
 /// # use ec_core::operator::{
 /// #     mutator::{Mutate, Mutator},
@@ -102,10 +186,10 @@ pub trait Mutator<G> {
 /// impl Mutator<Genome<bool>> for FlipFirst {
 ///     type Error = Infallible;
 ///
-///     fn mutate(
+///     fn mutate<R: Rng + ?Sized>(
 ///         &self,
 ///         mut genome: Genome<bool>,
-///         _: &mut ThreadRng,
+///         _: &mut R,
 ///     ) -> Result<Genome<bool>, Self::Error> {
 ///         genome[0] = !genome[0];
 ///         Ok(genome)
@@ -135,7 +219,7 @@ pub trait Mutator<G> {
 /// #     mutator::{Mutate, Mutator},
 /// #     Composable, Operator,
 /// # };
-/// # use rand::{rngs::ThreadRng, rng, Rng};
+/// # use rand::{Rng, rng};
 /// #
 /// type Genome<T> = [T; 4];
 ///
@@ -145,10 +229,10 @@ pub trait Mutator<G> {
 /// impl Mutator<Genome<bool>> for FlipOne {
 ///     type Error = Infallible;
 ///
-///     fn mutate(
+///     fn mutate<R: Rng + ?Sized>(
 ///         &self,
 ///         mut genome: Genome<bool>,
-///         rng: &mut ThreadRng,
+///         rng: &mut R,
 ///     ) -> Result<Genome<bool>, Self::Error> {
 ///         let index = rng.random_range(0..genome.len());
 ///         genome[index] = !genome[index];
@@ -164,10 +248,10 @@ pub trait Mutator<G> {
 ///     type Output = usize;
 ///     type Error = Infallible;
 ///
-///     fn apply(
+///     fn apply<R: Rng + ?Sized>(
 ///         &self,
 ///         genome: Genome<bool>,
-///         _: &mut ThreadRng,
+///         _: &mut R,
 ///     ) -> Result<Self::Output, Self::Error> {
 ///         Ok(genome.iter().filter(|&&x| x).count())
 ///     }
@@ -192,7 +276,7 @@ pub trait Mutator<G> {
 /// #     mutator::{Mutate, Mutator},
 /// #     Composable, Operator,
 /// # };
-/// # use rand::{rngs::ThreadRng, rng, Rng};
+/// # use rand::{Rng, rng};
 /// # use std::convert::Infallible;
 /// #
 /// # type Genome<T> = [T; 4];
@@ -203,7 +287,7 @@ pub trait Mutator<G> {
 /// # impl Mutator<Genome<bool>> for FlipOne {
 /// #    type Error = Infallible;
 /// #
-/// #    fn mutate(&self, mut genome: Genome<bool>, rng: &mut ThreadRng) -> Result<Genome<bool>, Self::Error> {
+/// #    fn mutate<R: Rng + ?Sized>(&self, mut genome: Genome<bool>, rng: &mut R) -> Result<Genome<bool>, Self::Error> {
 /// #        let index = rng.random_range(0..genome.len());
 /// #        genome[index] = !genome[index];
 /// #        Ok(genome)
@@ -218,7 +302,7 @@ pub trait Mutator<G> {
 /// #    type Output = usize;
 /// #    type Error = Infallible;
 /// #
-/// #    fn apply(&self, genome: Genome<bool>, _: &mut ThreadRng) -> Result<Self::Output, Self::Error> {
+/// #    fn apply<R: Rng + ?Sized>(&self, genome: Genome<bool>, _: &mut R) -> Result<Self::Output, Self::Error> {
 /// #        Ok(genome.iter().filter(|&&x| x).count())
 /// #    }
 /// # }
@@ -251,7 +335,7 @@ where
     type Error = M::Error;
 
     /// Apply this `Mutator` as an `Operator`
-    fn apply(&self, genome: G, rng: &mut ThreadRng) -> Result<Self::Output, Self::Error> {
+    fn apply<R: Rng + ?Sized>(&self, genome: G, rng: &mut R) -> Result<Self::Output, Self::Error> {
         self.mutator.mutate(genome, rng)
     }
 }
@@ -266,7 +350,7 @@ where
 {
     type Error = M::Error;
 
-    fn mutate(&self, genome: G, rng: &mut ThreadRng) -> Result<G, Self::Error> {
+    fn mutate<R: Rng + ?Sized>(&self, genome: G, rng: &mut R) -> Result<G, Self::Error> {
         (**self).mutate(genome, rng)
     }
 }
@@ -277,7 +361,7 @@ where
 {
     type Error = M::Error;
 
-    fn mutate(&self, genome: G, rng: &mut ThreadRng) -> Result<G, Self::Error> {
+    fn mutate<R: Rng + ?Sized>(&self, genome: G, rng: &mut R) -> Result<G, Self::Error> {
         (**self).mutate(genome, rng)
     }
 }
@@ -286,7 +370,7 @@ where
 mod tests {
     use std::convert::Infallible;
 
-    use rand::{Rng, rng, rngs::ThreadRng};
+    use rand::{Rng, rng};
 
     use super::Mutator;
     use crate::operator::{Composable, Operator, mutator::Mutate};
@@ -298,10 +382,10 @@ mod tests {
     impl Mutator<Genome<bool>> for FlipOne {
         type Error = Infallible;
 
-        fn mutate(
+        fn mutate<R: Rng + ?Sized>(
             &self,
             mut genome: Genome<bool>,
-            rng: &mut ThreadRng,
+            rng: &mut R,
         ) -> Result<Genome<bool>, Self::Error> {
             let index = rng.random_range(0..genome.len());
             genome[index] = !genome[index];
@@ -317,10 +401,10 @@ mod tests {
         type Output = usize;
         type Error = Infallible;
 
-        fn apply(
+        fn apply<R: Rng + ?Sized>(
             &self,
             genome: Genome<bool>,
-            _: &mut ThreadRng,
+            _: &mut R,
         ) -> Result<Self::Output, Self::Error> {
             Ok(genome.iter().filter(|&&x| x).count())
         }

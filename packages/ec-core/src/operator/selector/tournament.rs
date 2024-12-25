@@ -1,7 +1,7 @@
 use std::num::NonZeroUsize;
 
 use miette::Diagnostic;
-use rand::{prelude::IndexedRandom, rngs::ThreadRng};
+use rand::{Rng, prelude::IndexedRandom};
 
 use super::Selector;
 use crate::population::Population;
@@ -79,10 +79,10 @@ where
 {
     type Error = TournamentSizeError;
 
-    fn select<'pop>(
+    fn select<'pop, R: Rng + ?Sized>(
         &self,
         population: &'pop P,
-        rng: &mut ThreadRng,
+        rng: &mut R,
     ) -> Result<&'pop P::Individual, Self::Error> {
         if population.size() < self.size.into() {
             return Err(TournamentSizeError::new(self.size, population.size()));

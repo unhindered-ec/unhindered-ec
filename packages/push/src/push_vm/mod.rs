@@ -9,7 +9,6 @@ pub mod stack;
 
 pub use self::stack::HasStack;
 
-// Need an associated error trait
 pub trait State: Sized {
     type Instruction: Instruction<Self>;
 

@@ -1,4 +1,13 @@
-use rand::rngs::ThreadRng;
+#[cfg(feature = "erased")]
+use std::{
+    cell::{Ref, RefMut},
+    rc::Rc,
+    sync::Arc,
+};
+
+use rand::Rng;
+#[cfg(feature = "erased")]
+use rand::RngCore;
 
 use super::{Composable, Operator};
 
@@ -34,7 +43,7 @@ use super::{Composable, Operator};
 /// second parent.
 ///
 /// ```
-/// # use rand::{rngs::ThreadRng, rng, Rng};
+/// # use rand::{rng, Rng};
 /// # use ec_core::operator::recombinator::Recombinator;
 /// # use std::convert::Infallible;
 /// #
@@ -46,10 +55,10 @@ use super::{Composable, Operator};
 ///     type Output = Genome<T>;
 ///     type Error = Infallible;
 ///
-///     fn recombine(
+///     fn recombine<R: Rng + ?Sized>(
 ///         &self,
 ///         (mut first_parent, second_parent): Parents<T>,
-///         rng: &mut ThreadRng,
+///         rng: &mut R,
 ///     ) -> Result<Genome<T>, Self::Error> {
 ///         let index = rng.random_range(0..first_parent.len());
 ///         first_parent[index] = second_parent[index];
@@ -84,8 +93,98 @@ pub trait Recombinator<GS> {
     /// This will return an error if there is an error recombining the given
     /// parent genomes. This will usually be because the given `genomes` are
     /// invalid in some way, thus making recombination impossible.
-    fn recombine(&self, genomes: GS, rng: &mut ThreadRng) -> Result<Self::Output, Self::Error>;
+    fn recombine<R: Rng + ?Sized>(
+        &self,
+        genomes: GS,
+        rng: &mut R,
+    ) -> Result<Self::Output, Self::Error>;
 }
+
+#[cfg(feature = "erased")]
+pub trait DynRecombinator<GS, E = Box<dyn std::error::Error + Send + Sync>> {
+    type Output;
+
+    /// Recombine the given `genomes` returning a new genome of type `Output`.
+    ///
+    /// # Errors
+    ///
+    /// This will return an error if there is an error recombining the given
+    /// parent genomes. This will usually be because the given `genomes` are
+    /// invalid in some way, thus making recombination impossible.
+    fn dyn_recombine(&self, genomes: GS, rng: &mut dyn RngCore) -> Result<Self::Output, E>;
+}
+
+#[cfg(feature = "erased")]
+static_assertions::assert_obj_safe!(DynRecombinator<(), Output = ()>);
+
+#[cfg(feature = "erased")]
+impl<T, GS, E> DynRecombinator<GS, E> for T
+where
+    T: Recombinator<GS, Error: Into<E>>,
+{
+    type Output = T::Output;
+
+    fn dyn_recombine(&self, genomes: GS, rng: &mut dyn RngCore) -> Result<Self::Output, E> {
+        self.recombine(genomes, rng).map_err(Into::into)
+    }
+}
+
+#[cfg(feature = "erased")]
+macro_rules! dyn_recombinator_impl {
+    ($t: ty) => {
+        #[cfg(feature = "erased")]
+        impl<GS, O, E> Recombinator<GS> for $t
+        {
+            type Error = E;
+            type Output = O;
+
+            fn recombine<R: Rng + ?Sized>(
+                &self,
+                genomes: GS,
+                mut rng: &mut R
+            ) -> Result<Self::Output, Self::Error> {
+                (**self).dyn_recombine(genomes, &mut rng)
+            }
+        }
+    };
+    ($($t: ty),+ $(,)?) => {
+        $(dyn_recombinator_impl!($t);)+
+    }
+}
+
+#[cfg(feature = "erased")]
+// TODO: Create a macro to do this in a nicer way without needing to manually
+// repeat all the pointer types everywhere we provide a type erased trait
+dyn_recombinator_impl!(
+    &dyn DynRecombinator<GS, E, Output = O>,
+    &(dyn DynRecombinator<GS, E, Output = O> + Send),
+    &(dyn DynRecombinator<GS, E, Output = O> + Sync),
+    &(dyn DynRecombinator<GS, E, Output = O> + Send + Sync),
+    &mut dyn DynRecombinator<GS, E, Output = O>,
+    &mut (dyn DynRecombinator<GS, E, Output = O> + Send),
+    &mut (dyn DynRecombinator<GS, E, Output = O> + Sync),
+    &mut (dyn DynRecombinator<GS, E, Output = O> + Send + Sync),
+    Box<dyn DynRecombinator<GS, E, Output = O>>,
+    Box<dyn DynRecombinator<GS, E, Output = O> + Send>,
+    Box<dyn DynRecombinator<GS, E, Output = O> + Sync>,
+    Box<dyn DynRecombinator<GS, E, Output = O> + Send + Sync>,
+    Arc<dyn DynRecombinator<GS, E, Output = O>>,
+    Arc<dyn DynRecombinator<GS, E, Output = O> + Send>,
+    Arc<dyn DynRecombinator<GS, E, Output = O> + Sync>,
+    Arc<dyn DynRecombinator<GS, E, Output = O> + Send + Sync>,
+    Rc<dyn DynRecombinator<GS, E, Output = O>>,
+    Rc<dyn DynRecombinator<GS, E, Output = O> + Send>,
+    Rc<dyn DynRecombinator<GS, E, Output = O> + Sync>,
+    Rc<dyn DynRecombinator<GS, E, Output = O> + Send + Sync>,
+    Ref<'_, dyn DynRecombinator<GS, E, Output = O>>,
+    Ref<'_, dyn DynRecombinator<GS, E, Output = O> + Send>,
+    Ref<'_, dyn DynRecombinator<GS, E, Output = O> + Sync>,
+    Ref<'_, dyn DynRecombinator<GS, E, Output = O> + Send + Sync>,
+    RefMut<'_, dyn DynRecombinator<GS, E, Output = O>>,
+    RefMut<'_, dyn DynRecombinator<GS, E, Output = O> + Send>,
+    RefMut<'_, dyn DynRecombinator<GS, E, Output = O> + Sync>,
+    RefMut<'_, dyn DynRecombinator<GS, E, Output = O> + Send + Sync>,
+);
 
 /// A wrapper that converts a `Recombinator` into an `Operator`,
 ///
@@ -109,7 +208,7 @@ pub trait Recombinator<GS> {
 /// calling [`Recombinator::recombine`] directly on the recombinator.
 ///
 /// ```
-/// # use rand::{rngs::ThreadRng, rng};
+/// # use rand::{Rng, rng};
 /// # use ec_core::operator::{Operator, recombinator::{Recombinator, Recombine}};
 /// # use std::convert::Infallible;
 /// #
@@ -123,10 +222,10 @@ pub trait Recombinator<GS> {
 ///     type Output = Genome<T>;
 ///     type Error = Infallible;
 ///
-///     fn recombine(
+///     fn recombine<R: Rng + ?Sized>(
 ///         &self,
 ///         (mut first_parent, second_parent): Parents<T>,
-///         _: &mut ThreadRng,
+///         _: &mut R,
 ///     ) -> Result<Genome<T>, Self::Error> {
 ///         first_parent[0] = second_parent[0];
 ///         Ok(first_parent)
@@ -159,7 +258,7 @@ pub trait Recombinator<GS> {
 ///
 /// ```
 /// # use std::convert::Infallible;
-/// # use rand::{rngs::ThreadRng, rng, Rng};
+/// # use rand::{rng, Rng};
 /// #
 /// # use ec_core::operator::{recombinator::{Recombinator, Recombine}, Composable, Operator};
 /// #
@@ -173,10 +272,10 @@ pub trait Recombinator<GS> {
 ///     type Output = Genome<T>;
 ///     type Error = Infallible;
 ///
-///     fn recombine(
+///     fn recombine<R: Rng + ?Sized>(
 ///         &self,
 ///         (mut first_parent, second_parent): Parents<T>,
-///         rng: &mut ThreadRng,
+///         rng: &mut R,
 ///     ) -> Result<Genome<T>, Self::Error> {
 ///         let index = rng.random_range(0..first_parent.len());
 ///         first_parent[index] = second_parent[index];
@@ -192,10 +291,10 @@ pub trait Recombinator<GS> {
 ///     type Output = usize;
 ///     type Error = Infallible;
 ///
-///     fn apply(
+///     fn apply<R: Rng + ?Sized>(
 ///         &self,
 ///         genome: Genome<bool>,
-///         _: &mut ThreadRng,
+///         _: &mut R,
 ///     ) -> Result<Self::Output, Self::Error> {
 ///         Ok(genome.iter().filter(|&&x| x).count())
 ///     }
@@ -223,7 +322,7 @@ pub trait Recombinator<GS> {
 /// ownership of the recombinator.
 ///
 /// ```
-/// # use rand::{rngs::ThreadRng, rng, Rng};
+/// # use rand::{ rng, Rng};
 /// # use std::convert::Infallible;
 /// #
 /// # use ec_core::operator::{recombinator::{Recombinator, Recombine}, Composable, Operator};
@@ -239,10 +338,10 @@ pub trait Recombinator<GS> {
 /// #     type Output = Genome<T>;
 /// #     type Error = Infallible;
 /// #
-/// #     fn recombine(
+/// #     fn recombine<R: Rng + ?Sized>(
 /// #         &self,
 /// #         (mut first_parent, second_parent): Parents<T>,
-/// #         rng: &mut ThreadRng,
+/// #         rng: &mut R,
 /// #     ) -> Result<Genome<T>, Self::Error> {
 /// #         let index = rng.random_range(0..first_parent.len());
 /// #         first_parent[index] = second_parent[index];
@@ -258,7 +357,7 @@ pub trait Recombinator<GS> {
 /// #     type Output = usize;
 /// #     type Error = Infallible;
 /// #
-/// #     fn apply(&self, genome: Genome<bool>, _: &mut ThreadRng) -> Result<Self::Output, Self::Error> {
+/// #     fn apply<R: Rng + ?Sized>(&self, genome: Genome<bool>, _: &mut R) -> Result<Self::Output, Self::Error> {
 /// #         Ok(genome.iter().filter(|&&x| x).count())
 /// #     }
 /// # }
@@ -288,16 +387,16 @@ impl<R> Recombine<R> {
     }
 }
 
-impl<R, G> Operator<G> for Recombine<R>
+impl<Rec, G> Operator<G> for Recombine<Rec>
 where
-    R: Recombinator<G>,
+    Rec: Recombinator<G>,
 {
-    type Output = R::Output;
-    type Error = R::Error;
+    type Output = Rec::Output;
+    type Error = Rec::Error;
 
     /// Apply the wrapped [`Recombinator`] as an [`Operator`] to the given
     /// genomes.
-    fn apply(&self, genomes: G, rng: &mut ThreadRng) -> Result<Self::Output, Self::Error> {
+    fn apply<R: Rng + ?Sized>(&self, genomes: G, rng: &mut R) -> Result<Self::Output, Self::Error> {
         self.recombinator.recombine(genomes, rng)
     }
 }
@@ -306,14 +405,18 @@ impl<R> Composable for Recombine<R> {}
 /// Implement [`Recombinator`] for a reference to a [`Recombinator`].
 /// This allows us to wrap a reference to a [`Recombinator`] in a [`Recombine`]
 /// operator, allowing recombinators to be used in chains of operators.
-impl<R, GS> Recombinator<GS> for &R
+impl<Rec, GS> Recombinator<GS> for &Rec
 where
-    R: Recombinator<GS>,
+    Rec: Recombinator<GS>,
 {
-    type Output = R::Output;
-    type Error = R::Error;
+    type Output = Rec::Output;
+    type Error = Rec::Error;
 
-    fn recombine(&self, genomes: GS, rng: &mut ThreadRng) -> Result<Self::Output, Self::Error> {
+    fn recombine<R: Rng + ?Sized>(
+        &self,
+        genomes: GS,
+        rng: &mut R,
+    ) -> Result<Self::Output, Self::Error> {
         (**self).recombine(genomes, rng)
     }
 }
@@ -322,7 +425,7 @@ where
 mod tests {
     use std::convert::Infallible;
 
-    use rand::{Rng, rng, rngs::ThreadRng};
+    use rand::{Rng, rng};
 
     use super::{Recombinator, Recombine};
     use crate::operator::{Composable, Operator};
@@ -338,10 +441,10 @@ mod tests {
         type Output = Genome<T>;
         type Error = Infallible;
 
-        fn recombine(
+        fn recombine<R: Rng + ?Sized>(
             &self,
             (mut first_parent, second_parent): Parents<T>,
-            rng: &mut ThreadRng,
+            rng: &mut R,
         ) -> Result<Genome<T>, Self::Error> {
             let index = rng.random_range(0..first_parent.len());
             first_parent[index] = second_parent[index];
@@ -357,10 +460,10 @@ mod tests {
         type Output = usize;
         type Error = Infallible;
 
-        fn apply(
+        fn apply<R: Rng + ?Sized>(
             &self,
             genome: Genome<bool>,
-            _: &mut ThreadRng,
+            _: &mut R,
         ) -> Result<Self::Output, Self::Error> {
             Ok(genome.iter().filter(|&&x| x).count())
         }

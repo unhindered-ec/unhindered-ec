@@ -8,6 +8,8 @@ pub trait Population {
     fn size(&self) -> usize;
 }
 
+static_assertions::assert_obj_safe!(Population<Individual = ()>);
+
 impl<T, I> Population for T
 where
     // An alternative would be `T: Deref<[T]>` but this also supports
