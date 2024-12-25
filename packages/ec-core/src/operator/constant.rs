@@ -1,6 +1,6 @@
 use std::convert::Infallible;
 
-use rand::rngs::ThreadRng;
+use rand::Rng;
 
 use super::{Composable, Operator};
 
@@ -49,7 +49,7 @@ where
 
     /// Always return the value stored in the [`Operator`] regardless of the
     /// input value (of type `S`).
-    fn apply(&self, _: S, _: &mut ThreadRng) -> Result<Self::Output, Self::Error> {
+    fn apply<R: Rng + ?Sized>(&self, _: S, _: &mut R) -> Result<Self::Output, Self::Error> {
         Ok(self.value.clone())
     }
 }

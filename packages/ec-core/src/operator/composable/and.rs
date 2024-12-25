@@ -1,4 +1,4 @@
-use rand::rngs::ThreadRng;
+use rand::Rng;
 
 use super::{super::Operator, Composable};
 
@@ -70,7 +70,7 @@ where
     type Output = (F::Output, G::Output);
     type Error = AndError<F::Error, G::Error>;
 
-    fn apply(&self, x: A, rng: &mut ThreadRng) -> Result<Self::Output, Self::Error> {
+    fn apply<R: Rng + ?Sized>(&self, x: A, rng: &mut R) -> Result<Self::Output, Self::Error> {
         let f_value = self.f.apply(x.clone(), rng).map_err(AndError::First)?;
         let g_value = self.g.apply(x, rng).map_err(AndError::Second)?;
         Ok((f_value, g_value))

@@ -1,6 +1,6 @@
 use std::convert::Infallible;
 
-use rand::rngs::ThreadRng;
+use rand::Rng;
 
 use super::{Composable, Operator};
 
@@ -34,7 +34,7 @@ impl<T> Operator<T> for Identity {
     type Error = Infallible;
 
     /// Always return the input value.
-    fn apply(&self, input: T, _: &mut ThreadRng) -> Result<Self::Output, Self::Error> {
+    fn apply<R: Rng + ?Sized>(&self, input: T, _: &mut R) -> Result<Self::Output, Self::Error> {
         Ok(input)
     }
 }

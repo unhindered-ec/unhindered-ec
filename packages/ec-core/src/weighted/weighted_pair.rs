@@ -1,4 +1,7 @@
-use rand::distr::{Bernoulli, Distribution};
+use rand::{
+    Rng,
+    distr::{Bernoulli, Distribution},
+};
 
 use super::{
     error::{SelectionError, WeightSumOverflow, WeightedPairError, ZeroWeight},
@@ -52,10 +55,10 @@ where
 {
     type Error = SelectionError<WeightedPairError<A::Error, B::Error>>;
 
-    fn select<'pop>(
+    fn select<'pop, R: Rng + ?Sized>(
         &self,
         population: &'pop P,
-        rng: &mut rand::prelude::ThreadRng,
+        rng: &mut R,
     ) -> Result<&'pop <P as Population>::Individual, Self::Error> {
         let Some(distr) = self.distr else {
             return Err(ZeroWeight.into());

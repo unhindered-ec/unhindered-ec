@@ -1,4 +1,4 @@
-use rand::{prelude::IndexedRandom, rngs::ThreadRng};
+use rand::{Rng, prelude::IndexedRandom};
 
 use super::{Selector, error::EmptyPopulation};
 use crate::population::Population;
@@ -12,10 +12,10 @@ where
 {
     type Error = EmptyPopulation;
 
-    fn select<'pop>(
+    fn select<'pop, R: Rng + ?Sized>(
         &self,
         population: &'pop P,
-        rng: &mut ThreadRng,
+        rng: &mut R,
     ) -> Result<&'pop P::Individual, Self::Error> {
         population.as_ref().choose(rng).ok_or(EmptyPopulation)
     }

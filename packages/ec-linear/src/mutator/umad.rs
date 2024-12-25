@@ -1,7 +1,7 @@
 use std::convert::Infallible;
 
 use ec_core::{genome::Genome, operator::mutator::Mutator};
-use rand::{Rng, prelude::Distribution, rngs::ThreadRng};
+use rand::{Rng, prelude::Distribution};
 
 use crate::genome::Linear;
 
@@ -56,10 +56,11 @@ impl<GeneGenerator> Umad<GeneGenerator> {
         }
     }
 
-    fn new_gene<G>(&self, rng: &mut ThreadRng) -> G::Gene
+    fn new_gene<G, R>(&self, rng: &mut R) -> G::Gene
     where
         G: Genome,
         GeneGenerator: Distribution<G::Gene>,
+        R: Rng + ?Sized,
     {
         self.gene_generator.sample(rng)
     }
@@ -72,12 +73,12 @@ where
 {
     type Error = Infallible;
 
-    fn mutate(&self, genome: G, rng: &mut ThreadRng) -> Result<G, Self::Error> {
+    fn mutate<R: Rng + ?Sized>(&self, genome: G, rng: &mut R) -> Result<G, Self::Error> {
         if genome.size() == 0 {
             if let Some(addition_rate) = self.empty_addition_rate {
                 return Ok(rng
                     .random_bool(addition_rate)
-                    .then(|| self.new_gene::<G>(rng))
+                    .then(|| self.new_gene::<G, R>(rng))
                     .into_iter()
                     .collect());
             }
@@ -96,7 +97,7 @@ where
                 let old_gene = (!delete_gene).then_some(gene);
 
                 let new_gene = match (add_gene, delete_new_gene) {
-                    (true, false) => Some(self.new_gene::<G>(rng)),
+                    (true, false) => Some(self.new_gene::<G, R>(rng)),
                     _ => None,
                 };
 

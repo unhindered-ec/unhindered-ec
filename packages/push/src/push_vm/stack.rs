@@ -113,6 +113,8 @@ pub trait StackType {
     type Type;
 }
 
+static_assertions::assert_obj_safe!(StackType<Type = ()>);
+
 impl<T> StackType for Stack<T> {
     type Type = T;
 }
