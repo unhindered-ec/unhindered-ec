@@ -1,13 +1,4 @@
-#[cfg(feature = "erased")]
-use std::{
-    cell::{Ref, RefMut},
-    rc::Rc,
-    sync::Arc,
-};
-
 use rand::Rng;
-#[cfg(feature = "erased")]
-use rand::RngCore;
 
 use crate::{operator::selector::Selector, population::Population};
 
@@ -52,7 +43,7 @@ where
     /// That can include constructing or scoring the genome.
     fn dyn_make_child(
         &self,
-        rng: &mut dyn RngCore,
+        rng: &mut dyn rand::RngCore,
         population: &P,
         selector: &S,
     ) -> Result<P::Individual, E>;
@@ -70,7 +61,7 @@ where
 {
     fn dyn_make_child(
         &self,
-        rng: &mut dyn RngCore,
+        rng: &mut dyn rand::RngCore,
         population: &P,
         selector: &S,
     ) -> Result<<P as Population>::Individual, E> {
@@ -80,61 +71,20 @@ where
 }
 
 #[cfg(feature = "erased")]
-macro_rules! dyn_child_maker_impl {
-    ($t: ty) => {
-        #[cfg(feature = "erased")]
-        impl<P, S, E> ChildMaker<P, S> for $t
-        where
-            P: Population,
-            S: Selector<P>
-        {
-            type Error = E;
+#[ec_macros::dyn_ref_impls]
+impl<P, S, E> ChildMaker<P, S> for &dyn DynChildMaker<P, S, E>
+where
+    P: Population,
+    S: Selector<P>,
+{
+    type Error = E;
 
-            fn make_child<R: Rng + ?Sized>(
-                &self,
-                mut rng: &mut R,
-                population: &P,
-                selector: &S,
-            ) -> Result<P::Individual, Self::Error> {
-                (**self).dyn_make_child(&mut rng, population, selector)
-            }
-        }
-    };
-    ($($t: ty),+ $(,)?) => {
-        $(dyn_child_maker_impl!($t);)+
+    fn make_child<R: Rng + ?Sized>(
+        &self,
+        mut rng: &mut R,
+        population: &P,
+        selector: &S,
+    ) -> Result<P::Individual, Self::Error> {
+        (**self).dyn_make_child(&mut rng, population, selector)
     }
 }
-
-#[cfg(feature = "erased")]
-// TODO: Create a macro to do this in a nicer way without needing to manually
-// repeat all the pointer types everywhere we provide a type erased trait
-dyn_child_maker_impl!(
-    &dyn DynChildMaker<P, S, E>,
-    &(dyn DynChildMaker<P, S, E> + Send),
-    &(dyn DynChildMaker<P, S, E> + Sync),
-    &(dyn DynChildMaker<P, S, E> + Send + Sync),
-    &mut dyn DynChildMaker<P, S, E>,
-    &mut (dyn DynChildMaker<P, S, E> + Send),
-    &mut (dyn DynChildMaker<P, S, E> + Sync),
-    &mut (dyn DynChildMaker<P, S, E> + Send + Sync),
-    Box<dyn DynChildMaker<P, S, E>>,
-    Box<dyn DynChildMaker<P, S, E> + Send>,
-    Box<dyn DynChildMaker<P, S, E> + Sync>,
-    Box<dyn DynChildMaker<P, S, E> + Send + Sync>,
-    Arc<dyn DynChildMaker<P, S, E>>,
-    Arc<dyn DynChildMaker<P, S, E> + Send>,
-    Arc<dyn DynChildMaker<P, S, E> + Sync>,
-    Arc<dyn DynChildMaker<P, S, E> + Send + Sync>,
-    Rc<dyn DynChildMaker<P, S, E>>,
-    Rc<dyn DynChildMaker<P, S, E> + Send>,
-    Rc<dyn DynChildMaker<P, S, E> + Sync>,
-    Rc<dyn DynChildMaker<P, S, E> + Send + Sync>,
-    Ref<'_, dyn DynChildMaker<P, S, E>>,
-    Ref<'_, dyn DynChildMaker<P, S, E> + Send>,
-    Ref<'_, dyn DynChildMaker<P, S, E> + Sync>,
-    Ref<'_, dyn DynChildMaker<P, S, E> + Send + Sync>,
-    RefMut<'_, dyn DynChildMaker<P, S, E>>,
-    RefMut<'_, dyn DynChildMaker<P, S, E> + Send>,
-    RefMut<'_, dyn DynChildMaker<P, S, E> + Sync>,
-    RefMut<'_, dyn DynChildMaker<P, S, E> + Send + Sync>,
-);

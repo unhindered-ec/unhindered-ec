@@ -1,13 +1,4 @@
-#[cfg(feature = "erased")]
-use std::{
-    cell::{Ref, RefMut},
-    rc::Rc,
-    sync::Arc,
-};
-
 use rand::Rng;
-#[cfg(feature = "erased")]
-use rand::RngCore;
 
 use super::{Composable, Operator};
 
@@ -111,7 +102,7 @@ pub trait DynRecombinator<GS, E = Box<dyn std::error::Error + Send + Sync>> {
     /// This will return an error if there is an error recombining the given
     /// parent genomes. This will usually be because the given `genomes` are
     /// invalid in some way, thus making recombination impossible.
-    fn dyn_recombine(&self, genomes: GS, rng: &mut dyn RngCore) -> Result<Self::Output, E>;
+    fn dyn_recombine(&self, genomes: GS, rng: &mut dyn rand::RngCore) -> Result<Self::Output, E>;
 }
 
 #[cfg(feature = "erased")]
@@ -124,67 +115,21 @@ where
 {
     type Output = T::Output;
 
-    fn dyn_recombine(&self, genomes: GS, rng: &mut dyn RngCore) -> Result<Self::Output, E> {
+    fn dyn_recombine(&self, genomes: GS, rng: &mut dyn rand::RngCore) -> Result<Self::Output, E> {
         self.recombine(genomes, rng).map_err(Into::into)
     }
 }
 
 #[cfg(feature = "erased")]
-macro_rules! dyn_recombinator_impl {
-    ($t: ty) => {
-        #[cfg(feature = "erased")]
-        impl<GS, O, E> Recombinator<GS> for $t
-        {
-            type Error = E;
-            type Output = O;
+#[ec_macros::dyn_ref_impls]
+impl<GS, O, E> Recombinator<GS> for &dyn DynRecombinator<GS, E, Output = O> {
+    type Output = O;
+    type Error = E;
 
-            fn recombine<R: Rng + ?Sized>(
-                &self,
-                genomes: GS,
-                mut rng: &mut R
-            ) -> Result<Self::Output, Self::Error> {
-                (**self).dyn_recombine(genomes, &mut rng)
-            }
-        }
-    };
-    ($($t: ty),+ $(,)?) => {
-        $(dyn_recombinator_impl!($t);)+
+    fn recombine<R: Rng + ?Sized>(&self, genomes: GS, mut rng: &mut R) -> Result<Self::Output, E> {
+        (**self).dyn_recombine(genomes, &mut rng)
     }
 }
-
-#[cfg(feature = "erased")]
-// TODO: Create a macro to do this in a nicer way without needing to manually
-// repeat all the pointer types everywhere we provide a type erased trait
-dyn_recombinator_impl!(
-    &dyn DynRecombinator<GS, E, Output = O>,
-    &(dyn DynRecombinator<GS, E, Output = O> + Send),
-    &(dyn DynRecombinator<GS, E, Output = O> + Sync),
-    &(dyn DynRecombinator<GS, E, Output = O> + Send + Sync),
-    &mut dyn DynRecombinator<GS, E, Output = O>,
-    &mut (dyn DynRecombinator<GS, E, Output = O> + Send),
-    &mut (dyn DynRecombinator<GS, E, Output = O> + Sync),
-    &mut (dyn DynRecombinator<GS, E, Output = O> + Send + Sync),
-    Box<dyn DynRecombinator<GS, E, Output = O>>,
-    Box<dyn DynRecombinator<GS, E, Output = O> + Send>,
-    Box<dyn DynRecombinator<GS, E, Output = O> + Sync>,
-    Box<dyn DynRecombinator<GS, E, Output = O> + Send + Sync>,
-    Arc<dyn DynRecombinator<GS, E, Output = O>>,
-    Arc<dyn DynRecombinator<GS, E, Output = O> + Send>,
-    Arc<dyn DynRecombinator<GS, E, Output = O> + Sync>,
-    Arc<dyn DynRecombinator<GS, E, Output = O> + Send + Sync>,
-    Rc<dyn DynRecombinator<GS, E, Output = O>>,
-    Rc<dyn DynRecombinator<GS, E, Output = O> + Send>,
-    Rc<dyn DynRecombinator<GS, E, Output = O> + Sync>,
-    Rc<dyn DynRecombinator<GS, E, Output = O> + Send + Sync>,
-    Ref<'_, dyn DynRecombinator<GS, E, Output = O>>,
-    Ref<'_, dyn DynRecombinator<GS, E, Output = O> + Send>,
-    Ref<'_, dyn DynRecombinator<GS, E, Output = O> + Sync>,
-    Ref<'_, dyn DynRecombinator<GS, E, Output = O> + Send + Sync>,
-    RefMut<'_, dyn DynRecombinator<GS, E, Output = O>>,
-    RefMut<'_, dyn DynRecombinator<GS, E, Output = O> + Send>,
-    RefMut<'_, dyn DynRecombinator<GS, E, Output = O> + Sync>,
-    RefMut<'_, dyn DynRecombinator<GS, E, Output = O> + Send + Sync>,
-);
 
 /// A wrapper that converts a `Recombinator` into an `Operator`,
 ///

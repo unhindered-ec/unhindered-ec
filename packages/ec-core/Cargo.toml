@@ -29,6 +29,7 @@ thiserror = { workspace = true }
 miette = { workspace = true }
 polonius-the-crab = { workspace = true }
 static_assertions = { workspace = true }
+ec_macros = { workspace = true }
 
 [dev-dependencies]
 rand = { workspace = true, features = ["alloc", "small_rng"] }

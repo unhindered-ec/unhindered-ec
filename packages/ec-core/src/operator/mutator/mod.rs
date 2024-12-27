@@ -1,13 +1,4 @@
-#[cfg(feature = "erased")]
-use std::{
-    cell::{Ref, RefMut},
-    rc::Rc,
-    sync::Arc,
-};
-
 use rand::Rng;
-#[cfg(feature = "erased")]
-use rand::RngCore;
 
 use super::{Composable, Operator};
 
@@ -81,7 +72,7 @@ pub trait DynMutator<G, E = Box<dyn std::error::Error + Send + Sync>> {
     /// This will return an error if there is an error mutating the given
     /// genome. This will usually be because the given `genome` is invalid in
     /// some way, thus making the mutation impossible.
-    fn dyn_mutate(&self, genome: G, rng: &mut dyn RngCore) -> Result<G, E>;
+    fn dyn_mutate(&self, genome: G, rng: &mut dyn rand::RngCore) -> Result<G, E>;
 }
 
 #[cfg(feature = "erased")]
@@ -92,62 +83,20 @@ impl<T, G, E> DynMutator<G, E> for T
 where
     T: Mutator<G, Error: Into<E>>,
 {
-    fn dyn_mutate(&self, genome: G, rng: &mut dyn RngCore) -> Result<G, E> {
+    fn dyn_mutate(&self, genome: G, rng: &mut dyn rand::RngCore) -> Result<G, E> {
         self.mutate(genome, rng).map_err(Into::into)
     }
 }
 
 #[cfg(feature = "erased")]
-macro_rules! dyn_mutator_impl {
-    ($t: ty) => {
-        #[cfg(feature = "erased")]
-        impl<G, E> Mutator<G> for $t
-        {
-            type Error = E;
+#[ec_macros::dyn_ref_impls]
+impl<G, E> Mutator<G> for &dyn DynMutator<G, E> {
+    type Error = E;
 
-            fn mutate<R: Rng + ?Sized>(&self, genome: G, mut rng: &mut R) -> Result<G, E> {
-                (**self).dyn_mutate(genome, &mut rng)
-            }
-        }
-    };
-    ($($t: ty),+ $(,)?) => {
-        $(dyn_mutator_impl!($t);)+
+    fn mutate<R: Rng + ?Sized>(&self, genome: G, mut rng: &mut R) -> Result<G, Self::Error> {
+        (**self).dyn_mutate(genome, &mut rng)
     }
 }
-
-#[cfg(feature = "erased")]
-// TODO: Create a macro to do this in a nicer way without needing to manually
-// repeat all the pointer types everywhere we provide a type erased trait
-dyn_mutator_impl!(
-    &dyn DynMutator<G, E>,
-    &(dyn DynMutator<G, E> + Send),
-    &(dyn DynMutator<G, E> + Sync),
-    &(dyn DynMutator<G, E> + Send + Sync),
-    &mut dyn DynMutator<G, E>,
-    &mut (dyn DynMutator<G, E> + Send),
-    &mut (dyn DynMutator<G, E> + Sync),
-    &mut (dyn DynMutator<G, E> + Send + Sync),
-    Box<dyn DynMutator<G, E>>,
-    Box<dyn DynMutator<G, E> + Send>,
-    Box<dyn DynMutator<G, E> + Sync>,
-    Box<dyn DynMutator<G, E> + Send + Sync>,
-    Arc<dyn DynMutator<G, E>>,
-    Arc<dyn DynMutator<G, E> + Send>,
-    Arc<dyn DynMutator<G, E> + Sync>,
-    Arc<dyn DynMutator<G, E> + Send + Sync>,
-    Rc<dyn DynMutator<G, E>>,
-    Rc<dyn DynMutator<G, E> + Send>,
-    Rc<dyn DynMutator<G, E> + Sync>,
-    Rc<dyn DynMutator<G, E> + Send + Sync>,
-    Ref<'_, dyn DynMutator<G, E>>,
-    Ref<'_, dyn DynMutator<G, E> + Send>,
-    Ref<'_, dyn DynMutator<G, E> + Sync>,
-    Ref<'_, dyn DynMutator<G, E> + Send + Sync>,
-    RefMut<'_, dyn DynMutator<G, E>>,
-    RefMut<'_, dyn DynMutator<G, E> + Send>,
-    RefMut<'_, dyn DynMutator<G, E> + Sync>,
-    RefMut<'_, dyn DynMutator<G, E> + Send + Sync>,
-);
 
 /// A wrapper that converts a [`Mutator`] into an [`Operator`].
 ///
