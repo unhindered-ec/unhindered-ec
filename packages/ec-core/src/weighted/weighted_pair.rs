@@ -137,7 +137,7 @@ mod tests {
 
     #[test]
     fn zero_weight_sum_error() {
-        let pop = vec![5, 8, 9, 6, 3, 2, 0];
+        let pop = [5, 8, 9, 6, 3, 2, 0];
         let mut rng = rand::rng();
         let weighted = Weighted::new(Best, 0)
             .with_item_and_weight(Worst, 0)

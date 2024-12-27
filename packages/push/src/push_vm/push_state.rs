@@ -171,8 +171,8 @@ mod simple_check {
         let state = state.run_to_completion().unwrap();
 
         assert!(state.exec.is_empty());
-        assert_eq!(&state.int, &vec![5, 17]);
-        assert_eq!(&state.bool, &vec![true, false]);
-        assert_eq!(&state.float, &vec![OrderedFloat(13.0)]);
+        assert_eq!(&state.int, &[5, 17]);
+        assert_eq!(&state.bool, &[true, false]);
+        assert_eq!(&state.float, &[OrderedFloat(13.0)]);
     }
 }

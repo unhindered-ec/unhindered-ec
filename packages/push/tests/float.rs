@@ -38,7 +38,7 @@ fn add() {
     let y = OrderedFloat(512.825);
     let state = PushState::builder()
         .with_max_stack_size(2)
-        .with_float_values(vec![x, y])
+        .with_float_values([x, y])
         .unwrap()
         .with_no_program()
         .build();
@@ -54,10 +54,10 @@ fn overflow_bool_stack() {
         // Set the max stack size to 2 so we can cause it to overflow.
         .with_max_stack_size(2)
         // Push two copies of x so we can call `FloatInstruction::Equal`
-        .with_float_values(vec![x, x])
+        .with_float_values([x, x])
         .unwrap()
         // Now fill the boolean stack so that it overflows when we check the floats for equality
-        .with_bool_values(vec![false, false])
+        .with_bool_values([false, false])
         .unwrap()
         .with_no_program()
         .build();

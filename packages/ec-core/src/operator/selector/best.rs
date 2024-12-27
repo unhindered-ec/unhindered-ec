@@ -39,10 +39,7 @@ mod tests {
 
     #[test]
     fn can_select_twice() {
-        // Currently `.select()` can't take an array, so we need to make this a `Vec`.
-        // Once we've generalized `.select()` appropriately we can change this to be
-        // an array. See #259
-        let pop = vec![5, 8, 9, 6, 3, 2, 0];
+        let pop = [5, 8, 9, 6, 3, 2, 0];
         let mut rng = rand::rng();
         assert_eq!(&9, Best.select(&pop, &mut rng).unwrap());
         assert_eq!(&9, Best.select(&pop, &mut rng).unwrap());

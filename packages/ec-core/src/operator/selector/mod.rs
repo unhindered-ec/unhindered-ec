@@ -27,7 +27,7 @@ pub use error::EmptyPopulation;
 /// # use ec_core::operator::selector::{best::Best, Selector};
 /// # use rand::rng;
 /// #
-/// let population = vec![5, 8, 9, 2, 3, 6];
+/// let population = [5, 8, 9, 2, 3, 6];
 /// let winner = Best.select(&population, &mut rng())?;
 /// assert_eq!(*winner, 9);
 /// # Ok::<(), Box<dyn std::error::Error>>(())
@@ -42,19 +42,19 @@ pub use error::EmptyPopulation;
 /// #
 /// struct First;
 ///
-/// impl Selector<Vec<u8>> for First {
+/// impl<const N: usize> Selector<[u8; N]> for First {
 ///     type Error = EmptyPopulation;
 ///
 ///     fn select<'pop>(
 ///         &self,
-///         population: &'pop Vec<u8>,
+///         population: &'pop [u8; N],
 ///         _: &mut ThreadRng,
 ///     ) -> Result<&'pop u8, Self::Error> {
 ///         population.first().ok_or(EmptyPopulation)
 ///     }
 /// }
 ///
-/// let population = vec![5, 8, 9];
+/// let population = [5, 8, 9];
 /// let choice = First.select(&population, &mut rng())?;
 /// assert_eq!(*choice, 5);
 /// # Ok::<(), Box<dyn std::error::Error>>(())
@@ -101,12 +101,12 @@ where
 /// #
 /// struct First; // Simple selector that always returns the first element in a vector.
 ///
-/// impl<T> Selector<Vec<T>> for First {
+/// impl<T, const N: usize> Selector<[T; N]> for First {
 ///     type Error = EmptyPopulation;
 ///
 ///     fn select<'pop>(
 ///         &self,
-///         population: &'pop Vec<T>,
+///         population: &'pop [T; N],
 ///         _: &mut ThreadRng,
 ///     ) -> Result<&'pop T, Self::Error> {
 ///         population.first().ok_or(EmptyPopulation)
@@ -115,7 +115,7 @@ where
 ///
 /// // Create a `Select` operator from the `First` selector
 /// let select = Select::new(First);
-/// let population: Vec<u8> = vec![5, 8, 9];
+/// let population = [5u8, 8, 9];
 ///
 /// // Selectors return references to the individuals they choose, so we
 /// // get a `&u8` back from `select` and `apply`.
@@ -142,12 +142,12 @@ where
 /// #
 /// # struct First; // Simple selector that always returns the first element in a vector.
 /// #
-/// # impl<T> Selector<Vec<T>> for First {
+/// # impl<T, const N: usize> Selector<[T;N]> for First {
 /// #    type Error = EmptyPopulation;
 /// #
 /// #    fn select<'pop>(
 /// #        &self,
-/// #        population: &'pop Vec<T>,
+/// #        population: &'pop [T;N],
 /// #        _: &mut ThreadRng,
 /// #    ) -> Result<&'pop T, Self::Error> {
 /// #        population
@@ -175,7 +175,7 @@ where
 ///
 /// let select = Select::new(First);
 /// let chain = select.then(StrLen);
-/// let population: Vec<String> = vec!["Hello".to_string(), "World".to_string()];
+/// let population = ["Hello".to_string(), "World".to_string()];
 ///
 /// // The `StrLen` operator will take the `&String` returned by the `First`
 /// // selector and return its length.
@@ -197,12 +197,12 @@ where
 /// #
 /// # struct First; // Simple selector that always returns the first element in a vector.
 /// #
-/// # impl<T> Selector<Vec<T>> for First {
+/// # impl<T, const N:usize> Selector<[T;N]> for First {
 /// #    type Error = EmptyPopulation;
 /// #
 /// #    fn select<'pop>(
 /// #        &self,
-/// #        population: &'pop Vec<T>,
+/// #        population: &'pop [T;N],
 /// #        _: &mut ThreadRng,
 /// #    ) -> Result<&'pop T, Self::Error> {
 /// #        population
@@ -225,7 +225,7 @@ where
 /// #
 /// let ref_select = Select::new(&First);
 /// let chain = ref_select.then(StrLen);
-/// let population: Vec<String> = vec!["Hello".to_string(), "World".to_string()];
+/// let population = ["Hello".to_string(), "World".to_string()];
 /// let choice_length: usize = chain.apply(&population, &mut rng())?;
 /// assert_eq!(choice_length, 5);
 /// # Ok::<(), Box<dyn std::error::Error>>(())
@@ -289,12 +289,12 @@ mod tests {
     // A simple `Selector`` that always returns the first item in a vector.
     struct First;
 
-    impl<T> Selector<Vec<T>> for First {
+    impl<T, const N: usize> Selector<[T; N]> for First {
         type Error = EmptyPopulation;
 
         fn select<'pop>(
             &self,
-            population: &'pop Vec<T>,
+            population: &'pop [T; N],
             _: &mut ThreadRng,
         ) -> Result<&'pop T, Self::Error> {
             population.first().ok_or(EmptyPopulation)
@@ -320,7 +320,7 @@ mod tests {
 
     #[test]
     fn can_implement_simple_selector() {
-        let population = vec![5, 8, 9];
+        let population = [5, 8, 9];
         let choice = First.select(&population, &mut rng()).unwrap();
         assert_eq!(*choice, 5);
     }
@@ -328,7 +328,7 @@ mod tests {
     #[test]
     fn can_wrap_selector() {
         let select = Select::new(First);
-        let population = vec![5, 8, 9];
+        let population = [5, 8, 9];
         let choice = select.apply(&population, &mut rng()).unwrap();
         assert_eq!(*choice, 5);
     }
@@ -338,7 +338,7 @@ mod tests {
         // Make sure that we can pass a reference to a selector to `Select` and
         // still successfully select values.
         let select = Select::new(&First);
-        let population = vec![5, 8, 9];
+        let population = [5, 8, 9];
         let choice = select.apply(&population, &mut rng()).unwrap();
         assert_eq!(*choice, 5);
     }
@@ -348,7 +348,7 @@ mod tests {
         let select = Select::new(First);
         let double = StrLen;
         let chain = select.then(double);
-        let population: Vec<String> = vec!["Hello".to_string(), "World!".to_string()];
+        let population = ["Hello".to_string(), "World!".to_string()];
         let length_of_choice: usize = chain.apply(&population, &mut rng()).unwrap();
         assert_eq!(length_of_choice, 5);
     }
@@ -360,7 +360,7 @@ mod tests {
         let select = Select::new(&First);
         let double = StrLen;
         let chain = select.then(double);
-        let population: Vec<String> = vec!["Hello".to_string(), "World!".to_string()];
+        let population = ["Hello".to_string(), "World!".to_string()];
         let length_of_choice: usize = chain.apply(&population, &mut rng()).unwrap();
         assert_eq!(length_of_choice, 5);
     }

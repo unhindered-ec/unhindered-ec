@@ -312,41 +312,35 @@ mod test_results_from_vec {
 
     #[test]
     fn create_test_results_from_errors() {
-        let errors = vec![5, 8, 0, 9];
-        let test_results: TestResults<Error<i32>> = errors.clone().into();
-        assert_eq!(
-            test_results.results.iter().map(|r| r.0).collect::<Vec<_>>(),
-            errors
-        );
+        let errors = [5, 8, 0, 9];
+        let test_results: TestResults<Error<i32>> = errors.into();
+        assert!(test_results.results.iter().map(|r| r.0).eq(errors));
         assert_eq!(test_results.total_result, errors.into_iter().sum());
     }
 
     #[test]
     fn create_test_results_from_scores() {
-        let scores = vec![5, 8, 0, 9];
-        let test_results: TestResults<Score<i32>> = scores.clone().into();
-        assert_eq!(
-            test_results.results.iter().map(|r| r.0).collect::<Vec<_>>(),
-            scores
-        );
+        let scores = [5, 8, 0, 9];
+        let test_results: TestResults<Score<i32>> = scores.into();
+        assert!(test_results.results.iter().map(|r| r.0).eq(scores));
         assert_eq!(test_results.total_result, scores.into_iter().sum());
     }
 
     #[test]
     fn create_test_results_from_iter_errors() {
-        let errors = vec![5, 8, 0, 9];
+        let errors = [5, 8, 0, 9];
         let results = errors.iter().copied().map(Error::from);
         let test_results: TestResults<Error<i32>> = results.clone().collect();
-        assert_eq!(test_results.results, results.collect::<Vec<_>>());
+        assert!(test_results.results.into_iter().eq(results));
         assert_eq!(test_results.total_result, errors.into_iter().sum());
     }
 
     #[test]
     fn create_test_results_from_iter_scores() {
-        let scores = vec![5, 8, 0, 9];
+        let scores = [5, 8, 0, 9];
         let results = scores.iter().copied().map(Score::from);
         let test_results: TestResults<Score<i32>> = results.clone().collect();
-        assert_eq!(test_results.results, results.collect::<Vec<_>>());
+        assert!(test_results.results.into_iter().eq(results));
         assert_eq!(test_results.total_result, scores.into_iter().sum());
     }
 }
