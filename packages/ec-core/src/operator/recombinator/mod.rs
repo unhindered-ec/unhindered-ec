@@ -2,6 +2,11 @@ use rand::Rng;
 
 use super::{Composable, Operator};
 
+#[cfg(feature = "erased")]
+mod erased;
+#[cfg(feature = "erased")]
+pub use erased::*;
+
 /// Recombine (usually two or more) genomes into a new
 /// genome of the same type,
 ///
@@ -89,46 +94,6 @@ pub trait Recombinator<GS> {
         genomes: GS,
         rng: &mut R,
     ) -> Result<Self::Output, Self::Error>;
-}
-
-#[cfg(feature = "erased")]
-pub trait DynRecombinator<GS, E = Box<dyn std::error::Error + Send + Sync>> {
-    type Output;
-
-    /// Recombine the given `genomes` returning a new genome of type `Output`.
-    ///
-    /// # Errors
-    ///
-    /// This will return an error if there is an error recombining the given
-    /// parent genomes. This will usually be because the given `genomes` are
-    /// invalid in some way, thus making recombination impossible.
-    fn dyn_recombine(&self, genomes: GS, rng: &mut dyn rand::RngCore) -> Result<Self::Output, E>;
-}
-
-#[cfg(feature = "erased")]
-static_assertions::assert_obj_safe!(DynRecombinator<(), Output = ()>);
-
-#[cfg(feature = "erased")]
-impl<T, GS, E> DynRecombinator<GS, E> for T
-where
-    T: Recombinator<GS, Error: Into<E>>,
-{
-    type Output = T::Output;
-
-    fn dyn_recombine(&self, genomes: GS, rng: &mut dyn rand::RngCore) -> Result<Self::Output, E> {
-        self.recombine(genomes, rng).map_err(Into::into)
-    }
-}
-
-#[cfg(feature = "erased")]
-#[ec_macros::dyn_ref_impls]
-impl<GS, O, E> Recombinator<GS> for &dyn DynRecombinator<GS, E, Output = O> {
-    type Output = O;
-    type Error = E;
-
-    fn recombine<R: Rng + ?Sized>(&self, genomes: GS, mut rng: &mut R) -> Result<Self::Output, E> {
-        (**self).dyn_recombine(genomes, &mut rng)
-    }
 }
 
 /// A wrapper that converts a `Recombinator` into an `Operator`,
