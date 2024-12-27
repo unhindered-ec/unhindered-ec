@@ -8,11 +8,17 @@ pub trait Population {
     fn size(&self) -> usize;
 }
 
-impl<I> Population for Vec<I> {
+impl<T, I> Population for T
+where
+    // An alternative would be `T: Deref<[T]>` but this also supports
+    // hashsets, etc.
+    for<'a> &'a T: IntoIterator<Item = &'a I, IntoIter: ExactSizeIterator>,
+    T: IntoIterator<Item = I>,
+{
     type Individual = I;
 
     fn size(&self) -> usize {
-        self.len()
+        self.into_iter().len()
     }
 }
 
