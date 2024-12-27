@@ -1,13 +1,4 @@
-#[cfg(feature = "erased")]
-use std::{
-    cell::{Ref, RefMut},
-    rc::Rc,
-    sync::Arc,
-};
-
 use rand::Rng;
-#[cfg(feature = "erased")]
-use rand::RngCore;
 
 use super::{Composable, Operator};
 use crate::population::Population;
@@ -110,7 +101,7 @@ where
     fn dyn_select<'pop>(
         &self,
         population: &'pop P,
-        rng: &mut dyn RngCore,
+        rng: &mut dyn rand::RngCore,
     ) -> Result<&'pop P::Individual, Error>;
 }
 
@@ -126,69 +117,28 @@ where
     fn dyn_select<'pop>(
         &self,
         population: &'pop P,
-        rng: &mut dyn RngCore,
+        rng: &mut dyn rand::RngCore,
     ) -> Result<&'pop <P as Population>::Individual, E> {
         self.select(population, rng).map_err(Into::into)
     }
 }
 
 #[cfg(feature = "erased")]
-macro_rules! dyn_selector_impl {
-    ($t: ty) => {
-        #[cfg(feature = "erased")]
-        impl<P, E> Selector<P> for $t
-        where
-            P: Population,
-        {
-            type Error = E;
+#[ec_macros::dyn_ref_impls]
+impl<P, E> Selector<P> for &dyn DynSelector<P, E>
+where
+    P: Population,
+{
+    type Error = E;
 
-            fn select<'pop, R: Rng + ?Sized>(
-                &self,
-                population: &'pop P,
-                mut rng: &mut R,
-            ) -> Result<&'pop <P as Population>::Individual, Self::Error> {
-                (**self).dyn_select(population, &mut rng)
-            }
-        }
-    };
-    ($($t: ty),+ $(,)?) => {
-        $(dyn_selector_impl!($t);)+
+    fn select<'pop, R: Rng + ?Sized>(
+        &self,
+        population: &'pop P,
+        mut rng: &mut R,
+    ) -> Result<&'pop <P as Population>::Individual, Self::Error> {
+        (**self).dyn_select(population, &mut rng)
     }
 }
-
-#[cfg(feature = "erased")]
-// TODO: Create a macro to do this in a nicer way without needing to manually
-// repeat all the pointer types everywhere we provide a type erased trait
-dyn_selector_impl!(
-    &dyn DynSelector<P, E>,
-    &(dyn DynSelector<P, E> + Send),
-    &(dyn DynSelector<P, E> + Sync),
-    &(dyn DynSelector<P, E> + Send + Sync),
-    &mut dyn DynSelector<P, E>,
-    &mut (dyn DynSelector<P, E> + Send),
-    &mut (dyn DynSelector<P, E> + Sync),
-    &mut (dyn DynSelector<P, E> + Send + Sync),
-    Box<dyn DynSelector<P, E>>,
-    Box<dyn DynSelector<P, E> + Send>,
-    Box<dyn DynSelector<P, E> + Sync>,
-    Box<dyn DynSelector<P, E> + Send + Sync>,
-    Arc<dyn DynSelector<P, E>>,
-    Arc<dyn DynSelector<P, E> + Send>,
-    Arc<dyn DynSelector<P, E> + Sync>,
-    Arc<dyn DynSelector<P, E> + Send + Sync>,
-    Rc<dyn DynSelector<P, E>>,
-    Rc<dyn DynSelector<P, E> + Send>,
-    Rc<dyn DynSelector<P, E> + Sync>,
-    Rc<dyn DynSelector<P, E> + Send + Sync>,
-    Ref<'_, dyn DynSelector<P, E>>,
-    Ref<'_, dyn DynSelector<P, E> + Send>,
-    Ref<'_, dyn DynSelector<P, E> + Sync>,
-    Ref<'_, dyn DynSelector<P, E> + Send + Sync>,
-    RefMut<'_, dyn DynSelector<P, E>>,
-    RefMut<'_, dyn DynSelector<P, E> + Send>,
-    RefMut<'_, dyn DynSelector<P, E> + Sync>,
-    RefMut<'_, dyn DynSelector<P, E> + Send + Sync>,
-);
 
 /// A wrapper that converts a `Selector` into an `Operator`.
 ///

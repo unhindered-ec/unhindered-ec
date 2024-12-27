@@ -345,6 +345,7 @@ name = "ec-core"
 version = "0.1.0"
 dependencies = [
  "criterion",
+ "ec_macros",
  "itertools 0.13.0",
  "macro_railroad_annotation",
  "miette",
@@ -369,6 +370,16 @@ dependencies = [
  "rand 0.9.0-beta.1",
  "static_assertions",
  "thiserror",
+]
+
+[[package]]
+name = "ec_macros"
+version = "0.1.0"
+dependencies = [
+ "manyhow",
+ "proc-macro2",
+ "quote",
+ "syn 2.0.90",
 ]
 
 [[package]]
