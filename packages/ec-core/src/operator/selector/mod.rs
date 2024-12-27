@@ -283,10 +283,6 @@ where
     }
 }
 
-#[expect(
-    clippy::unwrap_used,
-    reason = "Panicking is the best way to deal with errors in unit tests"
-)]
 #[cfg(test)]
 mod tests {
     use anyhow::Context;

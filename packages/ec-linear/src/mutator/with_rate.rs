@@ -54,10 +54,6 @@ impl WithRate {
 }
 
 #[cfg(test)]
-#[expect(
-    clippy::unwrap_used,
-    reason = "Panicking is the best way to deal with errors in unit tests"
-)]
 mod tests {
     use std::iter::zip;
 

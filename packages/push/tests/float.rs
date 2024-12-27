@@ -1,9 +1,5 @@
 #![cfg(test)]
 #![expect(
-    clippy::unwrap_used,
-    reason = "Panicking is the best way to deal with errors in integration tests"
-)]
-#![expect(
     clippy::arithmetic_side_effects,
     reason = "The tradeoff safety <> ease of writing arguably lies on the ease of writing side \
               for test code."

@@ -52,10 +52,6 @@ impl<F, const N: usize> Composable for RepeatWith<F, N> {}
     reason = "The tradeoff safety <> ease of writing arguably lies on the ease of writing side \
               for test code."
 )]
-#[expect(
-    clippy::unwrap_used,
-    reason = "Panicking is the best way to deal with errors in unit tests"
-)]
 mod tests {
     use std::{convert::Infallible, ops::Range};
 

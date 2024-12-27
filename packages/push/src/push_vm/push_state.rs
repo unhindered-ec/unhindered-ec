@@ -107,10 +107,6 @@ impl State for PushState {
 }
 
 #[cfg(test)]
-#[expect(
-    clippy::unwrap_used,
-    reason = "Panicking is the best way to deal with errors in unit tests"
-)]
 mod simple_check {
     use ordered_float::OrderedFloat;
 

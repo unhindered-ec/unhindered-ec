@@ -40,10 +40,6 @@ impl<F, G> Composable for Then<F, G> {}
     reason = "The tradeoff safety <> ease of writing arguably lies on the ease of writing side \
               for test code."
 )]
-#[expect(
-    clippy::unwrap_used,
-    reason = "Panicking is the best way to deal with errors in unit tests"
-)]
 pub mod tests {
     use std::convert::Infallible;
 

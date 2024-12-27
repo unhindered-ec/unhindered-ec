@@ -80,7 +80,6 @@ where
 
 impl Composable for GenomeExtractor {}
 
-#[expect(clippy::unwrap_used, reason = "panicking is appropriate in tests")]
 #[cfg(test)]
 mod tests {
     use rand::{Rng, rngs::ThreadRng, thread_rng};
