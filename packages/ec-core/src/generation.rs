@@ -12,6 +12,10 @@ impl<P, C> Generation<P, C> {
     pub const fn population(&self) -> &P {
         &self.population
     }
+
+    pub fn into_population(self) -> P {
+        self.population
+    }
 }
 
 impl<P, C> Generation<P, C> {
