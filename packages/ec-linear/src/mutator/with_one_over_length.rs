@@ -30,6 +30,8 @@ where
         let mutator = WithRate::new(mutation_rate);
         mutator
             .mutate(genome, rng)
+            // This can't happen, as the only error is the conversion error
+            // since `WithRate::mutator` can't fail.
             .map_err(|_: Infallible| unreachable!())
     }
 }
@@ -50,6 +52,8 @@ where
         let mutator = WithRate::new(mutation_rate);
         mutator
             .mutate(genome, rng)
+            // This can't happen, as the only error is the conversion error
+            // since `WithRate::mutator` can't fail.
             .map_err(|_: Infallible| unreachable!())
     }
 }
