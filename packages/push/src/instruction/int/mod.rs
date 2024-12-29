@@ -198,7 +198,7 @@ where
                         .map_err(PushInstructionError::from)
                         .map(|(&x, &y)| {
                             let y: u32 = y.try_into().ok()?;
-                            x.checked_pow(y).map(i64::from)
+                            x.checked_pow(y)
                         })
                         .and_then(|v| {
                             v.ok_or(IntInstructionError::Overflow { op: *self })
