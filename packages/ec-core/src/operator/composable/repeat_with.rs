@@ -79,6 +79,13 @@ mod tests {
         let desired_value = 7;
         let mut rng = rng();
         let repeater: RepeatWith<AddOne, LENGTH> = RepeatWith::new(AddOne);
+        // This is fine since the compiler can use static analysis to
+        // verify that the Err variant of the result enum is uninhabited (can't be
+        // constructed, is of type '!') and as such the Pattern `Ok()` becomes
+        // irrefutable here.
+        //
+        // If it wasn't, then we would either need a match block or a else clause
+        // instead and the compiler would complain.
         let Ok(result) = repeater.apply(desired_value, &mut rng);
         assert_eq!(LENGTH, result.len());
         result.into_iter().all(|x| x == desired_value);
