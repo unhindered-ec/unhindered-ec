@@ -132,14 +132,26 @@ impl Linear for Bitstring {
 }
 
 #[derive(Debug, thiserror::Error, Diagnostic)]
-#[error("Failed to access gene at position {0}")]
-#[diagnostic(help = "Check that the gene is long enough")]
-pub struct GeneAccess(usize);
+#[error("Index {index} out of bounds for a bitstring of size {bitstring_size}")]
+#[diagnostic(
+    help = "Ensure that your indices are legal, i.e., at least zero and less than the size of the \
+            bitstring"
+)]
+pub struct GeneAccess {
+    index: usize,
+    bitstring_size: usize,
+}
 
 #[derive(Debug, thiserror::Error, Diagnostic)]
-#[error("Failed to access gene at range {}..{}", self.0.start, self.0.end)]
-#[diagnostic(help = "Check that the gene is long enough")]
-pub struct GeneAccessRange(std::ops::Range<usize>);
+#[error("Range {}..{} out of bounds for a bitstring of size {bitstring_size}", range.start, range.end)]
+#[diagnostic(
+    help("Ensure that your range bounds are legal, i.e., the start {} must be at least zero and \
+            the end {} must be at most the size of the bitstring {bitstring_size}", range.start, range.end)
+)]
+pub struct GeneAccessRange {
+    range: std::ops::Range<usize>,
+    bitstring_size: usize,
+}
 
 impl Crossover for Bitstring {
     type GeneCrossoverError = GeneAccess;
@@ -153,7 +165,10 @@ impl Crossover for Bitstring {
             std::mem::swap(lhs, rhs);
             Ok(())
         } else {
-            Err(GeneAccess(index))
+            Err(GeneAccess {
+                index,
+                bitstring_size: self.size(),
+            })
         }
     }
 
@@ -170,7 +185,10 @@ impl Crossover for Bitstring {
             lhs.swap_with_slice(rhs);
             Ok(())
         } else {
-            Err(GeneAccessRange(range))
+            Err(GeneAccessRange {
+                range,
+                bitstring_size: self.size(),
+            })
         }
     }
 }
