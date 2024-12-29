@@ -240,6 +240,18 @@ pub struct TestResults<R> {
     pub total_result: R,
 }
 
+impl<R> TestResults<R> {
+    /// Get the number of test results
+    pub fn len(&self) -> usize {
+        self.results.len()
+    }
+
+    /// Check if no test results were stored
+    pub fn is_empty(&self) -> bool {
+        self.results.is_empty()
+    }
+}
+
 impl<R: Ord> Ord for TestResults<R> {
     fn cmp(&self, other: &Self) -> Ordering {
         self.total_result.cmp(&other.total_result)
