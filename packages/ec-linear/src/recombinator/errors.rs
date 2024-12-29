@@ -12,9 +12,17 @@ pub struct DifferentGenomeLength(pub usize, pub usize);
 
 #[derive(Debug)]
 pub enum CrossoverGeneError<E> {
+    /// Attempted to crossover genomes with differing lengths
     DifferentGenomeLength(DifferentGenomeLength),
+    /// Some other error specific to a crossover operation
     Crossover(E),
 }
+
+// We need to hand implement all these traits because `derive` for
+// `thiserror::Error` and `miette::Diagnostic` don't
+// handle generics well in this context. Hopefully that will be fixed in
+// the future and we can simplify this considerably.
+
 impl<E> Error for CrossoverGeneError<E>
 where
     E: Error + 'static,
