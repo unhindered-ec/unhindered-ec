@@ -14,7 +14,13 @@ pub enum PushInstructionError {
         StackError,
     ),
     #[error("Exceeded the maximum step limit {step_limit}")]
-    #[diagnostic(help = "You might want to increase your step limit.")]
+    // The `StepLimitExceeded` variant is usually not seen by the user as it is
+    // typically processed by the interpreter, and a value from the appropriate
+    // stack is returned.
+    #[diagnostic(
+        help = "You might want to increase your step limit if {step_limit} seems too low, or else \
+                an infinite (or very large) loop may have occurred."
+    )]
     StepLimitExceeded { step_limit: usize },
     /// Int errors can be things like integer overflows.
     #[error(transparent)]

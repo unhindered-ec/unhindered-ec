@@ -93,7 +93,13 @@ pub enum StackError {
         num_present: usize,
     },
     #[error("Pushed onto full stack of type {stack_type}.")]
-    #[diagnostic(help = "You might want to increase your stack size", severity(Warning))]
+    // The `Overflow` variant is usually not seen by the user as it is
+    // typically processed by the interpreter, and a value from the appropriate
+    // stack is returned.
+    #[diagnostic(
+        help = "You might want to increase your stack size if it seems to low",
+        severity(Warning)
+    )]
     Overflow { stack_type: &'static str },
 }
 
