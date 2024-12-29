@@ -56,7 +56,7 @@ where
         rng: &mut rand::rngs::ThreadRng,
     ) -> Result<Self::Output, Self::Error> {
         let first_result = self.f.apply(x, rng).map_err(|e| MapError(e, 0))?;
-        let second_result = self.f.apply(y, rng).map_err(|e| MapError(e, 0))?;
+        let second_result = self.f.apply(y, rng).map_err(|e| MapError(e, 1))?;
         Ok([first_result, second_result])
     }
 }
@@ -74,7 +74,7 @@ where
         rng: &mut rand::rngs::ThreadRng,
     ) -> Result<Self::Output, Self::Error> {
         let first_result = self.f.apply(x, rng).map_err(|e| MapError(e, 0))?;
-        let second_result = self.f.apply(y, rng).map_err(|e| MapError(e, 0))?;
+        let second_result = self.f.apply(y, rng).map_err(|e| MapError(e, 1))?;
         Ok((first_result, second_result))
     }
 }
