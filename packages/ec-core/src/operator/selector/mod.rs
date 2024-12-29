@@ -38,23 +38,19 @@ pub use error::EmptyPopulation;
 ///
 /// ```
 /// # use rand::{rngs::ThreadRng, rng};
-/// # use ec_core::operator::selector::Selector;
+/// # use ec_core::operator::selector::{error::EmptyPopulation, Selector};
 /// #
 /// struct First;
 ///
-/// #[derive(Debug, thiserror::Error)]
-/// #[error("Should be at least one individual in the population")]
-/// struct EmptyPopulationError;
-///
 /// impl Selector<Vec<u8>> for First {
-///     type Error = EmptyPopulationError;
+///     type Error = EmptyPopulation;
 ///
 ///     fn select<'pop>(
 ///         &self,
 ///         population: &'pop Vec<u8>,
 ///         _: &mut ThreadRng,
 ///     ) -> Result<&'pop u8, Self::Error> {
-///         population.first().ok_or(EmptyPopulationError)
+///         population.first().ok_or(EmptyPopulation)
 ///     }
 /// }
 ///
@@ -101,23 +97,19 @@ where
 /// ```
 /// # use rand::{rngs::ThreadRng, rng};
 /// #
-/// # use ec_core::operator::{Operator, selector::{Select, Selector}};
+/// # use ec_core::operator::{Operator, selector::{error::EmptyPopulation, Select, Selector}};
 /// #
 /// struct First; // Simple selector that always returns the first element in a vector.
 ///
-/// #[derive(Debug, thiserror::Error)]
-/// #[error("At least one individual in the population is required to make a selection from it")]
-/// struct EmptyPopulationError;
-///
 /// impl<T> Selector<Vec<T>> for First {
-///     type Error = EmptyPopulationError;
+///     type Error = EmptyPopulation;
 ///
 ///     fn select<'pop>(
 ///         &self,
 ///         population: &'pop Vec<T>,
 ///         _: &mut ThreadRng,
 ///     ) -> Result<&'pop T, Self::Error> {
-///         population.first().ok_or(EmptyPopulationError)
+///         population.first().ok_or(EmptyPopulation)
 ///     }
 /// }
 ///
@@ -146,16 +138,12 @@ where
 /// # use rand::{rngs::ThreadRng, rng};
 /// # use std::convert::Infallible;
 /// #
-/// # use ec_core::operator::{Composable, Operator, selector::{Select, Selector}};
+/// # use ec_core::operator::{Composable, Operator, selector::{error::EmptyPopulation, Select, Selector}};
 /// #
 /// # struct First; // Simple selector that always returns the first element in a vector.
 /// #
-/// # #[derive(Debug, thiserror::Error)]
-/// # #[error("Should be at least one individual in the population")]
-/// # struct EmptyPopulationError;
-/// #
 /// # impl<T> Selector<Vec<T>> for First {
-/// #    type Error = EmptyPopulationError;
+/// #    type Error = EmptyPopulation;
 /// #
 /// #    fn select<'pop>(
 /// #        &self,
@@ -164,7 +152,7 @@ where
 /// #    ) -> Result<&'pop T, Self::Error> {
 /// #        population
 /// #            .first()
-/// #            .ok_or(EmptyPopulationError)
+/// #            .ok_or(EmptyPopulation)
 /// #    }
 /// # }
 /// #
@@ -205,16 +193,12 @@ where
 /// #
 /// # use rand::{rngs::ThreadRng, rng};
 /// #
-/// # use ec_core::operator::{Composable, Operator, selector::{Select, Selector}};
+/// # use ec_core::operator::{Composable, Operator, selector::{error::EmptyPopulation, Select, Selector}};
 /// #
 /// # struct First; // Simple selector that always returns the first element in a vector.
 /// #
-/// # #[derive(Debug, thiserror::Error)]
-/// # #[error("Should be at least one individual in the population")]
-/// # struct EmptyPopulationError;
-/// #
 /// # impl<T> Selector<Vec<T>> for First {
-/// #    type Error = EmptyPopulationError;
+/// #    type Error = EmptyPopulation;
 /// #
 /// #    fn select<'pop>(
 /// #        &self,
@@ -223,7 +207,7 @@ where
 /// #    ) -> Result<&'pop T, Self::Error> {
 /// #        population
 /// #            .first()
-/// #            .ok_or(EmptyPopulationError)
+/// #            .ok_or(EmptyPopulation)
 /// #    }
 /// # }
 /// #
@@ -303,25 +287,21 @@ mod tests {
 
     use rand::{rng, rngs::ThreadRng};
 
-    use super::{Select, Selector};
+    use super::{Select, Selector, error::EmptyPopulation};
     use crate::operator::{Composable, Operator};
 
     // A simple `Selector`` that always returns the first item in a vector.
     struct First;
 
-    #[derive(Debug, thiserror::Error)]
-    #[error("At least one individual in the population is required to make a selection from it")]
-    struct EmptyPopulationError;
-
     impl<T> Selector<Vec<T>> for First {
-        type Error = EmptyPopulationError;
+        type Error = EmptyPopulation;
 
         fn select<'pop>(
             &self,
             population: &'pop Vec<T>,
             _: &mut ThreadRng,
         ) -> Result<&'pop T, Self::Error> {
-            population.first().ok_or(EmptyPopulationError)
+            population.first().ok_or(EmptyPopulation)
         }
     }
 
