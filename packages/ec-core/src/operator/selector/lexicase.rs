@@ -244,7 +244,7 @@ mod tests {
 
         population.push(winning_individual);
 
-        let num_test_cases = population[0].test_results.results.len();
+        let num_test_cases = population[0].test_results.len();
         let lexicase = Lexicase::new(num_test_cases);
         let mut rng = rand::thread_rng();
 
