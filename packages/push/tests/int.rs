@@ -1,8 +1,4 @@
 #![cfg(test)]
-#![expect(
-    clippy::unwrap_used,
-    reason = "Panicking is the best way to deal with errors in integration tests"
-)]
 
 use proptest::prop_assert_eq;
 use push::{

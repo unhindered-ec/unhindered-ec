@@ -99,11 +99,6 @@ where
 }
 
 #[cfg(test)]
-#[expect(
-    clippy::unwrap_used,
-    reason = "`max()` and `min()` can fail if the list of individuals is empty, but we know that \
-              can't happen so we'll unwrap"
-)]
 mod tests {
     use std::{num::NonZeroUsize, ops::Not};
 
