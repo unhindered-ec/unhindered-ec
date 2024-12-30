@@ -15,8 +15,8 @@ use crate::{
 #[non_exhaustive]
 #[must_use]
 pub enum IntInstruction {
+    #[strum(to_string = "Push({0})")]
     Push(i64),
-
     Negate(Negate),
     Abs(Abs),
     Min,
@@ -339,5 +339,20 @@ where
                     .with_stack_discard::<bool>(1)
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::IntInstruction;
+
+    #[test]
+    fn auto_display() {
+        assert_eq!(format!("{}", IntInstruction::IsZero), "IsZero");
+    }
+
+    #[test]
+    fn manual_push_display() {
+        assert_eq!(format!("{}", IntInstruction::Push(1)), "Push(1)");
     }
 }
