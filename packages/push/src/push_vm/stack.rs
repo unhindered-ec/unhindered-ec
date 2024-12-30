@@ -184,6 +184,10 @@ where
     }
 }
 
+/// Extend the stack with values from the provided iterator
+///
+/// Note that the provided iterator will always be (partially) consumed, even
+/// if the method errors.
 impl<A> TryExtend<A> for Stack<A> {
     type Error = StackError;
 
@@ -191,14 +195,24 @@ impl<A> TryExtend<A> for Stack<A> {
     where
         T: Iterator<Item = A>,
     {
-        #[expect(
-            clippy::needless_collect,
-            reason = "The collect is neccessary to turn a arbitary iterator into one that \
-                      implements ExactSizeIterator (to support .len()) and DoubleEndedIterator \
-                      (to support .rev()), which TryExtend doesn't guarantee and isn't able to \
-                      guarantee."
-        )]
-        self.try_extend(iter.into_iter().collect::<Vec<_>>())
+        let current_len = self.values.len();
+        let current_capacity = self.values.capacity();
+
+        let max_extended = self.max_stack_size.saturating_sub(current_len);
+
+        self.values.extend(iter.take(max_extended));
+
+        if iter.next().is_some() {
+            self.values.truncate(current_len);
+            self.values.shrink_to(current_capacity);
+            return Err(StackError::Overflow {
+                stack_type: std::any::type_name::<A>(),
+            });
+        }
+
+        self.values[current_len..].reverse();
+
+        Ok(())
     }
 }
 
