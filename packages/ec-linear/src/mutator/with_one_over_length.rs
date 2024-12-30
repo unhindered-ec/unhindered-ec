@@ -1,7 +1,7 @@
-use std::ops::Not;
+use std::{convert::Infallible, ops::Not};
 
-use anyhow::{Context, Result};
 use ec_core::operator::mutator::Mutator;
+use miette::Diagnostic;
 use num_traits::ToPrimitive;
 use rand::rngs::ThreadRng;
 
@@ -10,20 +10,29 @@ use crate::genome::Linear;
 
 pub struct WithOneOverLength;
 
+#[derive(Debug, thiserror::Error, Diagnostic)]
+#[error("Failed to convert genome size {0} to an f32 value to be used as the mutation rate")]
+#[diagnostic(help = "Make sure the genome size is representable by an f32 when using this mutator")]
+pub struct GenomeSizeConversionError(usize);
+
 impl<T> Mutator<Vec<T>> for WithOneOverLength
 where
     T: Not<Output = T>,
 {
-    fn mutate(&self, genome: Vec<T>, rng: &mut ThreadRng) -> Result<Vec<T>> {
-        let genome_length = genome.len().to_f32().with_context(|| {
-            format!(
-                "The genome length {} couldn't be converted to an f32 value",
-                genome.len()
-            )
-        })?;
+    type Error = GenomeSizeConversionError;
+
+    fn mutate(&self, genome: Vec<T>, rng: &mut ThreadRng) -> Result<Vec<T>, Self::Error> {
+        let genome_length = genome
+            .len()
+            .to_f32()
+            .ok_or(GenomeSizeConversionError(genome.len()))?;
         let mutation_rate = 1.0 / genome_length;
         let mutator = WithRate::new(mutation_rate);
-        mutator.mutate(genome, rng)
+        mutator
+            .mutate(genome, rng)
+            // This can't happen, as the only error is the conversion error
+            // since `WithRate::mutator` can't fail.
+            .map_err(|_: Infallible| unreachable!())
     }
 }
 
@@ -32,16 +41,20 @@ where
     T: Linear + FromIterator<T::Gene> + IntoIterator<Item = T::Gene>,
     T::Gene: Not<Output = T::Gene>,
 {
-    fn mutate(&self, genome: T, rng: &mut ThreadRng) -> Result<T> {
-        let genome_length = genome.size().to_f32().with_context(|| {
-            format!(
-                "The genome length {} couldn't be converted to an f32 value",
-                genome.size()
-            )
-        })?;
+    type Error = GenomeSizeConversionError;
+
+    fn mutate(&self, genome: T, rng: &mut ThreadRng) -> Result<T, Self::Error> {
+        let genome_length = genome
+            .size()
+            .to_f32()
+            .ok_or_else(|| GenomeSizeConversionError(genome.size()))?;
         let mutation_rate = 1.0 / genome_length;
         let mutator = WithRate::new(mutation_rate);
-        mutator.mutate(genome, rng)
+        mutator
+            .mutate(genome, rng)
+            // This can't happen, as the only error is the conversion error
+            // since `WithRate::mutator` can't fail.
+            .map_err(|_: Infallible| unreachable!())
     }
 }
 
@@ -60,7 +73,7 @@ mod tests {
     #[test]
     #[ignore = "This test is stochastic, so I'm going to ignore it most of the time."]
     fn mutate_one_over_does_not_change_much() {
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let num_bits = 100;
         let parent_bits = Bitstring::random(num_bits, &mut rng);
 

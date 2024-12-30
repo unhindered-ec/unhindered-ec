@@ -16,7 +16,7 @@ use crate::individual::Individual;
 /// extract the genome from an individual and mutate it.
 ///
 /// ```
-/// # use rand::{rngs::ThreadRng, thread_rng, Rng};
+/// # use rand::{rngs::ThreadRng, rng, Rng};
 /// # use ec_core::{
 /// #     individual::ec::EcIndividual,
 /// #     operator::{
@@ -25,17 +25,21 @@ use crate::individual::Individual;
 /// #         Composable, Operator,
 /// #     },
 /// # };
+/// # use std::convert::Infallible;
+/// #
 /// type Genome<T> = [T; 4];
 /// // Flip a single bit in an array of booleans.
 /// struct FlipOne;
 ///
 /// impl Mutator<Genome<bool>> for FlipOne {
+///     type Error = Infallible;
+///
 ///     fn mutate(
 ///         &self,
 ///         mut genome: Genome<bool>,
 ///         rng: &mut ThreadRng,
-///     ) -> anyhow::Result<Genome<bool>> {
-///         let index = rng.gen_range(0..genome.len());
+///     ) -> Result<Genome<bool>, Self::Error> {
+///         let index = rng.random_range(0..genome.len());
 ///         genome[index] = !genome[index];
 ///         Ok(genome)
 ///     }
@@ -47,7 +51,7 @@ use crate::individual::Individual;
 /// let mutate = Mutate::new(FlipOne);
 /// let chain = GenomeExtractor.then(mutate);
 ///
-/// let result = chain.apply(&individual, &mut thread_rng())?;
+/// let result = chain.apply(&individual, &mut rng())?;
 ///
 /// // Count the number of genome values that have been changed, which should be 1.
 /// let num_different = result
@@ -57,7 +61,7 @@ use crate::individual::Individual;
 ///     .count();
 ///
 /// assert_eq!(num_different, 1);
-/// # Ok::<(), anyhow::Error>(())
+/// # Ok::<(), Box<dyn std::error::Error>>(())
 /// ```
 pub struct GenomeExtractor;
 
@@ -83,7 +87,9 @@ impl Composable for GenomeExtractor {}
 #[expect(clippy::unwrap_used, reason = "panicking is appropriate in tests")]
 #[cfg(test)]
 mod tests {
-    use rand::{Rng, rngs::ThreadRng, thread_rng};
+    use std::convert::Infallible;
+
+    use rand::{Rng, rng, rngs::ThreadRng};
 
     use super::GenomeExtractor;
     use crate::{
@@ -98,12 +104,13 @@ mod tests {
     struct FlipOne;
 
     impl Mutator<Genome<bool>> for FlipOne {
+        type Error = Infallible;
         fn mutate(
             &self,
             mut genome: Genome<bool>,
             rng: &mut ThreadRng,
-        ) -> anyhow::Result<Genome<bool>> {
-            let index = rng.gen_range(0..genome.len());
+        ) -> Result<Genome<bool>, Self::Error> {
+            let index = rng.random_range(0..genome.len());
             genome[index] = !genome[index];
             Ok(genome)
         }
@@ -117,7 +124,7 @@ mod tests {
         let mutate = Mutate::new(FlipOne);
         let chain = GenomeExtractor.then(mutate);
 
-        let result = chain.apply(&individual, &mut thread_rng()).unwrap();
+        let result = chain.apply(&individual, &mut rng()).unwrap();
 
         let num_same = result
             .iter()

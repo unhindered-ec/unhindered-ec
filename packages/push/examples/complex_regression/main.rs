@@ -6,9 +6,6 @@
 
 pub mod args;
 
-use std::ops::Not;
-
-use anyhow::{Result, ensure};
 use clap::Parser;
 use ec_core::{
     distributions::collection::ConvertToCollectionGenerator,
@@ -25,6 +22,7 @@ use ec_core::{
     uniform_distribution_of,
 };
 use ec_linear::mutator::umad::Umad;
+use miette::ensure;
 use num_traits::Float;
 use ordered_float::OrderedFloat;
 use push::{
@@ -33,7 +31,7 @@ use push::{
     instruction::{FloatInstruction, PushInstruction, variable_name::VariableName},
     push_vm::{HasStack, State, program::PushProgram, push_state::PushState},
 };
-use rand::{prelude::Distribution, thread_rng};
+use rand::{prelude::Distribution, rng};
 
 use crate::args::{CliArgs, RunModel};
 
@@ -103,7 +101,7 @@ fn score_genome(
         .collect()
 }
 
-fn main() -> Result<()> {
+fn main() -> miette::Result<()> {
     // FIXME: Respect the max_genome_length input
     let CliArgs {
         run_model,
@@ -113,7 +111,7 @@ fn main() -> Result<()> {
         ..
     } = CliArgs::parse();
 
-    let mut rng = thread_rng();
+    let mut rng = rng();
 
     // Inputs from -4 (inclusive) to 4 (exclusive) in increments of 0.25.
     let training_cases = (-4 * 4..4 * 4)
@@ -157,7 +155,10 @@ fn main() -> Result<()> {
         .into_collection_generator(population_size)
         .sample(&mut rng);
 
-    ensure!(population.is_empty().not());
+    ensure!(
+        !population.is_empty(),
+        "An initial populaiton is always required"
+    );
 
     let best = Best.select(&population, &mut rng)?;
     println!("Best initial individual is {best}");

@@ -1,6 +1,7 @@
 mod abs;
 mod negate;
 
+use miette::Diagnostic;
 use strum_macros::EnumIter;
 
 use self::{abs::Abs, negate::Negate};
@@ -64,9 +65,13 @@ impl From<IntInstruction> for PushInstruction {
     }
 }
 
-#[derive(thiserror::Error, Debug, Eq, PartialEq)]
+#[derive(thiserror::Error, Debug, Eq, PartialEq, Diagnostic)]
 pub enum IntInstructionError {
     #[error("Integer arithmetic overflow for instruction {op}")]
+    #[diagnostic(
+        help = "If you run into this too often you might want to use the saturating or wrapping \
+                arithmetic instruction set instead."
+    )]
     Overflow {
         op: IntInstruction,
         // I liked the idea of keeping track of the arguments to the instruction

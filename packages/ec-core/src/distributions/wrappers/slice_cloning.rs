@@ -1,5 +1,6 @@
 use std::num::NonZeroUsize;
 
+use miette::Diagnostic;
 use rand::{distr::Slice, prelude::Distribution};
 
 use crate::distributions::choices::ChoicesDistribution;
@@ -9,19 +10,10 @@ use crate::distributions::choices::ChoicesDistribution;
 #[derive(Debug, Clone, Copy)]
 pub struct SliceCloning<'a, T>(Slice<'a, T>);
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, thiserror::Error, Diagnostic)]
+#[error("Tried to create a `distributions::Slice` with an empty slice")]
+#[diagnostic(help = "Ensure your slice has at least length one.")]
 pub struct EmptySlice;
-
-impl core::fmt::Display for EmptySlice {
-    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        write!(
-            f,
-            "Tried to create a `distributions::Slice` with an empty slice"
-        )
-    }
-}
-
-impl std::error::Error for EmptySlice {}
 
 impl<'a, T> SliceCloning<'a, T> {
     /// Create a new `Slice` instance which samples uniformly from the slice.

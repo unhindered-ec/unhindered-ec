@@ -1,4 +1,3 @@
-use anyhow::Context;
 use rand::rngs::ThreadRng;
 
 use super::{super::Operator, Composable};
@@ -14,22 +13,62 @@ impl<F, G> Then<F, G> {
     }
 }
 
+#[derive(Debug)]
+pub enum ThenError<T, U> {
+    First(T),
+    Second(U),
+}
+
+impl<T, U> std::fmt::Display for ThenError<T, U> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::First(_) => f.write_str(
+                "Error while applying the first passed operator (`T`) in the `Then<T,>` Operator",
+            ),
+            Self::Second(_) => f.write_str(
+                "Error while applying the second passed operator (`U`) in the `Then<,U>` Operator",
+            ),
+        }
+    }
+}
+
+impl<T, U> std::error::Error for ThenError<T, U>
+where
+    T: std::error::Error + 'static,
+    U: std::error::Error + 'static,
+{
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        match self {
+            Self::First(t) => Some(t),
+            Self::Second(t) => Some(t),
+        }
+    }
+}
+
+impl<T, U> miette::Diagnostic for ThenError<T, U>
+where
+    T: miette::Diagnostic + 'static,
+    U: miette::Diagnostic + 'static,
+{
+    fn diagnostic_source(&self) -> Option<&dyn miette::Diagnostic> {
+        match self {
+            Self::First(t) => Some(t),
+            Self::Second(t) => Some(t),
+        }
+    }
+}
+
 impl<A, F, G> Operator<A> for Then<F, G>
 where
     F: Operator<A>,
     G: Operator<F::Output>,
-    anyhow::Error: From<F::Error> + From<G::Error>,
 {
     type Output = G::Output;
-    type Error = anyhow::Error;
+    type Error = ThenError<F::Error, G::Error>;
 
     fn apply(&self, x: A, rng: &mut ThreadRng) -> Result<Self::Output, Self::Error> {
-        let f_result = self
-            .f
-            .apply(x, rng)
-            .map_err(anyhow::Error::from)
-            .context("f in `Then` failed")?;
-        self.g.apply(f_result, rng).map_err(anyhow::Error::from)
+        let f_result = self.f.apply(x, rng).map_err(ThenError::First)?;
+        self.g.apply(f_result, rng).map_err(ThenError::Second)
     }
 }
 impl<F, G> Composable for Then<F, G> {}
@@ -47,7 +86,7 @@ impl<F, G> Composable for Then<F, G> {}
 pub mod tests {
     use std::convert::Infallible;
 
-    use rand::thread_rng;
+    use rand::rng;
 
     use super::*;
 
@@ -76,7 +115,7 @@ pub mod tests {
     #[test]
     fn increment_then_double() {
         let combo = Increment.then(Double);
-        let result = combo.apply(7, &mut thread_rng()).unwrap();
+        let result = combo.apply(7, &mut rng()).unwrap();
         assert_eq!(16, result);
     }
 }

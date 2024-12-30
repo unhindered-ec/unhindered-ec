@@ -20,7 +20,7 @@ impl<I> Population for Vec<I> {
 mod tests {
     use core::ops::Range;
 
-    use rand::{Rng, prelude::Distribution, thread_rng};
+    use rand::{Rng, prelude::Distribution, rng};
 
     use crate::{distributions::collection::ConvertToCollectionGenerator, population::Population};
 
@@ -31,14 +31,14 @@ mod tests {
     impl Distribution<RandValue> for Range<i32> {
         fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> RandValue {
             RandValue {
-                val: rng.gen_range(self.clone()),
+                val: rng.random_range(self.clone()),
             }
         }
     }
 
     #[test]
     fn generator_works() {
-        let mut rng = thread_rng();
+        let mut rng = rng();
         let population_size = 10;
         let range = -10..25;
         let vec_pop = range

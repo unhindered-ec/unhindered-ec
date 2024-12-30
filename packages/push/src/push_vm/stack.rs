@@ -1,4 +1,5 @@
 use collectable::TryExtend;
+use miette::Diagnostic;
 
 use crate::error::{Error, InstructionResult, MapInstructionError};
 
@@ -83,14 +84,22 @@ pub trait HasStack<T> {
     }
 }
 
-#[derive(thiserror::Error, Debug, Eq, PartialEq)]
+#[derive(thiserror::Error, Debug, Eq, PartialEq, Diagnostic)]
 pub enum StackError {
     #[error("Requested {num_requested} elements from stack with {num_present} elements.")]
+    #[diagnostic(severity(Warning))]
     Underflow {
         num_requested: usize,
         num_present: usize,
     },
     #[error("Pushed onto full stack of type {stack_type}.")]
+    // The `Overflow` variant is usually not seen by the user as it is
+    // typically processed by the interpreter, and a value from the appropriate
+    // stack is returned.
+    #[diagnostic(
+        help = "You might want to increase your stack size if it seems to low",
+        severity(Warning)
+    )]
     Overflow { stack_type: &'static str },
 }
 

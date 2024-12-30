@@ -1,8 +1,5 @@
 pub mod args;
 
-use std::ops::Not;
-
-use anyhow::{Result, ensure};
 use clap::Parser;
 use ec_core::{
     distributions::{collection::ConvertToCollectionGenerator, conversion::IntoDistribution},
@@ -18,6 +15,7 @@ use ec_core::{
     test_results::{self, TestResults},
 };
 use ec_linear::mutator::umad::Umad;
+use miette::{IntoDiagnostic, ensure};
 use push::{
     evaluation::{Case, Cases, WithTargetFn},
     genome::plushy::{GeneGenerator, Plushy},
@@ -30,7 +28,7 @@ use push::{
 use rand::{
     Rng,
     distr::{Distribution, Uniform},
-    thread_rng,
+    rng,
 };
 use strum::IntoEnumIterator;
 
@@ -70,7 +68,7 @@ impl Distribution<Input> for Uniform<i64> {
 //
 // This problem is quite easy if you have both `Min` and `Max` instructions, but
 // can be more difficult without those instruction.
-fn main() -> Result<()> {
+fn main() -> miette::Result<()> {
     let CliArgs {
         run_model,
         population_size,
@@ -83,9 +81,10 @@ fn main() -> Result<()> {
         ..
     } = CliArgs::parse();
 
-    let mut rng = thread_rng();
+    let mut rng = rng();
 
-    let training_cases = Uniform::new(lower_input_bound, upper_input_bound)?
+    let training_cases = Uniform::new(lower_input_bound, upper_input_bound)
+        .into_diagnostic()?
         .sample_iter(&mut rng)
         .take(num_training_cases)
         .with_target_fn(Input::median);
@@ -105,7 +104,10 @@ fn main() -> Result<()> {
         .into_collection_generator(population_size)
         .sample(&mut rng);
 
-    ensure!(population.is_empty().not());
+    ensure!(
+        !population.is_empty(),
+        "An initial populaiton is always required"
+    );
 
     let best = Best.select(&population, &mut rng)?;
     println!("Best initial individual is {best}");

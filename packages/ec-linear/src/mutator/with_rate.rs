@@ -1,6 +1,5 @@
-use std::ops::Not;
+use std::{convert::Infallible, ops::Not};
 
-use anyhow::Result;
 use ec_core::operator::mutator::Mutator;
 use rand::{Rng, rngs::ThreadRng};
 
@@ -16,7 +15,9 @@ impl<T> Mutator<Vec<T>> for WithRate
 where
     T: Not<Output = T>,
 {
-    fn mutate(&self, genome: Vec<T>, rng: &mut ThreadRng) -> Result<Vec<T>> {
+    type Error = Infallible;
+
+    fn mutate(&self, genome: Vec<T>, rng: &mut ThreadRng) -> Result<Vec<T>, Self::Error> {
         Ok(genome
             .into_iter()
             .map(|bit| {
@@ -35,7 +36,8 @@ where
     T: Linear + FromIterator<T::Gene> + IntoIterator<Item = T::Gene>,
     T::Gene: Not<Output = T::Gene>,
 {
-    fn mutate(&self, genome: T, rng: &mut ThreadRng) -> Result<T> {
+    type Error = Infallible;
+    fn mutate(&self, genome: T, rng: &mut ThreadRng) -> Result<T, Self::Error> {
         Ok(genome
             .into_iter()
             .map(|bit| {
@@ -54,10 +56,6 @@ impl WithRate {
 }
 
 #[cfg(test)]
-#[expect(
-    clippy::unwrap_used,
-    reason = "Panicking is the best way to deal with errors in unit tests"
-)]
 mod tests {
     use std::iter::zip;
 
@@ -72,7 +70,7 @@ mod tests {
             mutation_rate: 0.05,
         };
 
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let num_bits = 100;
 
         let parent_bits = Bitstring::random(num_bits, &mut rng);
@@ -99,7 +97,7 @@ mod tests {
             mutation_rate: 0.05,
         };
 
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let num_bits = 100;
         let parent_bits = Bitstring::random(num_bits, &mut rng);
         let child_bits = mutator.mutate(parent_bits.clone(), &mut rng).unwrap();
