@@ -251,7 +251,7 @@ mod test {
         uniform_distribution_of,
     };
     use ec_linear::mutator::umad::Umad;
-    use rand::thread_rng;
+    use rand::rng;
 
     use super::*;
     use crate::{
@@ -261,7 +261,7 @@ mod test {
 
     #[test]
     fn generator() {
-        let mut rng = thread_rng();
+        let mut rng = rng();
         let plushy: Plushy = uniform_distribution_of![<PushInstruction>
             IntInstruction::Add,
             IntInstruction::Subtract,
@@ -279,7 +279,7 @@ mod test {
                 runners in ci"]
     #[test]
     fn umad() {
-        let mut rng = thread_rng();
+        let mut rng = rng();
 
         let instruction_options = uniform_distribution_of![<PushGene> VariableName::from("x")];
 

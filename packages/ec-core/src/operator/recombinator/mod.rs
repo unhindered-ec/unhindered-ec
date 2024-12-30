@@ -34,8 +34,9 @@ use super::{Composable, Operator};
 /// second parent.
 ///
 /// ```
-/// # use rand::{rngs::ThreadRng, thread_rng, Rng};
+/// # use rand::{rngs::ThreadRng, rng, Rng};
 /// # use ec_core::operator::recombinator::Recombinator;
+/// # use std::convert::Infallible;
 /// #
 /// struct SwapOne;
 /// type Genome<T> = [T; 4];
@@ -43,13 +44,14 @@ use super::{Composable, Operator};
 ///
 /// impl<T: Copy> Recombinator<Parents<T>> for SwapOne {
 ///     type Output = Genome<T>;
+///     type Error = Infallible;
 ///
 ///     fn recombine(
 ///         &self,
 ///         (mut first_parent, second_parent): Parents<T>,
 ///         rng: &mut ThreadRng,
-///     ) -> anyhow::Result<Genome<T>> {
-///         let index = rng.gen_range(0..first_parent.len());
+///     ) -> Result<Genome<T>, Self::Error> {
+///         let index = rng.random_range(0..first_parent.len());
 ///         first_parent[index] = second_parent[index];
 ///         Ok(first_parent)
 ///     }
@@ -59,18 +61,21 @@ use super::{Composable, Operator};
 /// // should result in a child with three zeros and a single one.
 /// let first_parent = [0, 0, 0, 0];
 /// let second_parent = [1, 1, 1, 1];
-/// let child = SwapOne.recombine((first_parent, second_parent), &mut thread_rng())?;
+/// let child = SwapOne.recombine((first_parent, second_parent), &mut rng())?;
 /// let num_zeros = child.iter().filter(|&&x| x == 0).count();
 /// let num_ones = child.iter().filter(|&&x| x == 1).count();
 /// assert_eq!(num_zeros, 3);
 /// assert_eq!(num_ones, 1);
-/// # Ok::<(), anyhow::Error>(())
+/// # Ok::<(), Box<dyn std::error::Error>>(())
 /// ```
 pub trait Recombinator<GS> {
     /// The type of the output genome after recombination. This is typically
     /// the same as the type of genomes in the input group of type `GS`, but
     /// that isn't strictly required here.
     type Output;
+
+    /// The type of the error that can happen using this recombinator
+    type Error;
 
     /// Recombine the given `genomes` returning a new genome of type `Output`.
     ///
@@ -79,7 +84,7 @@ pub trait Recombinator<GS> {
     /// This will return an error if there is an error recombining the given
     /// parent genomes. This will usually be because the given `genomes` are
     /// invalid in some way, thus making recombination impossible.
-    fn recombine(&self, genomes: GS, rng: &mut ThreadRng) -> anyhow::Result<Self::Output>;
+    fn recombine(&self, genomes: GS, rng: &mut ThreadRng) -> Result<Self::Output, Self::Error>;
 }
 
 /// A wrapper that converts a `Recombinator` into an `Operator`,
@@ -104,9 +109,10 @@ pub trait Recombinator<GS> {
 /// calling [`Recombinator::recombine`] directly on the recombinator.
 ///
 /// ```
-/// # use rand::{rngs::ThreadRng, thread_rng};
-/// #
+/// # use rand::{rngs::ThreadRng, rng};
 /// # use ec_core::operator::{Operator, recombinator::{Recombinator, Recombine}};
+/// # use std::convert::Infallible;
+/// #
 /// // A simple `Recombinator` that swaps one element from the second parent
 /// // into the corresponding position in the first parent.
 /// struct SwapFirst;
@@ -115,12 +121,13 @@ pub trait Recombinator<GS> {
 /// type Parents<T> = (Genome<T>, Genome<T>);
 /// impl<T: Copy> Recombinator<Parents<T>> for SwapFirst {
 ///     type Output = Genome<T>;
+///     type Error = Infallible;
 ///
 ///     fn recombine(
 ///         &self,
 ///         (mut first_parent, second_parent): Parents<T>,
 ///         _: &mut ThreadRng,
-///     ) -> anyhow::Result<Genome<T>> {
+///     ) -> Result<Genome<T>, Self::Error> {
 ///         first_parent[0] = second_parent[0];
 ///         Ok(first_parent)
 ///     }
@@ -130,17 +137,15 @@ pub trait Recombinator<GS> {
 /// let second_parent = [1, 1, 1, 1];
 ///
 /// let recombinator = SwapFirst;
-/// let recombinator_result = recombinator.recombine(
-///     (first_parent.clone(), second_parent.clone()),
-///     &mut thread_rng(),
-/// )?;
+/// let recombinator_result =
+///     recombinator.recombine((first_parent.clone(), second_parent.clone()), &mut rng())?;
 ///
 /// // Wrap the recombinator in a `Recombine` to make it an `Operator`.
 /// let recombine = Recombine::new(recombinator);
-/// let operator_result = recombine.apply((first_parent, second_parent), &mut thread_rng())?;
+/// let operator_result = recombine.apply((first_parent, second_parent), &mut rng())?;
 ///
 /// assert_eq!(recombinator_result, operator_result);
-/// # Ok::<(), anyhow::Error>(())
+/// # Ok::<(), Box<dyn std::error::Error>>(())
 /// ```
 ///
 /// Because [`Recombine`] and [`Operator`] are both [`Composable`], you can
@@ -154,7 +159,7 @@ pub trait Recombinator<GS> {
 ///
 /// ```
 /// # use std::convert::Infallible;
-/// # use rand::{rngs::ThreadRng, thread_rng, Rng};
+/// # use rand::{rngs::ThreadRng, rng, Rng};
 /// #
 /// # use ec_core::operator::{recombinator::{Recombinator, Recombine}, Composable, Operator};
 /// #
@@ -166,13 +171,14 @@ pub trait Recombinator<GS> {
 /// type Parents<T> = (Genome<T>, Genome<T>);
 /// impl<T: Copy> Recombinator<Parents<T>> for SwapOne {
 ///     type Output = Genome<T>;
+///     type Error = Infallible;
 ///
 ///     fn recombine(
 ///         &self,
 ///         (mut first_parent, second_parent): Parents<T>,
 ///         rng: &mut ThreadRng,
-///     ) -> anyhow::Result<Genome<T>> {
-///         let index = rng.gen_range(0..first_parent.len());
+///     ) -> Result<Genome<T>, Self::Error> {
+///         let index = rng.random_range(0..first_parent.len());
 ///         first_parent[index] = second_parent[index];
 ///         Ok(first_parent)
 ///     }
@@ -206,9 +212,9 @@ pub trait Recombinator<GS> {
 /// let count_true = CountTrue;
 /// let chain = recombine.then(count_true);
 ///
-/// let count = chain.apply((first_parent, second_parent), &mut thread_rng())?;
+/// let count = chain.apply((first_parent, second_parent), &mut rng())?;
 /// assert_eq!(count, 3);
-/// # Ok::<(), anyhow::Error>(())
+/// # Ok::<(), Box<dyn std::error::Error>>(())
 /// ```
 ///
 /// We can also pass a _reference_ to a [`Recombinator`] (i.e.,
@@ -217,7 +223,8 @@ pub trait Recombinator<GS> {
 /// ownership of the recombinator.
 ///
 /// ```
-/// # use rand::{rngs::ThreadRng, thread_rng, Rng};
+/// # use rand::{rngs::ThreadRng, rng, Rng};
+/// # use std::convert::Infallible;
 /// #
 /// # use ec_core::operator::{recombinator::{Recombinator, Recombine}, Composable, Operator};
 /// #
@@ -230,13 +237,14 @@ pub trait Recombinator<GS> {
 /// #
 /// # impl<T: Copy> Recombinator<Parents<T>> for SwapOne {
 /// #     type Output = Genome<T>;
+/// #     type Error = Infallible;
 /// #
 /// #     fn recombine(
 /// #         &self,
 /// #         (mut first_parent, second_parent): Parents<T>,
 /// #         rng: &mut ThreadRng,
-/// #     ) -> anyhow::Result<Genome<T>> {
-/// #         let index = rng.gen_range(0..first_parent.len());
+/// #     ) -> Result<Genome<T>, Self::Error> {
+/// #         let index = rng.random_range(0..first_parent.len());
 /// #         first_parent[index] = second_parent[index];
 /// #         Ok(first_parent)
 /// #     }
@@ -248,7 +256,7 @@ pub trait Recombinator<GS> {
 /// #
 /// # impl Operator<Genome<bool>> for CountTrue {
 /// #     type Output = usize;
-/// #     type Error = anyhow::Error;
+/// #     type Error = Infallible;
 /// #
 /// #     fn apply(&self, genome: Genome<bool>, _: &mut ThreadRng) -> Result<Self::Output, Self::Error> {
 /// #         Ok(genome.iter().filter(|&&x| x).count())
@@ -265,9 +273,9 @@ pub trait Recombinator<GS> {
 /// let chain = recombine.then(CountTrue);
 ///
 /// let count = chain
-///     .apply((first_parent, second_parent), &mut thread_rng())?;
+///     .apply((first_parent, second_parent), &mut rng())?;
 /// assert_eq!(count, 3);
-/// # Ok::<(), anyhow::Error>(())
+/// # Ok::<(), Box<dyn std::error::Error>>(())
 /// ```
 pub struct Recombine<R> {
     /// The wrapped [`Recombinator`] that this [`Recombine`] will apply
@@ -285,7 +293,7 @@ where
     R: Recombinator<G>,
 {
     type Output = R::Output;
-    type Error = anyhow::Error;
+    type Error = R::Error;
 
     /// Apply the wrapped [`Recombinator`] as an [`Operator`] to the given
     /// genomes.
@@ -303,8 +311,9 @@ where
     R: Recombinator<GS>,
 {
     type Output = R::Output;
+    type Error = R::Error;
 
-    fn recombine(&self, genomes: GS, rng: &mut ThreadRng) -> anyhow::Result<Self::Output> {
+    fn recombine(&self, genomes: GS, rng: &mut ThreadRng) -> Result<Self::Output, Self::Error> {
         (**self).recombine(genomes, rng)
     }
 }
@@ -313,7 +322,7 @@ where
 mod tests {
     use std::convert::Infallible;
 
-    use rand::{Rng, rngs::ThreadRng, thread_rng};
+    use rand::{Rng, rng, rngs::ThreadRng};
 
     use super::{Recombinator, Recombine};
     use crate::operator::{Composable, Operator};
@@ -327,13 +336,14 @@ mod tests {
 
     impl<T: Copy> Recombinator<Parents<T>> for SwapOne {
         type Output = Genome<T>;
+        type Error = Infallible;
 
         fn recombine(
             &self,
             (mut first_parent, second_parent): Parents<T>,
             rng: &mut ThreadRng,
-        ) -> anyhow::Result<Genome<T>> {
-            let index = rng.gen_range(0..first_parent.len());
+        ) -> Result<Genome<T>, Self::Error> {
+            let index = rng.random_range(0..first_parent.len());
             first_parent[index] = second_parent[index];
             Ok(first_parent)
         }
@@ -362,7 +372,7 @@ mod tests {
         let first_parent = [0, 0, 0, 0];
         let second_parent = [1, 1, 1, 1];
         let child = SwapOne
-            .recombine((first_parent, second_parent), &mut thread_rng())
+            .recombine((first_parent, second_parent), &mut rng())
             .unwrap();
         // `child` should be all zeros except for the one place where
         // a one was swapped in from the second parent.
@@ -382,7 +392,7 @@ mod tests {
         let recombine = Recombine::new(recombinator);
 
         let child = recombine
-            .apply((first_parent, second_parent), &mut thread_rng())
+            .apply((first_parent, second_parent), &mut rng())
             .unwrap();
         let num_zeros = child.iter().filter(|&&x| x == 0).count();
         let num_ones = child.iter().filter(|&&x| x == 1).count();
@@ -401,7 +411,7 @@ mod tests {
         let recombine = Recombine::new(&recombinator);
 
         let child = recombine
-            .apply((first_parent, second_parent), &mut thread_rng())
+            .apply((first_parent, second_parent), &mut rng())
             .unwrap();
         let num_zeros = child.iter().filter(|&&x| x == 0).count();
         let num_ones = child.iter().filter(|&&x| x == 1).count();
@@ -422,7 +432,7 @@ mod tests {
         let chain = recombine.then(count_true);
 
         let count = chain
-            .apply((first_parent, second_parent), &mut thread_rng())
+            .apply((first_parent, second_parent), &mut rng())
             .unwrap();
         assert_eq!(count, 3);
     }
@@ -442,7 +452,7 @@ mod tests {
         let chain = recombine.then(count_true);
 
         let count = chain
-            .apply((first_parent, second_parent), &mut thread_rng())
+            .apply((first_parent, second_parent), &mut rng())
             .unwrap();
         assert_eq!(count, 3);
     }

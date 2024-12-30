@@ -31,7 +31,7 @@ mod tests {
     #[test]
     fn empty_population() {
         let pop: Vec<i32> = Vec::new();
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         assert!(matches!(
             Random.select(&pop, &mut rng),
             Err(EmptyPopulation)
@@ -40,7 +40,7 @@ mod tests {
 
     #[proptest]
     fn test_random(#[map(|v: [i32;10]| v.into())] pop: Vec<i32>) {
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let selection = Random.select(&pop, &mut rng).unwrap();
         assert!(pop.contains(selection));
     }

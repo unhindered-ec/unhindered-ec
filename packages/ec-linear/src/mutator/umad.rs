@@ -1,3 +1,5 @@
+use std::convert::Infallible;
+
 use ec_core::{genome::Genome, operator::mutator::Mutator};
 use rand::{Rng, prelude::Distribution, rngs::ThreadRng};
 
@@ -68,11 +70,13 @@ where
     G: Linear + IntoIterator<Item = G::Gene> + FromIterator<G::Gene>,
     GeneGenerator: Distribution<G::Gene>,
 {
-    fn mutate(&self, genome: G, rng: &mut ThreadRng) -> anyhow::Result<G> {
+    type Error = Infallible;
+
+    fn mutate(&self, genome: G, rng: &mut ThreadRng) -> Result<G, Self::Error> {
         if genome.size() == 0 {
             if let Some(addition_rate) = self.empty_addition_rate {
                 return Ok(rng
-                    .gen_bool(addition_rate)
+                    .random_bool(addition_rate)
                     .then(|| self.new_gene::<G>(rng))
                     .into_iter()
                     .collect());
@@ -84,10 +88,10 @@ where
             .flat_map(|gene| {
                 // The body of this closure is due to MizardX@Twitch;
                 // much nicer than my original approach.
-                let add_gene = rng.gen_bool(self.addition_rate);
-                let delete_gene = rng.gen_bool(self.deletion_rate);
+                let add_gene = rng.random_bool(self.addition_rate);
+                let delete_gene = rng.random_bool(self.deletion_rate);
                 // only called when `add_gene` is true
-                let delete_new_gene = add_gene && rng.gen_bool(self.deletion_rate);
+                let delete_new_gene = add_gene && rng.random_bool(self.deletion_rate);
 
                 let old_gene = (!delete_gene).then_some(gene);
 
@@ -111,7 +115,7 @@ where
 )]
 mod test {
     use ec_core::uniform_distribution_of;
-    use rand::thread_rng;
+    use rand::rng;
 
     use super::*;
     use crate::genome::vector::Vector;
@@ -134,7 +138,7 @@ mod test {
     #[test]
     #[ignore = "This is stochastic, and it will fail sometimes"]
     fn umad_test() {
-        let mut rng = thread_rng();
+        let mut rng = rng();
 
         let char_options = uniform_distribution_of!['x'];
         let umad = Umad::new(0.3, 0.3, char_options);

@@ -20,10 +20,9 @@ impl<F, Input, const N: usize> Operator<Input> for RepeatWith<F, N>
 where
     Input: Clone,
     F: Operator<Input>,
-    anyhow::Error: From<F::Error>,
 {
     type Output = [F::Output; N];
-    type Error = anyhow::Error;
+    type Error = F::Error;
 
     fn apply(
         &self,
@@ -55,7 +54,7 @@ impl<F, const N: usize> Composable for RepeatWith<F, N> {}
 mod tests {
     use std::{convert::Infallible, ops::Range};
 
-    use rand::{Rng, thread_rng};
+    use rand::{Rng, rng};
 
     use super::*;
 
@@ -78,9 +77,16 @@ mod tests {
     fn deterministic() {
         const LENGTH: usize = 5;
         let desired_value = 7;
-        let mut rng = thread_rng();
+        let mut rng = rng();
         let repeater: RepeatWith<AddOne, LENGTH> = RepeatWith::new(AddOne);
-        let result = repeater.apply(desired_value, &mut rng).unwrap();
+        // This is fine since the compiler can use static analysis to
+        // verify that the Err variant of the result enum is uninhabited (can't be
+        // constructed, is of type '!') and as such the Pattern `Ok()` becomes
+        // irrefutable here.
+        //
+        // If it wasn't, then we would either need a match block or a else clause
+        // instead and the compiler would complain.
+        let Ok(result) = repeater.apply(desired_value, &mut rng);
         assert_eq!(LENGTH, result.len());
         result.into_iter().all(|x| x == desired_value);
     }
@@ -95,7 +101,7 @@ mod tests {
             range: Range<i32>,
             rng: &mut rand::rngs::ThreadRng,
         ) -> Result<Self::Output, Self::Error> {
-            Ok(rng.gen_range(range))
+            Ok(rng.random_range(range))
         }
     }
     impl Composable for UniformRange {}
@@ -104,7 +110,7 @@ mod tests {
     fn stochastic() {
         const LENGTH: usize = 5;
         let range = 0..7;
-        let mut rng = thread_rng();
+        let mut rng = rng();
         let repeater: RepeatWith<UniformRange, LENGTH> = RepeatWith::new(UniformRange);
         let result = repeater.apply(range.clone(), &mut rng).unwrap();
         assert_eq!(LENGTH, result.len());

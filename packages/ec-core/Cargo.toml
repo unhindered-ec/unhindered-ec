@@ -20,7 +20,6 @@ readme = "README.md"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-anyhow = { workspace = true }
 itertools = { workspace = true }
 num-traits = { workspace = true }
 rand = { workspace = true, features = ["alloc"] }
@@ -28,6 +27,7 @@ rayon = "1.7.0"
 macro_railroad_annotation = { workspace = true }
 thiserror = { workspace = true }
 miette = { workspace = true }
+polonius-the-crab = { workspace = true }
 
 [dev-dependencies]
 rand = { workspace = true, features = ["alloc", "small_rng"] }

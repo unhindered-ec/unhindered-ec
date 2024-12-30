@@ -7,9 +7,6 @@
 
 pub mod args;
 
-use std::ops::Not;
-
-use anyhow::{Result, ensure};
 use clap::Parser;
 use ec_core::{
     distributions::collection::ConvertToCollectionGenerator,
@@ -32,9 +29,10 @@ use ec_linear::{
     genome::bitstring::Bitstring, mutator::with_one_over_length::WithOneOverLength,
     recombinator::two_point_xo::TwoPointXo,
 };
+use miette::ensure;
 use rand::{
-    distr::{Distribution, Standard},
-    thread_rng,
+    distr::{Distribution, StandardUniform},
+    rng,
 };
 
 use crate::args::{CliArgs, RunModel};
@@ -44,7 +42,7 @@ pub fn count_ones(bits: &[bool]) -> TestResults<Score<i64>> {
     bits.iter().copied().map(i64::from).collect()
 }
 
-fn main() -> Result<()> {
+fn main() -> miette::Result<()> {
     let CliArgs {
         run_model,
         population_size,
@@ -52,7 +50,7 @@ fn main() -> Result<()> {
         max_generations,
     } = CliArgs::parse();
 
-    let mut rng = thread_rng();
+    let mut rng = rng();
 
     let scorer = FnScorer(|bitstring: &Bitstring| count_ones(&bitstring.bits));
 
@@ -62,13 +60,16 @@ fn main() -> Result<()> {
         .with_selector(Lexicase::new(num_test_cases), 5)
         .with_selector(Tournament::binary(), population_size - 1);
 
-    let population = Standard
+    let population = StandardUniform
         .to_collection_generator(bit_length)
         .with_scorer(scorer)
         .into_collection_generator(population_size)
         .sample(&mut rng);
 
-    ensure!(population.is_empty().not());
+    ensure!(
+        !population.is_empty(),
+        "An initial populaiton is always required"
+    );
 
     println!("{population:?}");
 

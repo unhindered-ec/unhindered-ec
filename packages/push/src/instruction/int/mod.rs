@@ -1,6 +1,7 @@
 mod abs;
 mod negate;
 
+use miette::Diagnostic;
 use strum_macros::EnumIter;
 
 use self::{abs::Abs, negate::Negate};
@@ -14,8 +15,8 @@ use crate::{
 #[non_exhaustive]
 #[must_use]
 pub enum IntInstruction {
+    #[strum(to_string = "Push({0})")]
     Push(i64),
-
     Negate(Negate),
     Abs(Abs),
     Min,
@@ -64,9 +65,13 @@ impl From<IntInstruction> for PushInstruction {
     }
 }
 
-#[derive(thiserror::Error, Debug, Eq, PartialEq)]
+#[derive(thiserror::Error, Debug, Eq, PartialEq, Diagnostic)]
 pub enum IntInstructionError {
     #[error("Integer arithmetic overflow for instruction {op}")]
+    #[diagnostic(
+        help = "If you run into this too often you might want to use the saturating or wrapping \
+                arithmetic instruction set instead."
+    )]
     Overflow {
         op: IntInstruction,
         // I liked the idea of keeping track of the arguments to the instruction
@@ -198,7 +203,7 @@ where
                         .map_err(PushInstructionError::from)
                         .map(|(&x, &y)| {
                             let y: u32 = y.try_into().ok()?;
-                            x.checked_pow(y).map(i64::from)
+                            x.checked_pow(y)
                         })
                         .and_then(|v| {
                             v.ok_or(IntInstructionError::Overflow { op: *self })
@@ -334,5 +339,20 @@ where
                     .with_stack_discard::<bool>(1)
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::IntInstruction;
+
+    #[test]
+    fn auto_display() {
+        assert_eq!(format!("{}", IntInstruction::IsZero), "IsZero");
+    }
+
+    #[test]
+    fn manual_push_display() {
+        assert_eq!(format!("{}", IntInstruction::Push(1)), "Push(1)");
     }
 }

@@ -11,6 +11,7 @@ use crate::{
 #[derive(Debug, strum_macros::Display, Clone, PartialEq, Eq, EnumIter)]
 #[non_exhaustive]
 pub enum BoolInstruction {
+    #[strum(to_string = "Push({0})")]
     Push(bool),
     Not,
     Or,
@@ -166,5 +167,20 @@ mod property_tests {
 
         prop_assert_eq!(result_state.bool.size(), 1);
         prop_assert_eq!(*result_state.bool.top().unwrap(), !x || y);
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::BoolInstruction;
+
+    #[test]
+    fn auto_display() {
+        assert_eq!(format!("{}", BoolInstruction::Not), "Not");
+    }
+
+    #[test]
+    fn manual_push_display() {
+        assert_eq!(format!("{}", BoolInstruction::Push(true)), "Push(true)");
     }
 }

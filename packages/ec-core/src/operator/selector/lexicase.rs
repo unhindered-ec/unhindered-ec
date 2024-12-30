@@ -117,7 +117,7 @@ mod tests {
     #[test]
     fn empty_population() {
         let pop = population_from_single_scores([]);
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let selector = Lexicase::new(0);
         assert!(matches!(
             selector.select(&pop, &mut rng),
@@ -156,7 +156,7 @@ mod tests {
         let population = population_from_single_scores([5, 8, 9, 6, 3, 2, 0]);
 
         let lexicase = Lexicase::new(1);
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
         assert_eq!(&2, lexicase.select(&population, &mut rng).unwrap().genome());
     }
@@ -167,7 +167,7 @@ mod tests {
         let population = population_from_single_scores([5, 8, 9, 6, 3, 2, 0, 9]);
 
         let lexicase = Lexicase::new(1);
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
         let selected = *lexicase.select(&population, &mut rng).unwrap().genome();
         assert!(
@@ -183,7 +183,7 @@ mod tests {
             population_from_scores([[5, 3], [8, 2], [9, 8], [6, 2], [3, 8], [2, 8], [0, 6]]);
 
         let lexicase = Lexicase::new(2);
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
         assert_eq!(&2, lexicase.select(&population, &mut rng).unwrap().genome());
     }
@@ -202,7 +202,7 @@ mod tests {
         ]);
 
         let lexicase = Lexicase::new(2);
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
         let selected = *lexicase.select(&population, &mut rng).unwrap().genome();
         assert!(
@@ -240,9 +240,9 @@ mod tests {
 
         population.push(winning_individual);
 
-        let num_test_cases = population[0].test_results.results.len();
+        let num_test_cases = population[0].test_results.len();
         let lexicase = Lexicase::new(num_test_cases);
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
 
         let selected = lexicase.select(&population, &mut rng).unwrap().genome();
         prop_assert_eq!(selected, &winning_label);

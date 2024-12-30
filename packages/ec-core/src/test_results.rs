@@ -24,20 +24,13 @@ use std::{
 //   closer to where they're actually needed.
 
 /// Score implicitly follows a "bigger is better" model.
-#[derive(Eq, PartialEq, Ord, PartialOrd)]
-pub struct Score<T> {
-    pub score: T,
-}
-
-impl<T: Debug> Debug for Score<T> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_fmt(format_args!("{:?}", self.score))
-    }
-}
+#[derive(Eq, PartialEq, Ord, PartialOrd, Debug)]
+#[repr(transparent)]
+pub struct Score<T>(pub T);
 
 impl<T: Display> Display for Score<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Score (higher is better): {}", self.score)
+        write!(f, "Score (higher is better): {}", self.0)
     }
 }
 
@@ -45,7 +38,7 @@ impl<T: Display> Display for Score<T> {
 
 impl<T> From<T> for Score<T> {
     fn from(score: T) -> Self {
-        Self { score }
+        Self(score)
     }
 }
 
@@ -54,7 +47,7 @@ impl<T: Sum> Sum<T> for Score<T> {
     where
         I: Iterator<Item = T>,
     {
-        Self { score: iter.sum() }
+        Self(iter.sum())
     }
 }
 
@@ -63,7 +56,7 @@ impl<T: Sum> Sum for Score<T> {
     where
         I: Iterator<Item = Self>,
     {
-        iter.map(|s| s.score).sum()
+        iter.map(|s| s.0).sum()
     }
 }
 
@@ -73,47 +66,40 @@ where
     Self: Sum<<T as ToOwned>::Owned>,
 {
     fn sum<I: Iterator<Item = &'a Self>>(iter: I) -> Self {
-        iter.map(|s| s.score.to_owned()).sum()
+        iter.map(|s| s.0.to_owned()).sum()
     }
 }
 
 // TODO: Rewrite `Error` using the std::cmp::Reverse type
 //   to convert `Score` to `Error`.
-#[derive(Eq, PartialEq)]
-pub struct Error<T> {
-    pub error: T,
-}
-
-impl<T: Debug> Debug for Error<T> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_fmt(format_args!("{:?}", self.error))
-    }
-}
+#[derive(Eq, PartialEq, Debug)]
+#[repr(transparent)]
+pub struct Error<T>(pub T);
 
 impl<T: Ord> Ord for Error<T> {
     fn cmp(&self, other: &Self) -> Ordering {
-        self.error.cmp(&other.error).reverse()
+        self.0.cmp(&other.0).reverse()
     }
 }
 
 impl<T: PartialOrd> PartialOrd for Error<T> {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        self.error
-            .partial_cmp(&other.error)
+        self.0
+            .partial_cmp(&other.0)
             .map(std::cmp::Ordering::reverse)
     }
 }
 
 impl<T: Display> Display for Error<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Error (lower is better): {}", self.error)
+        write!(f, "Error (lower is better): {}", self.0)
     }
 }
 // TODO: Write tests for the `From` and `Sum` trait implementations.
 
 impl<T> From<T> for Error<T> {
     fn from(error: T) -> Self {
-        Self { error }
+        Self(error)
     }
 }
 
@@ -122,7 +108,7 @@ impl<T: Sum> Sum<T> for Error<T> {
     where
         I: Iterator<Item = T>,
     {
-        Self { error: iter.sum() }
+        Self(iter.sum())
     }
 }
 
@@ -131,7 +117,7 @@ impl<T: Sum> Sum for Error<T> {
     where
         I: Iterator<Item = Self>,
     {
-        iter.map(|s| s.error).sum()
+        iter.map(|s| s.0).sum()
     }
 }
 
@@ -141,7 +127,7 @@ where
     Self: Sum<<T as ToOwned>::Owned>,
 {
     fn sum<I: Iterator<Item = &'a Self>>(iter: I) -> Self {
-        iter.map(|s| s.error.to_owned()).sum()
+        iter.map(|s| s.0.to_owned()).sum()
     }
 }
 
@@ -151,8 +137,8 @@ mod score_error_tests {
 
     #[test]
     fn score_bigger_is_better() {
-        let first = Score { score: 37 };
-        let second = Score { score: 82 };
+        let first = Score(37);
+        let second = Score(82);
         // These use `Ord`
         assert_eq!(first.cmp(&second), Ordering::Less);
         assert_eq!(second.cmp(&first), Ordering::Greater);
@@ -165,8 +151,8 @@ mod score_error_tests {
 
     #[test]
     fn error_smaller_is_better() {
-        let first = Error { error: 37 };
-        let second = Error { error: 82 };
+        let first = Error(37);
+        let second = Error(82);
         // These use `Ord`
         assert_eq!(first.cmp(&second), Ordering::Greater);
         assert_eq!(second.cmp(&first), Ordering::Less);
@@ -206,8 +192,8 @@ mod test_result_tests {
 
     #[test]
     fn score_compares_to_score() {
-        let first: TestResult<i32, i32> = TestResult::Score(Score { score: 32 });
-        let second = TestResult::Score(Score { score: 87 });
+        let first: TestResult<i32, i32> = TestResult::Score(Score(32));
+        let second = TestResult::Score(Score(87));
         assert!(first < second);
         assert!(first != second);
         assert!((first > second).not());
@@ -215,8 +201,8 @@ mod test_result_tests {
 
     #[test]
     fn error_compares_to_error() {
-        let first: TestResult<i32, i32> = TestResult::Error(Error { error: 32 });
-        let second = TestResult::Error(Error { error: 87 });
+        let first: TestResult<i32, i32> = TestResult::Error(Error(32));
+        let second = TestResult::Error(Error(87));
         assert!(first > second);
         assert!(first != second);
         assert!((first < second).not());
@@ -224,8 +210,8 @@ mod test_result_tests {
 
     #[test]
     fn error_and_score_incomparable() {
-        let first = TestResult::Score(Score { score: 32 });
-        let second = TestResult::Error(Error { error: 87 });
+        let first = TestResult::Score(Score(32));
+        let second = TestResult::Error(Error(87));
         assert!((first > second).not());
         assert!(first != second);
         assert!((first < second).not());
@@ -238,6 +224,18 @@ mod test_result_tests {
 pub struct TestResults<R> {
     pub results: Vec<R>,
     pub total_result: R,
+}
+
+impl<R> TestResults<R> {
+    /// Get the number of test results
+    pub fn len(&self) -> usize {
+        self.results.len()
+    }
+
+    /// Check if no test results were stored
+    pub fn is_empty(&self) -> bool {
+        self.results.is_empty()
+    }
 }
 
 impl<R: Ord> Ord for TestResults<R> {
@@ -317,11 +315,7 @@ mod test_results_from_vec {
         let errors = vec![5, 8, 0, 9];
         let test_results: TestResults<Error<i32>> = errors.clone().into();
         assert_eq!(
-            test_results
-                .results
-                .iter()
-                .map(|r| r.error)
-                .collect::<Vec<_>>(),
+            test_results.results.iter().map(|r| r.0).collect::<Vec<_>>(),
             errors
         );
         assert_eq!(test_results.total_result, errors.into_iter().sum());
@@ -332,11 +326,7 @@ mod test_results_from_vec {
         let scores = vec![5, 8, 0, 9];
         let test_results: TestResults<Score<i32>> = scores.clone().into();
         assert_eq!(
-            test_results
-                .results
-                .iter()
-                .map(|r| r.score)
-                .collect::<Vec<_>>(),
+            test_results.results.iter().map(|r| r.0).collect::<Vec<_>>(),
             scores
         );
         assert_eq!(test_results.total_result, scores.into_iter().sum());

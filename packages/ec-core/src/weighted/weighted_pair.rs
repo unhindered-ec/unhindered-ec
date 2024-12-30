@@ -110,7 +110,7 @@ mod tests {
 
     #[proptest]
     fn best_or_worst(#[map(|v: [i32;10]| v.into())] pop: Vec<i32>) {
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         // We'll make a selector that has a 50/50 chance of choosing the highest
         // or lowest value.
         let weighted = Weighted::new(Best, 1)
@@ -123,7 +123,7 @@ mod tests {
 
     #[proptest]
     fn several_selectors(#[map(|v: [i32;10]| v.into())] pop: Vec<i32>) {
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         // We'll make a selector that has a 50/50 chance of choosing the highest
         // or lowest value.
         let weighted = Weighted::new(Best, 1)
@@ -138,7 +138,7 @@ mod tests {
     #[test]
     fn zero_weight_sum_error() {
         let pop = vec![5, 8, 9, 6, 3, 2, 0];
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let weighted = Weighted::new(Best, 0)
             .with_item_and_weight(Worst, 0)
             .with_item_and_weight(Random, 0)

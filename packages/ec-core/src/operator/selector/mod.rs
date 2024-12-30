@@ -25,42 +25,39 @@ pub use error::EmptyPopulation;
 ///
 /// ```
 /// # use ec_core::operator::selector::{best::Best, Selector};
-/// # use rand::thread_rng;
+/// # use rand::rng;
 /// #
 /// let population = vec![5, 8, 9, 2, 3, 6];
-/// let winner = Best.select(&population, &mut thread_rng())?;
+/// let winner = Best.select(&population, &mut rng())?;
 /// assert_eq!(*winner, 9);
-/// # Ok::<(), anyhow::Error>(())
+/// # Ok::<(), Box<dyn std::error::Error>>(())
 /// ```
 ///
 /// Here we implement a `First` selector that always returns the first
 /// element in a vector.
 ///
 /// ```
-/// # use rand::{rngs::ThreadRng, thread_rng};
-/// # use anyhow::Context;
-/// # use ec_core::operator::selector::Selector;
+/// # use rand::{rngs::ThreadRng, rng};
+/// # use ec_core::operator::selector::{error::EmptyPopulation, Selector};
 /// #
 /// struct First;
 ///
 /// impl Selector<Vec<u8>> for First {
-///     type Error = anyhow::Error;
+///     type Error = EmptyPopulation;
 ///
 ///     fn select<'pop>(
 ///         &self,
 ///         population: &'pop Vec<u8>,
 ///         _: &mut ThreadRng,
-///     ) -> anyhow::Result<&'pop u8> {
-///         population
-///             .first()
-///             .context("Should be at least one individual in the population")
+///     ) -> Result<&'pop u8, Self::Error> {
+///         population.first().ok_or(EmptyPopulation)
 ///     }
 /// }
 ///
 /// let population = vec![5, 8, 9];
-/// let choice = First.select(&population, &mut thread_rng())?;
+/// let choice = First.select(&population, &mut rng())?;
 /// assert_eq!(*choice, 5);
-/// # Ok::<(), anyhow::Error>(())
+/// # Ok::<(), Box<dyn std::error::Error>>(())
 /// ```
 pub trait Selector<P>
 where
@@ -98,24 +95,21 @@ where
 /// selector.
 ///
 /// ```
-/// # use anyhow::Context;
-/// # use rand::{rngs::ThreadRng, thread_rng};
+/// # use rand::{rngs::ThreadRng, rng};
 /// #
-/// # use ec_core::operator::{Operator, selector::{Select, Selector}};
+/// # use ec_core::operator::{Operator, selector::{error::EmptyPopulation, Select, Selector}};
 /// #
 /// struct First; // Simple selector that always returns the first element in a vector.
 ///
 /// impl<T> Selector<Vec<T>> for First {
-///     type Error = anyhow::Error;
+///     type Error = EmptyPopulation;
 ///
 ///     fn select<'pop>(
 ///         &self,
 ///         population: &'pop Vec<T>,
 ///         _: &mut ThreadRng,
-///     ) -> anyhow::Result<&'pop T> {
-///         population
-///             .first()
-///             .context("Should be at least one individual in the population")
+///     ) -> Result<&'pop T, Self::Error> {
+///         population.first().ok_or(EmptyPopulation)
 ///     }
 /// }
 ///
@@ -125,12 +119,12 @@ where
 ///
 /// // Selectors return references to the individuals they choose, so we
 /// // get a `&u8` back from `select` and `apply`.
-/// let selector_result: &u8 = First.select(&population, &mut thread_rng())?;
+/// let selector_result: &u8 = First.select(&population, &mut rng())?;
 /// assert_eq!(*selector_result, 5);
 ///
-/// let operator_result: &u8 = select.apply(&population, &mut thread_rng())?;
+/// let operator_result: &u8 = select.apply(&population, &mut rng())?;
 /// assert_eq!(selector_result, operator_result);
-/// # Ok::<(), anyhow::Error>(())
+/// # Ok::<(), Box<dyn std::error::Error>>(())
 /// ```
 ///
 /// Because both [`Select`] and [`Operator`] are [`Composable`], we can chain
@@ -141,25 +135,24 @@ where
 /// return the length of that string.
 ///
 /// ```
-/// # use anyhow::Context;
-/// # use rand::{rngs::ThreadRng, thread_rng};
+/// # use rand::{rngs::ThreadRng, rng};
 /// # use std::convert::Infallible;
 /// #
-/// # use ec_core::operator::{Composable, Operator, selector::{Select, Selector}};
+/// # use ec_core::operator::{Composable, Operator, selector::{error::EmptyPopulation, Select, Selector}};
 /// #
 /// # struct First; // Simple selector that always returns the first element in a vector.
 /// #
 /// # impl<T> Selector<Vec<T>> for First {
-/// #    type Error = anyhow::Error;
+/// #    type Error = EmptyPopulation;
 /// #
 /// #    fn select<'pop>(
 /// #        &self,
 /// #        population: &'pop Vec<T>,
 /// #        _: &mut ThreadRng,
-/// #    ) -> anyhow::Result<&'pop T> {
+/// #    ) -> Result<&'pop T, Self::Error> {
 /// #        population
 /// #            .first()
-/// #            .context("Should be at least one individual in the population")
+/// #            .ok_or(EmptyPopulation)
 /// #    }
 /// # }
 /// #
@@ -186,9 +179,9 @@ where
 ///
 /// // The `StrLen` operator will take the `&String` returned by the `First`
 /// // selector and return its length.
-/// let choice_length: usize = chain.apply(&population, &mut thread_rng())?;
+/// let choice_length: usize = chain.apply(&population, &mut rng())?;
 /// assert_eq!(choice_length, 5);
-/// # Ok::<(), anyhow::Error>(())
+/// # Ok::<(), Box<dyn std::error::Error>>(())
 /// ```
 ///
 /// We can also pass a _reference_ to a [`Selector`] (i.e., `&Selector`) to
@@ -196,24 +189,25 @@ where
 /// operators without requiring or giving up ownership of the selector.
 ///
 /// ```
-/// # use anyhow::Context;
-/// # use rand::{rngs::ThreadRng, thread_rng};
+/// # use std::convert::Infallible;
 /// #
-/// # use ec_core::operator::{Composable, Operator, selector::{Select, Selector}};
+/// # use rand::{rngs::ThreadRng, rng};
+/// #
+/// # use ec_core::operator::{Composable, Operator, selector::{error::EmptyPopulation, Select, Selector}};
 /// #
 /// # struct First; // Simple selector that always returns the first element in a vector.
 /// #
 /// # impl<T> Selector<Vec<T>> for First {
-/// #    type Error = anyhow::Error;
+/// #    type Error = EmptyPopulation;
 /// #
 /// #    fn select<'pop>(
 /// #        &self,
 /// #        population: &'pop Vec<T>,
 /// #        _: &mut ThreadRng,
-/// #    ) -> anyhow::Result<&'pop T> {
+/// #    ) -> Result<&'pop T, Self::Error> {
 /// #        population
 /// #            .first()
-/// #            .context("Should be at least one individual in the population")
+/// #            .ok_or(EmptyPopulation)
 /// #    }
 /// # }
 /// #
@@ -221,9 +215,9 @@ where
 /// #
 /// # impl Operator<&String> for StrLen {
 /// #    type Output = usize;
-/// #    type Error = anyhow::Error;
+/// #    type Error = Infallible;
 /// #
-/// #    fn apply(&self, input: &String, _: &mut ThreadRng) -> anyhow::Result<usize> {
+/// #    fn apply(&self, input: &String, _: &mut ThreadRng) -> Result<usize, Self::Error> {
 /// #        Ok(input.len())
 /// #    }
 /// # }
@@ -232,9 +226,9 @@ where
 /// let ref_select = Select::new(&First);
 /// let chain = ref_select.then(StrLen);
 /// let population: Vec<String> = vec!["Hello".to_string(), "World".to_string()];
-/// let choice_length: usize = chain.apply(&population, &mut thread_rng())?;
+/// let choice_length: usize = chain.apply(&population, &mut rng())?;
 /// assert_eq!(choice_length, 5);
-/// # Ok::<(), anyhow::Error>(())
+/// # Ok::<(), Box<dyn std::error::Error>>(())
 /// ```
 #[derive(Clone)]
 pub struct Select<S> {
@@ -285,26 +279,25 @@ where
 
 #[cfg(test)]
 mod tests {
-    use anyhow::Context;
-    use rand::{rngs::ThreadRng, thread_rng};
+    use std::convert::Infallible;
 
-    use super::{Select, Selector};
+    use rand::{rng, rngs::ThreadRng};
+
+    use super::{Select, Selector, error::EmptyPopulation};
     use crate::operator::{Composable, Operator};
 
     // A simple `Selector`` that always returns the first item in a vector.
     struct First;
 
     impl<T> Selector<Vec<T>> for First {
-        type Error = anyhow::Error;
+        type Error = EmptyPopulation;
 
         fn select<'pop>(
             &self,
             population: &'pop Vec<T>,
             _: &mut ThreadRng,
-        ) -> anyhow::Result<&'pop T> {
-            population
-                .first()
-                .context("Should be at least one individual in the population")
+        ) -> Result<&'pop T, Self::Error> {
+            population.first().ok_or(EmptyPopulation)
         }
     }
 
@@ -317,9 +310,9 @@ mod tests {
         T: AsRef<str>,
     {
         type Output = usize;
-        type Error = anyhow::Error;
+        type Error = Infallible;
 
-        fn apply(&self, input: T, _: &mut ThreadRng) -> anyhow::Result<usize> {
+        fn apply(&self, input: T, _: &mut ThreadRng) -> Result<usize, Self::Error> {
             Ok(input.as_ref().len())
         }
     }
@@ -328,7 +321,7 @@ mod tests {
     #[test]
     fn can_implement_simple_selector() {
         let population = vec![5, 8, 9];
-        let choice = First.select(&population, &mut thread_rng()).unwrap();
+        let choice = First.select(&population, &mut rng()).unwrap();
         assert_eq!(*choice, 5);
     }
 
@@ -336,7 +329,7 @@ mod tests {
     fn can_wrap_selector() {
         let select = Select::new(First);
         let population = vec![5, 8, 9];
-        let choice = select.apply(&population, &mut thread_rng()).unwrap();
+        let choice = select.apply(&population, &mut rng()).unwrap();
         assert_eq!(*choice, 5);
     }
 
@@ -346,7 +339,7 @@ mod tests {
         // still successfully select values.
         let select = Select::new(&First);
         let population = vec![5, 8, 9];
-        let choice = select.apply(&population, &mut thread_rng()).unwrap();
+        let choice = select.apply(&population, &mut rng()).unwrap();
         assert_eq!(*choice, 5);
     }
 
@@ -356,7 +349,7 @@ mod tests {
         let double = StrLen;
         let chain = select.then(double);
         let population: Vec<String> = vec!["Hello".to_string(), "World!".to_string()];
-        let length_of_choice: usize = chain.apply(&population, &mut thread_rng()).unwrap();
+        let length_of_choice: usize = chain.apply(&population, &mut rng()).unwrap();
         assert_eq!(length_of_choice, 5);
     }
 
@@ -368,7 +361,7 @@ mod tests {
         let double = StrLen;
         let chain = select.then(double);
         let population: Vec<String> = vec!["Hello".to_string(), "World!".to_string()];
-        let length_of_choice: usize = chain.apply(&population, &mut thread_rng()).unwrap();
+        let length_of_choice: usize = chain.apply(&population, &mut rng()).unwrap();
         assert_eq!(length_of_choice, 5);
     }
 }

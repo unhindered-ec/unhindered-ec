@@ -102,7 +102,7 @@ where
 mod tests {
     use std::{num::NonZeroUsize, ops::Not};
 
-    use rand::thread_rng;
+    use rand::rng;
     use test_strategy::proptest;
 
     use super::Tournament;
@@ -114,7 +114,7 @@ mod tests {
     #[test]
     fn empty_population() {
         let pop: Vec<i32> = Vec::new();
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let selector = Tournament::new(NonZeroUsize::MIN);
         let expected_error = TournamentSizeError::new(NonZeroUsize::MIN, 0);
         assert_eq!(selector.select(&pop, &mut rng), Err(expected_error));
@@ -130,7 +130,7 @@ mod tests {
     #[test]
     fn tournament_size_larger_than_population() {
         let pop: Vec<i32> = vec![0];
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         let selector = Tournament::of_size::<2>();
         assert!(matches!(
             selector.select(&pop, &mut rng),
@@ -142,7 +142,7 @@ mod tests {
 
     #[test]
     fn tournament_size_1() {
-        let mut rng = thread_rng();
+        let mut rng = rng();
         let scores = &[5, 8, 9];
         let population = scores
             .iter()
@@ -156,7 +156,7 @@ mod tests {
 
     #[proptest]
     fn tournament_size_2_pop_size_2(#[any] x: i32, #[any] y: i32) {
-        let mut rng = thread_rng();
+        let mut rng = rng();
         let scores = &[x, y];
         let population = scores
             .iter()
@@ -174,7 +174,7 @@ mod tests {
         #[filter(|v| *v != #x)] y: i32,
         #[filter(|v| [#x, #y].contains(v).not())] z: i32,
     ) {
-        let mut rng = thread_rng();
+        let mut rng = rng();
         // We know from the filters that all the scores are unique, so the selected
         // score should always be better than the smallest score.
         let scores = &[x, y, z];
