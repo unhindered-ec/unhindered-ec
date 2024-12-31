@@ -12,6 +12,8 @@ mod private {
 
 pub trait ErrorSeverity: private::SealedMarker {}
 
+static_assertions::assert_obj_safe!(ErrorSeverity);
+
 #[derive(Debug)]
 pub struct Fatal;
 impl ErrorSeverity for Fatal {}

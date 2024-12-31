@@ -8,3 +8,5 @@ pub trait Individual {
     fn genome(&self) -> &Self::Genome;
     fn test_results(&self) -> &Self::TestResults;
 }
+
+static_assertions::assert_obj_safe!(Individual<Genome = (), TestResults = ()>);

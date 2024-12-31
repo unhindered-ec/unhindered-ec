@@ -1,5 +1,5 @@
 use ec_core::operator::recombinator::Recombinator;
-use rand::{Rng, rngs::ThreadRng};
+use rand::Rng;
 
 use super::{
     crossover::Crossover,
@@ -14,10 +14,10 @@ impl<T: Clone> Recombinator<[Vec<T>; 2]> for UniformXo {
     type Output = Vec<T>;
     type Error = DifferentGenomeLength;
 
-    fn recombine(
+    fn recombine<R: Rng + ?Sized>(
         &self,
         [first_genome, second_genome]: [Vec<T>; 2],
-        rng: &mut ThreadRng,
+        rng: &mut R,
     ) -> Result<Self::Output, Self::Error> {
         let len = first_genome.len();
         if len != second_genome.len() {
@@ -39,10 +39,10 @@ impl<T: Clone> Recombinator<(Vec<T>, Vec<T>)> for UniformXo {
     type Output = Vec<T>;
     type Error = <Self as Recombinator<[Vec<T>; 2]>>::Error;
 
-    fn recombine(
+    fn recombine<R: Rng + ?Sized>(
         &self,
         genomes: (Vec<T>, Vec<T>),
-        rng: &mut ThreadRng,
+        rng: &mut R,
     ) -> Result<Self::Output, Self::Error> {
         self.recombine(<[Vec<T>; 2]>::from(genomes), rng)
     }
@@ -55,10 +55,10 @@ where
     type Output = G;
     type Error = CrossoverGeneError<G::GeneCrossoverError>;
 
-    fn recombine(
+    fn recombine<R: Rng + ?Sized>(
         &self,
         [mut first_genome, mut second_genome]: [G; 2],
-        rng: &mut ThreadRng,
+        rng: &mut R,
     ) -> Result<Self::Output, Self::Error> {
         let len = first_genome.size();
         if len != second_genome.size() {
@@ -83,7 +83,11 @@ where
     type Output = G;
     type Error = <Self as Recombinator<[G; 2]>>::Error;
 
-    fn recombine(&self, genomes: (G, G), rng: &mut ThreadRng) -> Result<Self::Output, Self::Error> {
+    fn recombine<R: Rng + ?Sized>(
+        &self,
+        genomes: (G, G),
+        rng: &mut R,
+    ) -> Result<Self::Output, Self::Error> {
         self.recombine(<[G; 2]>::from(genomes), rng)
     }
 }

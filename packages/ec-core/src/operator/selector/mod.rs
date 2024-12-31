@@ -1,7 +1,12 @@
-use rand::rngs::ThreadRng;
+use rand::Rng;
 
 use super::{Composable, Operator};
 use crate::population::Population;
+
+#[cfg(feature = "erased")]
+mod erased;
+#[cfg(feature = "erased")]
+pub use erased::*;
 
 pub mod best;
 pub mod dyn_weighted;
@@ -37,7 +42,7 @@ pub use error::EmptyPopulation;
 /// element in a vector.
 ///
 /// ```
-/// # use rand::{rngs::ThreadRng, rng};
+/// # use rand::{Rng, rng};
 /// # use ec_core::operator::selector::{error::EmptyPopulation, Selector};
 /// #
 /// struct First;
@@ -45,10 +50,10 @@ pub use error::EmptyPopulation;
 /// impl Selector<Vec<u8>> for First {
 ///     type Error = EmptyPopulation;
 ///
-///     fn select<'pop>(
+///     fn select<'pop, R: Rng + ?Sized>(
 ///         &self,
 ///         population: &'pop Vec<u8>,
-///         _: &mut ThreadRng,
+///         _: &mut R,
 ///     ) -> Result<&'pop u8, Self::Error> {
 ///         population.first().ok_or(EmptyPopulation)
 ///     }
@@ -72,10 +77,10 @@ where
     /// This will return an error if there's some problem selecting. That will
     /// usually be because the population is empty or not large enough for
     /// the desired selector.
-    fn select<'pop>(
+    fn select<'pop, R: Rng + ?Sized>(
         &self,
         population: &'pop P,
-        rng: &mut ThreadRng,
+        rng: &mut R,
     ) -> Result<&'pop P::Individual, Self::Error>;
 }
 
@@ -95,7 +100,7 @@ where
 /// selector.
 ///
 /// ```
-/// # use rand::{rngs::ThreadRng, rng};
+/// # use rand::{Rng, rng};
 /// #
 /// # use ec_core::operator::{Operator, selector::{error::EmptyPopulation, Select, Selector}};
 /// #
@@ -104,10 +109,10 @@ where
 /// impl<T> Selector<Vec<T>> for First {
 ///     type Error = EmptyPopulation;
 ///
-///     fn select<'pop>(
+///     fn select<'pop, R: Rng + ?Sized>(
 ///         &self,
 ///         population: &'pop Vec<T>,
-///         _: &mut ThreadRng,
+///         _: &mut R,
 ///     ) -> Result<&'pop T, Self::Error> {
 ///         population.first().ok_or(EmptyPopulation)
 ///     }
@@ -135,7 +140,7 @@ where
 /// return the length of that string.
 ///
 /// ```
-/// # use rand::{rngs::ThreadRng, rng};
+/// # use rand::{Rng, rng};
 /// # use std::convert::Infallible;
 /// #
 /// # use ec_core::operator::{Composable, Operator, selector::{error::EmptyPopulation, Select, Selector}};
@@ -145,10 +150,10 @@ where
 /// # impl<T> Selector<Vec<T>> for First {
 /// #    type Error = EmptyPopulation;
 /// #
-/// #    fn select<'pop>(
+/// #    fn select<'pop, R: Rng + ?Sized>(
 /// #        &self,
 /// #        population: &'pop Vec<T>,
-/// #        _: &mut ThreadRng,
+/// #        _: &mut R,
 /// #    ) -> Result<&'pop T, Self::Error> {
 /// #        population
 /// #            .first()
@@ -164,7 +169,7 @@ where
 ///
 ///     // The argument is a reference to a `String` because `Selector`s return
 ///     // references to the individuals they choose.
-///     fn apply(&self, input: &String, _: &mut ThreadRng) -> Result<usize, Self::Error> {
+///     fn apply<R: Rng + ?Sized>(&self, input: &String, _: &mut R) -> Result<usize, Self::Error> {
 ///         Ok(input.len())
 ///     }
 /// }
@@ -190,6 +195,7 @@ where
 ///
 /// ```
 /// # use std::convert::Infallible;
+/// # use rand::{Rng, thread_rng};
 /// #
 /// # use rand::{rngs::ThreadRng, rng};
 /// #
@@ -200,10 +206,10 @@ where
 /// # impl<T> Selector<Vec<T>> for First {
 /// #    type Error = EmptyPopulation;
 /// #
-/// #    fn select<'pop>(
+/// #    fn select<'pop, R: Rng + ?Sized>(
 /// #        &self,
 /// #        population: &'pop Vec<T>,
-/// #        _: &mut ThreadRng,
+/// #        _: &mut R,
 /// #    ) -> Result<&'pop T, Self::Error> {
 /// #        population
 /// #            .first()
@@ -217,7 +223,7 @@ where
 /// #    type Output = usize;
 /// #    type Error = Infallible;
 /// #
-/// #    fn apply(&self, input: &String, _: &mut ThreadRng) -> Result<usize, Self::Error> {
+/// #    fn apply<R: Rng + ?Sized>(&self, input: &String, _: &mut R) -> Result<usize, Self::Error>{
 /// #        Ok(input.len())
 /// #    }
 /// # }
@@ -252,7 +258,11 @@ where
     type Error = S::Error;
 
     /// Apply this `Selector` as an `Operator`
-    fn apply(&self, population: &'pop P, rng: &mut ThreadRng) -> Result<Self::Output, Self::Error> {
+    fn apply<R: Rng + ?Sized>(
+        &self,
+        population: &'pop P,
+        rng: &mut R,
+    ) -> Result<Self::Output, Self::Error> {
         self.selector.select(population, rng)
     }
 }
@@ -268,10 +278,10 @@ where
 {
     type Error = S::Error;
 
-    fn select<'pop>(
+    fn select<'pop, R: Rng + ?Sized>(
         &self,
         population: &'pop P,
-        rng: &mut ThreadRng,
+        rng: &mut R,
     ) -> Result<&'pop P::Individual, Self::Error> {
         (**self).select(population, rng)
     }
@@ -281,7 +291,7 @@ where
 mod tests {
     use std::convert::Infallible;
 
-    use rand::{rng, rngs::ThreadRng};
+    use rand::{Rng, rng};
 
     use super::{Select, Selector, error::EmptyPopulation};
     use crate::operator::{Composable, Operator};
@@ -292,10 +302,10 @@ mod tests {
     impl<T> Selector<Vec<T>> for First {
         type Error = EmptyPopulation;
 
-        fn select<'pop>(
+        fn select<'pop, R: Rng + ?Sized>(
             &self,
             population: &'pop Vec<T>,
-            _: &mut ThreadRng,
+            _: &mut R,
         ) -> Result<&'pop T, Self::Error> {
             population.first().ok_or(EmptyPopulation)
         }
@@ -312,7 +322,7 @@ mod tests {
         type Output = usize;
         type Error = Infallible;
 
-        fn apply(&self, input: T, _: &mut ThreadRng) -> Result<usize, Self::Error> {
+        fn apply<R: Rng + ?Sized>(&self, input: T, _: &mut R) -> Result<usize, Self::Error> {
             Ok(input.as_ref().len())
         }
     }

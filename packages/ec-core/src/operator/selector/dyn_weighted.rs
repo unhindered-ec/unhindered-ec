@@ -2,37 +2,12 @@ use std::error::Error;
 
 use miette::Diagnostic;
 use rand::{
-    rngs::ThreadRng,
+    Rng,
     seq::{IndexedRandom, WeightError},
 };
 
-use super::{Selector, error::EmptyPopulation};
+use super::{DynSelector, Selector, error::EmptyPopulation};
 use crate::population::Population;
-
-trait DynSelector<P>
-where
-    P: Population,
-{
-    fn dyn_select<'pop>(
-        &self,
-        population: &'pop P,
-        rng: &mut ThreadRng,
-    ) -> Result<&'pop P::Individual, Box<dyn Error + Send + Sync>>;
-}
-
-impl<T, P> DynSelector<P> for T
-where
-    P: Population,
-    T: Selector<P, Error: Error + Send + Sync + 'static>,
-{
-    fn dyn_select<'pop>(
-        &self,
-        population: &'pop P,
-        rng: &mut ThreadRng,
-    ) -> Result<&'pop P::Individual, Box<dyn Error + Send + Sync>> {
-        self.select(population, rng).map_err(|e| Box::new(e).into())
-    }
-}
 
 pub struct DynWeighted<P: Population> {
     selectors: Vec<(Box<dyn DynSelector<P> + Send + Sync>, usize)>,
@@ -90,14 +65,14 @@ where
 {
     type Error = DynWeightedError;
 
-    fn select<'pop>(
+    fn select<'pop, R: Rng + ?Sized>(
         &self,
         population: &'pop P,
-        rng: &mut ThreadRng,
+        rng: &mut R,
     ) -> Result<&'pop P::Individual, Self::Error> {
         let (selector, _) = self.selectors.choose_weighted(rng, |(_, w)| *w)?;
         selector
-            .dyn_select(population, rng)
+            .select(population, rng)
             .map_err(DynWeightedError::Other)
     }
 }

@@ -1,6 +1,11 @@
-use rand::rngs::ThreadRng;
+use rand::Rng;
 
 use crate::{operator::selector::Selector, population::Population};
+
+#[cfg(feature = "erased")]
+mod erased;
+#[cfg(feature = "erased")]
+pub use erased::*;
 
 // TODO: esitsu@Twitch: "In my world the ChildMaker becomes
 //   an operator that scores". So this could just be
@@ -23,46 +28,10 @@ where
     ///
     /// This can return errors if any aspect of creating this child fail.
     /// That can include constructing or scoring the genome.
-    fn make_child(
+    fn make_child<R: Rng + ?Sized>(
         &self,
-        rng: &mut ThreadRng,
+        rng: &mut R,
         population: &P,
         selector: &S,
     ) -> Result<P::Individual, Self::Error>;
-}
-
-impl<P, S, T> ChildMaker<P, S> for &T
-where
-    P: Population,
-    S: Selector<P>,
-    T: ChildMaker<P, S>,
-{
-    type Error = T::Error;
-
-    fn make_child(
-        &self,
-        rng: &mut ThreadRng,
-        population: &P,
-        selector: &S,
-    ) -> Result<<P as Population>::Individual, Self::Error> {
-        (**self).make_child(rng, population, selector)
-    }
-}
-
-impl<P, S, T> ChildMaker<P, S> for &mut T
-where
-    P: Population,
-    S: Selector<P>,
-    T: ChildMaker<P, S>,
-{
-    type Error = T::Error;
-
-    fn make_child(
-        &self,
-        rng: &mut ThreadRng,
-        population: &P,
-        selector: &S,
-    ) -> Result<<P as Population>::Individual, Self::Error> {
-        (**self).make_child(rng, population, selector)
-    }
 }

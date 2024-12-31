@@ -1,4 +1,5 @@
 use error::{SelectionError, ZeroWeight};
+use rand::Rng;
 use with_weight::WithWeight;
 
 use crate::{operator::selector::Selector, population::Population};
@@ -33,10 +34,10 @@ where
 {
     type Error = SelectionError<T::Error>;
 
-    fn select<'pop>(
+    fn select<'pop, R: Rng + ?Sized>(
         &self,
         population: &'pop P,
-        rng: &mut rand::prelude::ThreadRng,
+        rng: &mut R,
     ) -> Result<&'pop <P as Population>::Individual, Self::Error> {
         if self.weight == 0 {
             return Err(ZeroWeight.into());

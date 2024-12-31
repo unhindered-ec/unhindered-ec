@@ -1,5 +1,7 @@
 use std::convert::Infallible;
 
+use rand::Rng;
+
 use super::{Composable, Operator};
 use crate::individual::Individual;
 
@@ -16,7 +18,7 @@ use crate::individual::Individual;
 /// extract the genome from an individual and mutate it.
 ///
 /// ```
-/// # use rand::{rngs::ThreadRng, rng, Rng};
+/// # use rand::{rng, Rng};
 /// # use ec_core::{
 /// #     individual::ec::EcIndividual,
 /// #     operator::{
@@ -34,10 +36,10 @@ use crate::individual::Individual;
 /// impl Mutator<Genome<bool>> for FlipOne {
 ///     type Error = Infallible;
 ///
-///     fn mutate(
+///     fn mutate<R: Rng + ?Sized>(
 ///         &self,
 ///         mut genome: Genome<bool>,
-///         rng: &mut ThreadRng,
+///         rng: &mut R,
 ///     ) -> Result<Genome<bool>, Self::Error> {
 ///         let index = rng.random_range(0..genome.len());
 ///         genome[index] = !genome[index];
@@ -73,10 +75,10 @@ where
     type Output = I::Genome;
     type Error = Infallible;
 
-    fn apply(
+    fn apply<R: Rng + ?Sized>(
         &self,
         individual: &I,
-        _: &mut rand::rngs::ThreadRng,
+        _: &mut R,
     ) -> Result<Self::Output, Self::Error> {
         Ok(individual.genome().clone())
     }
@@ -88,7 +90,7 @@ impl Composable for GenomeExtractor {}
 mod tests {
     use std::convert::Infallible;
 
-    use rand::{Rng, rng, rngs::ThreadRng};
+    use rand::{Rng, rng};
 
     use super::GenomeExtractor;
     use crate::{
@@ -104,10 +106,11 @@ mod tests {
 
     impl Mutator<Genome<bool>> for FlipOne {
         type Error = Infallible;
-        fn mutate(
+
+        fn mutate<R: Rng + ?Sized>(
             &self,
             mut genome: Genome<bool>,
-            rng: &mut ThreadRng,
+            rng: &mut R,
         ) -> Result<Genome<bool>, Self::Error> {
             let index = rng.random_range(0..genome.len());
             genome[index] = !genome[index];

@@ -8,6 +8,8 @@ pub trait ChoicesDistribution {
     fn num_choices(&self) -> NonZeroUsize;
 }
 
+static_assertions::assert_obj_safe!(ChoicesDistribution);
+
 impl<T> ChoicesDistribution for Slice<'_, T> {
     fn num_choices(&self) -> NonZeroUsize {
         self.num_choices()

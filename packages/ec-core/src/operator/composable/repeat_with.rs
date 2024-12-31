@@ -1,5 +1,7 @@
 use std::iter;
 
+use rand::Rng;
+
 use super::Composable;
 use crate::operator::Operator;
 
@@ -24,10 +26,10 @@ where
     type Output = [F::Output; N];
     type Error = F::Error;
 
-    fn apply(
+    fn apply<R: Rng + ?Sized>(
         &self,
         input: Input,
-        rng: &mut rand::rngs::ThreadRng,
+        rng: &mut R,
     ) -> Result<Self::Output, Self::Error> {
         Ok(iter::repeat_with(|| self.f.apply(input.clone(), rng))
             .take(N)
@@ -63,10 +65,10 @@ mod tests {
         type Output = i32;
         type Error = Infallible;
 
-        fn apply(
+        fn apply<R: Rng + ?Sized>(
             &self,
             input: i32,
-            _: &mut rand::rngs::ThreadRng,
+            _: &mut R,
         ) -> Result<Self::Output, Self::Error> {
             Ok(input + 1)
         }
@@ -96,10 +98,10 @@ mod tests {
         type Output = i32;
         type Error = Infallible;
 
-        fn apply(
+        fn apply<R: Rng + ?Sized>(
             &self,
             range: Range<i32>,
-            rng: &mut rand::rngs::ThreadRng,
+            rng: &mut R,
         ) -> Result<Self::Output, Self::Error> {
             Ok(rng.random_range(range))
         }

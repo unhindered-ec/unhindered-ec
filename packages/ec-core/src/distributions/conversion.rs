@@ -17,6 +17,8 @@ pub trait IntoDistribution<Element> {
     fn into_distribution(self) -> Result<Self::Distribution, Self::Error>;
 }
 
+static_assertions::assert_obj_safe!(IntoDistribution<(), Distribution = (), Error = ()>);
+
 pub trait ToDistribution<'a, Element> {
     type Distribution: Distribution<Element>;
     type Error;
@@ -28,6 +30,8 @@ pub trait ToDistribution<'a, Element> {
     /// returned
     fn to_distribution(&'a self) -> Result<Self::Distribution, Self::Error>;
 }
+
+static_assertions::assert_obj_safe!(ToDistribution<(), Distribution = (), Error = ()>);
 
 impl<U> IntoDistribution<U> for Vec<U>
 where

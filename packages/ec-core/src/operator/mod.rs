@@ -5,7 +5,12 @@
 //! Explain the use of wrappers, and why blanket
 //! implementations weren't feasible.
 
-use rand::rngs::ThreadRng;
+use rand::Rng;
+
+#[cfg(feature = "erased")]
+mod erased;
+#[cfg(feature = "erased")]
+pub use erased::*;
 
 pub mod composable;
 pub mod constant;
@@ -26,5 +31,9 @@ pub trait Operator<Input>: Composable {
     /// This will return an error if there's some problem applying the operator.
     /// Given how general this concept is, there's no good way of saying here
     /// what that might be.
-    fn apply(&self, input: Input, rng: &mut ThreadRng) -> Result<Self::Output, Self::Error>;
+    fn apply<R: Rng + ?Sized>(
+        &self,
+        input: Input,
+        rng: &mut R,
+    ) -> Result<Self::Output, Self::Error>;
 }

@@ -8,6 +8,8 @@ pub trait Population {
     fn size(&self) -> usize;
 }
 
+static_assertions::assert_obj_safe!(Population<Individual = ()>);
+
 impl<I> Population for Vec<I> {
     type Individual = I;
 
