@@ -129,7 +129,7 @@ mod tests {
 
     #[test]
     fn tournament_size_larger_than_population() {
-        let pop: Vec<i32> = vec![0];
+        let pop = [0];
         let mut rng = rand::rng();
         let selector = Tournament::of_size::<2>();
         assert!(matches!(
