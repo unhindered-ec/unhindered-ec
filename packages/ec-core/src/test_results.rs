@@ -7,24 +7,13 @@ use std::{
 // TODO: We can probably use things in the `num` family of traits
 //   (https://github.com/rust-num/num) to genericize `Score` and
 //   `Error` so they're not tied to `i64`s anymore.
-// TODO: I think that we want `Score` and `Error` to implement
-//   some common trait so that we can mixed vectors of `Score`s
-//   and `Error`s. Or maybe we already have that? Do (Partial)Ord,
-//   (Partial)Eq, Ord, and Sum get us where we need to be? That's
-//   lot to keep track of, so it might be useful to have a named
-//   trait that has all those as super-traits so we have one name
-//   that pulls them all together.
 
 // TODO: Should there just be one struct (e.g., `Result<T>` with a `result: T`
 // field)   and then `Error` and `Score` should be traits that these structs can
 //   implement? I feel like that might avoid some duplication here.
 
-// TODO: I'm not convinced that `Score` & `Error` need `Clone` and `Copy`
-//   anymore. At a minimum we should try to push those requirements
-//   closer to where they're actually needed.
-
 /// Score implicitly follows a "bigger is better" model.
-#[derive(Eq, PartialEq, Ord, PartialOrd, Debug)]
+#[derive(Eq, PartialEq, Ord, PartialOrd, Debug, Clone, Copy, Hash)]
 #[repr(transparent)]
 pub struct Score<T>(pub T);
 
@@ -72,7 +61,7 @@ where
 
 // TODO: Rewrite `Error` using the std::cmp::Reverse type
 //   to convert `Score` to `Error`.
-#[derive(Eq, PartialEq, Debug)]
+#[derive(Eq, PartialEq, Debug, Clone, Copy, Hash)]
 #[repr(transparent)]
 pub struct Error<T>(pub T);
 
@@ -164,7 +153,7 @@ mod score_error_tests {
     }
 }
 
-#[derive(Eq, PartialEq)]
+#[derive(Debug, Eq, PartialEq, Clone, Copy, Hash)]
 pub enum TestResult<S, E> {
     Score(Score<S>),
     Error(Error<E>),
@@ -220,7 +209,7 @@ mod test_result_tests {
     }
 }
 
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Debug, Eq, PartialEq, Clone, Hash)]
 pub struct TestResults<R> {
     pub results: Vec<R>,
     pub total_result: R,
@@ -307,7 +296,7 @@ where
 }
 
 #[cfg(test)]
-mod test_results_from_vec {
+mod test_results_tests {
     use super::*;
 
     #[test]
@@ -343,4 +332,59 @@ mod test_results_from_vec {
         assert!(test_results.results.into_iter().eq(results));
         assert_eq!(test_results.total_result, scores.into_iter().sum());
     }
+
+    #[test]
+    fn can_clone_test_results_of_scores_of_i32() {
+        let scores = vec![5, 8, 0, 9];
+        let test_results: TestResults<Error<i32>> = scores.into();
+        #[expect(clippy::redundant_clone, reason = "We're testing Clone")]
+        let cloned_test_results = test_results.clone();
+        assert_eq!(cloned_test_results, test_results);
+    }
+
+    #[test]
+    fn can_clone_test_results_of_errors_of_i32() {
+        let errors = vec![5, 8, 0, 9];
+        let test_results: TestResults<Error<i32>> = errors.into();
+        #[expect(clippy::redundant_clone, reason = "We're testing Clone")]
+        let cloned_test_results = test_results.clone();
+        assert_eq!(cloned_test_results, test_results);
+    }
+
+    // The following code is commented out because it doesn't compile. I wrote
+    // it to demonstrate to myself that we indeed could not call `.clone()`
+    // on a `TestResults` of a type that doesn't implement `Clone`, and to
+    // see what the exact error was. It was pretty straightforward, saying
+    // that `NonCloneable` doesn't implement `Clone`.
+
+    // struct NonCloneable(i32);
+    //
+    // impl From<NonCloneable> for i32 {
+    //     fn from(NonCloneable(i): NonCloneable) -> Self {
+    //         i
+    //     }
+    // }
+    //
+    // impl<'a> Sum<&'a NonCloneable> for NonCloneable {
+    //     fn sum<I>(iter: I) -> Self
+    //     where
+    //         I: Iterator<Item = &'a NonCloneable>,
+    //     {
+    //         NonCloneable(iter.into_iter().map(|NonCloneable(i)| i).sum())
+    //     }
+    // }
+    //
+    // #[test]
+    // fn cannot_clone_test_results_of_scores_of_non_cloneable() {
+    //     let scores: Vec<NonCloneable> = vec![
+    //         NonCloneable(5),
+    //         NonCloneable(8),
+    //         NonCloneable(0),
+    //         NonCloneable(9),
+    //     ];
+    //     let test_results: TestResults<NonCloneable> = scores.into();
+    //     #[expect(clippy::redundant_clone, reason = "We're testing Clone")]
+    //     let cloned_test_results = test_results.clone();
+    //     assert_eq!(cloned_test_results, test_results);
+    // }
 }
