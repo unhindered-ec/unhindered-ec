@@ -12,6 +12,17 @@ impl<T, I> Population for T
 where
     // An alternative would be `T: Deref<[T]>` but this also supports
     // hashsets, etc.
+    //
+    // This might look a bit confusing but essentially what this bound
+    // combination does is require both a `iter(&self) -> impl Iterator<Item
+    // = &T>` as well as a `into_iter(self) -> impl Iterator<Item = T>`
+    // method on the collection implementing population,
+    // which enables us to get the size of the collection without consuming
+    // it (through the `.iter()` method, since it takes `&self`) as well
+    // as turning this population into an iterator.
+    //
+    // Just requiring `.into_iter()` wouldn't work, since we don't want to
+    // consume the population to implement the `.size()` method.
     for<'a> &'a T: IntoIterator<Item = &'a I, IntoIter: ExactSizeIterator>,
     T: IntoIterator<Item = I>,
 {
