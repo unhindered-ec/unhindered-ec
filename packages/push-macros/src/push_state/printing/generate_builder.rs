@@ -299,7 +299,7 @@ pub fn generate_builder(
                                 ::std::iter::DoubleEndedIterator +
                                 ::std::iter::ExactSizeIterator,
                         {
-                            self.partial_state.#field.try_extend(values)?;
+                            self.partial_state.#field.push_many(values)?;
 
                             ::std::result::Result::Ok(#builder_name {
                                 partial_state: self.partial_state,
@@ -564,7 +564,7 @@ pub fn generate_builder(
                 self
                     .partial_state
                     .#exec_stack_ident
-                    .try_extend(::std::iter::IntoIterator::into_iter(program)
+                    .push_many(::std::iter::IntoIterator::into_iter(program)
                     .map(::std::convert::Into::into))?;
                 ::std::result::Result::Ok(#builder_name {
                     partial_state: self.partial_state,
