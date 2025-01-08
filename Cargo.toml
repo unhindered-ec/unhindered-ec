@@ -32,11 +32,11 @@ test-case = "3.3.1"
 polonius-the-crab = "0.4.2"
 static_assertions = "1.1.0"
 
-ec-core = { path = "packages/ec-core", version = "0.1.0-course.3" }
-ec-linear = { path = "packages/ec-linear", version = "0.1.0-course.3" }
-push = { path = "packages/push", version = "0.1.0-course.3" }
-push_macros = { path = "packages/push-macros", version = "0.1.0-course.3" }
-ec_macros = { path = "packages/ec-macros" }
+ec-core = { path = "packages/ec-core", version = "0.1.0-course.3", registry = "local-server" }
+ec-linear = { path = "packages/ec-linear", version = "0.1.0-course.3", registry = "local-server" }
+push = { path = "packages/push", version = "0.1.0-course.3", registry = "local-server" }
+push_macros = { path = "packages/push-macros", version = "0.1.0-course.3", registry = "local-server" }
+ec_macros = { path = "packages/ec-macros", version = "0.1.0-course.3", registry = "local-server"  }
 
 
 [workspace.lints.clippy]
