@@ -8,3 +8,5 @@ pub trait Linear: Genome {
 
     fn gene_mut(&mut self, index: usize) -> Option<&mut Self::Gene>;
 }
+
+static_assertions::assert_obj_safe!(Linear<Gene = ()>);

@@ -3,7 +3,7 @@ use std::{convert::Infallible, ops::Not};
 use ec_core::operator::mutator::Mutator;
 use miette::Diagnostic;
 use num_traits::ToPrimitive;
-use rand::rngs::ThreadRng;
+use rand::Rng;
 
 use super::with_rate::WithRate;
 use crate::genome::Linear;
@@ -21,7 +21,7 @@ where
 {
     type Error = GenomeSizeConversionError;
 
-    fn mutate(&self, genome: Vec<T>, rng: &mut ThreadRng) -> Result<Vec<T>, Self::Error> {
+    fn mutate<R: Rng + ?Sized>(&self, genome: Vec<T>, rng: &mut R) -> Result<Vec<T>, Self::Error> {
         let genome_length = genome
             .len()
             .to_f32()
@@ -43,7 +43,7 @@ where
 {
     type Error = GenomeSizeConversionError;
 
-    fn mutate(&self, genome: T, rng: &mut ThreadRng) -> Result<T, Self::Error> {
+    fn mutate<R: Rng + ?Sized>(&self, genome: T, rng: &mut R) -> Result<T, Self::Error> {
         let genome_length = genome
             .size()
             .to_f32()

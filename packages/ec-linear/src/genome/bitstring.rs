@@ -5,7 +5,7 @@ use ec_core::{
     genome::Genome,
 };
 use miette::Diagnostic;
-use rand::{Rng, distr::StandardUniform, prelude::Distribution, rngs::ThreadRng};
+use rand::{Rng, distr::StandardUniform, prelude::Distribution};
 
 use super::Linear;
 use crate::recombinator::crossover::Crossover;
@@ -47,13 +47,17 @@ where
 }
 
 impl Bitstring {
-    pub fn random(num_bits: usize, rng: &mut ThreadRng) -> Self {
+    pub fn random<R: Rng + ?Sized>(num_bits: usize, rng: &mut R) -> Self {
         StandardUniform
             .into_collection_generator(num_bits)
             .sample(rng)
     }
 
-    pub fn random_with_probability(num_bits: usize, probability: f64, rng: &mut ThreadRng) -> Self {
+    pub fn random_with_probability<R: Rng + ?Sized>(
+        num_bits: usize,
+        probability: f64,
+        rng: &mut R,
+    ) -> Self {
         BoolGenerator::new(probability)
             .into_collection_generator(num_bits)
             .sample(rng)

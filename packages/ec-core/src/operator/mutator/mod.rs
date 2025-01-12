@@ -1,6 +1,11 @@
-use rand::rngs::ThreadRng;
+use rand::Rng;
 
 use super::{Composable, Operator};
+
+#[cfg(feature = "erased")]
+mod erased;
+#[cfg(feature = "erased")]
+pub use erased::*;
 
 /// Mutate a genome of type `G` generating a new
 /// genome of the same type (`G`).
@@ -14,6 +19,17 @@ use super::{Composable, Operator};
 /// See [`Mutate`] for a wrapper that converts a `Mutator` into an [`Operator`],
 /// allowing mutators to be used in chains of operators.
 ///
+/// # [dyn-compatibility](https://doc.rust-lang.org/reference/items/traits.html#dyn-compatibility)
+///
+/// This trait is **not** dyn-compatible. As such please
+/// try to avoid the need for trait objects whenever you can.
+///
+/// If you can't get around the usage of trait objects, you can
+/// use the [`DynMutator`] trait, which is available if you compile
+/// this crate with the `erased` feature.
+///
+/// Please see its documentation for further details on its usage.
+///
 /// # Examples
 ///
 /// In this example, we define a `Mutator` that flips one random bit in a
@@ -21,7 +37,7 @@ use super::{Composable, Operator};
 /// that exactly one bit has changed.
 ///
 /// ```
-/// # use rand::{rngs::ThreadRng, rng, Rng};
+/// # use rand::{rng, Rng};
 /// # use ec_core::operator::mutator::Mutator;
 /// # use std::convert::Infallible;
 /// #
@@ -32,10 +48,10 @@ use super::{Composable, Operator};
 /// impl Mutator<Genome<bool>> for FlipOne {
 ///     type Error = Infallible;
 ///
-///     fn mutate(
+///     fn mutate<R: Rng + ?Sized>(
 ///         &self,
 ///         mut genome: Genome<bool>,
-///         rng: &mut ThreadRng,
+///         rng: &mut R,
 ///     ) -> Result<Genome<bool>, Self::Error> {
 ///         let index = rng.random_range(0..genome.len());
 ///         genome[index] = !genome[index];
@@ -62,7 +78,7 @@ pub trait Mutator<G> {
     /// This will return an error if there is an error mutating the given
     /// genome. This will usually be because the given `genome` is invalid in
     /// some way, thus making the mutation impossible.
-    fn mutate(&self, genome: G, rng: &mut ThreadRng) -> Result<G, Self::Error>;
+    fn mutate<R: Rng + ?Sized>(&self, genome: G, rng: &mut R) -> Result<G, Self::Error>;
 }
 
 /// A wrapper that converts a [`Mutator`] into an [`Operator`].
@@ -86,7 +102,7 @@ pub trait Mutator<G> {
 /// mutator.
 ///
 /// ```
-/// # use rand::{rngs::ThreadRng, rng};
+/// # use rand::{Rng, rng};
 /// #
 /// # use ec_core::operator::{
 /// #     mutator::{Mutate, Mutator},
@@ -102,10 +118,10 @@ pub trait Mutator<G> {
 /// impl Mutator<Genome<bool>> for FlipFirst {
 ///     type Error = Infallible;
 ///
-///     fn mutate(
+///     fn mutate<R: Rng + ?Sized>(
 ///         &self,
 ///         mut genome: Genome<bool>,
-///         _: &mut ThreadRng,
+///         _: &mut R,
 ///     ) -> Result<Genome<bool>, Self::Error> {
 ///         genome[0] = !genome[0];
 ///         Ok(genome)
@@ -135,7 +151,7 @@ pub trait Mutator<G> {
 /// #     mutator::{Mutate, Mutator},
 /// #     Composable, Operator,
 /// # };
-/// # use rand::{rngs::ThreadRng, rng, Rng};
+/// # use rand::{Rng, rng};
 /// #
 /// type Genome<T> = [T; 4];
 ///
@@ -145,10 +161,10 @@ pub trait Mutator<G> {
 /// impl Mutator<Genome<bool>> for FlipOne {
 ///     type Error = Infallible;
 ///
-///     fn mutate(
+///     fn mutate<R: Rng + ?Sized>(
 ///         &self,
 ///         mut genome: Genome<bool>,
-///         rng: &mut ThreadRng,
+///         rng: &mut R,
 ///     ) -> Result<Genome<bool>, Self::Error> {
 ///         let index = rng.random_range(0..genome.len());
 ///         genome[index] = !genome[index];
@@ -164,10 +180,10 @@ pub trait Mutator<G> {
 ///     type Output = usize;
 ///     type Error = Infallible;
 ///
-///     fn apply(
+///     fn apply<R: Rng + ?Sized>(
 ///         &self,
 ///         genome: Genome<bool>,
-///         _: &mut ThreadRng,
+///         _: &mut R,
 ///     ) -> Result<Self::Output, Self::Error> {
 ///         Ok(genome.iter().filter(|&&x| x).count())
 ///     }
@@ -192,7 +208,7 @@ pub trait Mutator<G> {
 /// #     mutator::{Mutate, Mutator},
 /// #     Composable, Operator,
 /// # };
-/// # use rand::{rngs::ThreadRng, rng, Rng};
+/// # use rand::{Rng, rng};
 /// # use std::convert::Infallible;
 /// #
 /// # type Genome<T> = [T; 4];
@@ -203,7 +219,7 @@ pub trait Mutator<G> {
 /// # impl Mutator<Genome<bool>> for FlipOne {
 /// #    type Error = Infallible;
 /// #
-/// #    fn mutate(&self, mut genome: Genome<bool>, rng: &mut ThreadRng) -> Result<Genome<bool>, Self::Error> {
+/// #    fn mutate<R: Rng + ?Sized>(&self, mut genome: Genome<bool>, rng: &mut R) -> Result<Genome<bool>, Self::Error> {
 /// #        let index = rng.random_range(0..genome.len());
 /// #        genome[index] = !genome[index];
 /// #        Ok(genome)
@@ -218,7 +234,7 @@ pub trait Mutator<G> {
 /// #    type Output = usize;
 /// #    type Error = Infallible;
 /// #
-/// #    fn apply(&self, genome: Genome<bool>, _: &mut ThreadRng) -> Result<Self::Output, Self::Error> {
+/// #    fn apply<R: Rng + ?Sized>(&self, genome: Genome<bool>, _: &mut R) -> Result<Self::Output, Self::Error> {
 /// #        Ok(genome.iter().filter(|&&x| x).count())
 /// #    }
 /// # }
@@ -251,7 +267,7 @@ where
     type Error = M::Error;
 
     /// Apply this `Mutator` as an `Operator`
-    fn apply(&self, genome: G, rng: &mut ThreadRng) -> Result<Self::Output, Self::Error> {
+    fn apply<R: Rng + ?Sized>(&self, genome: G, rng: &mut R) -> Result<Self::Output, Self::Error> {
         self.mutator.mutate(genome, rng)
     }
 }
@@ -266,7 +282,7 @@ where
 {
     type Error = M::Error;
 
-    fn mutate(&self, genome: G, rng: &mut ThreadRng) -> Result<G, Self::Error> {
+    fn mutate<R: Rng + ?Sized>(&self, genome: G, rng: &mut R) -> Result<G, Self::Error> {
         (**self).mutate(genome, rng)
     }
 }
@@ -277,7 +293,7 @@ where
 {
     type Error = M::Error;
 
-    fn mutate(&self, genome: G, rng: &mut ThreadRng) -> Result<G, Self::Error> {
+    fn mutate<R: Rng + ?Sized>(&self, genome: G, rng: &mut R) -> Result<G, Self::Error> {
         (**self).mutate(genome, rng)
     }
 }
@@ -286,7 +302,7 @@ where
 mod tests {
     use std::convert::Infallible;
 
-    use rand::{Rng, rng, rngs::ThreadRng};
+    use rand::{Rng, rng};
 
     use super::Mutator;
     use crate::operator::{Composable, Operator, mutator::Mutate};
@@ -298,10 +314,10 @@ mod tests {
     impl Mutator<Genome<bool>> for FlipOne {
         type Error = Infallible;
 
-        fn mutate(
+        fn mutate<R: Rng + ?Sized>(
             &self,
             mut genome: Genome<bool>,
-            rng: &mut ThreadRng,
+            rng: &mut R,
         ) -> Result<Genome<bool>, Self::Error> {
             let index = rng.random_range(0..genome.len());
             genome[index] = !genome[index];
@@ -317,10 +333,10 @@ mod tests {
         type Output = usize;
         type Error = Infallible;
 
-        fn apply(
+        fn apply<R: Rng + ?Sized>(
             &self,
             genome: Genome<bool>,
-            _: &mut ThreadRng,
+            _: &mut R,
         ) -> Result<Self::Output, Self::Error> {
             Ok(genome.iter().filter(|&&x| x).count())
         }

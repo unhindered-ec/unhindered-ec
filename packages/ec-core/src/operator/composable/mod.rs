@@ -63,6 +63,8 @@ pub trait Composable {
     // }
 }
 
+static_assertions::assert_obj_safe!(Composable);
+
 pub trait Wrappable<T> {
     type Context;
 

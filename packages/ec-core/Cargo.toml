@@ -28,6 +28,8 @@ macro_railroad_annotation = { workspace = true }
 thiserror = { workspace = true }
 miette = { workspace = true }
 polonius-the-crab = { workspace = true }
+static_assertions = { workspace = true }
+ec_macros = { workspace = true }
 
 [dev-dependencies]
 rand = { workspace = true, features = ["alloc", "small_rng"] }
@@ -35,6 +37,12 @@ criterion = { workspace = true }
 miette = { workspace = true, features = ["fancy"] }
 proptest = { workspace = true }
 test-strategy = { workspace = true }
+
+[features]
+default = ["erased"]
+# This enables dyn-compatible versions of dyn-incompatible
+# traits in this library.
+erased = []
 
 [lints]
 workspace = true

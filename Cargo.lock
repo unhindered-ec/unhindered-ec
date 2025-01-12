@@ -345,6 +345,7 @@ name = "ec-core"
 version = "0.1.0"
 dependencies = [
  "criterion",
+ "ec_macros",
  "itertools 0.13.0",
  "macro_railroad_annotation",
  "miette",
@@ -353,6 +354,7 @@ dependencies = [
  "proptest",
  "rand 0.9.0-beta.1",
  "rayon",
+ "static_assertions",
  "test-strategy",
  "thiserror",
 ]
@@ -366,7 +368,18 @@ dependencies = [
  "miette",
  "num-traits",
  "rand 0.9.0-beta.1",
+ "static_assertions",
  "thiserror",
+]
+
+[[package]]
+name = "ec_macros"
+version = "0.1.0"
+dependencies = [
+ "manyhow",
+ "proc-macro2",
+ "quote",
+ "syn 2.0.90",
 ]
 
 [[package]]
@@ -861,6 +874,7 @@ dependencies = [
  "proptest",
  "push_macros",
  "rand 0.9.0-beta.1",
+ "static_assertions",
  "strum",
  "strum_macros",
  "test-case",
@@ -1127,6 +1141,12 @@ name = "smallvec"
 version = "1.13.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3c5e1a9a646d36c3599cd173a41282daf47c44583ad367b8e6837255952e5c67"
+
+[[package]]
+name = "static_assertions"
+version = "1.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a2eb9349b6444b326872e140eb1cf5e7c522154d69e7a0ffb0fb81c06b37543f"
 
 [[package]]
 name = "strsim"

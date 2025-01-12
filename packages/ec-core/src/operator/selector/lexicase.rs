@@ -1,6 +1,6 @@
 use std::{cmp::Ordering, mem::swap, ops::Not};
 
-use rand::{prelude::SliceRandom, rngs::ThreadRng};
+use rand::{Rng, prelude::SliceRandom};
 
 use super::{Selector, error::EmptyPopulation};
 use crate::{individual::Individual, population::Population, test_results::TestResults};
@@ -17,7 +17,7 @@ impl Lexicase {
     }
 }
 
-impl<P, R> Selector<P> for Lexicase
+impl<P, Res> Selector<P> for Lexicase
 where
     P: Population,
     // TODO: We don't really use the iterator here as we immediately
@@ -31,15 +31,15 @@ where
     //   bare `Vec`s and will be forced to wrap them like we currently
     //   do with `VecPop`.
     for<'pop> &'pop P: IntoIterator<Item = &'pop P::Individual>,
-    P::Individual: Individual<TestResults = TestResults<R>>,
-    R: Ord,
+    P::Individual: Individual<TestResults = TestResults<Res>>,
+    Res: Ord,
 {
     type Error = EmptyPopulation;
 
-    fn select<'pop>(
+    fn select<'pop, R: Rng + ?Sized>(
         &self,
         population: &'pop P,
-        rng: &mut ThreadRng,
+        rng: &mut R,
     ) -> Result<&'pop P::Individual, Self::Error> {
         // Candidate set is initially the whole population.
         // Shuffle the (indices of the) test cases.

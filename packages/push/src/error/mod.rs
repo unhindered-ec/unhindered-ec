@@ -30,6 +30,8 @@ pub trait MapInstructionError<S, E> {
     fn map_err_into(self) -> InstructionResult<S, E>;
 }
 
+static_assertions::assert_obj_safe!(MapInstructionError<(),()>);
+
 // MizardX@Twitch's initial suggestion here had `E2` as a generic on the
 // _function_ `map_err_into()` instead of at the `impl` level. That provided
 // some additional flexibility, although it wasn't clear that we would use it.
