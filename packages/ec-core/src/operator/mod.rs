@@ -23,6 +23,17 @@ pub mod selector;
 
 pub use composable::Composable;
 
+/// Operator trait
+///
+/// # [dyn-compatibility](https://doc.rust-lang.org/reference/items/traits.html#dyn-compatibility)
+/// This trait is **not** dyn-compatible. As such please
+/// try to avoid the need for trait objects whenever you can.
+///
+/// If you can't get around the usage of trait objects, you can
+/// use the [`DynOperator`] trait, which is available if you compile
+/// this crate with the `erased` feature.
+///
+/// Please see its documentation for further details on its usage.
 pub trait Operator<Input>: Composable {
     type Output;
     type Error;

@@ -2,7 +2,52 @@ use rand::{Rng, RngCore};
 
 use super::Mutator;
 
-#[cfg(feature = "erased")]
+/// Erased
+/// ([dyn-compatible](https://doc.rust-lang.org/reference/items/traits.html#dyn-compatibility))
+/// version of the [`Mutator`] trait
+///
+/// # How does this work?
+///
+/// The `erased` pattern in rust aids in type-erasure for traits
+/// that aren't themselves dyn-compatible by declaring a dyn-compatible
+/// extension trait wrapper for the original trait and blanket-implementing
+/// that for all types which implement the original trait.
+///
+/// In this case, the trait [`DynMutator`] can be seen as a dyn-compatible
+/// version of the [`Mutator`] trait, and any `T: Mutator` can also be
+/// interpreted as [`T: DynMutator`]
+///
+/// This allows you to use `dyn DynMutator<I>` trait objects to perform type
+/// erasure on types implementing the [`Mutator`] trait.
+///
+/// # When to use it?
+///
+/// The original trait most of the time has a reason for not beeing
+/// dyn-compatible. As such, usually the erased variants of traits come with
+/// performance tradeoffs, and [`DynMutator`] is of course no exception either,
+/// since it introduces additonal indirection and vtable-lookups.
+///
+/// Please prefer the [`Mutator`] trait whenever possible.
+///
+/// # How to use it?
+///
+/// tl;dr: use `dyn DynMutator<>` instead of `dyn Mutator<>` and still use
+/// all the usual [`Mutator`] methods elsewhere.
+///
+/// This trait tries to provide some useful ergonomics to ease the interaction
+/// with existing [`Mutator`] code.
+/// For example, many common pointer types in Rust pointing to a [`dyn
+/// DynMutator<>`](DynMutator) also implement the [`Mutator`] trait
+/// themselves, so you most likely do not need to interact with this trait
+/// directly.
+///
+/// For example: `Box<dyn DynMutator<>>` implements
+/// [`Mutator<>`](Mutator) and as such you can directly call
+/// [`.mutate()`](Mutator::mutate) on it and do not need to use
+/// [`DynMutator::dyn_mutate`].
+///
+/// This also means, any `Box<dyn DynMutator<>>` can be passed to generic
+/// functions expecting an [`Mutator`], like `fn foo(t: impl Mutator<>);`.
 pub trait DynMutator<G, E = Box<dyn std::error::Error + Send + Sync>> {
     /// # Errors
     ///

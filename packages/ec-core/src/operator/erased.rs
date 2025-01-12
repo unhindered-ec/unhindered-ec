@@ -4,6 +4,52 @@ use rand::{Rng, RngCore};
 
 use super::{Composable, Operator};
 
+/// Erased
+/// ([dyn-compatible](https://doc.rust-lang.org/reference/items/traits.html#dyn-compatibility))
+/// version of the [`Operator`] trait
+///
+/// # How does this work?
+///
+/// The `erased` pattern in rust aids in type-erasure for traits
+/// that aren't themselves dyn-compatible by declaring a dyn-compatible
+/// extension trait wrapper for the original trait and blanket-implementing
+/// that for all types which implement the original trait.
+///
+/// In this case, the trait [`DynOperator`] can be seen as a dyn-compatible
+/// version of the [`Operator`] trait, and any `T: Operator` can also be
+/// interpreted as [`T: DynOperator`]
+///
+/// This allows you to use `dyn DynOperator<I>` trait objects to perform type
+/// erasure on types implementing the [`Operator`] trait.
+///
+/// # When to use it?
+///
+/// The original trait most of the time has a reason for not beeing
+/// dyn-compatible. As such, usually the erased variants of traits come with
+/// performance tradeoffs, and [`DynOperator`] is of course no exception either,
+/// since it introduces additonal indirection and vtable-lookups.
+///
+/// Please prefer the [`Operator`] trait whenever possible.
+///
+/// # How to use it?
+///
+/// tl;dr: use `dyn DynOperator<>` instead of `dyn Operator<I>` and still use
+/// all the usual [`Operator`] methods elsewhere.
+///
+/// This trait tries to provide some useful ergonomics to ease the interaction
+/// with existing [`Operator`] code.
+/// For example, many common pointer types in Rust pointing to a [`dyn
+/// DynOperator<I>`](DynOperator) also implement the [`Operator`] trait
+/// themselves, so you most likely do not need to interact with this trait
+/// directly.
+///
+/// For example: `Box<dyn DynOperator<()>>` implements
+/// [`Operator<()>`](Operator) and as such you can directly call
+/// [`.apply()`](Operator::apply) on it and do not need to use
+/// [`DynOperator::dyn_apply`].
+///
+/// This also means, any [`Box<dyn DynOperator<()>>`] can be passed to generic
+/// functions expecting an [`Operator`], like `fn foo(t: impl Operator<()>);`.
 pub trait DynOperator<Input, Error = Box<dyn StdError + Send + Sync>>: Composable {
     type Output;
 

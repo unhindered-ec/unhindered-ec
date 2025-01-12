@@ -12,6 +12,18 @@ pub use erased::*;
 //   something that takes a `genome` and returns a
 //   scored `Individual`. That would be a lot cleaner.
 // #[deprecated(note = "Turn this into a genome->Individual operator")]
+/// [`ChildMaker`] trait
+///
+/// # [dyn-compatability](https://doc.rust-lang.org/reference/items/traits.html#dyn-compatibility)
+///
+/// This trait is **not** dyn-compatible. As such please
+/// try to avoid the need for trait objects whenever you can.
+///
+/// If you can't get around the usage of trait objects, you can
+/// use the [`DynChildMaker`] trait, which is available if you compile
+/// this crate with the `erased` feature.
+///
+/// Please see its documentation for further details on its usage.
 pub trait ChildMaker<P, S>
 where
     P: Population,

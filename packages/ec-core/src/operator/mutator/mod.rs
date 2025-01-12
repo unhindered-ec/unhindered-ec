@@ -19,6 +19,17 @@ pub use erased::*;
 /// See [`Mutate`] for a wrapper that converts a `Mutator` into an [`Operator`],
 /// allowing mutators to be used in chains of operators.
 ///
+/// # [dyn-compatibility](https://doc.rust-lang.org/reference/items/traits.html#dyn-compatibility)
+///
+/// This trait is **not** dyn-compatible. As such please
+/// try to avoid the need for trait objects whenever you can.
+///
+/// If you can't get around the usage of trait objects, you can
+/// use the [`DynMutator`] trait, which is available if you compile
+/// this crate with the `erased` feature.
+///
+/// Please see its documentation for further details on its usage.
+///
 /// # Examples
 ///
 /// In this example, we define a `Mutator` that flips one random bit in a
