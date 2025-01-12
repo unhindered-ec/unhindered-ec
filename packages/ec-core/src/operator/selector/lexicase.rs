@@ -1,5 +1,6 @@
-use std::{cmp::Ordering, mem::swap, ops::Not};
+use std::cmp::Ordering;
 
+use miette::Diagnostic;
 use rand::{Rng, prelude::SliceRandom};
 
 use super::{Selector, error::EmptyPopulation};
@@ -15,6 +16,25 @@ impl Lexicase {
     pub const fn new(num_test_cases: usize) -> Self {
         Self { num_test_cases }
     }
+}
+
+#[derive(Debug, thiserror::Error, Diagnostic)]
+pub enum LexicaseError {
+    #[error(transparent)]
+    #[diagnostic(transparent)]
+    EmptyPopulation(#[from] EmptyPopulation),
+    #[error(
+        "Expected {total_cases} test cases but couldn't access test case result at index \
+         {current_index}"
+    )]
+    #[diagnostic(help(
+        "Make sure the configured lexicase test case count ({total_cases}) matches your actual \
+         test case count"
+    ))]
+    MissingTestCase {
+        total_cases: usize,
+        current_index: usize,
+    },
 }
 
 impl<P, Res> Selector<P> for Lexicase
@@ -34,7 +54,7 @@ where
     P::Individual: Individual<TestResults = TestResults<Res>>,
     Res: Ord,
 {
-    type Error = EmptyPopulation;
+    type Error = LexicaseError;
 
     fn select<'pop, R: Rng + ?Sized>(
         &self,
@@ -54,22 +74,35 @@ where
         case_indices.shuffle(rng);
 
         let mut candidates: Vec<_> = population.into_iter().collect();
-
         let mut winners = Vec::with_capacity(candidates.len());
+
         for test_case_index in case_indices {
-            assert!(
-                candidates.is_empty().not(),
-                "The set of lexicase candidates shouldn't be empty"
-            );
-            if candidates.len() == 1 {
+            let (&initial_winner, remaining) = candidates.split_first().ok_or(EmptyPopulation)?;
+
+            if remaining.is_empty() {
                 break;
             }
-            winners.clear();
-            winners.push(candidates[0]);
-            let mut current_best_result = &winners[0].test_results().results[test_case_index];
 
-            for c in &candidates[1..] {
-                let this_result = &c.test_results().results[test_case_index];
+            winners.clear();
+            winners.push(initial_winner);
+
+            let mut current_best_result = initial_winner
+                .test_results()
+                .results
+                .get(test_case_index)
+                .ok_or(LexicaseError::MissingTestCase {
+                    total_cases: self.num_test_cases,
+                    current_index: test_case_index,
+                })?;
+
+            for c in remaining {
+                let this_result = c.test_results().results.get(test_case_index).ok_or(
+                    LexicaseError::MissingTestCase {
+                        total_cases: self.num_test_cases,
+                        current_index: test_case_index,
+                    },
+                )?;
+
                 match this_result.cmp(current_best_result) {
                     // If `c` is strictly less (worse) than the current winner
                     // it's removed from consideration by not doing
@@ -92,11 +125,15 @@ where
                     }
                 }
             }
-            swap(&mut candidates, &mut winners);
+            std::mem::swap(&mut candidates, &mut winners);
         }
 
         candidates.shuffle(rng);
-        candidates.first().copied().ok_or(EmptyPopulation)
+        candidates
+            .first()
+            .copied()
+            .ok_or(EmptyPopulation)
+            .map_err(Into::into)
     }
 }
 
@@ -121,7 +158,7 @@ mod tests {
         let selector = Lexicase::new(0);
         assert!(matches!(
             selector.select(&pop, &mut rng),
-            Err(EmptyPopulation)
+            Err(LexicaseError::EmptyPopulation(EmptyPopulation))
         ));
     }
 
