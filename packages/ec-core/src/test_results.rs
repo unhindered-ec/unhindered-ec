@@ -17,6 +17,11 @@ use std::{
 #[repr(transparent)]
 pub struct Score<T>(pub T);
 
+// We need `Score` to be cloneable in many of our applications,
+// even if it's not needed here in `ec_core`. For `Score` to be
+// cloneable, the generic type must also be cloneable.
+static_assertions::assert_impl_all!(Score<()>: Clone);
+
 impl<T: Display> Display for Score<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "Score (higher is better): {}", self.0)
@@ -64,6 +69,11 @@ where
 #[derive(Eq, PartialEq, Debug, Clone, Copy, Hash)]
 #[repr(transparent)]
 pub struct Error<T>(pub T);
+
+// We need `Error` to be cloneable in many of our applications,
+// even if it's not needed here in `ec_core`. For `Error` to be
+// cloneable, the generic type must also be cloneable.
+static_assertions::assert_impl_all!(Error<()>: Clone);
 
 impl<T: Ord> Ord for Error<T> {
     fn cmp(&self, other: &Self) -> Ordering {
@@ -215,6 +225,11 @@ pub struct TestResults<R> {
     pub total_result: R,
 }
 
+// We need `TestResults` to be cloneable in many of our applications,
+// even if it's not needed here in `ec_core`. For `TestResults` to be
+// cloneable, the generic type must also be cloneable.
+static_assertions::assert_impl_all!(TestResults<()>: Clone);
+
 impl<R> TestResults<R> {
     /// Get the number of test results
     pub fn len(&self) -> usize {
@@ -332,59 +347,4 @@ mod test_results_tests {
         assert!(test_results.results.into_iter().eq(results));
         assert_eq!(test_results.total_result, scores.into_iter().sum());
     }
-
-    #[test]
-    fn can_clone_test_results_of_scores_of_i32() {
-        let scores = vec![5, 8, 0, 9];
-        let test_results: TestResults<Error<i32>> = scores.into();
-        #[expect(clippy::redundant_clone, reason = "We're testing Clone")]
-        let cloned_test_results = test_results.clone();
-        assert_eq!(cloned_test_results, test_results);
-    }
-
-    #[test]
-    fn can_clone_test_results_of_errors_of_i32() {
-        let errors = vec![5, 8, 0, 9];
-        let test_results: TestResults<Error<i32>> = errors.into();
-        #[expect(clippy::redundant_clone, reason = "We're testing Clone")]
-        let cloned_test_results = test_results.clone();
-        assert_eq!(cloned_test_results, test_results);
-    }
-
-    // The following code is commented out because it doesn't compile. I wrote
-    // it to demonstrate to myself that we indeed could not call `.clone()`
-    // on a `TestResults` of a type that doesn't implement `Clone`, and to
-    // see what the exact error was. It was pretty straightforward, saying
-    // that `NonCloneable` doesn't implement `Clone`.
-
-    // struct NonCloneable(i32);
-    //
-    // impl From<NonCloneable> for i32 {
-    //     fn from(NonCloneable(i): NonCloneable) -> Self {
-    //         i
-    //     }
-    // }
-    //
-    // impl<'a> Sum<&'a NonCloneable> for NonCloneable {
-    //     fn sum<I>(iter: I) -> Self
-    //     where
-    //         I: Iterator<Item = &'a NonCloneable>,
-    //     {
-    //         NonCloneable(iter.into_iter().map(|NonCloneable(i)| i).sum())
-    //     }
-    // }
-    //
-    // #[test]
-    // fn cannot_clone_test_results_of_scores_of_non_cloneable() {
-    //     let scores: Vec<NonCloneable> = vec![
-    //         NonCloneable(5),
-    //         NonCloneable(8),
-    //         NonCloneable(0),
-    //         NonCloneable(9),
-    //     ];
-    //     let test_results: TestResults<NonCloneable> = scores.into();
-    //     #[expect(clippy::redundant_clone, reason = "We're testing Clone")]
-    //     let cloned_test_results = test_results.clone();
-    //     assert_eq!(cloned_test_results, test_results);
-    // }
 }
