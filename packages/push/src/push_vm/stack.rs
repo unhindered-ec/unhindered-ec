@@ -420,12 +420,12 @@ impl<T> Stack<T> {
     /// let mut stack: Stack<i64> = Stack::default();
     /// assert_eq!(stack.size(), 0);
     ///
-    /// stack.push_many(vec![5, 8, 9])?;
+    /// stack.push_many([5, 8, 9])?;
     /// // Now the top of the stack is 5, followed by 8, then 9 at the bottom.
     /// assert_eq!(stack.size(), 3);
     /// assert_eq!(stack.top()?, &5);
     ///
-    /// stack.push_many(vec![6, 3])?;
+    /// stack.push_many([6, 3])?;
     /// // Now the top of the stack is 6 and the whole stack is 6, 3, 5, 8, 9.
     /// assert_eq!(stack.size(), 5);
     /// assert_eq!(stack.top()?, &6);
