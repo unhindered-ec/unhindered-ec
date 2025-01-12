@@ -7,6 +7,8 @@ mod map;
 mod repeat_with;
 mod then;
 
+// derive macro
+pub use ec_macros::Composable;
 pub trait Composable {
     fn then<Op>(self, op: Op) -> Then<Self, Op>
     where
