@@ -7,26 +7,20 @@ use std::{
 // TODO: We can probably use things in the `num` family of traits
 //   (https://github.com/rust-num/num) to genericize `Score` and
 //   `Error` so they're not tied to `i64`s anymore.
-// TODO: I think that we want `Score` and `Error` to implement
-//   some common trait so that we can mixed vectors of `Score`s
-//   and `Error`s. Or maybe we already have that? Do (Partial)Ord,
-//   (Partial)Eq, Ord, and Sum get us where we need to be? That's
-//   lot to keep track of, so it might be useful to have a named
-//   trait that has all those as super-traits so we have one name
-//   that pulls them all together.
 
 // TODO: Should there just be one struct (e.g., `Result<T>` with a `result: T`
 // field)   and then `Error` and `Score` should be traits that these structs can
 //   implement? I feel like that might avoid some duplication here.
 
-// TODO: I'm not convinced that `Score` & `Error` need `Clone` and `Copy`
-//   anymore. At a minimum we should try to push those requirements
-//   closer to where they're actually needed.
-
 /// Score implicitly follows a "bigger is better" model.
-#[derive(Eq, PartialEq, Ord, PartialOrd, Debug)]
+#[derive(Eq, PartialEq, Ord, PartialOrd, Debug, Clone, Copy, Hash)]
 #[repr(transparent)]
 pub struct Score<T>(pub T);
+
+// We need `Score` to be cloneable in many of our applications,
+// even if it's not needed here in `ec_core`. For `Score` to be
+// cloneable, the generic type must also be cloneable.
+static_assertions::assert_impl_all!(Score<()>: Clone);
 
 impl<T: Display> Display for Score<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -72,9 +66,14 @@ where
 
 // TODO: Rewrite `Error` using the std::cmp::Reverse type
 //   to convert `Score` to `Error`.
-#[derive(Eq, PartialEq, Debug)]
+#[derive(Eq, PartialEq, Debug, Clone, Copy, Hash)]
 #[repr(transparent)]
 pub struct Error<T>(pub T);
+
+// We need `Error` to be cloneable in many of our applications,
+// even if it's not needed here in `ec_core`. For `Error` to be
+// cloneable, the generic type must also be cloneable.
+static_assertions::assert_impl_all!(Error<()>: Clone);
 
 impl<T: Ord> Ord for Error<T> {
     fn cmp(&self, other: &Self) -> Ordering {
@@ -164,7 +163,7 @@ mod score_error_tests {
     }
 }
 
-#[derive(Eq, PartialEq)]
+#[derive(Debug, Eq, PartialEq, Clone, Copy, Hash)]
 pub enum TestResult<S, E> {
     Score(Score<S>),
     Error(Error<E>),
@@ -220,11 +219,16 @@ mod test_result_tests {
     }
 }
 
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Debug, Eq, PartialEq, Clone, Hash)]
 pub struct TestResults<R> {
     pub results: Vec<R>,
     pub total_result: R,
 }
+
+// We need `TestResults` to be cloneable in many of our applications,
+// even if it's not needed here in `ec_core`. For `TestResults` to be
+// cloneable, the generic type must also be cloneable.
+static_assertions::assert_impl_all!(TestResults<()>: Clone);
 
 impl<R> TestResults<R> {
     /// Get the number of test results
@@ -307,7 +311,7 @@ where
 }
 
 #[cfg(test)]
-mod test_results_from_vec {
+mod test_results_tests {
     use super::*;
 
     #[test]
