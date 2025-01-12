@@ -24,6 +24,7 @@ use super::{Composable, Operator};
 /// assert_eq!(identity.apply("string", &mut rng).unwrap(), "string");
 /// assert_eq!(identity.apply(Some(7), &mut rng).unwrap(), Some(7));
 /// ```
+#[derive(Composable)]
 pub struct Identity;
 
 impl<T> Operator<T> for Identity {
@@ -38,8 +39,6 @@ impl<T> Operator<T> for Identity {
         Ok(input)
     }
 }
-
-impl Composable for Identity {}
 
 #[cfg(test)]
 mod tests {

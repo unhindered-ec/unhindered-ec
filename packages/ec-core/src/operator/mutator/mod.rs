@@ -248,6 +248,7 @@ pub trait Mutator<G> {
 /// assert_eq!(chain.apply(genome, &mut rng())?, 1);
 /// # Ok::<(), Box<dyn std::error::Error>>(())
 /// ```
+#[derive(Composable)]
 pub struct Mutate<M> {
     /// The wrapped [`Mutator`] that this [`Mutate`] will apply
     mutator: M,
@@ -271,7 +272,6 @@ where
         self.mutator.mutate(genome, rng)
     }
 }
-impl<M> Composable for Mutate<M> {}
 
 /// Implement [`Mutator`] for a reference to a [`Mutator`].
 /// This allows us to wrap a reference to a [`Mutator`] in a [`Mutate`] operator
@@ -327,6 +327,7 @@ mod tests {
 
     // A simple `Operator` that takes a `Genome<bool>` and returns the number
     // of `true` values in the genome.
+    #[derive(Composable)]
     struct CountTrue;
 
     impl Operator<Genome<bool>> for CountTrue {
@@ -341,7 +342,6 @@ mod tests {
             Ok(genome.iter().filter(|&&x| x).count())
         }
     }
-    impl Composable for CountTrue {}
 
     fn count_differences(genome: &[bool], child_genome: &[bool]) -> usize {
         genome

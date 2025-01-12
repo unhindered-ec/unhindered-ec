@@ -5,6 +5,7 @@ use super::{super::Operator, Composable};
 // TODO: May a `apply_n_times(usize)` operator
 //   to use in cases where, e.g., we need to select
 //   two parents using the same selection operator.
+#[derive(Composable)]
 pub struct And<F, G> {
     f: F,
     g: G,
@@ -76,4 +77,3 @@ where
         Ok((f_value, g_value))
     }
 }
-impl<F, G> Composable for And<F, G> {}

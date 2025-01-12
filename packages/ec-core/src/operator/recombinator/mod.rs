@@ -297,6 +297,7 @@ pub trait Recombinator<GS> {
 /// assert_eq!(count, 3);
 /// # Ok::<(), Box<dyn std::error::Error>>(())
 /// ```
+#[derive(Composable)]
 pub struct Recombine<R> {
     /// The wrapped [`Recombinator`] that this [`Recombine`] will apply
     recombinator: R,
@@ -321,7 +322,6 @@ where
         self.recombinator.recombine(genomes, rng)
     }
 }
-impl<R> Composable for Recombine<R> {}
 
 /// Implement [`Recombinator`] for a reference to a [`Recombinator`].
 /// This allows us to wrap a reference to a [`Recombinator`] in a [`Recombine`]
@@ -375,6 +375,7 @@ mod tests {
 
     // A simple `Operator` that takes a `Vec<bool>` and returns the number
     // of `true` values in the genome.
+    #[derive(Composable)]
     struct CountTrue;
 
     impl Operator<Genome<bool>> for CountTrue {
@@ -389,7 +390,6 @@ mod tests {
             Ok(genome.iter().filter(|&&x| x).count())
         }
     }
-    impl Composable for CountTrue {}
 
     #[test]
     fn swap_one() {

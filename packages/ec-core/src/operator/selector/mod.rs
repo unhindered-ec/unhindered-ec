@@ -247,7 +247,7 @@ where
 /// assert_eq!(choice_length, 5);
 /// # Ok::<(), Box<dyn std::error::Error>>(())
 /// ```
-#[derive(Clone)]
+#[derive(Clone, Composable)]
 pub struct Select<S> {
     /// The wrapped [`Selector`] that this [`Select`] will apply
     selector: S,
@@ -277,7 +277,6 @@ where
         self.selector.select(population, rng)
     }
 }
-impl<S> Composable for Select<S> {}
 
 /// Implement [`Selector`] for a reference to a [`Selector`].
 /// This allows us to wrap a reference to a selector in a [`Select`] operator
@@ -324,6 +323,7 @@ mod tests {
 
     // A simple `Operator` that takes a `&str` (or anything that can be treated as
     // a `&str`, like `&String) and returns its length.
+    #[derive(Composable)]
     struct StrLen;
 
     impl<T> Operator<T> for StrLen
@@ -337,7 +337,6 @@ mod tests {
             Ok(input.as_ref().len())
         }
     }
-    impl Composable for StrLen {}
 
     #[test]
     fn can_implement_simple_selector() {
