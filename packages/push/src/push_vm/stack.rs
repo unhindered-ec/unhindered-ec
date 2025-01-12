@@ -358,12 +358,9 @@ impl<T> Stack<T> {
             });
         }
         for _ in 0..num_to_discard {
-            match self.pop() {
-                Ok(_) => continue,
-                Err(error) => {
-                    return Err(error);
-                }
-            }
+            // explicit type here so that we get an
+            // error if we accidentally remove the ?
+            let _: T = self.pop()?;
         }
         Ok(())
     }
