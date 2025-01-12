@@ -184,6 +184,22 @@ where
     }
 }
 
+/// Extend the stack with values from the provided iterator
+///
+/// Note that the provided iterator will always be (partially) consumed, even
+/// if the method errors.
+///
+/// This implementation exists to be able to use [`Stack<T>`] in more generic
+/// contexts. If possible, try to use
+/// [`Stack::<T>::push_many()`](Stack::push_many) instead since it's able to be
+/// more optimized due to the additional bounds on the input, which this trait
+/// doesn't have.
+///
+/// If you either need to use [`Stack`] in a generic fashion using `T:
+/// TryExtend<I>` or you have an iterator where you can't guarantee the
+/// neccessary bounds, using this implementation is the best way to go.
+/// (this implementation of course tries to be as optimized as possible as well,
+/// given the constraints)
 impl<A> TryExtend<A> for Stack<A> {
     type Error = StackError;
 
@@ -191,14 +207,24 @@ impl<A> TryExtend<A> for Stack<A> {
     where
         T: Iterator<Item = A>,
     {
-        #[expect(
-            clippy::needless_collect,
-            reason = "The collect is neccessary to turn a arbitary iterator into one that \
-                      implements ExactSizeIterator (to support .len()) and DoubleEndedIterator \
-                      (to support .rev()), which TryExtend doesn't guarantee and isn't able to \
-                      guarantee."
-        )]
-        self.try_extend(iter.into_iter().collect::<Vec<_>>())
+        let current_len = self.values.len();
+        let current_capacity = self.values.capacity();
+
+        let max_extended = self.max_stack_size.saturating_sub(current_len);
+
+        self.values.extend(iter.take(max_extended));
+
+        if iter.next().is_some() {
+            self.values.truncate(current_len);
+            self.values.shrink_to(current_capacity);
+            return Err(StackError::Overflow {
+                stack_type: std::any::type_name::<A>(),
+            });
+        }
+
+        self.values[current_len..].reverse();
+
+        Ok(())
     }
 }
 
@@ -376,6 +402,9 @@ impl<T> Stack<T> {
     ///   can be converted into an appropriate iterator, including both [`Vec`]
     ///   and arrays.
     ///
+    ///   If this is too restrictive, take a look at the [`Stack::try_extend`]
+    ///   method instead.
+    ///
     /// # Errors
     ///
     /// - [`StackError::Overflow`] is returned when adding the provided elements
@@ -391,19 +420,19 @@ impl<T> Stack<T> {
     /// let mut stack: Stack<i64> = Stack::default();
     /// assert_eq!(stack.size(), 0);
     ///
-    /// stack.try_extend(vec![5, 8, 9])?;
+    /// stack.push_many(vec![5, 8, 9])?;
     /// // Now the top of the stack is 5, followed by 8, then 9 at the bottom.
     /// assert_eq!(stack.size(), 3);
     /// assert_eq!(stack.top()?, &5);
     ///
-    /// stack.try_extend(vec![6, 3])?;
+    /// stack.push_many(vec![6, 3])?;
     /// // Now the top of the stack is 6 and the whole stack is 6, 3, 5, 8, 9.
     /// assert_eq!(stack.size(), 5);
     /// assert_eq!(stack.top()?, &6);
     ///
     /// # Ok::<(), StackError>(())
     /// ```
-    pub fn try_extend<I>(&mut self, iter: I) -> Result<(), StackError>
+    pub fn push_many<I>(&mut self, iter: I) -> Result<(), StackError>
     where
         I: IntoIterator<Item = T>,
         // We need the iterator to implement `ExactSizeIterator` so that
