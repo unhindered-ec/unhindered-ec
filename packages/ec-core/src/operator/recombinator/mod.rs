@@ -206,6 +206,7 @@ pub trait Recombinator<GS> {
 ///
 /// // A simple `Operator` that takes a `Vec<bool>` and returns the number
 /// // of `true` values in the genome.
+/// #[derive(Composable)]
 /// struct CountTrue;
 ///
 /// impl Operator<Genome<bool>> for CountTrue {
@@ -220,7 +221,6 @@ pub trait Recombinator<GS> {
 ///         Ok(genome.iter().filter(|&&x| x).count())
 ///     }
 /// }
-/// impl Composable for CountTrue {}
 ///
 /// // If we swap in exactly one value from the `second_parent` we
 /// // should have 3 `true` values in the resulting genome.
@@ -272,6 +272,7 @@ pub trait Recombinator<GS> {
 /// #
 /// # // A simple `Operator` that takes a `Vec<bool>` and returns the number
 /// # // of `true` values in the genome.
+/// # #[derive(Composable)]
 /// # struct CountTrue;
 /// #
 /// # impl Operator<Genome<bool>> for CountTrue {
@@ -282,7 +283,6 @@ pub trait Recombinator<GS> {
 /// #         Ok(genome.iter().filter(|&&x| x).count())
 /// #     }
 /// # }
-/// # impl Composable for CountTrue {}
 /// #
 /// # // If we swap in exactly one value from the `second_parent` we
 /// # // should have 3 `true` values in the resulting genome.

@@ -172,6 +172,10 @@ where
 /// #    }
 /// # }
 /// #
+/// // All `Operators` have to implement `Composable` so we can chain them.
+/// // The default implementations of all the `Composable` methods are fine,
+/// // though, so we don't have to do anything other than add a derive.
+/// #[derive(Composable)]
 /// struct StrLen; // A simple `Operator` that takes a `&String` and returns its length.
 ///
 /// impl Operator<&String> for StrLen {
@@ -184,10 +188,6 @@ where
 ///         Ok(input.len())
 ///     }
 /// }
-/// // All `Operators` have to implement `Composable` so we can chain them.
-/// // The default implementations of all the `Composable` methods are fine,
-/// // though, so we don't have to do anything.
-/// impl Composable for StrLen {}
 ///
 /// let select = Select::new(First);
 /// let chain = select.then(StrLen);
@@ -228,6 +228,7 @@ where
 /// #    }
 /// # }
 /// #
+/// # #[derive(Composable)]
 /// # struct StrLen; // A simple `Operator` that takes a `&String` and returns its length.
 /// #
 /// # impl Operator<&String> for StrLen {
@@ -238,7 +239,6 @@ where
 /// #        Ok(input.len())
 /// #    }
 /// # }
-/// # impl Composable for StrLen {}
 /// #
 /// let ref_select = Select::new(&First);
 /// let chain = ref_select.then(StrLen);
