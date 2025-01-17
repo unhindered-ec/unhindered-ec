@@ -36,13 +36,6 @@ static SHARED_ALTERNATIVES: fn() -> Vec<Box<dyn Modification>> = || {
     ]
 };
 
-/// Annotate your trait impl for a reference type with this to automatically
-/// generate impls for a predefined set of compatible smart pointer types as
-/// well, as well as for the same type and the bounds `Send` and `Sync` or any
-/// combination
-///
-/// This is usually used to generate normal trait impls for corresponding trait
-/// objects of erased variants of the trait
 pub fn dyn_ref_impls(a: proc_macro2::TokenStream, tokens: syn::ItemImpl) -> manyhow::Result {
     manyhow::ensure!(a.is_empty(), a, "Expected no inputs");
 
