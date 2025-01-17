@@ -25,6 +25,7 @@ use super::{Composable, Operator};
 /// assert_eq!(constant_five.apply("string", &mut rng).unwrap(), 5);
 /// assert_eq!(constant_five.apply(true, &mut rng).unwrap(), 5);
 /// ```
+#[derive(Composable)]
 pub struct Constant<T> {
     /// The value that this operator will always return.
     value: T,
@@ -53,7 +54,6 @@ where
         Ok(self.value.clone())
     }
 }
-impl<T> Composable for Constant<T> {}
 
 #[cfg(test)]
 mod tests {

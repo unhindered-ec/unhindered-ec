@@ -6,6 +6,7 @@ use crate::{
     population::Population,
 };
 
+#[derive(Composable)]
 pub struct GenomeScorer<GM, S> {
     genome_maker: GM,
     scorer: S,
@@ -48,5 +49,3 @@ where
         Ok(EcIndividual::new(genome, score))
     }
 }
-
-impl<GM, S> Composable for GenomeScorer<GM, S> {}

@@ -2,6 +2,7 @@ use rand::Rng;
 
 use super::{super::Operator, Composable};
 
+#[derive(Composable)]
 pub struct Then<F, G> {
     f: F,
     g: G,
@@ -71,7 +72,6 @@ where
         self.g.apply(f_result, rng).map_err(ThenError::Second)
     }
 }
-impl<F, G> Composable for Then<F, G> {}
 
 #[cfg(test)]
 #[expect(
@@ -86,7 +86,9 @@ pub mod tests {
 
     use super::*;
 
+    #[derive(Composable)]
     struct Increment;
+
     impl Operator<i32> for Increment {
         type Output = i32;
         type Error = Infallible;
@@ -99,9 +101,10 @@ pub mod tests {
             Ok(input + 1)
         }
     }
-    impl Composable for Increment {}
 
+    #[derive(Composable)]
     struct Double;
+
     impl Operator<i32> for Double {
         type Output = i32;
         type Error = Infallible;
@@ -114,7 +117,6 @@ pub mod tests {
             Ok(input * 2)
         }
     }
-    impl Composable for Double {}
 
     #[test]
     fn increment_then_double() {

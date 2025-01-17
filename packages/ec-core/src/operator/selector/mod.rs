@@ -172,6 +172,10 @@ where
 /// #    }
 /// # }
 /// #
+/// // All `Operators` have to implement `Composable` so we can chain them.
+/// // The default implementations of all the `Composable` methods are fine,
+/// // though, so we don't have to do anything other than add a derive.
+/// #[derive(Composable)]
 /// struct StrLen; // A simple `Operator` that takes a `&String` and returns its length.
 ///
 /// impl Operator<&String> for StrLen {
@@ -184,10 +188,6 @@ where
 ///         Ok(input.len())
 ///     }
 /// }
-/// // All `Operators` have to implement `Composable` so we can chain them.
-/// // The default implementations of all the `Composable` methods are fine,
-/// // though, so we don't have to do anything.
-/// impl Composable for StrLen {}
 ///
 /// let select = Select::new(First);
 /// let chain = select.then(StrLen);
@@ -228,6 +228,7 @@ where
 /// #    }
 /// # }
 /// #
+/// # #[derive(Composable)]
 /// # struct StrLen; // A simple `Operator` that takes a `&String` and returns its length.
 /// #
 /// # impl Operator<&String> for StrLen {
@@ -238,7 +239,6 @@ where
 /// #        Ok(input.len())
 /// #    }
 /// # }
-/// # impl Composable for StrLen {}
 /// #
 /// let ref_select = Select::new(&First);
 /// let chain = ref_select.then(StrLen);
@@ -247,7 +247,7 @@ where
 /// assert_eq!(choice_length, 5);
 /// # Ok::<(), Box<dyn std::error::Error>>(())
 /// ```
-#[derive(Clone)]
+#[derive(Clone, Composable)]
 pub struct Select<S> {
     /// The wrapped [`Selector`] that this [`Select`] will apply
     selector: S,
@@ -277,7 +277,6 @@ where
         self.selector.select(population, rng)
     }
 }
-impl<S> Composable for Select<S> {}
 
 /// Implement [`Selector`] for a reference to a [`Selector`].
 /// This allows us to wrap a reference to a selector in a [`Select`] operator
@@ -324,6 +323,7 @@ mod tests {
 
     // A simple `Operator` that takes a `&str` (or anything that can be treated as
     // a `&str`, like `&String) and returns its length.
+    #[derive(Composable)]
     struct StrLen;
 
     impl<T> Operator<T> for StrLen
@@ -337,7 +337,6 @@ mod tests {
             Ok(input.as_ref().len())
         }
     }
-    impl Composable for StrLen {}
 
     #[test]
     fn can_implement_simple_selector() {

@@ -65,6 +65,7 @@ use crate::individual::Individual;
 /// assert_eq!(num_different, 1);
 /// # Ok::<(), Box<dyn std::error::Error>>(())
 /// ```
+#[derive(Composable)]
 pub struct GenomeExtractor;
 
 impl<I> Operator<&I> for GenomeExtractor
@@ -83,8 +84,6 @@ where
         Ok(individual.genome().clone())
     }
 }
-
-impl Composable for GenomeExtractor {}
 
 #[cfg(test)]
 mod tests {

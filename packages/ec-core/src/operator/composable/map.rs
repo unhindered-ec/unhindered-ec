@@ -3,6 +3,7 @@ use rand::Rng;
 use super::Composable;
 use crate::operator::Operator;
 
+#[derive(Composable)]
 pub struct Map<F> {
     f: F,
 }
@@ -100,7 +101,3 @@ where
             .collect()
     }
 }
-
-// TODO: Impl `Map` over iterators.
-
-impl<F> Composable for Map<F> {}

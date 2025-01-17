@@ -8,6 +8,7 @@ use crate::operator::Operator;
 /// An `Operator` that applies the encapsulated `Operator`
 /// `N` times on the given input, returning an array of
 /// the `N` results.
+#[derive(Composable)]
 pub struct RepeatWith<F, const N: usize> {
     f: F,
 }
@@ -45,8 +46,6 @@ where
     }
 }
 
-impl<F, const N: usize> Composable for RepeatWith<F, N> {}
-
 #[cfg(test)]
 #[expect(
     clippy::arithmetic_side_effects,
@@ -60,7 +59,9 @@ mod tests {
 
     use super::*;
 
+    #[derive(Composable)]
     struct AddOne;
+
     impl Operator<i32> for AddOne {
         type Output = i32;
         type Error = Infallible;
@@ -73,7 +74,6 @@ mod tests {
             Ok(input + 1)
         }
     }
-    impl Composable for AddOne {}
 
     #[test]
     fn deterministic() {
@@ -93,7 +93,9 @@ mod tests {
         result.into_iter().all(|x| x == desired_value);
     }
 
+    #[derive(Composable)]
     struct UniformRange;
+
     impl Operator<Range<i32>> for UniformRange {
         type Output = i32;
         type Error = Infallible;
@@ -106,7 +108,6 @@ mod tests {
             Ok(rng.random_range(range))
         }
     }
-    impl Composable for UniformRange {}
 
     #[test]
     fn stochastic() {
