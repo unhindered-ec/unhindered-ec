@@ -10,7 +10,6 @@ license = { workspace = true }
 categories = ["development-tools"]
 # keywords = ["push", "proc-macros", "builder-pattern"]
 readme = "README.md"
-publish = false
 
 [lib]
 proc-macro=true
