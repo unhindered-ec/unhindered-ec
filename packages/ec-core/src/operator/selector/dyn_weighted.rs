@@ -9,15 +9,53 @@ use rand::{
 use super::{DynSelector, Selector, error::EmptyPopulation};
 use crate::population::Population;
 
+/// Weighted selector, based on type-erased selectors and dynamic dispatch.
+///
+/// Also see the [`WeightedPair`](crate::weighted::weighted_pair::WeightedPair)
+/// selector for a compile time (typed) version of this which is not using
+/// dynamic dispatch
+///
+/// Each selector has an associated weight passed in at construction time and
+/// one selector will be selected based on that on each selection call, and
+/// actual selection will then be forwarded to that selector.
+#[derive(Default)]
 pub struct DynWeighted<P: Population> {
     selectors: Vec<(Box<dyn DynSelector<P> + Send + Sync>, usize)>,
 }
 
+/// Debugs the `DynWeighted` selector.
+///
+/// Note that this has no way to actually debug the underlying selector, since
+/// we don't require a debug bound in the dyn selector trait. As such this only
+/// debugs the count of selectors as well as their weights.
 impl<P: Population> std::fmt::Debug for DynWeighted<P> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("DynWeighted")
-            .field("selectors", &self.selectors.len())
+            .field("selector_count", &self.selectors.len())
+            .field(
+                "selector_weights",
+                &self.selectors.iter().map(|(_, x)| x).collect::<Vec<_>>(),
+            )
             .finish_non_exhaustive()
+    }
+}
+
+impl<P, S> FromIterator<(S, usize)> for DynWeighted<P>
+where
+    P: Population,
+    S: Selector<P, Error: Error + Send + Sync + 'static> + Send + Sync + 'static,
+{
+    fn from_iter<T: IntoIterator<Item = (S, usize)>>(iter: T) -> Self {
+        Self {
+            selectors: iter
+                .into_iter()
+                .map(
+                    |(selector, weight)| -> (Box<dyn DynSelector<P> + Send + Sync>, _) {
+                        (Box::new(selector), weight)
+                    },
+                )
+                .collect(),
+        }
     }
 }
 
