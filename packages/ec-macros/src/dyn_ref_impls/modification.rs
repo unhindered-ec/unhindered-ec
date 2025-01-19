@@ -6,6 +6,7 @@ pub trait Modification {
 
 #[derive(Clone)]
 pub struct Passthrough;
+
 impl Modification for Passthrough {
     fn apply(&self, ty: syn::Type) -> syn::Type {
         ty
