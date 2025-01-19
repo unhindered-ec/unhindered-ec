@@ -3,7 +3,9 @@ use rand::Rng;
 use super::{Selector, error::EmptyPopulation};
 use crate::population::Population;
 
-#[derive(Debug)]
+/// Selector that selects the individual with the highest value as specified by
+/// the [`Ord`] relation on the individuals.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 pub struct Best;
 
 impl<P> Selector<P> for Best

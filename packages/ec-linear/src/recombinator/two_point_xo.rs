@@ -6,6 +6,13 @@ use super::{
     errors::{CrossoverGeneError, DifferentGenomeLength},
 };
 
+/// Recombinator for fixed-length linear genomes, like [`Bitstring`]
+///
+/// This recombinator works by having two parents and randomly choosing a range
+/// in the genes to swap. This is in contrast to
+/// [`UniformXo`](super::uniform_xo::UniformXo) which randomly chooses which
+/// gene to keep at each position.
+#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Default)]
 pub struct TwoPointXo;
 
 // TODO: Remove the `Vec<T>` versions when we're done migrating
