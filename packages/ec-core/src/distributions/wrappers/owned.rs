@@ -2,13 +2,13 @@ use std::{borrow::Borrow, marker::PhantomData, num::NonZeroUsize};
 
 use rand::{distr::Uniform, prelude::Distribution};
 
-use crate::distributions::{choices::ChoicesDistribution, wrappers::slice_cloning::EmptySlice};
+use crate::distributions::{choices::ChoicesDistribution, wrappers::choose_cloning::EmptySlice};
 
 /// Generate a random element from a collection of options, cloning the chosen
 /// element.
 ///
 /// The [`OneOfCloning`] struct takes ownership of the collection; the
-/// [`SliceCloning`](super::slice_cloning::SliceCloning) struct allows one to
+/// [`ChooseCloning`](super::choose_cloning::ChooseCloning) struct allows one to
 /// borrow the collection.
 #[derive(Debug, PartialEq, Eq)]
 pub struct OneOfCloning<T, U> {
@@ -42,7 +42,7 @@ where
     /// #    choices::ChoicesDistribution,
     /// #    wrappers::{
     /// #       owned::OneOfCloning,
-    /// #       slice_cloning::EmptySlice,
+    /// #       choose_cloning::EmptySlice,
     /// #    },
     /// # };
     /// #
