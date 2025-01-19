@@ -5,12 +5,21 @@ use std::{
 
 use miette::{Diagnostic, LabeledSpan, Severity, SourceCode};
 
-#[derive(Debug, thiserror::Error, Diagnostic)]
-#[error("Attempted to perform TwoPointXo on genomes of different lengths {0} and {1}")]
+/// Error that occurs when trying to perform
+/// [`UniformXo`](super::uniform_xo::UniformXo)
+/// or [`TwoPointXo`](super::two_point_xo::TwoPointXo) on genomes of differing
+/// lengths
+#[derive(
+    Debug, thiserror::Error, Diagnostic, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash,
+)]
+#[error("Attempted to perform Crossover on genomes of different lengths {0} and {1}")]
 #[diagnostic(help = "Ensure your genomes are of uniform length")]
 pub struct DifferentGenomeLength(pub usize, pub usize);
 
-#[derive(Debug)]
+/// Error that occurs when performing crossover using
+/// [`UniformXo`](super::uniform_xo::UniformXo)
+/// or [`TwoPointXo`](super::two_point_xo::TwoPointXo)
+#[derive(Debug, thiserror::Error, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum CrossoverGeneError<E> {
     /// Attempted to crossover genomes with differing lengths
     DifferentGenomeLength(DifferentGenomeLength),
