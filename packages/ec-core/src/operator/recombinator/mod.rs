@@ -296,13 +296,20 @@ pub trait Recombinator<GS> {
 /// assert_eq!(count, 3);
 /// # Ok::<(), Box<dyn std::error::Error>>(())
 /// ```
-#[derive(Composable)]
+#[derive(Debug, Composable, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 pub struct Recombine<R> {
     /// The wrapped [`Recombinator`] that this [`Recombine`] will apply
     recombinator: R,
 }
 
+impl<R> From<R> for Recombine<R> {
+    fn from(value: R) -> Self {
+        Self::new(value)
+    }
+}
+
 impl<R> Recombine<R> {
+    /// Create a new Recombine operator from a underlying recombinator.
     pub const fn new(recombinator: R) -> Self {
         Self { recombinator }
     }

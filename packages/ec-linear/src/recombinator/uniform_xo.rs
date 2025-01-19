@@ -4,6 +4,14 @@ use rand::Rng;
 use super::{crossover::Crossover, errors::UniformCrossoverError};
 use crate::{genome::Linear, recombinator::errors::DifferentGenomeLength};
 
+/// Recombinator for fixed-length linear genomes, like
+/// [`Bitstring`](crate::genome::bitstring::Bitstring).
+///
+/// This recombinator works by having two parents and randomly choosing at each
+/// gene which parent the child's gene will be from. This is in contrast to
+/// [`TwoPointXo`](super::two_point_xo::TwoPointXo) which chooses a range in the
+/// genomes and swaps the entire range.
+#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Default)]
 pub struct UniformXo;
 
 impl<G> Recombinator<[G; 2]> for UniformXo
