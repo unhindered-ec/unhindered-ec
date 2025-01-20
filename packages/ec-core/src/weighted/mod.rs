@@ -11,8 +11,8 @@ pub mod with_weighted_item;
 
 #[derive(Debug)]
 pub struct Weighted<T> {
-    pub(crate) item: T,
-    pub(crate) weight: u32,
+    item: T,
+    weight: u32,
 }
 
 impl<T> Weighted<T> {
