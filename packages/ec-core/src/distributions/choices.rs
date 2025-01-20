@@ -1,6 +1,6 @@
 use std::num::NonZeroUsize;
 
-use rand::distr::Slice;
+use rand::distr::slice::Choose;
 
 /// A Distribution which knows how many choices are selcted from
 pub trait ChoicesDistribution {
@@ -10,7 +10,7 @@ pub trait ChoicesDistribution {
 
 static_assertions::assert_obj_safe!(ChoicesDistribution);
 
-impl<T> ChoicesDistribution for Slice<'_, T> {
+impl<T> ChoicesDistribution for Choose<'_, T> {
     fn num_choices(&self) -> NonZeroUsize {
         self.num_choices()
     }

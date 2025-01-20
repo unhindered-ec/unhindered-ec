@@ -1,8 +1,8 @@
-use rand::{distr::Slice, prelude::Distribution};
+use rand::{distr::slice::Choose, prelude::Distribution};
 
 use super::wrappers::{
+    choose_cloning::{ChooseCloning, EmptySlice},
     owned::OneOfCloning,
-    slice_cloning::{EmptySlice, SliceCloning},
 };
 
 pub trait IntoDistribution<Element> {
@@ -46,7 +46,7 @@ where
 }
 
 impl<'a, U> IntoDistribution<&'a U> for &'a Vec<U> {
-    type Distribution = Slice<'a, U>;
+    type Distribution = Choose<'a, U>;
 
     type Error = EmptySlice;
 
@@ -59,7 +59,7 @@ impl<'a, U> IntoDistribution<U> for &'a Vec<U>
 where
     U: Clone,
 {
-    type Distribution = SliceCloning<'a, U>;
+    type Distribution = ChooseCloning<'a, U>;
 
     type Error = EmptySlice;
 
@@ -72,11 +72,11 @@ impl<'a, U> ToDistribution<'a, U> for Vec<U>
 where
     U: 'a + Clone,
 {
-    type Distribution = SliceCloning<'a, U>;
+    type Distribution = ChooseCloning<'a, U>;
     type Error = EmptySlice;
 
     fn to_distribution(&'a self) -> Result<Self::Distribution, Self::Error> {
-        SliceCloning::new(self)
+        ChooseCloning::new(self)
     }
 }
 
@@ -84,11 +84,11 @@ impl<'a, U> ToDistribution<'a, &'a U> for Vec<U>
 where
     U: 'a,
 {
-    type Distribution = Slice<'a, U>;
+    type Distribution = Choose<'a, U>;
     type Error = EmptySlice;
 
     fn to_distribution(&'a self) -> Result<Self::Distribution, Self::Error> {
-        Slice::new(self).map_err(|_| EmptySlice)
+        Choose::new(self).map_err(|_| EmptySlice)
     }
 }
 
@@ -105,7 +105,7 @@ where
 }
 
 impl<'a, U, const N: usize> IntoDistribution<&'a U> for &'a [U; N] {
-    type Distribution = Slice<'a, U>;
+    type Distribution = Choose<'a, U>;
 
     type Error = EmptySlice;
 
@@ -118,7 +118,7 @@ impl<'a, U, const N: usize> IntoDistribution<U> for &'a [U; N]
 where
     U: Clone,
 {
-    type Distribution = SliceCloning<'a, U>;
+    type Distribution = ChooseCloning<'a, U>;
 
     type Error = EmptySlice;
 
@@ -131,11 +131,11 @@ impl<'a, U, const N: usize> ToDistribution<'a, U> for [U; N]
 where
     U: 'a + Clone,
 {
-    type Distribution = SliceCloning<'a, U>;
+    type Distribution = ChooseCloning<'a, U>;
     type Error = EmptySlice;
 
     fn to_distribution(&'a self) -> Result<Self::Distribution, Self::Error> {
-        SliceCloning::new(self)
+        ChooseCloning::new(self)
     }
 }
 
@@ -143,21 +143,21 @@ impl<'a, U, const N: usize> ToDistribution<'a, &'a U> for [U; N]
 where
     U: 'a,
 {
-    type Distribution = Slice<'a, U>;
+    type Distribution = Choose<'a, U>;
     type Error = EmptySlice;
 
     fn to_distribution(&'a self) -> Result<Self::Distribution, Self::Error> {
-        Slice::new(self).map_err(|_| EmptySlice)
+        Choose::new(self).map_err(|_| EmptySlice)
     }
 }
 
 impl<'a, T> IntoDistribution<&'a T> for &'a [T] {
-    type Distribution = Slice<'a, T>;
+    type Distribution = Choose<'a, T>;
 
     type Error = EmptySlice;
 
     fn into_distribution(self) -> Result<Self::Distribution, Self::Error> {
-        Slice::new(self).map_err(|_| EmptySlice)
+        Choose::new(self).map_err(|_| EmptySlice)
     }
 }
 
@@ -165,22 +165,22 @@ impl<'a, T> IntoDistribution<T> for &'a [T]
 where
     T: Clone,
 {
-    type Distribution = SliceCloning<'a, T>;
+    type Distribution = ChooseCloning<'a, T>;
 
     type Error = EmptySlice;
 
     fn into_distribution(self) -> Result<Self::Distribution, Self::Error> {
-        SliceCloning::new(self)
+        ChooseCloning::new(self)
     }
 }
 
 impl<'a, T> ToDistribution<'a, &'a T> for [T] {
-    type Distribution = Slice<'a, T>;
+    type Distribution = Choose<'a, T>;
 
     type Error = EmptySlice;
 
     fn to_distribution(&'a self) -> Result<Self::Distribution, Self::Error> {
-        Slice::new(self).map_err(|_| EmptySlice)
+        Choose::new(self).map_err(|_| EmptySlice)
     }
 }
 
@@ -188,11 +188,11 @@ impl<'a, T> ToDistribution<'a, T> for [T]
 where
     T: Clone + 'a,
 {
-    type Distribution = SliceCloning<'a, T>;
+    type Distribution = ChooseCloning<'a, T>;
 
     type Error = EmptySlice;
 
     fn to_distribution(&'a self) -> Result<Self::Distribution, Self::Error> {
-        SliceCloning::new(self)
+        ChooseCloning::new(self)
     }
 }
