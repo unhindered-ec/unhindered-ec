@@ -11,10 +11,10 @@ use crate::{operator::selector::Selector, population::Population};
 
 #[derive(Debug)]
 pub struct WeightedPair<A, B> {
-    pub(crate) a: A,
-    pub(crate) b: B,
-    pub(crate) distr: Option<Bernoulli>,
-    pub(crate) weight_sum: u32,
+    a: A,
+    b: B,
+    distr: Option<Bernoulli>,
+    weight_sum: u32,
 }
 
 impl<A, B> WeightedPair<A, B> {
