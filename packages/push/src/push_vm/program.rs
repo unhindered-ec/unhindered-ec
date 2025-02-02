@@ -123,15 +123,18 @@ mod test {
         // [Instruction(Int-Add), Instruction(Exec-IfElse),
         // Block([Instruction(Int-Multiply)]), Block([Instruction(Exec-Dup),
         // Block([Instruction(Int-Subtract)])])]
-        assert_eq!(program, vec_into![
-            IntInstruction::Add,
-            ExecInstruction::if_else(),
-            PushProgram::Block(vec_into![IntInstruction::Multiply]),
-            PushProgram::Block(vec_into![
-                ExecInstruction::dup_block(),
-                PushProgram::Block(vec_into![IntInstruction::Subtract])
-            ])
-        ]);
+        assert_eq!(
+            program,
+            vec_into![
+                IntInstruction::Add,
+                ExecInstruction::if_else(),
+                PushProgram::Block(vec_into![IntInstruction::Multiply]),
+                PushProgram::Block(vec_into![
+                    ExecInstruction::dup_block(),
+                    PushProgram::Block(vec_into![IntInstruction::Subtract])
+                ])
+            ]
+        );
     }
 
     #[test]
