@@ -71,9 +71,12 @@ where
 
             Self::Dup => {
                 if state.stack::<OrderedFloat<f64>>().is_full() {
-                    return Err(Error::fatal(state, StackError::Overflow {
-                        stack_type: "float",
-                    }));
+                    return Err(Error::fatal(
+                        state,
+                        StackError::Overflow {
+                            stack_type: "float",
+                        },
+                    ));
                 }
                 let float_stack: &mut Stack<OrderedFloat<f64>> =
                     state.stack_mut::<OrderedFloat<f64>>();
@@ -111,9 +114,10 @@ impl FloatInstruction {
         S: Clone + HasStack<OrderedFloat<f64>> + HasStack<bool>,
     {
         if state.stack::<bool>().is_full() {
-            return Err(Error::fatal(state, StackError::Overflow {
-                stack_type: "bool",
-            }));
+            return Err(Error::fatal(
+                state,
+                StackError::Overflow { stack_type: "bool" },
+            ));
         }
         let float_stack: &mut Stack<OrderedFloat<f64>> = state.stack_mut::<OrderedFloat<f64>>();
         float_stack
