@@ -14,36 +14,14 @@ impl<F> Map<F> {
     }
 }
 
-#[derive(Debug)]
-pub struct MapError<T>(T, usize);
-
-impl<T> std::fmt::Display for MapError<T> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "Error while applying passed operator on the {}-th element of the mapped iterable",
-            self.1
-        )
-    }
-}
-
-impl<T> std::error::Error for MapError<T>
-where
-    T: std::error::Error + 'static,
-{
-    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
-        Some(&self.0)
-    }
-}
-
-impl<T> miette::Diagnostic for MapError<T>
-where
-    T: miette::Diagnostic + 'static,
-{
-    fn diagnostic_source(&self) -> Option<&dyn miette::Diagnostic> {
-        Some(&self.0)
-    }
-}
+#[derive(Debug, thiserror::Error, miette::Diagnostic)]
+#[error("Error while applying passed operator on the {1}-th element of the mapped iterable")]
+pub struct MapError<T>(
+    #[diagnostic_source]
+    #[source]
+    T,
+    usize,
+);
 
 // I think I can parameterize over the 2 here to make this more general?
 impl<F, Input> Operator<[Input; 2]> for Map<F>

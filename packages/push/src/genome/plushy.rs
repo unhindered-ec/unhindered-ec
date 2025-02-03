@@ -25,7 +25,7 @@ impl Display for PushGene {
             Self::Instruction(i) => {
                 i.fmt(f)?;
 
-                for bracket in std::iter::repeat(" {").take(i.num_opens()) {
+                for bracket in std::iter::repeat_n(" {", i.num_opens()) {
                     f.write_str(bracket)?;
                 }
             }
@@ -174,7 +174,7 @@ impl Display for Plushy {
         let mut iter = self.genes.iter();
         if let Some(gene) = iter.next() {
             gene.fmt(f)?;
-        };
+        }
 
         for gene in iter {
             f.write_str(" ")?;
