@@ -1,10 +1,11 @@
 mod abs;
+mod inc;
 mod negate;
 
 use miette::Diagnostic;
 use strum_macros::EnumIter;
 
-use self::{abs::Abs, negate::Negate};
+pub use self::{abs::Abs, inc::Inc, negate::Negate};
 use super::{Instruction, PushInstruction, PushInstructionError};
 use crate::{
     error::{Error, InstructionResult, MapInstructionError},
@@ -16,12 +17,19 @@ use crate::{
 #[must_use]
 pub enum IntInstruction {
     #[strum(to_string = "Push({0})")]
+    /// Push a constant value onto the `i64` stack
     Push(i64),
+    /// Negate the value of the top of the `i64` stack. See [`Negate`]
+    /// for details, including the handling of potential errors.
     Negate(Negate),
+    /// Take the absolute value of the top of the `i64` stack. See [`Abs`]
+    /// for details, including the handling of potential errors.
     Abs(Abs),
+    /// Increment the top of the `i64` stack. See [`Inc`]
+    /// for details, including the handling of potential errors.
+    Inc(Inc),
     Min,
     Max,
-    Inc,
     Dec,
     Add,
     Subtract,
@@ -95,8 +103,8 @@ where
         match self {
             Self::Negate(negate) => negate.perform(state),
             Self::Abs(abs) => abs.perform(state),
+            Self::Inc(inc) => inc.perform(state),
             Self::Push(_)
-            | Self::Inc
             | Self::Dec
             | Self::Square
             | Self::Add
@@ -118,16 +126,6 @@ where
                     // This works, but is going to be nasty after we repeat a lot. There should
                     // perhaps be another trait method somewhere that eliminates a lot of this
                     // boilerplate.
-                    Self::Inc => int_stack
-                        .top()
-                        .map_err(PushInstructionError::from)
-                        .map(|&i| i.checked_add(1))
-                        .and_then(|v| {
-                            v.ok_or(IntInstructionError::Overflow { op: *self })
-                                .map_err(Into::into)
-                        })
-                        .replace_on(1, state),
-
                     Self::Dec => int_stack
                         .top()
                         .map_err(PushInstructionError::from)
