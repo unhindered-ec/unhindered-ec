@@ -27,7 +27,8 @@ macro_railroad_annotation = "1.0.3"
 test-strategy = "0.4.0"
 proptest = "1.5.0"
 criterion = "0.5.1"
-miette = "7.4.0"
+# TODO: Change this to the version number when new miette is released.
+miette = { git = "https://github.com/JustusFluegel/miette.git", branch = "add-required-bounds-while-deriving", features = ["perfect-derive"] }
 test-case = "3.3.1"
 polonius-the-crab = "0.4.2"
 static_assertions = "1.1.0"
