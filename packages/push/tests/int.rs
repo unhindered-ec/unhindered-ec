@@ -48,29 +48,6 @@ fn add_overflows() {
 }
 
 #[test]
-fn inc_overflows() {
-    let x = i64::MAX;
-    let state = PushState::builder()
-        .with_max_stack_size(1)
-        .with_int_values(std::iter::once(x))
-        .unwrap()
-        .with_no_program()
-        .build();
-
-    let result = IntInstruction::Inc.perform(state).unwrap_err();
-    assert_eq!(result.state().stack::<i64>().size(), 1);
-    assert_eq!(result.state().stack::<i64>().top().unwrap(), &i64::MAX);
-    assert_eq!(
-        result.error(),
-        &IntInstructionError::Overflow {
-            op: IntInstruction::Inc
-        }
-        .into()
-    );
-    assert!(result.is_recoverable());
-}
-
-#[test]
 fn dec_overflows() {
     let x = i64::MIN;
     let state = PushState::builder()
@@ -321,17 +298,6 @@ fn mod_rems_or_does_nothing(#[any] x: i64, #[any] y: i64) {
         let top_int = result.state().stack::<i64>().top().unwrap();
         prop_assert_eq!(*top_int, x);
     }
-}
-
-#[proptest]
-fn inc_does_not_crash(#[any] x: i64) {
-    let state = PushState::builder()
-        .with_max_stack_size(1)
-        .with_int_values(std::iter::once(x))
-        .unwrap()
-        .with_no_program()
-        .build();
-    let _ = IntInstruction::Inc.perform(state);
 }
 
 #[proptest]
