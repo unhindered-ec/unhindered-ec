@@ -1,3 +1,4 @@
+use miette::Diagnostic;
 use rand::Rng;
 
 use super::{super::Operator, Composable};
@@ -14,49 +15,20 @@ impl<F, G> Then<F, G> {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, thiserror::Error, Diagnostic)]
 pub enum ThenError<T, U> {
-    First(T),
-    Second(U),
-}
-
-impl<T, U> std::fmt::Display for ThenError<T, U> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::First(_) => f.write_str(
-                "Error while applying the first passed operator (`T`) in the `Then<T,>` Operator",
-            ),
-            Self::Second(_) => f.write_str(
-                "Error while applying the second passed operator (`U`) in the `Then<,U>` Operator",
-            ),
-        }
-    }
-}
-
-impl<T, U> std::error::Error for ThenError<T, U>
-where
-    T: std::error::Error + 'static,
-    U: std::error::Error + 'static,
-{
-    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
-        match self {
-            Self::First(t) => Some(t),
-            Self::Second(t) => Some(t),
-        }
-    }
-}
-
-impl<T, U> miette::Diagnostic for ThenError<T, U>
-where
-    T: miette::Diagnostic + 'static,
-    U: miette::Diagnostic + 'static,
-{
-    fn diagnostic_source(&self) -> Option<&dyn miette::Diagnostic> {
-        match self {
-            Self::First(t) => Some(t),
-            Self::Second(t) => Some(t),
-        }
-    }
+    #[error("Error while applying the first passed operator (`T`) in the `Then<T,>` Operator")]
+    First(
+        #[diagnostic_source]
+        #[source]
+        T,
+    ),
+    #[error("Error while applying the second passed operator (`U`) in the `Then<,U>` Operator")]
+    Second(
+        #[diagnostic_source]
+        #[source]
+        U,
+    ),
 }
 
 impl<A, F, G> Operator<A> for Then<F, G>

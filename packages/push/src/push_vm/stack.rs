@@ -241,7 +241,7 @@ impl<T> Stack<T> {
     /// Sets the maximum size for this stack. Attempts to add elements that
     /// would take the stack above this size should return
     /// `StackError::Overflow`.
-    pub fn set_max_stack_size(&mut self, max_stack_size: usize) {
+    pub const fn set_max_stack_size(&mut self, max_stack_size: usize) {
         self.max_stack_size = max_stack_size;
     }
 
