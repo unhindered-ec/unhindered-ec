@@ -1,3 +1,6 @@
+mod ascii_from_wrapping_integer;
+
+use ascii_from_wrapping_integer::AsciiFromWrappingInteger;
 use strum_macros::EnumIter;
 
 use super::{Instruction, PushInstruction, instruction_error::PushInstructionError};
@@ -18,6 +21,14 @@ pub enum CharInstruction {
     /// onto the character stack.
     #[strum(to_string = "Push({0})")]
     Push(char),
+
+    /// Convert the top of the integer stack to a character,
+    /// and push that character to the top of the character stack.
+    /// To ensure that the integer is a legal ASCII code, we'll
+    /// take it mod 128 before converting it to a character.
+    /// Note that this does *not* support more complex Unicode
+    /// characters.
+    AsciiFromWrappingInteger(AsciiFromWrappingInteger),
 }
 
 impl From<CharInstruction> for PushInstruction {
@@ -28,12 +39,15 @@ impl From<CharInstruction> for PushInstruction {
 
 impl<S> Instruction<S> for CharInstruction
 where
-    S: Clone + HasStack<char> + HasStack<bool>,
+    S: Clone + HasStack<char> + HasStack<bool> + HasStack<i64>,
 {
     type Error = PushInstructionError;
 
-    fn perform(&self, mut state: S) -> InstructionResult<S, Self::Error> {
-        todo!()
+    fn perform(&self, state: S) -> InstructionResult<S, Self::Error> {
+        match self {
+            Self::Push(c) => state.with_push(*c).map_err_into(),
+            Self::AsciiFromWrappingInteger(ascii_wrap) => ascii_wrap.perform(state),
+        }
     }
 }
 
