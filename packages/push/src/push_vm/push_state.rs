@@ -20,14 +20,36 @@ use crate::{
 #[derive(Default, Debug, Clone, Eq, PartialEq)]
 #[push_macros::push_state(builder)]
 pub struct PushState {
+    /// A stack of `PushProgram`s
+    ///
+    /// The execution of a Push program consists of running the
+    /// program at the top of the exec stack until the exec stack
+    /// is empty.
     #[stack(exec)]
     pub(crate) exec: Stack<PushProgram>,
+
+    /// A stack of `i64` values
     #[stack(sample_values = [4, 5, 7])]
     pub(crate) int: Stack<i64>,
+
+    /// A stack of `OrderedFloat<f64> values`
     #[stack(sample_values = [OrderedFloat(4.3), OrderedFloat(5.1), OrderedFloat(2.1)])]
     pub(crate) float: Stack<OrderedFloat<f64>>,
+
+    /// A stack of boolean values
     #[stack(sample_values = [true, false, true, true])]
     pub(crate) bool: Stack<bool>,
+
+    /// A stack of character values
+    #[stack(sample_values = ['a', 'b', 'c'])]
+    pub(crate) char: Stack<char>,
+
+    /// A map that maps from (input) variable names to their values.
+    ///
+    /// Thus if you have an input `x` which has the value 5 in this
+    /// training case, then you would add an entry to this mapping
+    /// with the key `VariableName::from("x")` and the value
+    /// `PushInstruction::IntInstruction(IntInstruction::Push(5))`.
     // The Internet suggests that when you have fewer than 15 entries,
     // linear search on `Vec` is faster than `HashMap`. I found that
     // using `HashMap` here did slow things down, mostly
