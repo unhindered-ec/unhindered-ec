@@ -1,6 +1,9 @@
+mod ascii_from_wrapping_float;
 mod ascii_from_wrapping_integer;
 
+use ascii_from_wrapping_float::AsciiFromWrappingFloat;
 use ascii_from_wrapping_integer::AsciiFromWrappingInteger;
+use ordered_float::OrderedFloat;
 use strum_macros::EnumIter;
 
 use super::{Instruction, PushInstruction, instruction_error::PushInstructionError};
@@ -29,6 +32,14 @@ pub enum CharInstruction {
     /// Note that this does *not* support more complex Unicode
     /// characters.
     AsciiFromWrappingInteger(AsciiFromWrappingInteger),
+
+    /// Convert the top of the float stack to a character,
+    /// and push that character to the top of the character stack.
+    /// To ensure that the float is a legal ASCII code, we mod
+    /// it by 128 before converting it to a character.
+    /// Note that this does *not* support more complex Unicode
+    /// characters.
+    AsciiFromWrappingFloat(AsciiFromWrappingFloat),
 }
 
 impl From<CharInstruction> for PushInstruction {
@@ -39,7 +50,7 @@ impl From<CharInstruction> for PushInstruction {
 
 impl<S> Instruction<S> for CharInstruction
 where
-    S: Clone + HasStack<char> + HasStack<bool> + HasStack<i64>,
+    S: Clone + HasStack<char> + HasStack<bool> + HasStack<i64> + HasStack<OrderedFloat<f64>>,
 {
     type Error = PushInstructionError;
 
@@ -47,6 +58,7 @@ where
         match self {
             Self::Push(c) => state.with_push(*c).map_err_into(),
             Self::AsciiFromWrappingInteger(ascii_wrap) => ascii_wrap.perform(state),
+            Self::AsciiFromWrappingFloat(ascii_wrap) => ascii_wrap.perform(state),
         }
     }
 }
