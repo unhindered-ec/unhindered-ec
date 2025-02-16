@@ -4,7 +4,7 @@ mod is_alphabetic;
 
 use ascii_from_wrapping_float::AsciiFromWrappingFloat;
 use ascii_from_wrapping_integer::AsciiFromWrappingInteger;
-use is_alphabetic::IsAlphabetic;
+use is_alphabetic::{IsAlphabetic, IsAlphabeticNonConsuming};
 use ordered_float::OrderedFloat;
 use strum_macros::EnumIter;
 
@@ -44,9 +44,16 @@ pub enum CharInstruction {
     AsciiFromWrappingFloat(AsciiFromWrappingFloat),
 
     /// Take the top of the character stack, and push a boolean
-    /// onto the bool stack that is true if that character was a
-    /// letter, and false otherwise.
+    /// onto the bool stack that is true if that character was
+    /// alphabetic, and false otherwise.
     IsAlphabetic(IsAlphabetic),
+
+    /// Push a boolean onto the bool stack that is `true` if the
+    /// character at the top of the character stack is alphabetic,
+    /// and `false` otherwise. This does *not* consumer the value
+    /// at the top of the character stack, i.e., it is still there
+    /// unchanged after this instruction is performed.
+    IsAlphabeticNonConsuming(IsAlphabeticNonConsuming),
 }
 
 impl From<CharInstruction> for PushInstruction {
@@ -67,6 +74,9 @@ where
             Self::AsciiFromWrappingInteger(ascii_wrap) => ascii_wrap.perform(state),
             Self::AsciiFromWrappingFloat(ascii_wrap) => ascii_wrap.perform(state),
             Self::IsAlphabetic(is_alphabetic) => is_alphabetic.perform(state),
+            Self::IsAlphabeticNonConsuming(is_alphabetic_non_consuming) => {
+                is_alphabetic_non_consuming.perform(state)
+            }
         }
     }
 }
