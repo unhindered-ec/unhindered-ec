@@ -1,10 +1,13 @@
 mod ascii_from_wrapping_float;
 mod ascii_from_wrapping_integer;
 mod is_alphabetic;
+mod is_ascii_digit;
+mod is_whitespace;
 
 use ascii_from_wrapping_float::AsciiFromWrappingFloat;
 use ascii_from_wrapping_integer::AsciiFromWrappingInteger;
 use is_alphabetic::{IsAlphabetic, IsAlphabeticNonConsuming};
+use is_ascii_digit::{IsAsciiDigit, IsAsciiDigitNonConsuming};
 use ordered_float::OrderedFloat;
 use strum_macros::EnumIter;
 
@@ -54,6 +57,31 @@ pub enum CharInstruction {
     /// at the top of the character stack, i.e., it is still there
     /// unchanged after this instruction is performed.
     IsAlphabeticNonConsuming(IsAlphabeticNonConsuming),
+
+    /// Take the top of the character stack, and push a boolean
+    /// onto the bool stack that is true if that character was
+    /// a digit, and false otherwise.
+    IsAsciiDigit(IsAsciiDigit),
+
+    /// Push a boolean onto the bool stack that is `true` if the
+    /// character at the top of the character stack is a digit,
+    /// and `false` otherwise. This does *not* consumer the value
+    /// at the top of the character stack, i.e., it is still there
+    /// unchanged after this instruction is performed.
+    IsAsciiDigitNonConsuming(IsAsciiDigitNonConsuming),
+
+    /// Take the top of the character stack, and push a boolean
+    /// onto the bool stack that is true if that character was
+    /// whitespace, and false otherwise.
+    // IsWhitespace(IsWhitespace),
+
+    /// Push a boolean onto the bool stack that is `true` if the
+    /// character at the top of the character stack is whitespace,
+    /// and `false` otherwise. This does *not* consumer the value
+    /// at the top of the character stack, i.e., it is still there
+    /// unchanged after this instruction is performed.
+    // IsWhitespaceNonConsuming(IsWhitespaceNonConsuming),
+    Frog,
 }
 
 impl From<CharInstruction> for PushInstruction {
@@ -77,6 +105,15 @@ where
             Self::IsAlphabeticNonConsuming(is_alphabetic_non_consuming) => {
                 is_alphabetic_non_consuming.perform(state)
             }
+            Self::IsAsciiDigit(is_ascii_digit) => is_ascii_digit.perform(state),
+            Self::IsAsciiDigitNonConsuming(is_ascii_digit_non_consuming) => {
+                is_ascii_digit_non_consuming.perform(state)
+            }
+            // Self::IsWhitespace(is_whitespace) => is_whitespace.perform(state),
+            // Self::IsWhitespaceNonConsuming(is_whitespace_non_consuming) => {
+            //     is_whitespace_non_consuming.perform(state)
+            // }
+            Self::Frog => todo!(),
         }
     }
 }
