@@ -1,8 +1,10 @@
 mod ascii_from_wrapping_float;
 mod ascii_from_wrapping_integer;
+mod is_alphabetic;
 
 use ascii_from_wrapping_float::AsciiFromWrappingFloat;
 use ascii_from_wrapping_integer::AsciiFromWrappingInteger;
+use is_alphabetic::IsAlphabetic;
 use ordered_float::OrderedFloat;
 use strum_macros::EnumIter;
 
@@ -40,6 +42,11 @@ pub enum CharInstruction {
     /// Note that this does *not* support more complex Unicode
     /// characters.
     AsciiFromWrappingFloat(AsciiFromWrappingFloat),
+
+    /// Take the top of the character stack, and push a boolean
+    /// onto the bool stack that is true if that character was a
+    /// letter, and false otherwise.
+    IsAlphabetic(IsAlphabetic),
 }
 
 impl From<CharInstruction> for PushInstruction {
@@ -59,6 +66,7 @@ where
             Self::Push(c) => state.with_push(*c).map_err_into(),
             Self::AsciiFromWrappingInteger(ascii_wrap) => ascii_wrap.perform(state),
             Self::AsciiFromWrappingFloat(ascii_wrap) => ascii_wrap.perform(state),
+            Self::IsAlphabetic(is_alphabetic) => is_alphabetic.perform(state),
         }
     }
 }
