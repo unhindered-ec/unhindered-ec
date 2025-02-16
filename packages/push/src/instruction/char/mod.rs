@@ -4,6 +4,7 @@ mod is_alphabetic;
 mod is_ascii_digit;
 mod is_whitespace;
 mod to_ascii_lowercase;
+mod to_ascii_uppercase;
 
 use ascii_from_wrapping_float::AsciiFromWrappingFloat;
 use ascii_from_wrapping_integer::AsciiFromWrappingInteger;
@@ -13,6 +14,7 @@ use is_whitespace::{IsWhitespace, IsWhitespaceNonConsuming};
 use ordered_float::OrderedFloat;
 use strum_macros::EnumIter;
 use to_ascii_lowercase::ToAsciiLowercase;
+use to_ascii_uppercase::ToAsciiUppercase;
 
 use super::{Instruction, PushInstruction, instruction_error::PushInstructionError};
 use crate::{
@@ -88,6 +90,10 @@ pub enum CharInstruction {
     /// Convert the top of the character stack to ASCII lowercase
     /// if it's an ASCII uppercase letter. Otherwise leave it unchanged.
     ToAsciiLowercase(ToAsciiLowercase),
+
+    /// Convert the top of the character stack to ASCII uppercase
+    /// if it's an ASCII lowercase letter. Otherwise leave it unchanged.
+    ToAsciiUppercase(ToAsciiUppercase),
 }
 
 impl From<CharInstruction> for PushInstruction {
@@ -120,6 +126,7 @@ where
                 is_whitespace_non_consuming.perform(state)
             }
             Self::ToAsciiLowercase(to_ascii_lowercase) => to_ascii_lowercase.perform(state),
+            Self::ToAsciiUppercase(to_ascii_uppercase) => to_ascii_uppercase.perform(state),
         }
     }
 }
@@ -140,7 +147,7 @@ https://github.com/lspector/Clojush/blob/master/src/clojush/instructions/char.cl
 - tolowercase
    - Leave char alone if not a letter
 
-Must "common" instructions shared across all stacks:
+Must be "common" instructions shared across all stacks:
 - eq
 - ord
 - eq_ignore_ascii_case
