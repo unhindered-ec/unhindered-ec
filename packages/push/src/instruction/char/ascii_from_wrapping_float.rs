@@ -3,7 +3,10 @@ use ordered_float::OrderedFloat;
 use crate::{
     error::InstructionResult,
     instruction::{Instruction, instruction_error::PushInstructionError},
-    push_vm::{HasStack, stack::PushOnto},
+    push_vm::{
+        HasStack,
+        stack::{PushOnto, StackDiscard},
+    },
 };
 
 /// An instruction that takes the top value from the `f64` stack and
@@ -70,8 +73,8 @@ where
 {
     type Error = PushInstructionError;
 
-    fn perform(&self, state: S) -> InstructionResult<S, Self::Error> {
-        let float_stack = state.stack::<OrderedFloat<f64>>();
+    fn perform(&self, mut state: S) -> InstructionResult<S, Self::Error> {
+        let float_stack = state.stack_mut::<OrderedFloat<f64>>();
         #[expect(
             clippy::cast_possible_truncation,
             reason = "We know that after taking `.rem_euclid(128)`, the value will be in the \
@@ -85,7 +88,9 @@ where
         let ascii_character = float_stack
             .top()
             .map(|x| ((x.0 as i128).rem_euclid(128)) as u8 as char);
-        ascii_character.push_onto(state)
+        ascii_character
+            .push_onto(state)
+            .with_stack_discard::<OrderedFloat<f64>>(1)
     }
 }
 
@@ -97,6 +102,25 @@ mod tests {
 
     use super::*;
     use crate::push_vm::push_state::PushState;
+
+    /// Performing `AsciiFromWrappingFloat` when the `f64` stack is empty
+    /// should return a recoverable error with the state unchanged.
+    #[test]
+    fn ascii_from_wrapping_integer_empty_stack() {
+        let state = PushState::builder()
+            .with_max_stack_size(3)
+            .with_char_values(['a', 'b', 'c'])
+            .unwrap()
+            .with_bool_values([true, false])
+            .unwrap()
+            .with_no_program()
+            .build();
+        let result = AsciiFromWrappingFloat.perform(state).unwrap_err();
+        assert!(result.is_recoverable());
+        let result_state = result.state();
+        assert_eq!(result_state.stack::<char>().size(), 3);
+        assert_eq!(result_state.stack::<bool>().size(), 2);
+    }
 
     #[test]
     fn ascii_from_wrapping_float() {
@@ -158,6 +182,7 @@ mod tests {
             .with_no_program()
             .build();
         let result = AsciiFromWrappingFloat.perform(state).unwrap();
+        prop_assert_eq!(result.stack::<OrderedFloat<f64>>().size(), 0);
         prop_assert_eq!(result.stack::<char>().size(), 1);
         let top_char = *result.stack::<char>().top().unwrap();
         let top_char_ascii = top_char as u8;
