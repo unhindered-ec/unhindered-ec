@@ -73,8 +73,8 @@ where
 {
     type Error = PushInstructionError;
 
-    fn perform(&self, mut state: S) -> InstructionResult<S, Self::Error> {
-        let float_stack = state.stack_mut::<OrderedFloat<f64>>();
+    fn perform(&self, state: S) -> InstructionResult<S, Self::Error> {
+        let float_stack = state.stack::<OrderedFloat<f64>>();
         #[expect(
             clippy::cast_possible_truncation,
             reason = "We know that after taking `.rem_euclid(128)`, the value will be in the \
