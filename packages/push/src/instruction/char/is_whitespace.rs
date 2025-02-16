@@ -9,22 +9,22 @@ use crate::{
 
 /// An instruction that takes the top value from the `char` stack and
 /// pushes a `bool` on the bool stack that is `true` if that character
-/// is a alphabetic (as defined in
+/// is whitespace (as defined in
 /// [the Unicode standard](https://www.unicode.org/Public/UCD/latest/ucd/DerivedCoreProperties.txt)),
 /// and `false` otherwise.
 ///
 /// # Inputs
 ///
-/// The `CharInstruction::IsAlphabetic` instruction takes the
+/// The `CharInstruction::IsWhitespace` instruction takes the
 /// following inputs:
 ///    - `char` stack
 ///      - One value
 ///
 /// # Behavior
 ///
-/// The `CharInstruction::IsAlphabetic` instruction takes the top
+/// The `CharInstruction::IsWhitespace` instruction takes the top
 /// value of the `char` stack and pushes a `bool` onto the bool stack
-/// that is `true` if that character is a alphabetic (as described in
+/// that is `true` if that character is whitespace (as described in
 /// [the Unicode standard](https://www.unicode.org/Public/UCD/latest/ucd/DerivedCoreProperties.txt)),
 /// and `false` if it isn't.
 ///
@@ -46,7 +46,7 @@ use crate::{
 ///
 /// | `char` stack  | `bool` stack  |  Success | Note |
 /// | ------------- | ------------- | ------------- | ------------- |
-/// | exists | whether the `char` is alphabetic | ✅ | |
+/// | exists | whether the `char` is whitespace | ✅ | |
 /// | missing | nothing is pushed onto the `bool` stack | [❗..](crate::push_vm::stack::StackError::Underflow) | State is unchanged |
 ///
 /// # Errors
@@ -55,9 +55,9 @@ use crate::{
 /// [`StackError::Underflow`](crate::push_vm::stack::StackError::Underflow)
 /// error when the `char` stack is empty.
 #[derive(Debug, Default, Copy, Clone, PartialEq, Eq)]
-pub struct IsAlphabetic;
+pub struct IsWhitespace;
 
-impl<S> Instruction<S> for IsAlphabetic
+impl<S> Instruction<S> for IsWhitespace
 where
     S: Clone + HasStack<char> + HasStack<bool>,
 {
@@ -67,30 +67,30 @@ where
         state
             .stack::<char>()
             .top()
-            .map(|x| x.is_alphabetic())
+            .map(|x| x.is_whitespace())
             .push_onto(state)
             .with_stack_discard::<char>(1)
     }
 }
 
-/// An instruction that pushes a `bool` on the bool stack that is `true` if that
-/// character on top of the character stack is a alphabetic (as defined in
+/// An instruction that pushes a `bool` on the bool stack that is `true` if the
+/// character on top of the character stack is whitespace (as defined in
 /// [the Unicode standard](https://www.unicode.org/Public/UCD/latest/ucd/DerivedCoreProperties.txt)),
 /// and `false` otherwise. This is *not* consuming in the sense that it leaves
 /// the character on top of the character stack unchanged.
 ///
 /// # Inputs
 ///
-/// The `CharInstruction::IsAlphabetic` instruction takes the
+/// The `CharInstruction::IsWhitespace` instruction takes the
 /// following inputs:
 ///    - `char` stack
 ///      - One value
 ///
 /// # Behavior
 ///
-/// The `CharInstruction::IsAlphabetic` pushes a `bool` onto the bool stack
-/// that is `true` if that character on top of the character stack is a
-/// alphabetic (as described in [the Unicode standard](https://www.unicode.org/Public/UCD/latest/ucd/DerivedCoreProperties.txt)),
+/// The `CharInstruction::IsWhitespace` pushes a `bool` onto the bool stack
+/// that is `true` if the character on top of the character stack is a
+/// whitespace (as described in [the Unicode standard](https://www.unicode.org/Public/UCD/latest/ucd/DerivedCoreProperties.txt)),
 /// and `false` if it isn't. This is *not* consuming in the sense that it leaves
 /// the character on top of the character stack unchanged.
 ///
@@ -112,7 +112,7 @@ where
 ///
 /// | `char` stack  | `bool` stack  |  Success | Note |
 /// | ------------- | ------------- | ------------- | ------------- |
-/// | exists, remains unchanged | whether the `char` is alphabetic | ✅ | The top of the `char` stack remains unchanged |
+/// | exists, remains unchanged | whether the `char` is whitespace | ✅ | The top of the `char` stack remains unchanged |
 /// | missing | nothing is pushed onto the `bool` stack | [❗..](crate::push_vm::stack::StackError::Underflow) | State is unchanged |
 ///
 /// # Errors
@@ -121,9 +121,9 @@ where
 /// [`StackError::Underflow`](crate::push_vm::stack::StackError::Underflow)
 /// error when the `char` stack is empty.
 #[derive(Debug, Default, Copy, Clone, PartialEq, Eq)]
-pub struct IsAlphabeticNonConsuming;
+pub struct IsWhitespaceNonConsuming;
 
-impl<S> Instruction<S> for IsAlphabeticNonConsuming
+impl<S> Instruction<S> for IsWhitespaceNonConsuming
 where
     S: Clone + HasStack<char> + HasStack<bool>,
 {
@@ -133,7 +133,7 @@ where
         state
             .stack::<char>()
             .top()
-            .map(|x| x.is_alphabetic())
+            .map(|x| x.is_whitespace())
             .push_onto(state)
     }
 }
@@ -143,13 +143,13 @@ mod tests {
     use proptest::prop_assert_eq;
     use test_strategy::proptest;
 
-    use super::IsAlphabetic;
+    use super::{IsWhitespace, IsWhitespaceNonConsuming};
     use crate::{
-        instruction::{Instruction, char::is_alphabetic::IsAlphabeticNonConsuming},
+        instruction::Instruction,
         push_vm::{HasStack, push_state::PushState},
     };
 
-    /// Performing `IsAlphabetic` when the `char` stack is empty should
+    /// Performing `IsWhitespace` when the `char` stack is empty should
     /// return a recoverable error with the state unchanged.
     #[test]
     fn is_alphabetic_empty_stack() {
@@ -161,14 +161,14 @@ mod tests {
             .unwrap()
             .with_no_program()
             .build();
-        let result = IsAlphabetic.perform(state).unwrap_err();
+        let result = IsWhitespace.perform(state).unwrap_err();
         assert!(result.is_recoverable());
         let result_state = result.state();
         assert_eq!(result_state.stack::<i64>().size(), 3);
         assert_eq!(result_state.stack::<bool>().size(), 2);
     }
 
-    /// Performing `IsAlphabetic` when the `char` stack is empty should
+    /// Performing `IsWhitespace` when the `char` stack is empty should
     /// return a recoverable error with the state unchanged.
     #[test]
     fn is_alphabetic_non_consuming_empty_stack() {
@@ -180,7 +180,7 @@ mod tests {
             .unwrap()
             .with_no_program()
             .build();
-        let result = IsAlphabeticNonConsuming.perform(state).unwrap_err();
+        let result = IsWhitespaceNonConsuming.perform(state).unwrap_err();
         assert!(result.is_recoverable());
         let result_state = result.state();
         assert_eq!(result_state.stack::<i64>().size(), 3);
@@ -198,10 +198,10 @@ mod tests {
             .unwrap()
             .with_no_program()
             .build();
-        let result = IsAlphabetic.perform(state).unwrap();
+        let result = IsWhitespace.perform(state).unwrap();
         prop_assert_eq!(result.stack::<char>().size(), 0);
         prop_assert_eq!(result.stack::<bool>().size(), 1);
-        prop_assert_eq!(*result.stack::<bool>().top().unwrap(), c.is_alphabetic());
+        prop_assert_eq!(*result.stack::<bool>().top().unwrap(), c.is_whitespace());
     }
 
     #[proptest]
@@ -215,10 +215,10 @@ mod tests {
             .unwrap()
             .with_no_program()
             .build();
-        let result = IsAlphabeticNonConsuming.perform(state).unwrap();
+        let result = IsWhitespaceNonConsuming.perform(state).unwrap();
         prop_assert_eq!(result.stack::<char>().size(), 1);
         prop_assert_eq!(*result.stack::<char>().top().unwrap(), c);
         prop_assert_eq!(result.stack::<bool>().size(), 1);
-        prop_assert_eq!(*result.stack::<bool>().top().unwrap(), c.is_alphabetic());
+        prop_assert_eq!(*result.stack::<bool>().top().unwrap(), c.is_whitespace());
     }
 }
