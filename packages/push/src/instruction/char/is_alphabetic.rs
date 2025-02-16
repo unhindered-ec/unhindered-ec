@@ -63,9 +63,9 @@ where
 {
     type Error = PushInstructionError;
 
-    fn perform(&self, mut state: S) -> InstructionResult<S, Self::Error> {
+    fn perform(&self, state: S) -> InstructionResult<S, Self::Error> {
         state
-            .stack_mut::<char>()
+            .stack::<char>()
             .top()
             .map(|x| x.is_alphabetic())
             .push_onto(state)
@@ -129,9 +129,9 @@ where
 {
     type Error = PushInstructionError;
 
-    fn perform(&self, mut state: S) -> InstructionResult<S, Self::Error> {
+    fn perform(&self, state: S) -> InstructionResult<S, Self::Error> {
         state
-            .stack_mut::<char>()
+            .stack::<char>()
             .top()
             .map(|x| x.is_alphabetic())
             .push_onto(state)
