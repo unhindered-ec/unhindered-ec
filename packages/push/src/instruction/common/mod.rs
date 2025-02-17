@@ -17,8 +17,8 @@ where
 {
     type Error = PushInstructionError;
 
-    fn perform(&self, mut state: S) -> InstructionResult<S, Self::Error> {
-        state.stack_mut::<T>().top().cloned().push_onto(state)
+    fn perform(&self, state: S) -> InstructionResult<S, Self::Error> {
+        state.stack::<T>().top().cloned().push_onto(state)
     }
 }
 
