@@ -3,21 +3,38 @@ use std::cmp::Ordering;
 use miette::Diagnostic;
 use rand::{Rng, prelude::SliceRandom};
 
-use super::{Selector, error::EmptyPopulation};
+use super::{Selector, error::EmptyPopulation, random::Random};
 use crate::{individual::Individual, population::Population, test_results::TestResults};
 
-#[derive(Debug)]
+/// Lexicase selector.
+///
+/// This selector works by selecting a random test case and throwing out all
+/// individuals that don't have the best score there, repeating that until only
+/// one individual is left or all test cases have been compared.
+/// In case more than one individual is left, one is selected randomly.
+///
+/// In case there are no test cases (i.e `num_test_cases` is zero) this devolves
+/// to a random selection.
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 pub struct Lexicase {
     num_test_cases: usize,
 }
 
 impl Lexicase {
+    /// Create a new Lexicase selector using the given number of test cases.
+    ///
+    /// Make sure your population you are intending to select from actually has
+    /// this number of test cases, or else selection might error.
     #[must_use]
     pub const fn new(num_test_cases: usize) -> Self {
         Self { num_test_cases }
     }
 }
 
+/// Error that can occur during [`Lexicase`] selection:
+/// - [`EmptyPopulation`] when trying to select from an empty population, or
+/// - `MissingTestCase` when using a lexicase selector with a higher number of
+///   test cases set than every individual in the population actually provides.
 #[derive(Debug, thiserror::Error, Diagnostic)]
 pub enum LexicaseError {
     #[error(transparent)]
@@ -56,6 +73,14 @@ where
 {
     type Error = LexicaseError;
 
+    /// Select an Individual from the given Population using this selector.
+    ///
+    /// # Errors
+    /// - [`LexicaseError::EmptyPopulation`] if trying to select from an empty
+    ///   population
+    /// - [`LexicaseError::MissingTestCase`] if passing a population where an
+    ///   individual has fewer test cases than the given `num_test_cases` from
+    ///   this selector.
     fn select<'pop, R: Rng + ?Sized>(
         &self,
         population: &'pop P,
@@ -128,12 +153,8 @@ where
             std::mem::swap(&mut candidates, &mut winners);
         }
 
-        candidates.shuffle(rng);
-        candidates
-            .first()
-            .copied()
-            .ok_or(EmptyPopulation)
-            .map_err(Into::into)
+        // use random selection on remaining candidates
+        Random.select(&candidates, rng).copied().map_err(Into::into)
     }
 }
 
