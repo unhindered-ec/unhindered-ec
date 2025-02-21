@@ -19,7 +19,7 @@ pub struct DifferentGenomeLength(pub usize, pub usize);
 /// Error that occurs when performing crossover using
 /// [`UniformXo`](super::uniform_xo::UniformXo)
 /// or [`TwoPointXo`](super::two_point_xo::TwoPointXo)
-#[derive(Debug, thiserror::Error, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum CrossoverGeneError<E> {
     /// Attempted to crossover genomes with differing lengths
     DifferentGenomeLength(DifferentGenomeLength),
