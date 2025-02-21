@@ -6,18 +6,18 @@ use rand::{
     seq::{IndexedRandom, WeightError},
 };
 
-use super::{DynSelector, Selector, error::EmptyPopulation};
+use super::{DynSelector, Selector};
 use crate::population::Population;
 
 /// Weighted selector, based on type-erased selectors and dynamic dispatch.
 ///
 /// Also see the [`WeightedPair`](crate::weighted::weighted_pair::WeightedPair)
-/// selector for a compile time (typed) version of this which is not using
+/// selector for a compile time (typed) version of this which does not use
 /// dynamic dispatch
 ///
 /// Each selector has an associated weight passed in at construction time and
-/// one selector will be selected based on that on each selection call, and
-/// actual selection will then be forwarded to that selector.
+/// one selector will be selected based on those weights on each selection call,
+/// and actual selection will then be forwarded to that selector.
 #[derive(Default)]
 pub struct DynWeighted<P: Population> {
     selectors: Vec<(Box<dyn DynSelector<P> + Send + Sync>, usize)>,
@@ -45,6 +45,21 @@ where
     P: Population,
     S: Selector<P, Error: Error + Send + Sync + 'static> + Send + Sync + 'static,
 {
+    /// Construct a new [`DynWeighted`] selector from an iterator over tuples of
+    /// selectors and associated weights
+    ///
+    /// You probably want to usually use
+    /// `DynWeighted::new(...).with_selector(...)` instead, since this method
+    /// acts on a homogeneous collection of types (the iterator's items) and as
+    /// such is very inflexible.
+    ///
+    /// # Example
+    /// ```
+    /// # use ec_core::operator::selector::{dyn_weighted::DynWeighted, best::Best};
+    /// # type Population = Vec<i32>;
+    /// let dyn_selector = [(Best, 1)].into_iter().collect::<DynWeighted<Population>>();
+    /// # let _ = dyn_selector;
+    /// ```
     fn from_iter<T: IntoIterator<Item = (S, usize)>>(iter: T) -> Self {
         Self {
             selectors: iter
@@ -59,12 +74,14 @@ where
     }
 }
 
+/// Error that can occur when trying to select from a [`DynWeighted`]:
+///
+/// - [`WeightError`] if the weight's of all the selectors add up to less than
+///   1, or
+/// - `Box<dyn Error + Send + Sync>` (boxed) error of an underlying selector if
+///   the selection fails there.
 #[derive(Debug, thiserror::Error, Diagnostic)]
 pub enum DynWeightedError {
-    #[error(transparent)]
-    #[diagnostic(transparent)]
-    EmptyPopulation(#[from] EmptyPopulation),
-
     #[error(transparent)]
     #[diagnostic(help = "Ensure that the weights are all non-negative and add to more than zero")]
     ZeroWeightSum(#[from] WeightError),
@@ -77,6 +94,19 @@ impl<P: Population> DynWeighted<P> {
     // Since we should never have an empty collection of weighted selectors,
     // the `new` implementation takes an initial selector so `selectors` is
     // guaranteed to never be empty.
+    /// Construct a new `DynWeighted` selector, by using an intial selector and
+    /// a weight
+    ///
+    /// Use [`DynWeighted::with_selector`] as a chain on this to add more
+    /// selectors afterwards
+    ///
+    /// # Example
+    /// ```
+    /// # use ec_core::operator::selector::{best::Best, dyn_weighted::DynWeighted};
+    /// # type Population = Vec<i32>;
+    /// let dyn_selector = DynWeighted::<Population>::new(Best, 1);
+    /// # let _ = dyn_selector;
+    /// ```
     #[must_use]
     pub fn new<S>(selector: S, weight: usize) -> Self
     where
@@ -87,6 +117,16 @@ impl<P: Population> DynWeighted<P> {
         }
     }
 
+    /// Add the given selector to the [`DynWeighted`] selector with the given
+    /// weight.
+    ///
+    /// # Example
+    /// ```
+    /// # use ec_core::operator::selector::{best::Best, worst::Worst, dyn_weighted::DynWeighted};
+    /// # type Population = Vec<i32>;
+    /// let dyn_selector = DynWeighted::<Population>::new(Best, 1).with_selector(Worst, 1);
+    /// # let _ = dyn_selector;
+    /// ```
     #[must_use]
     pub fn with_selector<S>(mut self, selector: S, weight: usize) -> Self
     where
@@ -103,6 +143,11 @@ where
 {
     type Error = DynWeightedError;
 
+    /// Select an individual from the given `Population` using this selector.
+    /// # Errors
+    /// - [`DynWeightedError::ZeroWeightSum`] if the weight sum of all selectors
+    ///   is less than 1
+    /// - [`DynWeightedError::Other`] if the selected selector errors
     fn select<'pop, R: Rng + ?Sized>(
         &self,
         population: &'pop P,
