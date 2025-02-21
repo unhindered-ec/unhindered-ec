@@ -3,7 +3,20 @@ use rand::{Rng, prelude::IndexedRandom};
 use super::{Selector, error::EmptyPopulation};
 use crate::population::Population;
 
-#[derive(Debug)]
+/// Selector that selects a random individual.
+///
+/// # Example
+/// ```
+/// # use ec_core::operator::selector::{Selector, random::Random, error::EmptyPopulation};
+/// let population = [2, 3, 5];
+///
+/// let random = Random;
+/// let selected = random.select(&population, &mut rand::rng())?;
+///
+/// assert!(population.contains(selected));
+/// # Ok::<(), EmptyPopulation>(())
+/// ```
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 pub struct Random;
 
 impl<P> Selector<P> for Random
@@ -12,6 +25,10 @@ where
 {
     type Error = EmptyPopulation;
 
+    /// Select an Individual from the given Population using this selector.
+    ///
+    /// # Errors
+    /// - [`EmptyPopulation`] if the population selected from is empty.
     fn select<'pop, R: Rng + ?Sized>(
         &self,
         population: &'pop P,
