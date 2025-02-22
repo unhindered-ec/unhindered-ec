@@ -71,6 +71,29 @@ where
     type Output = (F::Output, G::Output);
     type Error = AndError<F::Error, G::Error>;
 
+    /// Apply the two [`Operator`]'s this [`And`] [`Operator`] is based on to
+    /// the same input independently, cloning the input, returning a tuple
+    /// of results.
+    ///
+    /// # Errors
+    /// - [`AndError::First`] if the first operator failed, or
+    /// - [`AndError::Second`] if the second operator failed.
+    ///
+    /// # Example
+    /// ```
+    /// # use ec_core::operator::{
+    /// #     Operator,
+    /// #     composable::{And},
+    /// #     constant::Constant
+    /// # };
+    /// #
+    /// let operator = And::new(Constant::new(1), Constant::new(2));
+    ///
+    /// let result = operator.apply((), &mut rand::rng())?;
+    ///
+    /// assert_eq!(result, (1, 2));
+    /// # Ok::<(), Box<dyn std::error::Error>>(())
+    /// ```
     fn apply<R: Rng + ?Sized>(&self, x: A, rng: &mut R) -> Result<Self::Output, Self::Error> {
         let f_value = self.f.apply(x.clone(), rng).map_err(AndError::First)?;
         let g_value = self.g.apply(x, rng).map_err(AndError::Second)?;

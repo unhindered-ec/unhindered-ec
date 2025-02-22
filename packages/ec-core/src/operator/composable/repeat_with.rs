@@ -5,15 +5,66 @@ use rand::Rng;
 use super::Composable;
 use crate::operator::Operator;
 
-/// An `Operator` that applies the encapsulated `Operator`
-/// `N` times on the given input, returning an array of
+/// A composition [`Operator`] that applies the encapsulated [`Operator`]
+/// a constant `N` times on the given input, returning an array of
 /// the `N` results.
-#[derive(Composable)]
+///
+/// Since the contained operator is applied multiple times, the Input to this
+/// operator needs to implement [`Clone`].
+///
+/// # Example
+/// ```
+/// # use ec_core::operator::{Operator, constant::Constant, composable::RepeatWith};
+/// # use std::convert::Infallible;
+/// let operator = RepeatWith::<_, 5>::new(Constant::new(1));
+///
+/// let value = operator.apply((), &mut rand::rng())?;
+///
+/// assert_eq!(value, [1; 5]);
+/// # Ok::<(), Infallible>(())
+/// ```
+#[derive(Debug, Composable, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 pub struct RepeatWith<F, const N: usize> {
     f: F,
 }
 
+impl<F, const N: usize> From<F> for RepeatWith<F, N> {
+    /// Create a [`RepeatWith`] from another [`Operator`].
+    ///
+    /// The count of repetitions is provided by the `N` generic on
+    /// [`RepeatWith`]. This is identical to [`RepeatWith::new`]
+    ///
+    /// # Example
+    /// ```
+    /// # use ec_core::operator::{Operator, constant::Constant, composable::RepeatWith};
+    /// # use std::convert::Infallible;
+    /// let repeated_operator: RepeatWith<_, 5> = Constant::new(1).into();
+    /// #
+    /// # let value = repeated_operator.apply((), &mut rand::rng())?;
+    /// # assert_eq!(value, [1; 5]);
+    /// # Ok::<(), Infallible>(())
+    /// ```
+    fn from(value: F) -> Self {
+        Self::new(value)
+    }
+}
+
 impl<F, const N: usize> RepeatWith<F, N> {
+    /// Create a [`RepeatWith`] from another [`Operator`].
+    ///
+    /// The count of repetitions is provided by the `N` generic on
+    /// [`RepeatWith`]. This is identical to [`RepeatWith::from`]
+    ///
+    /// # Example
+    /// ```
+    /// # use ec_core::operator::{Operator, constant::Constant, composable::RepeatWith};
+    /// # use std::convert::Infallible;
+    /// let repeated_operator = RepeatWith::<_, 5>::new(Constant::new(1));
+    /// #
+    /// # let value = repeated_operator.apply((), &mut rand::rng())?;
+    /// # assert_eq!(value, [1; 5]);
+    /// # Ok::<(), Infallible>(())
+    /// ```
     pub const fn new(f: F) -> Self {
         Self { f }
     }
@@ -27,6 +78,27 @@ where
     type Output = [F::Output; N];
     type Error = F::Error;
 
+    /// Apply this [`RepeatWith`] [`Operator`] to the input, applying the
+    /// contained [`Operator`] N times. This requires [`Input:
+    /// Clone`](Clone).
+    ///
+    /// Returns an array of the outputs of length `N`.
+    ///
+    /// # Errors
+    /// - `F::Error` (The underlying [`Operator`]'s error) if any of the `N`
+    ///   applications fail.
+    ///
+    /// # Example
+    /// ```
+    /// # use ec_core::operator::{Operator, constant::Constant, composable::RepeatWith};
+    /// # use std::convert::Infallible;
+    /// let operator = RepeatWith::<_, 5>::new(Constant::new(10));
+    ///
+    /// let value = operator.apply((), &mut rand::rng())?;
+    ///
+    /// assert_eq!(value, [10; 5]);
+    /// # Ok::<(), Infallible>(())
+    /// ```
     fn apply<R: Rng + ?Sized>(
         &self,
         input: Input,
