@@ -29,8 +29,9 @@ pub struct Lexicase {
 impl Lexicase {
     /// Create a new Lexicase selector using the given number of test cases.
     ///
-    /// Make sure your population you are intending to select from actually has
-    /// this number of test cases, or else selection might error.
+    /// Make sure the individuals in the population you are intending to select
+    /// from actually have results for this number of test cases, or else
+    /// selection might fail.
     #[must_use]
     pub const fn new(num_test_cases: usize) -> Self {
         Self { num_test_cases }
@@ -41,7 +42,7 @@ impl Lexicase {
 /// - [`EmptyPopulation`] when trying to select from an empty population, or
 /// - `MissingTestCase` when using a lexicase selector with a higher number of
 ///   test cases set than every individual in the population actually provides.
-#[derive(Debug, thiserror::Error, Diagnostic)]
+#[derive(Debug, thiserror::Error, Diagnostic, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum LexicaseError {
     #[error(transparent)]
     #[diagnostic(transparent)]
