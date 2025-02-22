@@ -23,10 +23,13 @@ pub trait HasStack<T> {
         Self: Sized,
     {
         if self.stack::<U>().is_full() {
-            Err(Error::fatal(self, StackError::Overflow {
-                // TODO: Should make sure to overflow a stack so we know what this looks like.
-                stack_type: std::any::type_name::<T>(),
-            }))
+            Err(Error::fatal(
+                self,
+                StackError::Overflow {
+                    // TODO: Should make sure to overflow a stack so we know what this looks like.
+                    stack_type: std::any::type_name::<T>(),
+                },
+            ))
         } else {
             Ok(self)
         }
@@ -241,7 +244,7 @@ impl<T> Stack<T> {
     /// Sets the maximum size for this stack. Attempts to add elements that
     /// would take the stack above this size should return
     /// `StackError::Overflow`.
-    pub fn set_max_stack_size(&mut self, max_stack_size: usize) {
+    pub const fn set_max_stack_size(&mut self, max_stack_size: usize) {
         self.max_stack_size = max_stack_size;
     }
 
@@ -586,9 +589,12 @@ mod test {
     fn top_from_empty_fails() {
         let stack: Stack<bool> = Stack::default();
         let result = stack.top().unwrap_err();
-        assert_eq!(result, StackError::Underflow {
-            num_requested: 1,
-            num_present: 0
-        });
+        assert_eq!(
+            result,
+            StackError::Underflow {
+                num_requested: 1,
+                num_present: 0
+            }
+        );
     }
 }
