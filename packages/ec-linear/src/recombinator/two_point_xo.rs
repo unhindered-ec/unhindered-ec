@@ -6,7 +6,8 @@ use super::{
     errors::{CrossoverGeneError, DifferentGenomeLength},
 };
 
-/// Recombinator for fixed-length linear genomes, like [`Bitstring`]
+/// Recombinator for fixed-length linear genomes, like
+/// [`Bitstring`](crate::genome::bitstring::Bitstring).
 ///
 /// This recombinator works by having two parents and randomly choosing a range
 /// in the genes to swap. This is in contrast to

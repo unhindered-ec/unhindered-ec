@@ -39,7 +39,7 @@ impl Lexicase {
 /// - [`EmptyPopulation`] when trying to select from an empty population, or
 /// - `MissingTestCase` when using a lexicase selector with a higher number of
 ///   test cases set than every individual in the population actually provides.
-#[derive(Debug, thiserror::Error, Diagnostic)]
+#[derive(Debug, thiserror::Error, Diagnostic, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum LexicaseError {
     #[error(transparent)]
     #[diagnostic(transparent)]
