@@ -5,9 +5,9 @@ use miette::Diagnostic;
 use strum_macros::EnumIter;
 
 use self::{abs::Abs, negate::Negate};
-use super::{Instruction, PushInstruction, PushInstructionError};
+use super::{Instruction, PushInstruction, PushInstructionError, common::CommonInstruction};
 use crate::{
-    error::{Error, InstructionResult, MapInstructionError},
+    error::{Error, InstructionResult},
     push_vm::stack::{HasStack, PushOnto, Stack, StackDiscard, StackError},
 };
 
@@ -15,8 +15,8 @@ use crate::{
 #[non_exhaustive]
 #[must_use]
 pub enum IntInstruction {
-    #[strum(to_string = "Push({0})")]
-    Push(i64),
+    #[strum(to_string = "{0}")]
+    Common(CommonInstruction<i64>),
     Negate(Negate),
     Abs(Abs),
     Min,
@@ -50,6 +50,14 @@ pub enum IntInstruction {
 }
 
 impl IntInstruction {
+    pub const fn push(value: i64) -> Self {
+        Self::Common(CommonInstruction::push(value))
+    }
+
+    pub const fn dup() -> Self {
+        Self::Common(CommonInstruction::dup())
+    }
+
     pub const fn negate() -> Self {
         Self::Negate(Negate)
     }
@@ -93,10 +101,10 @@ where
     )]
     fn perform(&self, mut state: S) -> InstructionResult<S, Self::Error> {
         match self {
+            Self::Common(common) => common.perform(state),
             Self::Negate(negate) => negate.perform(state),
             Self::Abs(abs) => abs.perform(state),
-            Self::Push(_)
-            | Self::Inc
+            Self::Inc
             | Self::Dec
             | Self::Square
             | Self::Add
@@ -113,8 +121,6 @@ where
                 // any stacks are full before we start.
                 let int_stack = state.stack_mut::<i64>();
                 match self {
-                    Self::Push(i) => state.with_push(*i).map_err_into(),
-
                     // This works, but is going to be nasty after we repeat a lot. There should
                     // perhaps be another trait method somewhere that eliminates a lot of this
                     // boilerplate.
@@ -353,6 +359,6 @@ mod test {
 
     #[test]
     fn manual_push_display() {
-        assert_eq!(format!("{}", IntInstruction::Push(1)), "Push(1)");
+        assert_eq!(format!("{}", IntInstruction::push(1)), "Push(1)");
     }
 }
