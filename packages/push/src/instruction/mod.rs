@@ -76,7 +76,7 @@ impl PushInstruction {
 
     #[must_use]
     pub fn push_int(i: i64) -> Self {
-        IntInstruction::Push(i).into()
+        IntInstruction::push(i).into()
     }
 
     #[must_use]
