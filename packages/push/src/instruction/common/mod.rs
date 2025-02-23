@@ -1,10 +1,86 @@
-use std::marker::PhantomData;
+use std::{fmt::Display, marker::PhantomData};
+
+use strum_macros::EnumIter;
 
 use super::{Instruction, instruction_error::PushInstructionError};
 use crate::{
-    error::InstructionResult,
+    error::{InstructionResult, MapInstructionError},
     push_vm::{HasStack, stack::PushOnto},
 };
+
+#[derive(Debug, strum_macros::Display, Copy, Clone, PartialEq, Eq, EnumIter)]
+#[non_exhaustive]
+#[must_use]
+pub enum CommonInstruction<T>
+where
+    T: Default + std::fmt::Display,
+{
+    #[strum(to_string = "{0}")]
+    Push(PushValue<T>),
+    Dup(Dup<T>),
+}
+
+impl<T> CommonInstruction<T>
+where
+    T: Default + std::fmt::Display,
+{
+    pub const fn push(value: T) -> Self {
+        Self::Push(PushValue(value))
+    }
+
+    pub const fn dup() -> Self {
+        Self::Dup(Dup { _p: PhantomData })
+    }
+}
+
+impl<T> Default for CommonInstruction<T>
+where
+    T: Default + std::fmt::Display,
+{
+    fn default() -> Self {
+        Self::Push(PushValue(T::default()))
+    }
+}
+
+impl<T, S> Instruction<S> for CommonInstruction<T>
+where
+    T: Default + std::fmt::Display + Clone,
+    S: Clone + HasStack<T>,
+{
+    type Error = PushInstructionError;
+
+    fn perform(&self, state: S) -> InstructionResult<S, Self::Error> {
+        match self {
+            Self::Push(instr) => instr.perform(state),
+            Self::Dup(instr) => instr.perform(state),
+        }
+    }
+}
+
+#[derive(Debug, Default, Copy, Clone, Eq, PartialEq)]
+pub struct PushValue<T>(pub T);
+
+impl<S, T> Instruction<S> for PushValue<T>
+where
+    S: Clone + HasStack<T>,
+    T: Clone,
+{
+    type Error = PushInstructionError;
+
+    fn perform(&self, state: S) -> InstructionResult<S, Self::Error> {
+        // Can we use `push_onto()` to simplify this?
+        state.with_push(self.0.clone()).map_err_into()
+    }
+}
+
+impl<T> Display for PushValue<T>
+where
+    T: Display,
+{
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Push({})", self.0)
+    }
+}
 
 /// An instruction that duplicates (clones) the top
 /// value of a stack of type `T` in the given state.
@@ -77,7 +153,6 @@ where
     type Error = PushInstructionError;
 
     fn perform(&self, state: S) -> InstructionResult<S, Self::Error> {
-        let dup_block: DupBlock;
         state.stack::<T>().top().cloned().push_onto(state)
     }
 }
