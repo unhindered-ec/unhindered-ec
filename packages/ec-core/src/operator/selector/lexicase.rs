@@ -21,6 +21,31 @@ use crate::{
 ///
 /// In case there are no test cases (i.e `num_test_cases` is zero) this devolves
 /// to a random selection.
+///
+/// # Examples
+/// ```
+/// # use ec_core::{
+/// #     individual::ec::EcIndividual,
+/// #     operator::selector::{Selector, lexicase::Lexicase},
+/// #     performance::test_results::TestResults
+/// # };
+/// let population = [
+///     EcIndividual::new(100, TestResults::<i32>::from_iter([4, 10])),
+///     EcIndividual::new(100, TestResults::<i32>::from_iter([2, 10])),
+///     EcIndividual::new(100, TestResults::<i32>::from_iter([4, 5])),
+///     EcIndividual::new(100, TestResults::<i32>::from_iter([2, 5])),
+/// ];
+///
+/// let lexicase = Lexicase::new(2);
+///
+/// let selected = lexicase.select(&population, &mut rand::rng())?;
+///
+/// assert_eq!(
+///     selected,
+///     &EcIndividual::new(100, TestResults::from_iter([4, 10]))
+/// );
+/// # Ok::<(), Box<dyn std::error::Error>>(())
+/// ```
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 pub struct Lexicase {
     num_test_cases: usize,
