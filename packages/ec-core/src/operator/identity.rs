@@ -14,17 +14,16 @@ use super::{Composable, Operator};
 ///
 /// ```
 /// # use ec_core::operator::{Operator, identity::Identity};
-/// # use rand::rng;
 /// #
-/// let mut rng = rng();
 /// // This will always return the value that is passed in.
 /// let identity = Identity;
 ///
-/// assert_eq!(identity.apply(3, &mut rng).unwrap(), 3);
-/// assert_eq!(identity.apply("string", &mut rng).unwrap(), "string");
-/// assert_eq!(identity.apply(Some(7), &mut rng).unwrap(), Some(7));
+/// assert_eq!(identity.apply(3, &mut rand::rng())?, 3);
+/// assert_eq!(identity.apply("string", &mut rand::rng())?, "string");
+/// assert_eq!(identity.apply(Some(7), &mut rand::rng())?, Some(7));
+/// # Ok::<(), Box<dyn std::error::Error>>(())
 /// ```
-#[derive(Composable)]
+#[derive(Debug, Composable, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 pub struct Identity;
 
 impl<T> Operator<T> for Identity {
@@ -34,7 +33,19 @@ impl<T> Operator<T> for Identity {
     /// This [`Operator`] can't fail
     type Error = Infallible;
 
-    /// Always return the input value.
+    /// Apply this [`Indentity`] [`Operator`], always returning the input value.
+    ///
+    /// ```
+    /// # use ec_core::operator::{Operator, identity::Identity};
+    /// #
+    /// // This will always return the value that is passed in.
+    /// let identity = Identity;
+    ///
+    /// let result = identity.apply("Hello, World!", &mut rand::rng())?;
+    ///
+    /// assert_eq!(result, "Hello, World!");
+    /// # Ok::<(), Box<dyn std::error::Error>>(())
+    /// ```
     fn apply<R: Rng + ?Sized>(&self, input: T, _: &mut R) -> Result<Self::Output, Self::Error> {
         Ok(input)
     }
