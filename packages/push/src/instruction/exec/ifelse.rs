@@ -165,7 +165,7 @@ mod tests {
     fn cond_true() {
         let state = PushState::builder()
             .with_max_stack_size(2)
-            .with_program([IntInstruction::Push(0), IntInstruction::Push(1)])
+            .with_program([IntInstruction::push(0), IntInstruction::push(1)])
             .unwrap()
             .with_bool_values([true])
             .unwrap()
@@ -174,7 +174,7 @@ mod tests {
         assert!(result_state.bool.is_empty());
         assert_eq!(
             result_state.exec,
-            arr_into![<PushProgram> IntInstruction::Push(0)]
+            arr_into![<PushProgram> IntInstruction::push(0)]
         );
     }
 
@@ -182,7 +182,7 @@ mod tests {
     fn cond_false() {
         let state = PushState::builder()
             .with_max_stack_size(2)
-            .with_program([IntInstruction::Push(0), IntInstruction::Push(1)])
+            .with_program([IntInstruction::push(0), IntInstruction::push(1)])
             .unwrap()
             .with_bool_values([false])
             .unwrap()
@@ -191,7 +191,7 @@ mod tests {
         assert!(result_state.bool.is_empty());
         assert_eq!(
             result_state.exec,
-            arr_into![<PushProgram> IntInstruction::Push(1)]
+            arr_into![<PushProgram> IntInstruction::push(1)]
         );
     }
 
@@ -227,14 +227,14 @@ mod tests {
     fn cond_missing() {
         let state = PushState::builder()
             .with_max_stack_size(2)
-            .with_program([IntInstruction::Push(0), IntInstruction::Push(1)])
+            .with_program([IntInstruction::push(0), IntInstruction::push(1)])
             .unwrap()
             .build();
         let result_state = IfElse.perform(state).unwrap();
         assert!(result_state.bool.is_empty());
         assert_eq!(
             result_state.exec,
-            arr_into![<PushProgram> IntInstruction::Push(1)]
+            arr_into![<PushProgram> IntInstruction::push(1)]
         );
     }
 

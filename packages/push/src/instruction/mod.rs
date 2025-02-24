@@ -10,6 +10,7 @@ use self::{instruction_error::PushInstructionError, variable_name::VariableName}
 use crate::{error::InstructionResult, push_vm::push_state::PushState};
 
 mod bool;
+mod common;
 mod exec;
 mod float;
 pub mod instruction_error;
@@ -75,7 +76,7 @@ impl PushInstruction {
 
     #[must_use]
     pub fn push_int(i: i64) -> Self {
-        IntInstruction::Push(i).into()
+        IntInstruction::push(i).into()
     }
 
     #[must_use]

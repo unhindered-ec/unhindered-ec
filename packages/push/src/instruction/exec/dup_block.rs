@@ -75,7 +75,7 @@ where
         state
             .stack::<PushProgram>()
             .top()
-            .map_err(PushInstructionError::from)
+            // .map_err(PushInstructionError::from)
             .cloned()
             .push_onto(state)
     }
