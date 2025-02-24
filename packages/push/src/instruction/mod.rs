@@ -13,7 +13,7 @@ mod bool;
 mod exec;
 mod float;
 pub mod instruction_error;
-mod int;
+pub mod int;
 pub mod variable_name;
 
 /*
