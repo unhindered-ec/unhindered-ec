@@ -2,6 +2,7 @@ use ordered_float::OrderedFloat;
 
 pub use self::{
     bool::BoolInstruction,
+    char::CharInstruction,
     exec::ExecInstruction,
     float::FloatInstruction,
     int::{IntInstruction, IntInstructionError},
@@ -10,6 +11,7 @@ use self::{instruction_error::PushInstructionError, variable_name::VariableName}
 use crate::{error::InstructionResult, push_vm::push_state::PushState};
 
 mod bool;
+mod char;
 mod exec;
 mod float;
 pub mod instruction_error;
@@ -63,24 +65,46 @@ pub enum PushInstruction {
     InputVar(VariableName),
     Exec(ExecInstruction),
     BoolInstruction(BoolInstruction),
+    CharInstruction(CharInstruction),
     IntInstruction(IntInstruction),
     FloatInstruction(FloatInstruction),
 }
 
 impl PushInstruction {
+    /// Push a boolean value onto the bool stack
+    ///
+    /// This is typically used to push constant values
+    /// or argument values onto this stack.
     #[must_use]
     pub fn push_bool(b: bool) -> Self {
         BoolInstruction::Push(b).into()
     }
 
+    /// Push an `i64` value onto the int stack
+    ///
+    /// This is typically used to push constant values
+    /// or argument values onto this stack.
     #[must_use]
     pub fn push_int(i: i64) -> Self {
         IntInstruction::Push(i).into()
     }
 
+    /// Push an `OrderedFloat<f64>` value onto the float stack
+    ///
+    /// This is typically used to push constant values
+    /// or argument values onto this stack.
     #[must_use]
     pub fn push_float(f: OrderedFloat<f64>) -> Self {
         FloatInstruction::Push(f).into()
+    }
+
+    /// Push a character onto the character stack
+    ///
+    /// This is typically used to push constant values
+    /// or argument values onto this stack.
+    #[must_use]
+    pub fn push_char(c: char) -> Self {
+        CharInstruction::Push(c).into()
     }
 }
 
@@ -96,6 +120,7 @@ impl Instruction<PushState> for PushInstruction {
             }
             Self::Exec(i) => i.perform(state),
             Self::BoolInstruction(i) => i.perform(state),
+            Self::CharInstruction(i) => i.perform(state),
             Self::IntInstruction(i) => i.perform(state),
             Self::FloatInstruction(i) => i.perform(state),
         }
@@ -125,6 +150,7 @@ impl std::fmt::Display for PushInstruction {
             Self::InputVar(instruction) => write!(f, "{instruction}"),
             Self::Exec(instruction) => write!(f, "Exec-{instruction}"),
             Self::BoolInstruction(instruction) => write!(f, "Bool-{instruction}"),
+            Self::CharInstruction(instruction) => write!(f, "Char-{instruction}"),
             Self::IntInstruction(instruction) => write!(f, "Int-{instruction}"),
             Self::FloatInstruction(instruction) => write!(f, "Float-{instruction}"),
         }
