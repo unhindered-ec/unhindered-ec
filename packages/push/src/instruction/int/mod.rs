@@ -5,7 +5,10 @@ use miette::Diagnostic;
 use strum_macros::EnumIter;
 
 use self::{abs::Abs, negate::Negate};
-use super::{Instruction, PushInstruction, PushInstructionError, common::CommonInstruction};
+use super::{
+    Instruction, PushInstruction, PushInstructionError,
+    common::{dup::Dup, push_value::PushValue},
+};
 use crate::{
     error::{Error, InstructionResult},
     push_vm::stack::{HasStack, PushOnto, Stack, StackDiscard, StackError},
@@ -16,7 +19,8 @@ use crate::{
 #[must_use]
 pub enum IntInstruction {
     #[strum(to_string = "{0}")]
-    Common(CommonInstruction<i64>),
+    Push(PushValue<i64>),
+    Dup(Dup<i64>),
     Negate(Negate),
     Abs(Abs),
     Min,
@@ -51,11 +55,11 @@ pub enum IntInstruction {
 
 impl IntInstruction {
     pub const fn push(value: i64) -> Self {
-        Self::Common(CommonInstruction::push(value))
+        Self::Push(PushValue(value))
     }
 
     pub const fn dup() -> Self {
-        Self::Common(CommonInstruction::dup())
+        Self::Dup(Dup::new())
     }
 
     pub const fn negate() -> Self {
@@ -101,7 +105,8 @@ where
     )]
     fn perform(&self, mut state: S) -> InstructionResult<S, Self::Error> {
         match self {
-            Self::Common(common) => common.perform(state),
+            Self::Push(push) => push.perform(state),
+            Self::Dup(dup) => dup.perform(state),
             Self::Negate(negate) => negate.perform(state),
             Self::Abs(abs) => abs.perform(state),
             Self::Inc
@@ -249,10 +254,9 @@ where
                 // the instruction, we need to check for the case that the boolean stack is
                 // already full, and return an `Overflow` error if it is.
                 if state.stack::<bool>().is_full() {
-                    return Err(Error::fatal(
-                        state,
-                        StackError::Overflow { stack_type: "bool" },
-                    ));
+                    return Err(Error::fatal(state, StackError::Overflow {
+                        stack_type: "bool",
+                    }));
                 }
                 let int_stack: &mut Stack<i64> = state.stack_mut::<i64>();
                 match self {
