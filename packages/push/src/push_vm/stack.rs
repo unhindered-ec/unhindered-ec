@@ -23,13 +23,10 @@ pub trait HasStack<T> {
         Self: Sized,
     {
         if self.stack::<U>().is_full() {
-            Err(Error::fatal(
-                self,
-                StackError::Overflow {
-                    // TODO: Should make sure to overflow a stack so we know what this looks like.
-                    stack_type: std::any::type_name::<T>(),
-                },
-            ))
+            Err(Error::fatal(self, StackError::Overflow {
+                // TODO: Should make sure to overflow a stack so we know what this looks like.
+                stack_type: std::any::type_name::<T>(),
+            }))
         } else {
             Ok(self)
         }
@@ -312,6 +309,47 @@ impl<T> Stack<T> {
         Ok((x, y))
     }
 
+    /// Returns a triple of references to the top three elements of the stack,
+    /// or an error if the stack has less than three elements.
+    ///
+    /// # Errors
+    ///
+    /// Returns `StackError::Underflow` if the stack has less than three
+    /// elements.
+    pub fn top3(&self) -> Result<(&T, &T, &T), StackError> {
+        let index_third_to_top =
+            self.size()
+                .checked_sub(3)
+                .ok_or_else(|| StackError::Underflow {
+                    num_requested: 3,
+                    num_present: self.size(),
+                })?;
+        let x = self.top()?;
+        #[expect(
+            clippy::arithmetic_side_effects,
+            reason = "We've checked that there are at least 3 elements in the stack"
+        )]
+        let y = self
+            .values
+            .get(index_third_to_top + 1)
+            .ok_or_else(|| StackError::Underflow {
+                num_requested: 3,
+                num_present: self.size() - 1,
+            })?;
+        #[expect(
+            clippy::arithmetic_side_effects,
+            reason = "We've checked that there are at least 3 elements in the stack"
+        )]
+        let z = self
+            .values
+            .get(index_third_to_top)
+            .ok_or_else(|| StackError::Underflow {
+                num_requested: 3,
+                num_present: self.size() - 2,
+            })?;
+        Ok((x, y, z))
+    }
+
     /// Removes the top element from a stack and returns it, or
     /// `StackError::Underflow` if it is empty.
     ///
@@ -341,6 +379,28 @@ impl<T> Stack<T> {
         } else {
             Err(StackError::Underflow {
                 num_requested: 2,
+                num_present: self.size(),
+            })
+        }
+    }
+
+    /// Removes the top three elements from a stack and returns them in a
+    /// triple. Returns `StackError::Underflow` if the stack has fewer than
+    /// three elements.
+    ///
+    /// # Errors
+    ///
+    /// Returns `StackError::Underflow` if the stack has fewer than three
+    /// elements.
+    pub fn pop3(&mut self) -> Result<(T, T, T), StackError> {
+        if self.size() >= 3 {
+            let x = self.pop()?;
+            let y = self.pop()?;
+            let z = self.pop()?;
+            Ok((x, y, z))
+        } else {
+            Err(StackError::Underflow {
+                num_requested: 3,
                 num_present: self.size(),
             })
         }
@@ -589,12 +649,54 @@ mod test {
     fn top_from_empty_fails() {
         let stack: Stack<bool> = Stack::default();
         let result = stack.top().unwrap_err();
-        assert_eq!(
-            result,
-            StackError::Underflow {
-                num_requested: 1,
-                num_present: 0
-            }
-        );
+        assert_eq!(result, StackError::Underflow {
+            num_requested: 1,
+            num_present: 0
+        });
+    }
+
+    #[test]
+    fn top3_from_empty_fails() {
+        let stack: Stack<bool> = Stack::default();
+        let result = stack.top3().unwrap_err();
+        assert_eq!(result, StackError::Underflow {
+            num_requested: 3,
+            num_present: 0
+        });
+    }
+
+    #[test]
+    fn top3_from_one_fails() {
+        let mut stack: Stack<bool> = Stack::default();
+        stack.push(true).unwrap();
+        let result = stack.top3().unwrap_err();
+        assert_eq!(result, StackError::Underflow {
+            num_requested: 3,
+            num_present: 1
+        });
+    }
+
+    #[test]
+    fn top3_from_two_fails() {
+        let mut stack: Stack<bool> = Stack::default();
+        stack.push(true).unwrap();
+        stack.push(false).unwrap();
+        let result = stack.top3().unwrap_err();
+        assert_eq!(result, StackError::Underflow {
+            num_requested: 3,
+            num_present: 2
+        });
+    }
+
+    #[test]
+    fn pop3_from_two_fails() {
+        let mut stack: Stack<bool> = Stack::default();
+        stack.push(true).unwrap();
+        stack.push(false).unwrap();
+        let result = stack.pop3().unwrap_err();
+        assert_eq!(result, StackError::Underflow {
+            num_requested: 3,
+            num_present: 2
+        });
     }
 }
