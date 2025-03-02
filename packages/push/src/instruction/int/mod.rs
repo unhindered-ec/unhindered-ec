@@ -10,7 +10,8 @@ use self::{abs::Abs, negate::Negate};
 use super::{
     Instruction, PushInstruction, PushInstructionError,
     common::{
-        dup::Dup, flush::Flush, is_empty::IsEmpty, push_value::PushValue, stack_depth::StackDepth,
+        dup::Dup, flush::Flush, is_empty::IsEmpty, pop::Pop, push_value::PushValue,
+        stack_depth::StackDepth,
     },
 };
 use crate::{
@@ -22,6 +23,7 @@ use crate::{
 #[non_exhaustive]
 #[must_use]
 pub enum IntInstruction {
+    Pop(Pop<i64>),
     #[strum(to_string = "{0}")]
     Push(PushValue<i64>),
     Dup(Dup<i64>),
@@ -62,12 +64,24 @@ pub enum IntInstruction {
 }
 
 impl IntInstruction {
+    pub const fn pop() -> Self {
+        Self::Pop(Pop::new())
+    }
+
     pub const fn push(value: i64) -> Self {
         Self::Push(PushValue(value))
     }
 
     pub const fn dup() -> Self {
         Self::Dup(Dup::new())
+    }
+
+    pub const fn is_empty() -> Self {
+        Self::IsEmpty(IsEmpty::new())
+    }
+
+    pub const fn stack_depth() -> Self {
+        Self::StackDepth(StackDepth::new())
     }
 
     pub const fn negate() -> Self {
@@ -117,6 +131,7 @@ where
     )]
     fn perform(&self, mut state: S) -> InstructionResult<S, Self::Error> {
         match self {
+            Self::Pop(pop) => pop.perform(state),
             Self::Push(push) => push.perform(state),
             Self::Dup(dup) => dup.perform(state),
             Self::IsEmpty(is_empty) => is_empty.perform(state),
