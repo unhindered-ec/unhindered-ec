@@ -23,7 +23,8 @@ use crate::{
 ///
 /// If `value` is greater than `max`, `max` replaces `value` on the stack.
 ///
-/// If `value` is within the range `[min, max]`, it remains unchanged.
+/// If `value` is within the range `[min, max]` (inclusive on both sides), it
+/// remains unchanged.
 ///
 /// ## Action Table
 ///

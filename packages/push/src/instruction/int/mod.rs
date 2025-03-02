@@ -9,7 +9,7 @@ use strum_macros::EnumIter;
 use self::{abs::Abs, negate::Negate};
 use super::{
     Instruction, PushInstruction, PushInstructionError,
-    common::{dup::Dup, is_empty::IsEmpty, push_value::PushValue},
+    common::{dup::Dup, flush::Flush, is_empty::IsEmpty, push_value::PushValue},
 };
 use crate::{
     error::{Error, InstructionResult},
@@ -24,6 +24,7 @@ pub enum IntInstruction {
     Push(PushValue<i64>),
     Dup(Dup<i64>),
     IsEmpty(IsEmpty<i64>),
+    Flush(Flush<i64>),
     Negate(Negate),
     Abs(Abs),
     Min,
@@ -116,6 +117,7 @@ where
             Self::Push(push) => push.perform(state),
             Self::Dup(dup) => dup.perform(state),
             Self::IsEmpty(is_empty) => is_empty.perform(state),
+            Self::Flush(flush) => flush.perform(state),
             Self::Negate(negate) => negate.perform(state),
             Self::Abs(abs) => abs.perform(state),
             Self::Clamp(clamp) => clamp.perform(state),
