@@ -1,6 +1,8 @@
 mod abs;
+mod clamp;
 mod negate;
 
+use clamp::Clamp;
 use miette::Diagnostic;
 use strum_macros::EnumIter;
 
@@ -26,6 +28,7 @@ pub enum IntInstruction {
     Abs(Abs),
     Min,
     Max,
+    Clamp(Clamp),
     Inc,
     Dec,
     Add,
@@ -70,6 +73,10 @@ impl IntInstruction {
     pub const fn abs() -> Self {
         Self::Abs(Abs)
     }
+
+    pub const fn clamp() -> Self {
+        Self::Clamp(Clamp)
+    }
 }
 
 impl From<IntInstruction> for PushInstruction {
@@ -111,6 +118,7 @@ where
             Self::IsEmpty(is_empty) => is_empty.perform(state),
             Self::Negate(negate) => negate.perform(state),
             Self::Abs(abs) => abs.perform(state),
+            Self::Clamp(clamp) => clamp.perform(state),
             Self::Inc
             | Self::Dec
             | Self::Square
