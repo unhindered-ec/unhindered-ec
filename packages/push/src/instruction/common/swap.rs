@@ -79,6 +79,9 @@ where
 
 #[cfg(test)]
 mod tests {
+    use proptest::{collection::vec, prelude::any};
+    use test_strategy::proptest;
+
     use super::*;
     use crate::{
         instruction::Instruction,
@@ -133,5 +136,29 @@ mod tests {
         assert_eq!(state.stack::<i64>().top().unwrap(), &1);
         let result = Swap::<i64>::new().perform(state).unwrap();
         assert_eq!(result.stack::<i64>().top2().unwrap(), (&2, &1));
+    }
+
+    #[proptest]
+    fn swap_on_stack_with_multiple_items(
+        // We want at least two items so the swap can actually happen.
+        #[strategy(vec(any::<i64>(), 2..100))] mut values: Vec<i64>,
+    ) {
+        let state = PushState::builder()
+            .with_max_stack_size(100)
+            .with_int_values(values.clone().into_iter())
+            .unwrap()
+            .with_no_program()
+            .build();
+        let swap = Swap::<i64>::default();
+        let result = swap.perform(state).unwrap();
+        assert_eq!(result.stack::<i64>().size(), values.len());
+        // We need to swap the first two elements of the set of values
+        // to mimic the swap, and then reverse the set of values since
+        // they are essentially reversed when they are initially pushed
+        // onto the stack.
+        values.swap(0, 1);
+        values.reverse();
+        // Now the set of values of the stack should be the same as `values`.
+        assert_eq!(result.stack::<i64>(), &values);
     }
 }
