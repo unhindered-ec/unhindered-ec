@@ -84,6 +84,8 @@ where
     type Error = PushInstructionError;
 
     fn perform(&self, state: S) -> crate::error::InstructionResult<S, Self::Error> {
+        // If the number of items on the stack is too large to fit in an `i64`, then
+        // we'll replace it with `i64::MAX`.
         let stack_size = state.stack::<T>().size().try_into().unwrap_or(i64::MAX);
         state.with_push(stack_size).map_err_into()
     }
@@ -169,6 +171,10 @@ mod tests {
         assert_eq!(state.stack::<i64>().top().unwrap(), &(num_values as i64));
     }
 
+    // This sets the maximum stack size to three, and initially populates the
+    // int stack with 3 items. This will cause an `Overflow` error when we run
+    // `StackDepth` since that will want to push a 4th value on the int stack,
+    // exceeding the maximum stack size of 3.
     #[test]
     fn full_int_stack() {
         let state = PushState::builder()
