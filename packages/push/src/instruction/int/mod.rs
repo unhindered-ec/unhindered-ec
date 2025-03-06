@@ -11,7 +11,7 @@ use super::{
     Instruction, PushInstruction, PushInstructionError,
     common::{
         dup::Dup, flush::Flush, is_empty::IsEmpty, pop::Pop, push_value::PushValue,
-        stack_depth::StackDepth,
+        stack_depth::StackDepth, swap::Swap,
     },
 };
 use crate::{
@@ -27,6 +27,7 @@ pub enum IntInstruction {
     #[strum(to_string = "{0}")]
     Push(PushValue<i64>),
     Dup(Dup<i64>),
+    Swap(Swap<i64>),
     IsEmpty(IsEmpty<i64>),
     StackDepth(StackDepth<i64>),
     Flush(Flush<i64>),
@@ -74,6 +75,10 @@ impl IntInstruction {
 
     pub const fn dup() -> Self {
         Self::Dup(Dup::new())
+    }
+
+    pub const fn swap() -> Self {
+        Self::Swap(Swap::new())
     }
 
     pub const fn is_empty() -> Self {
@@ -134,6 +139,7 @@ where
             Self::Pop(pop) => pop.perform(state),
             Self::Push(push) => push.perform(state),
             Self::Dup(dup) => dup.perform(state),
+            Self::Swap(swap) => swap.perform(state),
             Self::IsEmpty(is_empty) => is_empty.perform(state),
             Self::StackDepth(stack_depth) => stack_depth.perform(state),
             Self::Flush(flush) => flush.perform(state),
