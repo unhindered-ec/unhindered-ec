@@ -35,7 +35,7 @@ use crate::{
 ///       - ‼️: fatal error, with links to the error kind
 ///    - The "Note" column briefly summarizes the action state in that case
 ///
-/// | `Stack<T>``  | Success | Note |
+/// | `Stack<T>`  | Success | Note |
 /// | ------------- | ------------- | ------------- |
 /// | exists, exists  | ✅ | The top two values are swapped |
 /// | exists, missing | [❗…](crate::push_vm::stack::StackError::Underflow) | State is unchanged |
