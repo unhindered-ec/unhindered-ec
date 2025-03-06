@@ -284,7 +284,9 @@ impl<T> Stack<T> {
 
     /// Returns a pair of references to the top two elements of
     /// the stack, or an error if the stack has less than two
-    /// elements.
+    /// elements. The first element of the pair will be the top element of the
+    /// stack, and the second element of the pair will be the second-to-top
+    /// element of the stack.
     ///
     /// # Errors
     ///
@@ -310,7 +312,11 @@ impl<T> Stack<T> {
     }
 
     /// Returns a triple of references to the top three elements of the stack,
-    /// or an error if the stack has less than three elements.
+    /// or an error if the stack has less than three elements. The first element
+    /// of the triple will be the top element of the stack, the second element
+    /// of the triple will be the second-to-top element of the stack, and the
+    /// third element of the triple will be the third-to-top element of the
+    /// stack.
     ///
     /// # Errors
     ///
@@ -365,7 +371,10 @@ impl<T> Stack<T> {
 
     /// Removes the top two elements from a stack and returns them in a pair.
     /// Returns `StackError::Underflow` if the stack has fewer than two
-    /// elements.
+    /// elements. The first element of the pair will be the value that was
+    /// the top element of the stack before popping, and the second element
+    /// of the pair will be what was the second-to-top element of the stack
+    /// before popping.
     ///
     /// # Errors
     ///
@@ -386,7 +395,11 @@ impl<T> Stack<T> {
 
     /// Removes the top three elements from a stack and returns them in a
     /// triple. Returns `StackError::Underflow` if the stack has fewer than
-    /// three elements.
+    /// three elements. The first element of the triple will be the value
+    /// that was the top element of the stack before popping, the second element
+    /// of the triple will be what was the second-to-top element of the stack
+    /// before popping, and the third element of the triple will be what was
+    /// the third-to-top element of the stack before popping.
     ///
     /// # Errors
     ///
