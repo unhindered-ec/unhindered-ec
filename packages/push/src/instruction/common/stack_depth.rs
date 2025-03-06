@@ -105,6 +105,17 @@ mod tests {
         push_vm::{HasStack, push_state::PushState, stack::StackError},
     };
 
+    #[test]
+    fn stack_size_for_empty_stack() {
+        let state = PushState::builder()
+            .with_max_stack_size(1)
+            .with_no_program()
+            .build();
+        let stack_depth = StackDepth::<bool>::new();
+        let state = stack_depth.perform(state).unwrap();
+        assert_eq!(state.stack::<i64>().top().unwrap(), &0);
+    }
+
     #[proptest]
     #[expect(
         clippy::arithmetic_side_effects,
@@ -144,7 +155,9 @@ mod tests {
     fn correct_stack_sizes_for_bool(#[any(size_range(0..1_000).lift())] values: Vec<bool>) {
         let num_values = values.len();
         let state = PushState::builder()
-            .with_max_stack_size(num_values)
+            // We `.max(1)` in case `values` has length 0 as we still need room
+            // for the value to be pushed onto the int stack.
+            .with_max_stack_size(num_values.max(1))
             .with_bool_values(values)
             .unwrap()
             .with_no_program()
