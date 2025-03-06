@@ -2,8 +2,8 @@ use std::marker::PhantomData;
 
 use super::super::{Instruction, instruction_error::PushInstructionError};
 use crate::{
-    error::{Error, InstructionResult},
-    push_vm::{HasStack, stack::PushOnto},
+    error::{Error, InstructionResult, MapInstructionError},
+    push_vm::HasStack,
 };
 
 /// An instruction that swaps the top two values of a stack of type `T`.
@@ -66,12 +66,12 @@ where
     type Error = PushInstructionError;
 
     fn perform(&self, mut state: S) -> InstructionResult<S, Self::Error> {
-        match state.stack::<T>().top2() {
+        match state.stack_mut::<T>().pop2() {
             Ok((x, y)) => state
-                .with_push(*x)
+                .with_push(x)
                 .map_err_into()?
-                .with_push(*y)
-                .map_err_into(), /* state.with_replace(2, *x), */
+                .with_push(y)
+                .map_err_into(),
             Err(error) => Err(Error::recoverable(state, error)),
         }
     }
@@ -103,6 +103,26 @@ mod tests {
     }
 
     #[test]
+    fn swap_singleton_stack() {
+        // Check that calling `Swap` on a stack with one element returns a
+        // `StackError::Underflow` error.
+        let state = PushState::builder()
+            .with_max_stack_size(1)
+            .with_int_values([1])
+            .unwrap()
+            .with_no_program()
+            .build();
+        let result = Swap::<i64>::new().perform(state).unwrap_err();
+        assert_eq!(
+            result.error(),
+            &PushInstructionError::StackError(StackError::Underflow {
+                num_requested: 2,
+                num_present: 1
+            })
+        );
+    }
+
+    #[test]
     fn swap_non_empty_stack() {
         let state = PushState::builder()
             .with_max_stack_size(2)
@@ -110,7 +130,8 @@ mod tests {
             .unwrap()
             .with_no_program()
             .build();
+        assert_eq!(state.stack::<i64>().top().unwrap(), &1);
         let result = Swap::<i64>::new().perform(state).unwrap();
-        assert_eq!(result.stack::<i64>().top2().unwrap(), (&1, &2));
+        assert_eq!(result.stack::<i64>().top2().unwrap(), (&2, &1));
     }
 }
