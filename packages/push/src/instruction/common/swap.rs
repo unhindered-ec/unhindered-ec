@@ -26,8 +26,8 @@ use crate::{
 /// The table below indicates the behavior in each of the different
 /// cases.
 ///
-///    - The "Stack<T>" column indicates the top two values of the stack of type
-///      `T`, or whether they exist.
+///    - The "`Stack<T>`" column indicates the top two values of the stack of
+///      type `T`, or whether they exist.
 ///    - The "Success" column indicates whether the instruction succeeds, and if
 ///      not what kind of error is returned:
 ///       - ✅: success (so two copies of the top block on the `Exec stack`)
@@ -35,7 +35,7 @@ use crate::{
 ///       - ‼️: fatal error, with links to the error kind
 ///    - The "Note" column briefly summarizes the action state in that case
 ///
-/// | Stack<T>  | Success | Note |
+/// | `Stack<T>``  | Success | Note |
 /// | ------------- | ------------- | ------------- |
 /// | exists, exists  | ✅ | The top two values are swapped |
 /// | exists, missing | [❗…](crate::push_vm::stack::StackError::Underflow) | State is unchanged |
@@ -45,7 +45,7 @@ use crate::{
 ///
 /// If the stack access returns any error other than a
 /// [`StackError::Underflow`](crate::push_vm::stack::StackError::Underflow)
-/// then this returns that as a [`Error::Fatal`](crate::error::Error::Fatal)
+/// then this returns that as a [`Error::Fatal`]
 /// error.
 #[derive(Debug, Copy, Clone, Default, Eq, PartialEq)]
 pub struct Swap<T> {
