@@ -291,9 +291,10 @@ where
                 // the instruction, we need to check for the case that the boolean stack is
                 // already full, and return an `Overflow` error if it is.
                 if state.stack::<bool>().is_full() {
-                    return Err(Error::fatal(state, StackError::Overflow {
-                        stack_type: "bool",
-                    }));
+                    return Err(Error::fatal(
+                        state,
+                        StackError::Overflow { stack_type: "bool" },
+                    ));
                 }
                 let int_stack: &mut Stack<i64> = state.stack_mut::<i64>();
                 match self {

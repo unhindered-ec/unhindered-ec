@@ -23,10 +23,13 @@ pub trait HasStack<T> {
         Self: Sized,
     {
         if self.stack::<U>().is_full() {
-            Err(Error::fatal(self, StackError::Overflow {
-                // TODO: Should make sure to overflow a stack so we know what this looks like.
-                stack_type: std::any::type_name::<T>(),
-            }))
+            Err(Error::fatal(
+                self,
+                StackError::Overflow {
+                    // TODO: Should make sure to overflow a stack so we know what this looks like.
+                    stack_type: std::any::type_name::<T>(),
+                },
+            ))
         } else {
             Ok(self)
         }
@@ -662,20 +665,26 @@ mod test {
     fn top_from_empty_fails() {
         let stack: Stack<bool> = Stack::default();
         let result = stack.top().unwrap_err();
-        assert_eq!(result, StackError::Underflow {
-            num_requested: 1,
-            num_present: 0
-        });
+        assert_eq!(
+            result,
+            StackError::Underflow {
+                num_requested: 1,
+                num_present: 0
+            }
+        );
     }
 
     #[test]
     fn top3_from_empty_fails() {
         let stack: Stack<bool> = Stack::default();
         let result = stack.top3().unwrap_err();
-        assert_eq!(result, StackError::Underflow {
-            num_requested: 3,
-            num_present: 0
-        });
+        assert_eq!(
+            result,
+            StackError::Underflow {
+                num_requested: 3,
+                num_present: 0
+            }
+        );
     }
 
     #[test]
@@ -683,10 +692,13 @@ mod test {
         let mut stack: Stack<bool> = Stack::default();
         stack.push(true).unwrap();
         let result = stack.top3().unwrap_err();
-        assert_eq!(result, StackError::Underflow {
-            num_requested: 3,
-            num_present: 1
-        });
+        assert_eq!(
+            result,
+            StackError::Underflow {
+                num_requested: 3,
+                num_present: 1
+            }
+        );
     }
 
     #[test]
@@ -695,10 +707,13 @@ mod test {
         stack.push(true).unwrap();
         stack.push(false).unwrap();
         let result = stack.top3().unwrap_err();
-        assert_eq!(result, StackError::Underflow {
-            num_requested: 3,
-            num_present: 2
-        });
+        assert_eq!(
+            result,
+            StackError::Underflow {
+                num_requested: 3,
+                num_present: 2
+            }
+        );
     }
 
     #[test]
@@ -707,9 +722,12 @@ mod test {
         stack.push(true).unwrap();
         stack.push(false).unwrap();
         let result = stack.pop3().unwrap_err();
-        assert_eq!(result, StackError::Underflow {
-            num_requested: 3,
-            num_present: 2
-        });
+        assert_eq!(
+            result,
+            StackError::Underflow {
+                num_requested: 3,
+                num_present: 2
+            }
+        );
     }
 }
