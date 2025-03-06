@@ -81,7 +81,7 @@ impl PushInstruction {
 
     #[must_use]
     pub fn push_float(f: OrderedFloat<f64>) -> Self {
-        FloatInstruction::Push(f).into()
+        FloatInstruction::push_ordered_float(f).into()
     }
 }
 

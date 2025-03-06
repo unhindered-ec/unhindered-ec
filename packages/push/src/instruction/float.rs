@@ -1,9 +1,15 @@
 use ordered_float::OrderedFloat;
 use strum_macros::EnumIter;
 
-use super::{Instruction, PushInstruction, PushInstructionError};
+use super::{
+    Instruction, PushInstruction, PushInstructionError,
+    common::{
+        dup::Dup, flush::Flush, is_empty::IsEmpty, pop::Pop, push_value::PushValue,
+        stack_depth::StackDepth, swap::Swap,
+    },
+};
 use crate::{
-    error::{Error, InstructionResult, MapInstructionError},
+    error::{Error, InstructionResult},
     push_vm::{
         HasStack,
         stack::{PushOnto, Stack, StackDiscard, StackError},
@@ -13,8 +19,15 @@ use crate::{
 #[derive(Debug, strum_macros::Display, Copy, Clone, EnumIter, Eq, PartialEq)]
 #[non_exhaustive]
 pub enum FloatInstruction {
-    #[strum(to_string = "Push({0})")]
-    Push(OrderedFloat<f64>),
+    Pop(Pop<OrderedFloat<f64>>),
+    #[strum(to_string = "{0}")]
+    Push(PushValue<OrderedFloat<f64>>),
+    Dup(Dup<OrderedFloat<f64>>),
+    Swap(Swap<OrderedFloat<f64>>),
+    IsEmpty(IsEmpty<OrderedFloat<f64>>),
+    StackDepth(StackDepth<OrderedFloat<f64>>),
+    Flush(Flush<OrderedFloat<f64>>),
+
     Add,
     Subtract,
     Multiply,
@@ -25,7 +38,48 @@ pub enum FloatInstruction {
     LessThan,
     GreaterThanOrEqual,
     LessThanOrEqual,
-    Dup,
+}
+
+impl FloatInstruction {
+    #[must_use]
+    pub const fn pop() -> Self {
+        Self::Pop(Pop::new())
+    }
+
+    #[must_use]
+    pub const fn push(value: f64) -> Self {
+        Self::Push(PushValue(OrderedFloat(value)))
+    }
+
+    #[must_use]
+    pub const fn push_ordered_float(value: OrderedFloat<f64>) -> Self {
+        Self::Push(PushValue(value))
+    }
+
+    #[must_use]
+    pub const fn dup() -> Self {
+        Self::Dup(Dup::new())
+    }
+
+    #[must_use]
+    pub const fn swap() -> Self {
+        Self::Swap(Swap::new())
+    }
+
+    #[must_use]
+    pub const fn is_empty() -> Self {
+        Self::IsEmpty(IsEmpty::new())
+    }
+
+    #[must_use]
+    pub const fn stack_depth() -> Self {
+        Self::StackDepth(StackDepth::new())
+    }
+
+    #[must_use]
+    pub const fn flush() -> Self {
+        Self::Flush(Flush::new())
+    }
 }
 
 impl From<FloatInstruction> for PushInstruction {
@@ -36,13 +90,19 @@ impl From<FloatInstruction> for PushInstruction {
 
 impl<S> Instruction<S> for FloatInstruction
 where
-    S: Clone + HasStack<OrderedFloat<f64>> + HasStack<bool>,
+    S: Clone + HasStack<OrderedFloat<f64>> + HasStack<bool> + HasStack<i64>,
 {
     type Error = PushInstructionError;
 
-    fn perform(&self, mut state: S) -> InstructionResult<S, Self::Error> {
+    fn perform(&self, state: S) -> InstructionResult<S, Self::Error> {
         match self {
-            Self::Push(f) => state.with_push(*f).map_err_into(),
+            Self::Pop(pop) => pop.perform(state),
+            Self::Push(push) => push.perform(state),
+            Self::Dup(dup) => dup.perform(state),
+            Self::Swap(swap) => swap.perform(state),
+            Self::IsEmpty(is_empty) => is_empty.perform(state),
+            Self::StackDepth(stack_depth) => stack_depth.perform(state),
+            Self::Flush(flush) => flush.perform(state),
 
             // All these instructions pop at least one value from the float stack, so we're
             // guaranteed that there will be space for the result. So we don't have to check that
@@ -68,24 +128,6 @@ where
             Self::LessThan => Self::binary_predicate(state, std::cmp::PartialOrd::lt),
             Self::GreaterThanOrEqual => Self::binary_predicate(state, std::cmp::PartialOrd::ge),
             Self::LessThanOrEqual => Self::binary_predicate(state, std::cmp::PartialOrd::le),
-
-            Self::Dup => {
-                if state.stack::<OrderedFloat<f64>>().is_full() {
-                    return Err(Error::fatal(
-                        state,
-                        StackError::Overflow {
-                            stack_type: "float",
-                        },
-                    ));
-                }
-                let float_stack: &mut Stack<OrderedFloat<f64>> =
-                    state.stack_mut::<OrderedFloat<f64>>();
-                float_stack
-                    .top()
-                    .map_err(PushInstructionError::from)
-                    .cloned()
-                    .push_onto(state)
-            }
         }
     }
 }
@@ -114,10 +156,9 @@ impl FloatInstruction {
         S: Clone + HasStack<OrderedFloat<f64>> + HasStack<bool>,
     {
         if state.stack::<bool>().is_full() {
-            return Err(Error::fatal(
-                state,
-                StackError::Overflow { stack_type: "bool" },
-            ));
+            return Err(Error::fatal(state, StackError::Overflow {
+                stack_type: "bool",
+            }));
         }
         let float_stack: &mut Stack<OrderedFloat<f64>> = state.stack_mut::<OrderedFloat<f64>>();
         float_stack
@@ -140,6 +181,6 @@ mod test {
 
     #[test]
     fn manual_push_display() {
-        assert_eq!(format!("{}", FloatInstruction::Push(1.0.into())), "Push(1)");
+        assert_eq!(format!("{}", FloatInstruction::push(1.0)), "Push(1)");
     }
 }
