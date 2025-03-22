@@ -89,6 +89,10 @@ impl IntInstruction {
         Self::StackDepth(StackDepth::new())
     }
 
+    pub const fn flush() -> Self {
+        Self::Flush(Flush::new())
+    }
+
     pub const fn negate() -> Self {
         Self::Negate(Negate)
     }
@@ -105,6 +109,48 @@ impl IntInstruction {
 impl From<IntInstruction> for PushInstruction {
     fn from(instr: IntInstruction) -> Self {
         Self::IntInstruction(instr)
+    }
+}
+
+impl From<Pop<i64>> for IntInstruction {
+    fn from(pop: Pop<i64>) -> Self {
+        Self::Pop(pop)
+    }
+}
+
+impl From<PushValue<i64>> for IntInstruction {
+    fn from(push: PushValue<i64>) -> Self {
+        Self::Push(push)
+    }
+}
+
+impl From<Dup<i64>> for IntInstruction {
+    fn from(dup: Dup<i64>) -> Self {
+        Self::Dup(dup)
+    }
+}
+
+impl From<Swap<i64>> for IntInstruction {
+    fn from(swap: Swap<i64>) -> Self {
+        Self::Swap(swap)
+    }
+}
+
+impl From<IsEmpty<i64>> for IntInstruction {
+    fn from(is_empty: IsEmpty<i64>) -> Self {
+        Self::IsEmpty(is_empty)
+    }
+}
+
+impl From<StackDepth<i64>> for IntInstruction {
+    fn from(stack_depth: StackDepth<i64>) -> Self {
+        Self::StackDepth(stack_depth)
+    }
+}
+
+impl From<Flush<i64>> for IntInstruction {
+    fn from(flush: Flush<i64>) -> Self {
+        Self::Flush(flush)
     }
 }
 
