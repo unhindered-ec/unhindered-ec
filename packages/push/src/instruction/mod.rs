@@ -71,7 +71,7 @@ pub enum PushInstruction {
 impl PushInstruction {
     #[must_use]
     pub fn push_bool(b: bool) -> Self {
-        BoolInstruction::Push(b).into()
+        BoolInstruction::push(b).into()
     }
 
     #[must_use]

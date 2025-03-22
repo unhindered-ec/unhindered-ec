@@ -2,7 +2,13 @@ use std::ops::Not;
 
 use strum_macros::EnumIter;
 
-use super::{Instruction, PushInstruction, PushInstructionError};
+use super::{
+    Instruction, PushInstruction, PushInstructionError,
+    common::{
+        dup::Dup, flush::Flush, is_empty::IsEmpty, pop::Pop, push_value::PushValue,
+        stack_depth::StackDepth, swap::Swap,
+    },
+};
 use crate::{
     error::{InstructionResult, MapInstructionError},
     push_vm::stack::{HasStack, PushOnto},
@@ -11,8 +17,16 @@ use crate::{
 #[derive(Debug, strum_macros::Display, Clone, PartialEq, Eq, EnumIter)]
 #[non_exhaustive]
 pub enum BoolInstruction {
-    #[strum(to_string = "Push({0})")]
-    Push(bool),
+    // "Common" instructions specialized for the integer stack
+    Pop(Pop<bool>),
+    #[strum(to_string = "{0}")]
+    Push(PushValue<bool>),
+    Dup(Dup<bool>),
+    Swap(Swap<bool>),
+    IsEmpty(IsEmpty<bool>),
+    StackDepth(StackDepth<bool>),
+    Flush(Flush<bool>),
+
     Not,
     Or,
     And,
@@ -23,6 +37,60 @@ pub enum BoolInstruction {
     // BoolInvertSecondThenAnd,
     FromInt,
     // BoolFromFloat,
+}
+
+impl BoolInstruction {
+    pub const fn push(value: bool) -> Self {
+        Self::Push(PushValue(value))
+    }
+}
+
+impl From<BoolInstruction> for PushInstruction {
+    fn from(instr: BoolInstruction) -> Self {
+        Self::BoolInstruction(instr)
+    }
+}
+
+impl From<Pop<bool>> for BoolInstruction {
+    fn from(pop: Pop<bool>) -> Self {
+        Self::Pop(pop)
+    }
+}
+
+impl From<PushValue<bool>> for BoolInstruction {
+    fn from(push: PushValue<bool>) -> Self {
+        Self::Push(push)
+    }
+}
+
+impl From<Dup<bool>> for BoolInstruction {
+    fn from(dup: Dup<bool>) -> Self {
+        Self::Dup(dup)
+    }
+}
+
+impl From<Swap<bool>> for BoolInstruction {
+    fn from(swap: Swap<bool>) -> Self {
+        Self::Swap(swap)
+    }
+}
+
+impl From<IsEmpty<bool>> for BoolInstruction {
+    fn from(is_empty: IsEmpty<bool>) -> Self {
+        Self::IsEmpty(is_empty)
+    }
+}
+
+impl From<StackDepth<bool>> for BoolInstruction {
+    fn from(stack_depth: StackDepth<bool>) -> Self {
+        Self::StackDepth(stack_depth)
+    }
+}
+
+impl From<Flush<bool>> for BoolInstruction {
+    fn from(flush: Flush<bool>) -> Self {
+        Self::Flush(flush)
+    }
 }
 
 impl<S> Instruction<S> for BoolInstruction
@@ -83,7 +151,14 @@ where
     fn perform(&self, mut state: S) -> InstructionResult<S, Self::Error> {
         let bool_stack = state.stack_mut::<bool>();
         match self {
-            Self::Push(b) => state.with_push(*b).map_err_into(),
+            Self::Pop(pop) => pop.perform(state),
+            Self::Push(push) => push.perform(state),
+            Self::Dup(dup) => dup.perform(state),
+            Self::Swap(swap) => swap.perform(state),
+            Self::IsEmpty(is_empty) => is_empty.perform(state),
+            Self::StackDepth(stack_depth) => stack_depth.perform(state),
+            Self::Flush(flush) => flush.perform(state),
+
             Self::Not => bool_stack.pop().map(Not::not).push_onto(state),
             Self::And => bool_stack.pop2().map(|(x, y)| x && y).push_onto(state),
             Self::Or => bool_stack.pop2().map(|(x, y)| x || y).push_onto(state),
@@ -98,12 +173,6 @@ where
                     .push_onto(state)
             }
         }
-    }
-}
-
-impl From<BoolInstruction> for PushInstruction {
-    fn from(instr: BoolInstruction) -> Self {
-        Self::BoolInstruction(instr)
     }
 }
 
@@ -181,6 +250,6 @@ mod test {
 
     #[test]
     fn manual_push_display() {
-        assert_eq!(format!("{}", BoolInstruction::Push(true)), "Push(true)");
+        assert_eq!(format!("{}", BoolInstruction::push(true)), "Push(true)");
     }
 }

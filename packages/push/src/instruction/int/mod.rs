@@ -23,6 +23,7 @@ use crate::{
 #[non_exhaustive]
 #[must_use]
 pub enum IntInstruction {
+    // "Common" instructions specialized for the integer stack
     Pop(Pop<i64>),
     #[strum(to_string = "{0}")]
     Push(PushValue<i64>),
@@ -31,6 +32,7 @@ pub enum IntInstruction {
     IsEmpty(IsEmpty<i64>),
     StackDepth(StackDepth<i64>),
     Flush(Flush<i64>),
+
     Negate(Negate),
     Abs(Abs),
     Min,
