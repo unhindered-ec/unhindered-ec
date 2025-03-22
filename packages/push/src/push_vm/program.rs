@@ -7,10 +7,16 @@ use crate::{
     },
 };
 
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Debug, strum_macros::Display, Clone, Eq, PartialEq)]
 pub enum PushProgram {
     Instruction(PushInstruction),
     Block(Vec<PushProgram>),
+}
+
+impl Default for PushProgram {
+    fn default() -> Self {
+        Self::Block(Vec::new())
+    }
 }
 
 impl From<Plushy> for Vec<PushProgram> {
