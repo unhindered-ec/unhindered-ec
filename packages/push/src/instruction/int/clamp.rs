@@ -17,7 +17,9 @@ use crate::{
 /// # Behavior
 ///
 /// The `Clamp` instruction takes three values from the top of the `i64` stack:
-/// `value`, `min`, and `max`.
+/// `value`, `min`, and `max`. The `min` and `max` values are the second and
+/// third values on the `i64` stack, ordered so that the smaller is `min` and
+/// the larger is `max`.
 ///
 /// If `value` is less than `min`, `min` replaces `value` on the stack.
 ///
@@ -70,13 +72,8 @@ where
             .top3()
             .map_err(PushInstructionError::from)
             .map(|(&value, &min, &max)| {
-                if value < min {
-                    min
-                } else if value > max {
-                    max
-                } else {
-                    value
-                }
+                let (min, max) = if min > max { (max, min) } else { (min, max) };
+                value.clamp(min, max)
             })
             .replace_on(3, state)
     }
@@ -209,30 +206,11 @@ mod test {
             .with_no_program()
             .build();
         let result = Clamp.perform(state).unwrap();
+        let (min, max) = if max < min { (max, min) } else { (min, max) };
         let expected = if value < min {
             min
         } else if value > max {
             max
-        } else {
-            value
-        };
-        prop_assert_eq!(result.stack::<i64>().top().unwrap(), &expected);
-        prop_assert_eq!(result.stack::<i64>().size(), 1);
-    }
-
-    #[proptest]
-    fn clamp_proptest_min_max_reversed(value: i64, min: i64, max: i64) {
-        let state = PushState::builder()
-            .with_max_stack_size(3)
-            .with_int_values([value, max, min])
-            .unwrap()
-            .with_no_program()
-            .build();
-        let result = Clamp.perform(state).unwrap();
-        let expected = if value < max {
-            max
-        } else if value > min {
-            min
         } else {
             value
         };

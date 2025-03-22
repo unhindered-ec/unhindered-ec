@@ -1,0 +1,8 @@
+# Seeds for failure cases proptest has generated in the past. It is
+# automatically read and these particular cases re-run before any
+# novel cases are generated.
+#
+# It is recommended to check this file in to source control so that
+# everyone who runs the test benefits from these saved cases.
+cc e8f6d609310b68a4d7f0b5909427b8edbc4a98a13d19fb73f4fda079c112cad3 # shrinks to input = _ClampProptestMinMaxReversedArgs { value: 0, min: -348321630786153799, max: 0 }
+cc fc4174e4676b4d2502b763a407f9076a472c156944351b9740fda9ba6b6281bf # shrinks to input = _ClampProptestArgs { value: 0, min: 0, max: -1 }
