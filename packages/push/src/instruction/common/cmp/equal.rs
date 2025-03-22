@@ -140,3 +140,195 @@ where
         state.with_push(first == second).map_err_into()
     }
 }
+
+#[cfg(test)]
+mod test {
+    use ordered_float::OrderedFloat;
+    use proptest::prelude::*;
+    use test_strategy::proptest;
+
+    use super::Equal;
+    use crate::{
+        instruction::{Instruction, instruction_error::PushInstructionError},
+        push_vm::{HasStack, push_state::PushState, stack::StackError},
+    };
+
+    #[test]
+    fn equal_same_stack_equal() {
+        let state = PushState::builder()
+            .with_max_stack_size(2)
+            .with_int_values([5, 5])
+            .unwrap()
+            .with_no_program()
+            .build();
+        let result = Equal::<i64>::default().perform(state).unwrap();
+        assert!(result.stack::<i64>().is_empty());
+        assert_eq!(result.stack::<bool>(), &[true]);
+    }
+
+    #[test]
+    fn equal_same_stack_not_equal() {
+        let state = PushState::builder()
+            .with_max_stack_size(2)
+            .with_int_values([5, 10])
+            .unwrap()
+            .with_no_program()
+            .build();
+        let result = Equal::<i64>::default().perform(state).unwrap();
+        assert!(result.stack::<i64>().is_empty());
+        assert_eq!(result.stack::<bool>(), &[false]);
+    }
+
+    // #[test]
+    // fn equal_different_stacks_equal() {
+    //     let state = PushState::builder()
+    //         .with_max_stack_size(1)
+    //         .with_int_values([5])
+    //         .unwrap()
+    //         .with_float_values([OrderedFloat(5.0)])
+    //         .unwrap()
+    //         .with_no_program()
+    //         .build();
+    //     let result = Equal::<i64, f64>::default().perform(state).unwrap();
+    //     assert_eq!(result.stack::<bool>().top().unwrap(), &true);
+    //     assert_eq!(result.stack::<bool>().size(), 1);
+    // }
+
+    // #[test]
+    // fn equal_different_stacks_not_equal() {
+    //     let state = PushState::builder()
+    //         .with_max_stack_size(1)
+    //         .with_int_values([5])
+    //         .unwrap()
+    //         .with_float_values([OrderedFloat(10.0)])
+    //         .unwrap()
+    //         .with_no_program()
+    //         .build();
+    //     let result = Equal::<i64, f64>::default().perform(state).unwrap();
+    //     assert_eq!(result.stack::<bool>().top().unwrap(), &false);
+    //     assert_eq!(result.stack::<bool>().size(), 1);
+    // }
+
+    #[test]
+    fn equal_same_stack_underflow() {
+        let state = PushState::builder()
+            // This has to be 1 to ensure that there's room on the bool stack for the result.
+            .with_max_stack_size(1)
+            .with_no_program()
+            .build();
+        let result = Equal::<i64>::default().perform(state).unwrap_err();
+        assert!(result.is_recoverable());
+        assert_eq!(
+            result.error(),
+            &PushInstructionError::StackError(StackError::Underflow {
+                num_requested: 2,
+                num_present: 0
+            })
+        );
+    }
+
+    #[test]
+    fn equal_same_stack_underflow_one() {
+        let state = PushState::builder()
+            .with_max_stack_size(1)
+            .with_int_values([5])
+            .unwrap()
+            .with_no_program()
+            .build();
+        let result = Equal::<i64>::default().perform(state).unwrap_err();
+        assert!(result.is_recoverable());
+        assert_eq!(
+            result.error(),
+            &PushInstructionError::StackError(StackError::Underflow {
+                num_requested: 2,
+                num_present: 1
+            })
+        );
+    }
+
+    // #[test]
+    // fn equal_different_stacks_underflow_first() {
+    //     let state = PushState::builder()
+    //         .with_max_stack_size(0)
+    //         .with_float_values([OrderedFloat(10.0)])
+    //         .unwrap()
+    //         .with_no_program()
+    //         .build();
+    //     let result = Equal::<i64, f64>::default().perform(state).unwrap_err();
+    //     assert!(result.is_recoverable());
+    //     assert_eq!(
+    //         result.error(),
+    //         &PushInstructionError::StackError(StackError::Underflow {
+    //             num_requested: 1,
+    //             num_present: 0
+    //         })
+    //     );
+    // }
+
+    // #[test]
+    // fn equal_different_stacks_underflow_second() {
+    //     let state = PushState::builder()
+    //         .with_max_stack_size(1)
+    //         .with_int_values([5])
+    //         .unwrap()
+    //         .with_max_stack_size(0)
+    //         .with_no_program()
+    //         .build();
+    //     let result = Equal::<i64, f64>::default().perform(state).unwrap_err();
+    //     assert!(result.is_recoverable());
+    //     assert_eq!(
+    //         result.error(),
+    //         &PushInstructionError::StackError(StackError::Underflow {
+    //             num_requested: 1,
+    //             num_present: 0
+    //         })
+    //     );
+    // }
+
+    #[test]
+    fn equal_bool_stack_overflow() {
+        let state = PushState::builder()
+            .with_max_stack_size(2)
+            .with_int_values([5, 5])
+            .unwrap()
+            // Trying to push the result will overflow the boolean stack
+            .with_bool_values([false, false])
+            .unwrap()
+            .with_no_program()
+            .build();
+        let result = Equal::<i64>::default().perform(state).unwrap_err();
+        assert!(!result.is_recoverable());
+        assert_eq!(
+            result.error(),
+            &PushInstructionError::StackError(StackError::Overflow { stack_type: "bool" })
+        );
+    }
+
+    #[proptest]
+    fn equal_proptest_same_stack(a: i64, b: i64) {
+        let state = PushState::builder()
+            .with_max_stack_size(2)
+            .with_int_values([a, b])
+            .unwrap()
+            .with_no_program()
+            .build();
+        let result = Equal::<i64>::default().perform(state).unwrap();
+        prop_assert_eq!(result.stack::<bool>().top().unwrap(), &(a == b));
+        prop_assert_eq!(result.stack::<bool>().size(), 1);
+    }
+
+    // #[proptest]
+    // fn equal_proptest_different_stacks(a: i64, b: f64) {
+    //     let state = PushState::builder()
+    //         .with_max_stack_size(1)
+    //         .with_int_values([a])
+    //         .unwrap()
+    //         .with_float_values([b])
+    //         .unwrap()
+    //         .with_no_program()
+    //         .build();
+    //     let result = Equal::<i64, f64>::default().perform(state).unwrap();
+    //     prop_assert_eq!(result.stack::<bool>().top().unwrap(), &(a as f64 ==
+    // b));     prop_assert_eq!(result.stack::<bool>().size(), 1);
+    // }
+}
