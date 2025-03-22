@@ -510,6 +510,14 @@ pub fn generate_builder(
         > #builder_name<__Exec, #(#stack_generics),*> {
             /// Sets the maximum stack size for all the stacks in this state.
             ///
+            /// If we set this too high, then this can allow evolved programs to consume
+            /// excessive resources, and potentially break in unexpected ways. If, for example,
+            /// this limit was set high enough, then the size of a stack could (in theory)
+            /// exceed the largest value possible on a stack of `i64`, which would break
+            /// the `StackDepth` instruction. With 2025 hardware we would almost certainly
+            /// run out of memory before we put $2^63$ items on a stack, but in theory it's
+            /// possible.
+            ///
             /// # Arguments
             ///
             /// * `max_stack_size` - A `usize` specifying the maximum stack size
