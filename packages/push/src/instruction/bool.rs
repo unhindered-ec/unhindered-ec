@@ -40,6 +40,7 @@ pub enum BoolInstruction {
 }
 
 impl BoolInstruction {
+    #[must_use]
     pub const fn push(value: bool) -> Self {
         Self::Push(PushValue(value))
     }
