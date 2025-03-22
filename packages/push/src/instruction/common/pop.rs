@@ -77,7 +77,7 @@ where
 
 #[cfg(test)]
 mod tests {
-    use proptest::{collection::vec, prelude::*};
+    use proptest::sample::size_range;
     use test_strategy::proptest;
 
     use super::*;
@@ -116,7 +116,7 @@ mod tests {
 
     // Test that `Pop` works on stacks of 1..100 elements of type `i64`.
     #[proptest]
-    fn pop_stacks_with_multiple_items(#[strategy(vec(any::<i64>(), 1..100))] values: Vec<i64>) {
+    fn pop_stacks_with_multiple_items(#[any(size_range(1..100).lift())] values: Vec<i64>) {
         let state = PushState::builder()
             .with_max_stack_size(100)
             .with_int_values(values.clone().into_iter().rev())
@@ -127,7 +127,7 @@ mod tests {
         let result = pop.perform(state).unwrap();
         #[expect(
             clippy::arithmetic_side_effects,
-            reason = "The length of `values` is less than 100, so adding 1 is guaranteed to be \
+            reason = "The length of `values` is at least 1, so subtracting 1 is guaranteed to be \
                       safe."
         )]
         let expected_num_values = values.len() - 1;

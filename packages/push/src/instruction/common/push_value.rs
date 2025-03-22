@@ -43,12 +43,19 @@ use crate::{
 ///
 /// # Errors
 ///
-/// If the stack access returns any error other than a
-/// [`StackError::Underflow`](crate::push_vm::stack::StackError::Underflow)
-/// then this returns that as a [`Error::Fatal`](crate::error::Error::Fatal)
+/// If the stack is full
+/// then this returns a [`Error::Fatal`](crate::error::Error::Fatal)
+/// [`StackError::Overflow`](crate::push_vm::stack::StackError::Overflow)
 /// error.
 #[derive(Debug, Default, Copy, Clone, Eq, PartialEq)]
 pub struct PushValue<T>(pub T);
+
+impl<T> PushValue<T> {
+    /// Create an instance of `PushValue` with the given `value`.
+    pub const fn new(value: T) -> Self {
+        Self(value)
+    }
+}
 
 impl<S, T> Instruction<S> for PushValue<T>
 where

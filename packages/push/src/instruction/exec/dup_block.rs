@@ -72,12 +72,7 @@ where
     type Error = PushInstructionError;
 
     fn perform(&self, state: S) -> InstructionResult<S, Self::Error> {
-        state
-            .stack::<PushProgram>()
-            .top()
-            // .map_err(PushInstructionError::from)
-            .cloned()
-            .push_onto(state)
+        state.stack::<PushProgram>().top().cloned().push_onto(state)
     }
 }
 

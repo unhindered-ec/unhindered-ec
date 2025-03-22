@@ -35,18 +35,17 @@ use crate::{
 ///       - ‼️: fatal error, with links to the error kind
 ///    - The "Note" column briefly summarizes the action state in that case
 ///
-/// | `Stack<T>`  | Success | Note |
+/// | `Stack<T>` top | `Stack<T>` next-to-top | Success | Note |
 /// | ------------- | ------------- | ------------- |
-/// | exists, exists  | ✅ | The top two values are swapped |
-/// | exists, missing | [❗…](crate::push_vm::stack::StackError::Underflow) | State is unchanged |
-/// | missing, irrelevant | [❗…](crate::push_vm::stack::StackError::Underflow) | State is unchanged |
+/// | exists | exists  | ✅ | The top two values are swapped |
+/// | exists | missing | [❗…](crate::push_vm::stack::StackError::Underflow) | State is unchanged |
+/// | missing | irrelevant | [❗…](crate::push_vm::stack::StackError::Underflow) | State is unchanged |
 ///
 /// # Errors
 ///
-/// If the stack access returns any error other than a
+/// This returns a [`Error::Recoverable`]
 /// [`StackError::Underflow`](crate::push_vm::stack::StackError::Underflow)
-/// then this returns that as a [`Error::Fatal`]
-/// error.
+/// error if `Stack<T>` doesn't have at least two values.
 #[derive(Debug, Copy, Clone, Default, Eq, PartialEq)]
 pub struct Swap<T> {
     _p: PhantomData<T>,

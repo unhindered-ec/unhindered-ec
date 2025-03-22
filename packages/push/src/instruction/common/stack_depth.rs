@@ -62,10 +62,9 @@ use crate::{
 ///
 /// # Errors
 ///
-/// If the stack access returns any error other than a
-/// [`StackError::Underflow`](crate::push_vm::stack::StackError::Underflow)
-/// then this returns that as a [`Error::Fatal`](crate::error::Error::Fatal)
-/// error.
+/// This returns a [`Error::Fatal`](crate::error::Error::Fatal)
+/// [`StackError::Overflow`](crate::push_vm::stack::StackError::Overflow)
+/// error if pushing the depth overflows the integer stack.
 #[derive(Debug, Copy, Clone, Default, Eq, PartialEq)]
 pub struct StackDepth<T> {
     _p: PhantomData<T>,

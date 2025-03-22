@@ -1,6 +1,7 @@
 use std::marker::PhantomData;
 
 use crate::{
+    error::InstructionResult,
     instruction::{Instruction, instruction_error::PushInstructionError},
     push_vm::HasStack,
 };
@@ -14,6 +15,7 @@ use crate::{
 /// # Behavior
 ///
 /// The `Flush` instruction removes all the elements from the stack of type `T`.
+/// If the stack was already empty, then this returns the state unchanged.
 ///
 /// If the type `T` is `bool`, this will remove all `bool` values from the
 /// stack. If the type `T` is `i64` then all `i64` values will be removed from
@@ -40,10 +42,7 @@ use crate::{
 ///
 /// # Errors
 ///
-/// If the stack access returns any error other than a
-/// [`StackError::Underflow`](crate::push_vm::stack::StackError::Underflow)
-/// then this returns that as a [`Error::Fatal`](crate::error::Error::Fatal)
-/// error.
+/// This instruction never fails.
 #[derive(Debug, Copy, Clone, Default, Eq, PartialEq)]
 pub struct Flush<T> {
     _p: PhantomData<T>,
@@ -61,7 +60,7 @@ where
 {
     type Error = PushInstructionError;
 
-    fn perform(&self, mut state: S) -> crate::error::InstructionResult<S, Self::Error> {
+    fn perform(&self, mut state: S) -> InstructionResult<S, Self::Error> {
         let stack = state.stack_mut::<T>();
         // Pop all the items on the stack
         // until we run into an underflow error.
@@ -84,6 +83,17 @@ mod test {
             .with_max_stack_size(3)
             .with_int_values([1, 2, 3])
             .unwrap()
+            .with_no_program()
+            .build();
+        let flush = Flush::<i64>::new();
+        let state = flush.perform(state).unwrap();
+        assert_eq!(state.stack::<i64>().size(), 0);
+    }
+
+    #[test]
+    fn flush_empty_stack() {
+        let state = PushState::builder()
+            .with_max_stack_size(0)
             .with_no_program()
             .build();
         let flush = Flush::<i64>::new();

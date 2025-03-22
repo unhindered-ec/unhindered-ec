@@ -1,7 +1,7 @@
 use std::marker::PhantomData;
 
 use crate::{
-    error::MapInstructionError,
+    error::{InstructionResult, MapInstructionError},
     instruction::{Instruction, instruction_error::PushInstructionError},
     push_vm::HasStack,
 };
@@ -72,7 +72,7 @@ where
 {
     type Error = PushInstructionError;
 
-    fn perform(&self, state: S) -> crate::error::InstructionResult<S, Self::Error> {
+    fn perform(&self, state: S) -> InstructionResult<S, Self::Error> {
         let is_empty = state.stack::<T>().is_empty();
         state.with_push(is_empty).map_err_into()
     }

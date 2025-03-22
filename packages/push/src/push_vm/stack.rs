@@ -202,7 +202,7 @@ where
 ///
 /// If you either need to use [`Stack`] in a generic fashion using `T:
 /// TryExtend<I>` or you have an iterator where you can't guarantee the
-/// neccessary bounds, using this implementation is the best way to go.
+/// necessary bounds, using this implementation is the best way to go.
 /// (this implementation of course tries to be as optimized as possible as well,
 /// given the constraints)
 impl<A> TryExtend<A> for Stack<A> {
@@ -712,6 +712,33 @@ mod test {
             StackError::Underflow {
                 num_requested: 3,
                 num_present: 2
+            }
+        );
+    }
+
+    #[test]
+    fn pop3_from_empty_fails() {
+        let mut stack: Stack<bool> = Stack::default();
+        let result = stack.pop3().unwrap_err();
+        assert_eq!(
+            result,
+            StackError::Underflow {
+                num_requested: 3,
+                num_present: 0
+            }
+        );
+    }
+
+    #[test]
+    fn pop3_from_one_fails() {
+        let mut stack: Stack<bool> = Stack::default();
+        stack.push(true).unwrap();
+        let result = stack.pop3().unwrap_err();
+        assert_eq!(
+            result,
+            StackError::Underflow {
+                num_requested: 3,
+                num_present: 1
             }
         );
     }

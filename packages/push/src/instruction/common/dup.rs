@@ -20,8 +20,11 @@ use crate::{
 /// The `Dup` instruction clones the top block on the stack of type `T`,
 /// leaving both the original and the copy on that stack.
 ///
-/// If stack is empty, this is a no-op,
-/// and the state is returned unchanged.
+/// If stack is empty,  then
+/// a recoverable
+/// [`StackError::Underflow`](crate::push_vm::stack::StackError::Underflow)
+/// is returned containing the state unchanged, allowing the interpreter to
+/// continue with the next instruction.
 ///
 /// If the stack is full before this instruction is performed, then
 /// a fatal [`StackError::Overflow`](crate::push_vm::stack::StackError::Overflow) is returned,

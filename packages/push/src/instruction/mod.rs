@@ -79,6 +79,11 @@ impl PushInstruction {
         IntInstruction::push(i).into()
     }
 
+    // #[must_use]
+    // pub fn push_float(f: f64) -> Self {
+    //     FloatInstruction::push(f).into()
+    // }
+
     #[must_use]
     pub fn push_float(f: OrderedFloat<f64>) -> Self {
         FloatInstruction::push_ordered_float(f).into()

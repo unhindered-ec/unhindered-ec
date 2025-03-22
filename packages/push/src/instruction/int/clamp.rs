@@ -51,10 +51,10 @@ use crate::{
 ///
 /// # Errors
 ///
-/// If the stack access returns any error other than a
+///
+/// The only possible error here is
 /// [`StackError::Underflow`](crate::push_vm::stack::StackError::Underflow)
-/// then this returns that as a [`Error::Fatal`](crate::error::Error::Fatal)
-/// error.
+/// and the instruction will then be ignored.
 #[derive(Debug, Default, Copy, Clone, Eq, PartialEq)]
 pub struct Clamp;
 
@@ -84,10 +84,13 @@ where
 
 #[cfg(test)]
 mod test {
+    use proptest::prop_assert_eq;
+    use test_strategy::proptest;
+
     use super::Clamp;
     use crate::{
-        instruction::Instruction,
-        push_vm::{HasStack, push_state::PushState},
+        instruction::{Instruction, instruction_error::PushInstructionError},
+        push_vm::{HasStack, push_state::PushState, stack::StackError},
     };
 
     #[test]
@@ -127,5 +130,113 @@ mod test {
         let result = Clamp.perform(state).unwrap();
         assert_eq!(result.stack::<i64>().top().unwrap(), &15);
         assert_eq!(result.stack::<i64>().size(), 1);
+    }
+
+    #[test]
+    fn clamp_min_equals_max() {
+        let state = PushState::builder()
+            .with_max_stack_size(3)
+            .with_int_values([15, 10, 10])
+            .unwrap()
+            .with_no_program()
+            .build();
+        let result = Clamp.perform(state).unwrap();
+        assert_eq!(result.stack::<i64>().top().unwrap(), &10);
+        assert_eq!(result.stack::<i64>().size(), 1);
+    }
+
+    #[test]
+    fn clamp_underflow() {
+        let state = PushState::builder()
+            .with_max_stack_size(0)
+            .with_no_program()
+            .build();
+        let result = Clamp.perform(state).unwrap_err();
+        assert!(result.is_recoverable());
+        assert_eq!(
+            result.error(),
+            &PushInstructionError::StackError(StackError::Underflow {
+                num_requested: 3,
+                num_present: 0
+            })
+        );
+    }
+
+    #[test]
+    fn clamp_underflow_one() {
+        let state = PushState::builder()
+            .with_max_stack_size(1)
+            .with_int_values([1])
+            .unwrap()
+            .with_no_program()
+            .build();
+        let result = Clamp.perform(state).unwrap_err();
+        assert!(result.is_recoverable());
+        assert_eq!(
+            result.error(),
+            &PushInstructionError::StackError(StackError::Underflow {
+                num_requested: 3,
+                num_present: 1
+            })
+        );
+    }
+
+    #[test]
+    fn clamp_underflow_two() {
+        let state = PushState::builder()
+            .with_max_stack_size(2)
+            .with_int_values([1, 2])
+            .unwrap()
+            .with_no_program()
+            .build();
+        let result = Clamp.perform(state).unwrap_err();
+        assert!(result.is_recoverable());
+        assert_eq!(
+            result.error(),
+            &PushInstructionError::StackError(StackError::Underflow {
+                num_requested: 3,
+                num_present: 2
+            })
+        );
+    }
+
+    #[proptest]
+    fn clamp_proptest(value: i64, min: i64, max: i64) {
+        let state = PushState::builder()
+            .with_max_stack_size(3)
+            .with_int_values([value, min, max])
+            .unwrap()
+            .with_no_program()
+            .build();
+        let result = Clamp.perform(state).unwrap();
+        let expected = if value < min {
+            min
+        } else if value > max {
+            max
+        } else {
+            value
+        };
+        prop_assert_eq!(result.stack::<i64>().top().unwrap(), &expected);
+        prop_assert_eq!(result.stack::<i64>().size(), 1);
+    }
+
+    #[proptest]
+    fn clamp_proptest_min_max_reversed(value: i64, min: i64, max: i64) {
+        let state = PushState::builder()
+            .with_max_stack_size(3)
+            .with_int_values([value, max, min])
+            .unwrap()
+            .with_no_program()
+            .build();
+        let result = Clamp.perform(state).unwrap();
+        let expected = if value < max {
+            max
+        } else if value > min {
+            min
+        } else {
+            value
+        };
+        prop_assert_eq!(result.stack::<i64>().top().unwrap(), &expected);
+        prop_assert_eq!(result.stack::<i64>().size(), 1);
     }
 }
