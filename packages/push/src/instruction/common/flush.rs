@@ -2,7 +2,7 @@ use std::marker::PhantomData;
 
 use crate::{
     error::InstructionResult,
-    instruction::{Instruction, instruction_error::PushInstructionError},
+    instruction::{Instruction, NumOpens, instruction_error::PushInstructionError},
     push_vm::HasStack,
 };
 
@@ -51,6 +51,12 @@ pub struct Flush<T> {
 impl<T> Flush<T> {
     pub const fn new() -> Self {
         Self { _p: PhantomData }
+    }
+}
+
+impl<T> NumOpens for Flush<T> {
+    fn num_opens(&self) -> usize {
+        0
     }
 }
 

@@ -3,6 +3,7 @@ use std::marker::PhantomData;
 use super::super::{Instruction, instruction_error::PushInstructionError};
 use crate::{
     error::InstructionResult,
+    instruction::NumOpens,
     push_vm::{HasStack, stack::PushOnto},
 };
 
@@ -75,6 +76,12 @@ pub struct Dup<T> {
 impl<T> Dup<T> {
     pub const fn new() -> Self {
         Self { _p: PhantomData }
+    }
+}
+
+impl<T> NumOpens for Dup<T> {
+    fn num_opens(&self) -> usize {
+        0
     }
 }
 

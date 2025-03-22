@@ -3,6 +3,7 @@ use std::fmt::Display;
 use super::super::{Instruction, instruction_error::PushInstructionError};
 use crate::{
     error::{InstructionResult, MapInstructionError},
+    instruction::NumOpens,
     push_vm::HasStack,
 };
 
@@ -54,6 +55,12 @@ impl<T> PushValue<T> {
     /// Create an instance of `PushValue` with the given `value`.
     pub const fn new(value: T) -> Self {
         Self(value)
+    }
+}
+
+impl<T> NumOpens for PushValue<T> {
+    fn num_opens(&self) -> usize {
+        0
     }
 }
 

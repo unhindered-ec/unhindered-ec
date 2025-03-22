@@ -2,7 +2,7 @@ use std::marker::PhantomData;
 
 use crate::{
     error::MapInstructionError,
-    instruction::{Instruction, instruction_error::PushInstructionError},
+    instruction::{Instruction, NumOpens, instruction_error::PushInstructionError},
     push_vm::HasStack,
 };
 
@@ -73,6 +73,12 @@ pub struct StackDepth<T> {
 impl<T> StackDepth<T> {
     pub const fn new() -> Self {
         Self { _p: PhantomData }
+    }
+}
+
+impl<T> NumOpens for StackDepth<T> {
+    fn num_opens(&self) -> usize {
+        0
     }
 }
 

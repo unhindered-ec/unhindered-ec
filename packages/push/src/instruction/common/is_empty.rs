@@ -2,7 +2,7 @@ use std::marker::PhantomData;
 
 use crate::{
     error::{InstructionResult, MapInstructionError},
-    instruction::{Instruction, instruction_error::PushInstructionError},
+    instruction::{Instruction, NumOpens, instruction_error::PushInstructionError},
     push_vm::HasStack,
 };
 
@@ -63,6 +63,12 @@ pub struct IsEmpty<T> {
 impl<T> IsEmpty<T> {
     pub const fn new() -> Self {
         Self { _p: PhantomData }
+    }
+}
+
+impl<T> NumOpens for IsEmpty<T> {
+    fn num_opens(&self) -> usize {
+        0
     }
 }
 

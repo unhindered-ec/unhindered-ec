@@ -3,6 +3,7 @@ use std::marker::PhantomData;
 use super::super::{Instruction, instruction_error::PushInstructionError};
 use crate::{
     error::{Error, InstructionResult, MapInstructionError},
+    instruction::NumOpens,
     push_vm::HasStack,
 };
 
@@ -54,6 +55,12 @@ pub struct Swap<T> {
 impl<T> Swap<T> {
     pub const fn new() -> Self {
         Self { _p: PhantomData }
+    }
+}
+
+impl<T> NumOpens for Swap<T> {
+    fn num_opens(&self) -> usize {
+        0
     }
 }
 

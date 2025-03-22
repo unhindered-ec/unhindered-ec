@@ -3,6 +3,7 @@ use std::marker::PhantomData;
 use super::super::{Instruction, instruction_error::PushInstructionError};
 use crate::{
     error::{Error, InstructionResult},
+    instruction::NumOpens,
     push_vm::HasStack,
 };
 
@@ -54,6 +55,12 @@ pub struct Pop<T> {
 impl<T> Pop<T> {
     pub const fn new() -> Self {
         Self { _p: PhantomData }
+    }
+}
+
+impl<T> NumOpens for Pop<T> {
+    fn num_opens(&self) -> usize {
+        0
     }
 }
 
