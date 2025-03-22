@@ -74,7 +74,7 @@ where
     fn perform(&self, mut state: S) -> InstructionResult<S, Self::Error> {
         match state.stack_mut::<T>().pop() {
             Ok(_) => Ok(state),
-            // If `pop()`` fails it's because the stack was empty and we
+            // If `pop()` fails it's because the stack was empty and we
             // want to return a recoverable error so the `pop` instruction
             // can be ignored.
             Err(error) => Err(Error::recoverable(state, error)),
