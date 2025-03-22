@@ -19,6 +19,7 @@ use crate::{
 #[derive(Debug, strum_macros::Display, Copy, Clone, EnumIter, Eq, PartialEq)]
 #[non_exhaustive]
 pub enum FloatInstruction {
+    // "Common" instructions specialized for the integer stack
     Pop(Pop<OrderedFloat<f64>>),
     #[strum(to_string = "{0}")]
     Push(PushValue<OrderedFloat<f64>>),
@@ -85,6 +86,48 @@ impl FloatInstruction {
 impl From<FloatInstruction> for PushInstruction {
     fn from(instr: FloatInstruction) -> Self {
         Self::FloatInstruction(instr)
+    }
+}
+
+impl From<Pop<OrderedFloat<f64>>> for FloatInstruction {
+    fn from(pop: Pop<OrderedFloat<f64>>) -> Self {
+        Self::Pop(pop)
+    }
+}
+
+impl From<PushValue<OrderedFloat<f64>>> for FloatInstruction {
+    fn from(push: PushValue<OrderedFloat<f64>>) -> Self {
+        Self::Push(push)
+    }
+}
+
+impl From<Dup<OrderedFloat<f64>>> for FloatInstruction {
+    fn from(dup: Dup<OrderedFloat<f64>>) -> Self {
+        Self::Dup(dup)
+    }
+}
+
+impl From<Swap<OrderedFloat<f64>>> for FloatInstruction {
+    fn from(swap: Swap<OrderedFloat<f64>>) -> Self {
+        Self::Swap(swap)
+    }
+}
+
+impl From<IsEmpty<OrderedFloat<f64>>> for FloatInstruction {
+    fn from(is_empty: IsEmpty<OrderedFloat<f64>>) -> Self {
+        Self::IsEmpty(is_empty)
+    }
+}
+
+impl From<StackDepth<OrderedFloat<f64>>> for FloatInstruction {
+    fn from(stack_depth: StackDepth<OrderedFloat<f64>>) -> Self {
+        Self::StackDepth(stack_depth)
+    }
+}
+
+impl From<Flush<OrderedFloat<f64>>> for FloatInstruction {
+    fn from(flush: Flush<OrderedFloat<f64>>) -> Self {
+        Self::Flush(flush)
     }
 }
 
