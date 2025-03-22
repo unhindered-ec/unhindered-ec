@@ -28,16 +28,16 @@ macro_rules! derived_ident {
             syn::Ident::new_raw(
                 &[$(format!(
                     "{}",
-                    derived_ident!(@handle_seprate $literal_part)
+                    derived_ident!(@handle_separate $literal_part)
                 )),*].concat(),
                 proc_macro2::Span::mixed_site()
             )
         }
     };
-    (@handle_seprate $lit: literal) => {
+    (@handle_separate $lit: literal) => {
         $lit
     };
-    (@handle_seprate $lit: expr) => {
+    (@handle_separate $lit: expr) => {
         $lit.unraw()
     }
 }
@@ -235,7 +235,7 @@ pub fn generate_builder(
                     ];
                     let var_name = derived_ident!(stack_ident, "_stack").unraw();
 
-                    let outtro = "# Ok::<(), StackError>(())";
+                    let outro = "# Ok::<(), StackError>(())";
 
                     let doctest_code = quote! {
                         let state = #struct_ident::builder()
@@ -255,7 +255,7 @@ pub fn generate_builder(
                     )
                         .then_some("ignore");
 
-                    doctest(Some(&imports), None::<&str>, doctest_code, Some(outtro), ignore_attr)
+                    doctest(Some(&imports), None::<&str>, doctest_code, Some(outro), ignore_attr)
                 });
 
                 let example_section = sample_values.is_some().then_some(quote! {
@@ -416,7 +416,7 @@ pub fn generate_builder(
                 Import::SuperRelativePath(import_utilities_path.clone()),
             ];
 
-            let outtro = "# Ok::<(), StackError>(())";
+            let outro = "# Ok::<(), StackError>(())";
 
             let doctest_code = quote! {
                 let state = #struct_ident::builder()
@@ -437,7 +437,7 @@ pub fn generate_builder(
                 Some(&imports),
                 None::<&str>,
                 doctest_code,
-                Some(outtro),
+                Some(outro),
                 ignore_attr
             );
 
