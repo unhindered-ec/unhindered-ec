@@ -27,7 +27,9 @@ fn push_float() {
         .with_max_stack_size(1)
         .with_no_program()
         .build();
-    let result = FloatInstruction::Push(x).perform(state).unwrap();
+    let result = FloatInstruction::push_ordered_float(x)
+        .perform(state)
+        .unwrap();
     assert_eq!(result.stack::<OrderedFloat<f64>>().size(), 1);
     assert_eq!(*result.stack::<OrderedFloat<f64>>().top().unwrap(), x);
 }
@@ -77,7 +79,7 @@ fn dup() {
         .unwrap()
         .with_no_program()
         .build();
-    let mut result = FloatInstruction::Dup.perform(state).unwrap();
+    let mut result = FloatInstruction::dup().perform(state).unwrap();
     assert_eq!(result.stack::<OrderedFloat<f64>>().size(), 2);
     let float_stack = result.stack_mut::<OrderedFloat<f64>>();
     let (&a, &b) = float_stack.top2().unwrap();

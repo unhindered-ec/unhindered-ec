@@ -28,16 +28,16 @@ macro_rules! derived_ident {
             syn::Ident::new_raw(
                 &[$(format!(
                     "{}",
-                    derived_ident!(@handle_seprate $literal_part)
+                    derived_ident!(@handle_separate $literal_part)
                 )),*].concat(),
                 proc_macro2::Span::mixed_site()
             )
         }
     };
-    (@handle_seprate $lit: literal) => {
+    (@handle_separate $lit: literal) => {
         $lit
     };
-    (@handle_seprate $lit: expr) => {
+    (@handle_separate $lit: expr) => {
         $lit.unraw()
     }
 }
@@ -235,7 +235,7 @@ pub fn generate_builder(
                     ];
                     let var_name = derived_ident!(stack_ident, "_stack").unraw();
 
-                    let outtro = "# Ok::<(), StackError>(())";
+                    let outro = "# Ok::<(), StackError>(())";
 
                     let doctest_code = quote! {
                         let state = #struct_ident::builder()
@@ -255,7 +255,7 @@ pub fn generate_builder(
                     )
                         .then_some("ignore");
 
-                    doctest(Some(&imports), None::<&str>, doctest_code, Some(outtro), ignore_attr)
+                    doctest(Some(&imports), None::<&str>, doctest_code, Some(outro), ignore_attr)
                 });
 
                 let example_section = sample_values.is_some().then_some(quote! {
@@ -416,7 +416,7 @@ pub fn generate_builder(
                 Import::SuperRelativePath(import_utilities_path.clone()),
             ];
 
-            let outtro = "# Ok::<(), StackError>(())";
+            let outro = "# Ok::<(), StackError>(())";
 
             let doctest_code = quote! {
                 let state = #struct_ident::builder()
@@ -437,7 +437,7 @@ pub fn generate_builder(
                 Some(&imports),
                 None::<&str>,
                 doctest_code,
-                Some(outtro),
+                Some(outro),
                 ignore_attr
             );
 
@@ -509,6 +509,14 @@ pub fn generate_builder(
             #(#stack_generics_with_dataless_bounds),*
         > #builder_name<__Exec, #(#stack_generics),*> {
             /// Sets the maximum stack size for all the stacks in this state.
+            ///
+            /// If we set this too high, then this can allow evolved programs to consume
+            /// excessive resources, and potentially break in unexpected ways. If, for example,
+            /// this limit was set high enough, then the size of a stack could (in theory)
+            /// exceed the largest value possible on a stack of `i64`, which would break
+            /// the `StackDepth` instruction. With 2025 hardware we would almost certainly
+            /// run out of memory before we put $2^63$ items on a stack, but in theory it's
+            /// possible.
             ///
             /// # Arguments
             ///

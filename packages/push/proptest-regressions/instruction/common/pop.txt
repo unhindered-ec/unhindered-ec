@@ -1,0 +1,7 @@
+# Seeds for failure cases proptest has generated in the past. It is
+# automatically read and these particular cases re-run before any
+# novel cases are generated.
+#
+# It is recommended to check this file in to source control so that
+# everyone who runs the test benefits from these saved cases.
+cc 9870b61189719861d67a590c410efb036caaecb0b4e0dbeaa224dba1eb8a4f82 # shrinks to input = _PopStacksWithMultipleItemsArgs { values: [0, 0, 1] }

@@ -142,9 +142,9 @@ fn main() -> miette::Result<()> {
         FloatInstruction::Subtract,
         FloatInstruction::Multiply,
         FloatInstruction::ProtectedDivide,
-        FloatInstruction::Dup,
-        FloatInstruction::Push(OrderedFloat(0.0)),
-        FloatInstruction::Push(OrderedFloat(1.0)),
+        FloatInstruction::dup(),
+        FloatInstruction::push(0.0),
+        FloatInstruction::push(1.0),
         VariableName::from("x")
     ]
     .into_gene_generator();

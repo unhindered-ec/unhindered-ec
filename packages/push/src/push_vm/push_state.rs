@@ -148,7 +148,7 @@ mod simple_check {
             BoolInstruction::And,       // [true]
             VariableName::from("b"),    // [false, true]
             push_float(3.5),            // [3.5]
-            FloatInstruction::Dup,      // [3.5, 3.5]
+            FloatInstruction::dup(),    // [3.5, 3.5]
             FloatInstruction::Multiply, // [12.25]
             VariableName::from("f"),    // [12.25, 0.75]
             FloatInstruction::Add,      // [13.0]

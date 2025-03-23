@@ -10,6 +10,7 @@ use self::{instruction_error::PushInstructionError, variable_name::VariableName}
 use crate::{error::InstructionResult, push_vm::push_state::PushState};
 
 mod bool;
+mod common;
 mod exec;
 mod float;
 pub mod instruction_error;
@@ -70,17 +71,22 @@ pub enum PushInstruction {
 impl PushInstruction {
     #[must_use]
     pub fn push_bool(b: bool) -> Self {
-        BoolInstruction::Push(b).into()
+        BoolInstruction::push(b).into()
     }
 
     #[must_use]
     pub fn push_int(i: i64) -> Self {
-        IntInstruction::Push(i).into()
+        IntInstruction::push(i).into()
     }
+
+    // #[must_use]
+    // pub fn push_float(f: f64) -> Self {
+    //     FloatInstruction::push(f).into()
+    // }
 
     #[must_use]
     pub fn push_float(f: OrderedFloat<f64>) -> Self {
-        FloatInstruction::Push(f).into()
+        FloatInstruction::push_ordered_float(f).into()
     }
 }
 

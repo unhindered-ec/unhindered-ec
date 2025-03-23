@@ -1,0 +1,7 @@
+# Seeds for failure cases proptest has generated in the past. It is
+# automatically read and these particular cases re-run before any
+# novel cases are generated.
+#
+# It is recommended to check this file in to source control so that
+# everyone who runs the test benefits from these saved cases.
+cc 3ae80eb1f252b8d10b50661d3f95bafaa63c3f11609e920b1007608d6e1f1670 # shrinks to input = _PushVarietyOfValuesOnNonemptyArgs { value: 0 }

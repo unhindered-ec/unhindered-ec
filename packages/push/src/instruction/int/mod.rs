@@ -1,13 +1,21 @@
 mod abs;
+mod clamp;
 mod negate;
 
+use clamp::Clamp;
 use miette::Diagnostic;
 use strum_macros::EnumIter;
 
 use self::{abs::Abs, negate::Negate};
-use super::{Instruction, PushInstruction, PushInstructionError};
+use super::{
+    Instruction, PushInstruction, PushInstructionError,
+    common::{
+        dup::Dup, flush::Flush, is_empty::IsEmpty, pop::Pop, push_value::PushValue,
+        stack_depth::StackDepth, swap::Swap,
+    },
+};
 use crate::{
-    error::{Error, InstructionResult, MapInstructionError},
+    error::{Error, InstructionResult},
     push_vm::stack::{HasStack, PushOnto, Stack, StackDiscard, StackError},
 };
 
@@ -15,12 +23,21 @@ use crate::{
 #[non_exhaustive]
 #[must_use]
 pub enum IntInstruction {
-    #[strum(to_string = "Push({0})")]
-    Push(i64),
+    // "Common" instructions specialized for the integer stack
+    Pop(Pop<i64>),
+    #[strum(to_string = "{0}")]
+    Push(PushValue<i64>),
+    Dup(Dup<i64>),
+    Swap(Swap<i64>),
+    IsEmpty(IsEmpty<i64>),
+    StackDepth(StackDepth<i64>),
+    Flush(Flush<i64>),
+
     Negate(Negate),
     Abs(Abs),
     Min,
     Max,
+    Clamp(Clamp),
     Inc,
     Dec,
     Add,
@@ -50,6 +67,34 @@ pub enum IntInstruction {
 }
 
 impl IntInstruction {
+    pub const fn pop() -> Self {
+        Self::Pop(Pop::new())
+    }
+
+    pub const fn push(value: i64) -> Self {
+        Self::Push(PushValue(value))
+    }
+
+    pub const fn dup() -> Self {
+        Self::Dup(Dup::new())
+    }
+
+    pub const fn swap() -> Self {
+        Self::Swap(Swap::new())
+    }
+
+    pub const fn is_empty() -> Self {
+        Self::IsEmpty(IsEmpty::new())
+    }
+
+    pub const fn stack_depth() -> Self {
+        Self::StackDepth(StackDepth::new())
+    }
+
+    pub const fn flush() -> Self {
+        Self::Flush(Flush::new())
+    }
+
     pub const fn negate() -> Self {
         Self::Negate(Negate)
     }
@@ -57,11 +102,57 @@ impl IntInstruction {
     pub const fn abs() -> Self {
         Self::Abs(Abs)
     }
+
+    pub const fn clamp() -> Self {
+        Self::Clamp(Clamp)
+    }
 }
 
 impl From<IntInstruction> for PushInstruction {
     fn from(instr: IntInstruction) -> Self {
         Self::IntInstruction(instr)
+    }
+}
+
+impl From<Pop<i64>> for IntInstruction {
+    fn from(pop: Pop<i64>) -> Self {
+        Self::Pop(pop)
+    }
+}
+
+impl From<PushValue<i64>> for IntInstruction {
+    fn from(push: PushValue<i64>) -> Self {
+        Self::Push(push)
+    }
+}
+
+impl From<Dup<i64>> for IntInstruction {
+    fn from(dup: Dup<i64>) -> Self {
+        Self::Dup(dup)
+    }
+}
+
+impl From<Swap<i64>> for IntInstruction {
+    fn from(swap: Swap<i64>) -> Self {
+        Self::Swap(swap)
+    }
+}
+
+impl From<IsEmpty<i64>> for IntInstruction {
+    fn from(is_empty: IsEmpty<i64>) -> Self {
+        Self::IsEmpty(is_empty)
+    }
+}
+
+impl From<StackDepth<i64>> for IntInstruction {
+    fn from(stack_depth: StackDepth<i64>) -> Self {
+        Self::StackDepth(stack_depth)
+    }
+}
+
+impl From<Flush<i64>> for IntInstruction {
+    fn from(flush: Flush<i64>) -> Self {
+        Self::Flush(flush)
     }
 }
 
@@ -93,10 +184,17 @@ where
     )]
     fn perform(&self, mut state: S) -> InstructionResult<S, Self::Error> {
         match self {
+            Self::Pop(pop) => pop.perform(state),
+            Self::Push(push) => push.perform(state),
+            Self::Dup(dup) => dup.perform(state),
+            Self::Swap(swap) => swap.perform(state),
+            Self::IsEmpty(is_empty) => is_empty.perform(state),
+            Self::StackDepth(stack_depth) => stack_depth.perform(state),
+            Self::Flush(flush) => flush.perform(state),
             Self::Negate(negate) => negate.perform(state),
             Self::Abs(abs) => abs.perform(state),
-            Self::Push(_)
-            | Self::Inc
+            Self::Clamp(clamp) => clamp.perform(state),
+            Self::Inc
             | Self::Dec
             | Self::Square
             | Self::Add
@@ -113,8 +211,6 @@ where
                 // any stacks are full before we start.
                 let int_stack = state.stack_mut::<i64>();
                 match self {
-                    Self::Push(i) => state.with_push(*i).map_err_into(),
-
                     // This works, but is going to be nasty after we repeat a lot. There should
                     // perhaps be another trait method somewhere that eliminates a lot of this
                     // boilerplate.
@@ -354,6 +450,6 @@ mod test {
 
     #[test]
     fn manual_push_display() {
-        assert_eq!(format!("{}", IntInstruction::Push(1)), "Push(1)");
+        assert_eq!(format!("{}", IntInstruction::push(1)), "Push(1)");
     }
 }
