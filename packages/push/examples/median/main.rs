@@ -203,6 +203,7 @@ fn instructions() -> impl Iterator<Item = PushInstruction> {
         // evolved programs which take much longer to run. Restore this `filter` line
         // to remove it from the instruction set.
         // .filter(|&i| i != ExecInstruction::dup_block())
+        .filter(|i| !matches!(i, ExecInstruction::DupBlock(_) | ExecInstruction::Push(_)))
         .map(Into::into);
 
     let variables = ["a", "b", "c"]
