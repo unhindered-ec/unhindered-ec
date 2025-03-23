@@ -181,14 +181,16 @@ fn build_state(
     program: &[PushProgram],
     Input([a, b, c, d]): Input,
 ) -> Result<PushState, StackError> {
-    Ok(PushState::builder()
+    let mut state = PushState::builder()
         .with_max_stack_size(1000)
         .with_program(program.to_vec())?
         .with_int_input("a", a)
         .with_int_input("b", b)
         .with_int_input("c", c)
         .with_int_input("d", d)
-        .build())
+        .build();
+    state.set_max_instruction_steps(1_000);
+    Ok(state)
 }
 
 fn compute_error(final_state: &PushState, penalty_value: i128, expected: i64) -> i128 {
@@ -212,7 +214,7 @@ fn instructions() -> impl Iterator<Item = PushInstruction> {
         // The `ExecInstruction::DupBlock` instruction often leads to substantially more complicated
         // evolved programs which take much longer to run. Restore this `filter` line
         // to remove it from the instruction set.
-        .filter(|i| !matches!(i, ExecInstruction::DupBlock(_) | ExecInstruction::Push(_)))
+        // .filter(|&i| i != ExecInstruction::dup_block())
         .map(Into::into);
 
     let variables = ["a", "b", "c", "d"]

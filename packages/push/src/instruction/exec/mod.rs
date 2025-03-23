@@ -10,13 +10,8 @@ use self::{dup_block::DupBlock, ifelse::IfElse, noop::Noop, unless::Unless, when
 use super::{
     Instruction, NumOpens, PushInstruction,
     common::{
-        // dup::Dup,
-        flush::Flush,
-        is_empty::IsEmpty,
-        pop::Pop,
-        push_value::PushValue,
-        stack_depth::StackDepth,
-        swap::Swap,
+        dup::Dup, flush::Flush, is_empty::IsEmpty, pop::Pop, push_value::PushValue,
+        stack_depth::StackDepth, swap::Swap,
     },
     instruction_error::PushInstructionError,
 };
@@ -33,11 +28,7 @@ pub enum ExecInstruction {
 
     #[strum(to_string = "{0}")]
     Push(Box<PushValue<PushProgram>>),
-    // This is currently commented out because it lead to infinite
-    // loops that were killing our GitHub actions checks. There are
-    // two other lines below that are commented out as well so that
-    // this will compile, along with a commented out import line.
-    // Dup(Dup<PushProgram>),
+    Dup(Dup<PushProgram>),
     Swap(Swap<PushProgram>),
     IsEmpty(IsEmpty<PushProgram>),
     StackDepth(StackDepth<PushProgram>),
@@ -83,7 +74,7 @@ impl NumOpens for ExecInstruction {
         match self {
             Self::Pop(pop) => pop.num_opens(),
             Self::Push(push) => push.num_opens(),
-            // Self::Dup(dup) => dup.num_opens(),
+            Self::Dup(dup) => dup.num_opens(),
             Self::Swap(swap) => swap.num_opens(),
             Self::IsEmpty(is_empty) => is_empty.num_opens(),
             Self::StackDepth(stack_depth) => stack_depth.num_opens(),
@@ -107,7 +98,7 @@ where
         match self {
             Self::Pop(pop) => pop.perform(state),
             Self::Push(push) => push.perform(state),
-            // Self::Dup(dup) => dup.perform(state),
+            Self::Dup(dup) => dup.perform(state),
             Self::Swap(swap) => swap.perform(state),
             Self::IsEmpty(is_empty) => is_empty.perform(state),
             Self::StackDepth(stack_depth) => stack_depth.perform(state),

@@ -70,12 +70,14 @@ const INPUT_VALUE: OrderedFloat<f64> = OrderedFloat(0.25);
 #[must_use]
 pub fn build_state(program: Vec<PushProgram>) -> PushState {
     const MAX_STACK_SIZE: usize = 100;
-    PushState::builder()
+    let mut state = PushState::builder()
         .with_max_stack_size(MAX_STACK_SIZE)
         .with_program(program)
         .unwrap()
         .with_float_input("x", INPUT_VALUE)
-        .build()
+        .build();
+    state.set_max_instruction_steps(100);
+    state
 }
 
 /// Run the program and confirm that the result is correct.
