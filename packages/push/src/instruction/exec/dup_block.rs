@@ -25,7 +25,7 @@ use crate::{
 /// and the state is returned unchanged.
 ///
 /// If the `Exec` stack is full before this instruction is performed, then
-/// a fatal `[StackError::StackOverflow]` returned, terminating the running
+/// a fatal [`StackError::StackOverflow`] returned, terminating the running
 /// of the program.
 ///
 /// ## Action Table
