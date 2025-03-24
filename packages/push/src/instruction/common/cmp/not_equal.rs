@@ -6,29 +6,29 @@ use crate::{
     push_vm::{HasStack, stack::StackError},
 };
 
-/// An instruction that compares two stack values for equality.
+/// An instruction that compares two stack values for inequality.
 ///
-/// This instruction works similarly to Rust's [`PartialEq`]. `Equal<T>` (which
-/// is just a shorthand for `Equal<T,T>`) compares the second value on the T
-/// stack with the first (top) value from the T
+/// This instruction works similarly to Rust's [`PartialEq`]. `NotEqual<T>`
+/// (which is just a shorthand for `NotEqual<T,T>`) compares the second value on
+/// the T stack with the first (top) value from the T
 /// stack, pushing the result onto the boolean stack.
 ///
-/// If we instead use two different types, like in `Equal<T,U>`, this
+/// If we instead use two different types, like in `NotEqual<T,U>`, this
 /// can compare across stacks as long as `T: PartialEq<U>`, comparing T == U
 /// using the top values of the respective stacks. Again the result is pushed
 /// onto the boolean stack.
 ///
 /// # Inputs
 ///
-/// ## `Equal<T, T>`
+/// ## `NotEqual<T, T>`
 ///
-/// The `Equal<T, T>` instruction takes the following inputs:
+/// The `NotEqual<T, T>` instruction takes the following inputs:
 ///    - `T` stack
 ///      - Two values
 ///
-/// ## `Equal<T, U>`
+/// ## `NotEqual<T, U>`
 ///
-/// The `Equal<T, U>` instruction takes the following inputs:
+/// The `NotEqual<T, U>` instruction takes the following inputs:
 ///    - `T` stack
 ///       - One value
 ///    - `U` stack
@@ -36,14 +36,15 @@ use crate::{
 ///
 /// # Behavior
 ///
-/// The `Equal` instruction takes top two values from the `T`
+/// The `NotEqual` instruction takes top two values from the `T`
 /// stack, or one from the `T` stack and one from the `U` stack,
 /// compares those values, and pushes the result onto the boolean
-/// stack (`true` if those values are equal, and `false` if they aren't).
+/// stack (`true` if those values are _not_ equal, and `false` if they _are_
+/// equal).
 ///
 /// ## Action Table
 ///
-/// ### `Equal<T, T>`
+/// ### `NotEqual<T, T>`
 ///
 /// The table below indicates the behavior in each of the different
 /// cases where the two values being compared are being taken from the same
@@ -62,11 +63,11 @@ use crate::{
 ///
 /// | X  | Y | Result | Success | Note |
 /// | ------------- | ------------- | ------------- | ------------- | ------------- | ------------- |
-/// | exists | exists | X = Y | ✅ | The value of X=Y is pushed onto the boolean stack |
+/// | exists | exists | X ≠ Y | ✅ | The value of X≠Y is pushed onto the boolean stack |
 /// | missing | irrelevant | irrelevant | [❗…](crate::push_vm::stack::StackError::Underflow) | State is unchanged |
 /// | present | missing | irrelevant | [❗…](crate::push_vm::stack::StackError::Underflow) | State is unchanged |
 ///
-/// ### `Equal<T, U>`, where T ≠ U
+/// ### `NotEqual<T, U>`, where T ≠ U
 ///
 ///
 /// The table below indicates the behavior in each of the different
@@ -86,29 +87,29 @@ use crate::{
 ///
 /// | "X": `Stack<T>`  | "Y": `Stack<U>` | Result | Success | Note |
 /// | ------------- | ------------- | ------------- | ------------- | ------------- | ------------- |
-/// | exists | exists | X = Y | ✅ | The value of X=Y is pushed onto the boolean stack |
+/// | exists | exists | X ≠ Y | ✅ | The value of X≠Y is pushed onto the boolean stack |
 /// | missing | irrelevant | irrelevant | [❗…](crate::push_vm::stack::StackError::Underflow) | State is unchanged |
 /// | present | missing | irrelevant | [❗…](crate::push_vm::stack::StackError::Underflow) | State is unchanged |
 ///
 /// # Errors
 ///
-/// ## `Equal<T, T>`
+/// ## `NotEqual<T, T>`
 ///
 /// Returns a
 /// [`StackError::Underflow`](crate::push_vm::stack::StackError::Underflow)
 /// error when the `T` stack contains fewer than two items.
 ///
-/// ## `Equal<T, U>` where T ≠ U
+/// ## `NotEqual<T, U>` where T ≠ U
 ///
 /// Returns a
 /// [`StackError::Underflow`](crate::push_vm::stack::StackError::Underflow)
 /// error when either the `T` stack or the `U` stack is empty.
 #[derive(Debug, Default, Copy, Clone, PartialEq, Eq)]
-pub struct Equal<T, U = T> {
+pub struct NotEqual<T, U = T> {
     _p: PhantomData<(T, U)>,
 }
 
-impl<S, First, Second> Instruction<S> for Equal<First, Second>
+impl<S, First, Second> Instruction<S> for NotEqual<First, Second>
 where
     S: Clone + HasStack<First> + HasStack<Second> + HasStack<bool>,
     First: PartialEq<Second> + 'static,
@@ -169,7 +170,7 @@ where
             Err(error) => return Err(Error::fatal(state, error)),
         };
 
-        state.with_push(first == second).map_err_into()
+        state.with_push(first != second).map_err_into()
     }
 }
 
@@ -179,40 +180,40 @@ mod test {
     use proptest::prelude::*;
     use test_strategy::proptest;
 
-    use super::Equal;
+    use super::NotEqual;
     use crate::{
         instruction::{Instruction, instruction_error::PushInstructionError},
         push_vm::{HasStack, push_state::PushState, stack::StackError},
     };
 
     #[test]
-    fn equal_same_stack_equal() {
+    fn not_equal_same_stack_equal() {
         let state = PushState::builder()
             .with_max_stack_size(2)
             .with_int_values([5, 5])
             .unwrap()
             .with_no_program()
             .build();
-        let result = Equal::<i64>::default().perform(state).unwrap();
+        let result = NotEqual::<i64>::default().perform(state).unwrap();
         assert!(result.stack::<i64>().is_empty());
-        assert_eq!(result.stack::<bool>(), &[true]);
+        assert_eq!(result.stack::<bool>(), &[false]);
     }
 
     #[test]
-    fn equal_same_stack_not_equal() {
+    fn not_equal_same_stack_not_equal() {
         let state = PushState::builder()
             .with_max_stack_size(2)
             .with_int_values([5, 10])
             .unwrap()
             .with_no_program()
             .build();
-        let result = Equal::<i64>::default().perform(state).unwrap();
+        let result = NotEqual::<i64>::default().perform(state).unwrap();
         assert!(result.stack::<i64>().is_empty());
-        assert_eq!(result.stack::<bool>(), &[false]);
+        assert_eq!(result.stack::<bool>(), &[true]);
     }
 
     // #[test]
-    // fn equal_different_stacks_equal() {
+    // fn not_equal_different_stacks_equal() {
     //     let state = PushState::builder()
     //         .with_max_stack_size(1)
     //         .with_int_values([5])
@@ -221,13 +222,15 @@ mod test {
     //         .unwrap()
     //         .with_no_program()
     //         .build();
-    //     let result = Equal::<i64, f64>::default().perform(state).unwrap();
-    //     assert_eq!(result.stack::<bool>().top().unwrap(), &true);
+    //     let result = NotEqual::<i64, OrderedFloat<f64>>::default()
+    //         .perform(state)
+    //         .unwrap();
+    //     assert_eq!(result.stack::<bool>().top().unwrap(), &false);
     //     assert_eq!(result.stack::<bool>().size(), 1);
     // }
 
     // #[test]
-    // fn equal_different_stacks_not_equal() {
+    // fn not_equal_different_stacks_not_equal() {
     //     let state = PushState::builder()
     //         .with_max_stack_size(1)
     //         .with_int_values([5])
@@ -236,19 +239,21 @@ mod test {
     //         .unwrap()
     //         .with_no_program()
     //         .build();
-    //     let result = Equal::<i64, f64>::default().perform(state).unwrap();
-    //     assert_eq!(result.stack::<bool>().top().unwrap(), &false);
+    //     let result = NotEqual::<i64, OrderedFloat<f64>>::default()
+    //         .perform(state)
+    //         .unwrap();
+    //     assert_eq!(result.stack::<bool>().top().unwrap(), &true);
     //     assert_eq!(result.stack::<bool>().size(), 1);
     // }
 
     #[test]
-    fn equal_same_stack_underflow() {
+    fn not_equal_same_stack_underflow() {
         let state = PushState::builder()
             // This has to be 1 to ensure that there's room on the bool stack for the result.
             .with_max_stack_size(1)
             .with_no_program()
             .build();
-        let result = Equal::<i64>::default().perform(state).unwrap_err();
+        let result = NotEqual::<i64>::default().perform(state).unwrap_err();
         assert!(result.is_recoverable());
         assert_eq!(
             result.error(),
@@ -260,14 +265,14 @@ mod test {
     }
 
     #[test]
-    fn equal_same_stack_underflow_one() {
+    fn not_equal_same_stack_underflow_one() {
         let state = PushState::builder()
             .with_max_stack_size(1)
             .with_int_values([5])
             .unwrap()
             .with_no_program()
             .build();
-        let result = Equal::<i64>::default().perform(state).unwrap_err();
+        let result = NotEqual::<i64>::default().perform(state).unwrap_err();
         assert!(result.is_recoverable());
         assert_eq!(
             result.error(),
@@ -279,14 +284,16 @@ mod test {
     }
 
     // #[test]
-    // fn equal_different_stacks_underflow_first() {
+    // fn not_equal_different_stacks_underflow_first() {
     //     let state = PushState::builder()
     //         .with_max_stack_size(0)
     //         .with_float_values([OrderedFloat(10.0)])
     //         .unwrap()
     //         .with_no_program()
     //         .build();
-    //     let result = Equal::<i64, f64>::default().perform(state).unwrap_err();
+    //     let result = NotEqual::<i64, OrderedFloat<f64>>::default()
+    //         .perform(state)
+    //         .unwrap_err();
     //     assert!(result.is_recoverable());
     //     assert_eq!(
     //         result.error(),
@@ -298,7 +305,7 @@ mod test {
     // }
 
     // #[test]
-    // fn equal_different_stacks_underflow_second() {
+    // fn not_equal_different_stacks_underflow_second() {
     //     let state = PushState::builder()
     //         .with_max_stack_size(1)
     //         .with_int_values([5])
@@ -306,7 +313,9 @@ mod test {
     //         .with_max_stack_size(0)
     //         .with_no_program()
     //         .build();
-    //     let result = Equal::<i64, f64>::default().perform(state).unwrap_err();
+    //     let result = NotEqual::<i64, OrderedFloat<f64>>::default()
+    //         .perform(state)
+    //         .unwrap_err();
     //     assert!(result.is_recoverable());
     //     assert_eq!(
     //         result.error(),
@@ -318,7 +327,7 @@ mod test {
     // }
 
     #[test]
-    fn equal_bool_stack_overflow() {
+    fn not_equal_bool_stack_overflow() {
         let state = PushState::builder()
             .with_max_stack_size(2)
             .with_int_values([5, 5])
@@ -328,7 +337,7 @@ mod test {
             .unwrap()
             .with_no_program()
             .build();
-        let result = Equal::<i64>::default().perform(state).unwrap_err();
+        let result = NotEqual::<i64>::default().perform(state).unwrap_err();
         assert!(!result.is_recoverable());
         assert_eq!(
             result.error(),
@@ -337,30 +346,32 @@ mod test {
     }
 
     #[proptest]
-    fn equal_proptest_same_stack(a: i64, b: i64) {
+    fn not_equal_proptest_same_stack(a: i64, b: i64) {
         let state = PushState::builder()
             .with_max_stack_size(2)
             .with_int_values([a, b])
             .unwrap()
             .with_no_program()
             .build();
-        let result = Equal::<i64>::default().perform(state).unwrap();
-        prop_assert_eq!(result.stack::<bool>().top().unwrap(), &(a == b));
+        let result = NotEqual::<i64>::default().perform(state).unwrap();
+        prop_assert_eq!(result.stack::<bool>().top().unwrap(), &(a != b));
         prop_assert_eq!(result.stack::<bool>().size(), 1);
     }
 
     // #[proptest]
-    // fn equal_proptest_different_stacks(a: i64, b: f64) {
+    // fn not_equal_proptest_different_stacks(a: i64, b: f64) {
     //     let state = PushState::builder()
     //         .with_max_stack_size(1)
     //         .with_int_values([a])
     //         .unwrap()
-    //         .with_float_values([b])
+    //         .with_float_values([OrderedFloat(b)])
     //         .unwrap()
     //         .with_no_program()
     //         .build();
-    //     let result = Equal::<i64, f64>::default().perform(state).unwrap();
-    //     prop_assert_eq!(result.stack::<bool>().top().unwrap(), &(a as f64 ==
+    //     let result = NotEqual::<i64, OrderedFloat<f64>>::default()
+    //         .perform(state)
+    //         .unwrap();
+    //     prop_assert_eq!(result.stack::<bool>().top().unwrap(), &(a as f64 !=
     // b));     prop_assert_eq!(result.stack::<bool>().size(), 1);
     // }
 }
