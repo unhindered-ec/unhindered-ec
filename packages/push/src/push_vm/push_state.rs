@@ -1,7 +1,8 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, io::Cursor, str::Utf8Error, string::FromUtf8Error};
 
 pub use ordered_float::OrderedFloat;
 
+use super::push_io::HasStdout;
 use crate::{
     error::{InstructionResult, stateful::FatalError, try_recover::TryRecover},
     instruction::{
@@ -38,6 +39,10 @@ pub struct PushState {
     // initialization of `PushState`.
     #[input_instructions]
     pub(super) input_instructions: HashMap<VariableName, PushInstruction>,
+
+    /// Used to represent the standard output used by an evolved
+    /// program when "printing".
+    stdout: Cursor<Vec<u8>>,
 
     #[instruction_step_limit]
     max_instruction_steps: usize,
@@ -125,6 +130,27 @@ impl State for PushState {
             }
         }
         Ok(self)
+    }
+}
+
+impl HasStdout for PushState {
+    type Stdout = Cursor<Vec<u8>>;
+
+    fn stdout(&mut self) -> &mut Self::Stdout {
+        &mut self.stdout
+    }
+
+    // TODO: Can we avoid the `clone()` here? It's not a huge deal (we'll
+    //   only call it once at the end of running the program), but it would
+    //   still be nice to avoid it if possible.
+    // TODO: I thought about unwrapping here instead of returning a `Result`.
+    //   It seems that if the only way we put things in our `Cursor` is through
+    //   `write!()` calls, then the results in the `Cursor` should be legal.
+    //   Evolution is weird, though, so it might still make sense to return
+    //   a `Result` just in case we evolve something that breaks the interpretation
+    //   of the `Cursor` as a `String`.
+    fn stdout_string(&mut self) -> Result<String, FromUtf8Error> {
+        String::from_utf8(self.stdout.clone().into_inner())
     }
 }
 
