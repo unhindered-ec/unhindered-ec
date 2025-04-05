@@ -1,5 +1,5 @@
 use ordered_float::OrderedFloat;
-use printing::{PrintChar, PrintSpace, PrintString};
+use printing::{PrintNewline, PrintSpace, PrintString};
 
 pub use self::{
     bool::BoolInstruction,
@@ -68,8 +68,8 @@ pub enum PushInstruction {
     BoolInstruction(BoolInstruction),
     IntInstruction(IntInstruction),
     FloatInstruction(FloatInstruction),
-    PrintSpace(PrintChar<' '>),
-    PrintNewline(PrintChar<'\n'>),
+    PrintSpace(PrintSpace),
+    PrintNewline(PrintNewline),
     PrintString(PrintString),
 }
 

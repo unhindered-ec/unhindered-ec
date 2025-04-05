@@ -76,17 +76,11 @@ where
     }
 }
 
-pub const PrintSpace: PrintChar<' '> = PrintChar::new();
-pub const PrintNewline: PrintChar<'n'> = PrintChar::new();
+pub type PrintSpace = PrintChar<' '>;
+pub type PrintNewline = PrintChar<'n'>;
 
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct PrintString(pub String);
-
-impl PrintString {
-    pub const fn new(s: String) -> Self {
-        Self(s)
-    }
-}
 
 impl<State> Instruction<State> for PrintString
 where
