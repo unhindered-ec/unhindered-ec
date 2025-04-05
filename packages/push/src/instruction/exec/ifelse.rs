@@ -169,6 +169,7 @@ mod tests {
             .unwrap()
             .with_bool_values([true])
             .unwrap()
+            .with_instruction_step_limit(1000)
             .build();
         let result_state = IfElse.perform(state).unwrap();
         assert!(result_state.bool.is_empty());
@@ -186,6 +187,7 @@ mod tests {
             .unwrap()
             .with_bool_values([false])
             .unwrap()
+            .with_instruction_step_limit(1000)
             .build();
         let result_state = IfElse.perform(state).unwrap();
         assert!(result_state.bool.is_empty());
@@ -203,6 +205,7 @@ mod tests {
             .unwrap()
             .with_bool_values([true])
             .unwrap()
+            .with_instruction_step_limit(1000)
             .build();
         let result_state = IfElse.perform(state.clone()).unwrap();
         assert!(result_state.bool.is_empty());
@@ -217,6 +220,7 @@ mod tests {
             .unwrap()
             .with_bool_values([false])
             .unwrap()
+            .with_instruction_step_limit(1000)
             .build();
         let result_state = IfElse.perform(state).unwrap();
         assert!(result_state.bool.is_empty());
@@ -229,6 +233,7 @@ mod tests {
             .with_max_stack_size(2)
             .with_program([IntInstruction::push(0), IntInstruction::push(1)])
             .unwrap()
+            .with_instruction_step_limit(1000)
             .build();
         let result_state = IfElse.perform(state).unwrap();
         assert!(result_state.bool.is_empty());
@@ -245,6 +250,7 @@ mod tests {
             .with_no_program()
             .with_bool_values([true])
             .unwrap()
+            .with_instruction_step_limit(1000)
             .build();
         let result_error = IfElse.perform(state.clone()).unwrap_err();
         assert!(result_error.is_recoverable());
@@ -262,6 +268,7 @@ mod tests {
             .with_no_program()
             .with_bool_values([false])
             .unwrap()
+            .with_instruction_step_limit(1000)
             .build();
         let result_error = IfElse.perform(state.clone()).unwrap_err();
         assert!(result_error.is_recoverable());
@@ -279,6 +286,7 @@ mod tests {
             .with_no_program()
             .with_bool_values([])
             .unwrap()
+            .with_instruction_step_limit(1000)
             .build();
 
         let result_error = IfElse.perform(state.clone()).unwrap_err();

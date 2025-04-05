@@ -41,6 +41,7 @@ mod tests {
             .with_max_stack_size(2)
             .with_program([ExecInstruction::noop(), ExecInstruction::noop()])
             .unwrap()
+            .with_instruction_step_limit(1000)
             .build();
         let result_state = Noop.perform(state.clone()).unwrap();
         assert_eq!(result_state, state);

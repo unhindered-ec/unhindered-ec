@@ -6,7 +6,7 @@ use syn::{Generics, Ident, Visibility, ext::IdentExt};
 use crate::{
     doctest_tokenstream::{Import, doctest},
     push_state::parsing::{
-        ExecStackInput, InputInstructionsInput, StacksInput, stack_attribute_args::StackMarkerFlags,
+        ExecStackInput, SingleFieldInput, StacksInput, stack_attribute_args::StackMarkerFlags,
     },
 };
 
@@ -42,6 +42,10 @@ macro_rules! derived_ident {
     }
 }
 
+#[expect(
+    clippy::too_many_arguments,
+    reason = "We'll fix this with a eventual rewrite"
+)]
 pub fn generate_builder(
     macro_span: Span,
     struct_ident: &Ident,
@@ -49,7 +53,8 @@ pub fn generate_builder(
     struct_generics: &Generics,
     stacks: &StacksInput,
     exec_stack: &ExecStackInput,
-    input_instructions: InputInstructionsInput,
+    input_instructions: SingleFieldInput,
+    max_instruction_steps: SingleFieldInput,
 ) -> syn::Result<TokenStream> {
     let Some((exec_stack_ident, _, exec_stack_ty)) = exec_stack else {
         return Err(syn::Error::new(
@@ -92,6 +97,30 @@ pub fn generate_builder(
         .iter()
         .map(|g| quote! {#g: #utilities_mod_ident::Dataless})
         .collect::<Vec<_>>();
+
+    let max_instruction_steps_generic = max_instruction_steps
+        .as_ref()
+        .map(|_| quote! {__MaxInstructionSteps,})
+        .unwrap_or_default();
+    let max_instruction_steps_generic_with_state_bound = max_instruction_steps
+        .as_ref()
+        .map(|_| quote! {__MaxInstructionSteps: #utilities_mod_ident::StackState,})
+        .unwrap_or_default();
+
+    let max_instruction_steps_generic_with_dataless_bound = max_instruction_steps
+        .as_ref()
+        .map(|_| quote! {__MaxInstructionSteps: #utilities_mod_ident::StackState,})
+        .unwrap_or_default();
+
+    let max_instruction_steps_generic_with_size_and_data = max_instruction_steps
+        .as_ref()
+        .map(|_| quote! {#utilities_mod_ident::WithSizeAndData,})
+        .unwrap_or_default();
+
+    let max_instruction_steps_generic_default = max_instruction_steps
+        .as_ref()
+        .map(|_| quote! {(),})
+        .unwrap_or_default();
 
     // List with length |stacks| of ()
     let default_states = stack_generics
@@ -165,13 +194,49 @@ pub fn generate_builder(
         );
 
         quote! {
-            impl<__Exec: #utilities_mod_ident::StackState, #(#stack_generics_with_state_bounds),*>
-                #builder_name<__Exec, #(#stack_generics),*>
+            impl<
+                __Exec: #utilities_mod_ident::StackState,
+                #max_instruction_steps_generic_with_state_bound
+                 #(#stack_generics_with_state_bounds),*
+            >
+                #builder_name<__Exec, #max_instruction_steps_generic #(#stack_generics),*>
             {
                 #(#with_inputs)*
             }
         }
     });
+
+    let with_max_instruction_steps_impl =
+        max_instruction_steps.as_ref().map(|max_instruction_steps| {
+            quote! {
+                impl<
+                    __Exec: #utilities_mod_ident::StackState,
+                    #max_instruction_steps_generic_with_dataless_bound
+                     #(#stack_generics_with_state_bounds),*
+                >
+                    #builder_name<__Exec, #max_instruction_steps_generic #(#stack_generics),*>
+                {
+                    /// Sets the instruction step limit
+                    ///
+                    /// This makes sure that infinite loops generated don't result in a stuck state,
+                    /// terminating the execution after this limit is reached.
+                    #[must_use]
+                    pub fn with_instruction_step_limit(mut self, max_steps: usize) ->
+                    #builder_name<
+                            __Exec,
+                            #utilities_mod_ident::WithSizeAndData,
+                            #(#stack_generics),*
+                    > {
+                        self.partial_state.#max_instruction_steps = max_steps;
+
+                        #builder_name {
+                            partial_state: self.partial_state,
+                            _p: ::std::marker::PhantomData,
+                        }
+                    }
+                }
+            }
+        });
 
     let with_values_impl = stacks
         .iter()
@@ -237,10 +302,16 @@ pub fn generate_builder(
 
                     let outro = "# Ok::<(), StackError>(())";
 
+                    let with_max_instruction_steps = max_instruction_steps
+                            .as_ref()
+                            .map(|_| quote! { .with_instruction_step_limit(1_000)})
+                            .unwrap_or_default();
+
                     let doctest_code = quote! {
                         let state = #struct_ident::builder()
                             .with_max_stack_size(#max_stack_size)
                             .with_no_program()
+                            #with_max_instruction_steps
                             .#fn_ident([#sample_values])?
                             .build();
                         let #var_name: &Stack<<#ty as StackType>::Type> =
@@ -268,9 +339,10 @@ pub fn generate_builder(
                 quote! {
                     impl<
                         __Exec: #utilities_mod_ident::StackState,
+                        #max_instruction_steps_generic_with_state_bound
                          #(#where_bounds),*
                     >
-                        #builder_name<__Exec, #(#stack_generics),*>
+                        #builder_name<__Exec, #max_instruction_steps_generic #(#stack_generics),*>
                     {
                         /// Adds the given sequence of values to the
                         /// stack for the state you're building.
@@ -288,7 +360,11 @@ pub fn generate_builder(
                             mut self,
                             values: T
                         ) -> ::std::result::Result<
-                            #builder_name<__Exec, #(#stack_generics_or_type),*>,
+                            #builder_name<
+                                __Exec,
+                                #max_instruction_steps_generic
+                                #(#stack_generics_or_type),*
+                            >,
                             ::push::push_vm::stack::StackError
                         >
                         where
@@ -363,9 +439,10 @@ pub fn generate_builder(
                 quote! {
                     impl<
                         __Exec: #utilities_mod_ident::StackState,
+                        #max_instruction_steps_generic_with_state_bound
                         #(#where_bounds),*
                     >
-                        #builder_name<__Exec, #(#stack_generics),*>
+                        #builder_name<__Exec, #max_instruction_steps_generic #(#stack_generics),*>
                     {
                         /// Sets the maximum stack size for the stack in this state.
                         ///
@@ -376,7 +453,11 @@ pub fn generate_builder(
                         pub fn #fn_ident(
                             mut self,
                             max_stack_size: usize
-                        ) -> #builder_name<__Exec, #(#stack_generics_or_type),*>  {
+                        ) -> #builder_name<
+                            __Exec,
+                            #max_instruction_steps_generic
+                            #(#stack_generics_or_type),*
+                        >  {
                             self.partial_state.#field.set_max_stack_size(max_stack_size);
 
                             #builder_name {
@@ -418,9 +499,15 @@ pub fn generate_builder(
 
             let outro = "# Ok::<(), StackError>(())";
 
+            let with_max_instruction_steps = max_instruction_steps
+                    .as_ref()
+                    .map(|_| quote! { .with_instruction_step_limit(1_000)})
+                    .unwrap_or_default();
+
             let doctest_code = quote! {
                 let state = #struct_ident::builder()
                     .with_max_stack_size(100)
+                    #with_max_instruction_steps
                     .with_no_program()
                     .build();
                 let stack: &Stack<<#ty as StackType>::Type> =
@@ -452,8 +539,16 @@ pub fn generate_builder(
     Ok(quote! {
         impl #impl_generics #struct_ident #type_generics #where_clause {
             #[must_use]
-            #struct_visibility fn builder() -> #builder_name<(),#(#default_states),*>{
-                #builder_name::<(),#(#default_states),*>::default()
+            #struct_visibility fn builder() -> #builder_name<
+                (),
+                #max_instruction_steps_generic_default
+                #(#default_states),*
+            >{
+                #builder_name::<
+                    (),
+                    #max_instruction_steps_generic_default
+                    #(#default_states),*
+                >::default()
             }
         }
 
@@ -489,13 +584,22 @@ pub fn generate_builder(
 
         #struct_visibility struct #builder_name<
             __Exec: #utilities_mod_ident::StackState,
+            #max_instruction_steps_generic_with_state_bound
             #(#stack_generics_with_state_bounds),*
         > {
             partial_state: #struct_ident,
-            _p: std::marker::PhantomData<(__Exec, #(#stack_generics),*)>
+            _p: std::marker::PhantomData<(
+                __Exec,
+                #max_instruction_steps_generic
+                #(#stack_generics),*
+            )>
         }
 
-        impl ::std::default::Default for #builder_name<(), #(#default_states),*> {
+        impl ::std::default::Default for #builder_name<
+            (),
+            #max_instruction_steps_generic_default
+            #(#default_states),*
+        > {
             fn default() -> Self {
                 #builder_name {
                     partial_state: ::std::default::Default::default(),
@@ -506,8 +610,9 @@ pub fn generate_builder(
 
         impl<
             __Exec: #utilities_mod_ident::Dataless,
+            #max_instruction_steps_generic_with_state_bound
             #(#stack_generics_with_dataless_bounds),*
-        > #builder_name<__Exec, #(#stack_generics),*> {
+        > #builder_name<__Exec, #max_instruction_steps_generic #(#stack_generics),*> {
             /// Sets the maximum stack size for all the stacks in this state.
             ///
             /// If we set this too high, then this can allow evolved programs to consume
@@ -526,7 +631,11 @@ pub fn generate_builder(
             pub fn with_max_stack_size(
                 mut self,
                 max_size: usize,
-            ) -> #builder_name<#utilities_mod_ident::WithSize, #(#with_size_repeated),*> {
+            ) -> #builder_name<
+                #utilities_mod_ident::WithSize,
+                #max_instruction_steps_generic
+                #(#with_size_repeated),*
+            > {
                 self.partial_state
                     .#exec_stack_ident
                     .set_max_stack_size(max_size);
@@ -543,9 +652,11 @@ pub fn generate_builder(
         }
 
         impl<
+            #max_instruction_steps_generic_with_state_bound
             #(#stack_generics_with_state_bounds),*
         > #builder_name<
             #utilities_mod_ident::WithSize,
+            #max_instruction_steps_generic
             #(#stack_generics),*
         > {
             /// Sets the program you wish to execute.
@@ -556,7 +667,11 @@ pub fn generate_builder(
             #[must_use]
             pub fn with_program<P>(mut self, program: P)
                 -> ::std::result::Result<
-                    #builder_name<#utilities_mod_ident::WithSizeAndData, #(#stack_generics),*>,
+                    #builder_name<
+                        #utilities_mod_ident::WithSizeAndData,
+                        #max_instruction_steps_generic
+                        #(#stack_generics),*
+                    >,
                     ::push::push_vm::stack::StackError
                 >
             where
@@ -583,8 +698,11 @@ pub fn generate_builder(
             /// Explicitly sets this state as having no program.
             #[must_use]
             pub fn with_no_program(mut self)
-                -> #builder_name<#utilities_mod_ident::WithSizeAndData, #(#stack_generics),*>
-            {
+                -> #builder_name<
+                #utilities_mod_ident::WithSizeAndData,
+                #max_instruction_steps_generic
+                #(#stack_generics),*
+            > {
                 #builder_name {
                     partial_state: self.partial_state,
                     _p: ::std::marker::PhantomData,
@@ -597,6 +715,7 @@ pub fn generate_builder(
             #(#stack_generics_with_state_bounds),*
         > #builder_name<
             #utilities_mod_ident::WithSizeAndData,
+            #max_instruction_steps_generic_with_size_and_data
             #(#stack_generics),*
         > {
             /// Finalize the build process, returning the fully constructed `PushState`
@@ -625,6 +744,7 @@ pub fn generate_builder(
         #with_inputs_impl
         #with_values_impl
         #set_max_size_impl
+        #with_max_instruction_steps_impl
 
     })
 }

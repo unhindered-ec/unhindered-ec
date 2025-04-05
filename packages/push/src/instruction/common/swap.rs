@@ -99,6 +99,7 @@ mod tests {
         let state = PushState::builder()
             .with_max_stack_size(0)
             .with_no_program()
+            .with_instruction_step_limit(1000)
             .build();
         let result = Swap::<i64>::new().perform(state).unwrap_err();
         assert!(result.is_recoverable());
@@ -120,6 +121,7 @@ mod tests {
             .with_int_values([1])
             .unwrap()
             .with_no_program()
+            .with_instruction_step_limit(1000)
             .build();
         let result = Swap::<i64>::new().perform(state).unwrap_err();
         assert_eq!(
@@ -138,6 +140,7 @@ mod tests {
             .with_int_values([1, 2])
             .unwrap()
             .with_no_program()
+            .with_instruction_step_limit(1000)
             .build();
         assert_eq!(state.stack::<i64>().top().unwrap(), &1);
         let result = Swap::<i64>::new().perform(state).unwrap();
@@ -154,6 +157,7 @@ mod tests {
             .with_int_values(values.clone().into_iter())
             .unwrap()
             .with_no_program()
+            .with_instruction_step_limit(1000)
             .build();
         let swap = Swap::<i64>::default();
         let result = swap.perform(state).unwrap();

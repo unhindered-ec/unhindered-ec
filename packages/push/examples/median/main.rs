@@ -172,15 +172,14 @@ fn run_case(
 }
 
 fn build_state(program: &[PushProgram], Input([a, b, c]): Input) -> Result<PushState, StackError> {
-    let mut state = PushState::builder()
+    Ok(PushState::builder()
         .with_max_stack_size(1000)
         .with_program(program.to_vec())?
         .with_int_input("a", a)
         .with_int_input("b", b)
         .with_int_input("c", c)
-        .build();
-    state.set_max_instruction_steps(1_000);
-    Ok(state)
+        .with_instruction_step_limit(1_000)
+        .build())
 }
 
 fn compute_error(final_state: &PushState, penalty_value: i128, expected: i64) -> i128 {

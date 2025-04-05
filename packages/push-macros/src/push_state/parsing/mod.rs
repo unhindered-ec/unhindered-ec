@@ -47,7 +47,7 @@ impl<T: Parse> Parse for FlagsValue<T> {
 
 pub type StacksInput = BTreeMap<Ident, (StackMarkerFlags, Type)>;
 pub type ExecStackInput = Option<(Ident, StackMarkerFlags, Type)>;
-pub type InputInstructionsInput = Option<Ident>;
+pub type SingleFieldInput = Option<Ident>;
 
 pub fn parse_fields(
     fields: &mut Punctuated<Field, Token![,]>,
@@ -56,11 +56,17 @@ pub fn parse_fields(
         builder: generate_builder,
         has_stack: derive_has_stack,
     }: &PushStateFlags,
-) -> syn::Result<(StacksInput, ExecStackInput, InputInstructionsInput)> {
+) -> syn::Result<(
+    StacksInput,
+    ExecStackInput,
+    SingleFieldInput,
+    SingleFieldInput,
+)> {
     let mut stacks: BTreeMap<Ident, (StackMarkerFlags, Type)> = BTreeMap::new();
     let mut exec_stack: Option<(Ident, StackMarkerFlags, Type)> = None;
 
     let mut input_instructions: Option<Ident> = None;
+    let mut max_instruction_steps: Option<Ident> = None;
 
     for Field {
         attrs, ident, ty, ..
@@ -98,6 +104,23 @@ pub fn parse_fields(
                 }
                 attrs.remove(i);
                 input_instructions = Some(ident.clone());
+                continue;
+            }
+            if to_compare.meta.path() == &syn::parse_quote!(instruction_step_limit) {
+                if max_instruction_steps.is_some() {
+                    return Err(syn::Error::new_spanned(
+                        to_compare,
+                        "Only one max instruction steps field is supported",
+                    ));
+                }
+                if !matches!(to_compare.meta, syn::Meta::Path(_)) {
+                    return Err(syn::Error::new_spanned(
+                        to_compare,
+                        "This attribute does not support any arguments",
+                    ));
+                }
+                attrs.remove(i);
+                max_instruction_steps = Some(ident.clone());
                 continue;
             }
             i += 1;
@@ -264,5 +287,10 @@ pub fn parse_fields(
             stacks.insert(ident, (stack_marker_flags, ty.clone()));
         }
     }
-    Ok((stacks, exec_stack, input_instructions))
+    Ok((
+        stacks,
+        exec_stack,
+        input_instructions,
+        max_instruction_steps,
+    ))
 }

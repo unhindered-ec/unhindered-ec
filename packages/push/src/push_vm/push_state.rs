@@ -39,6 +39,7 @@ pub struct PushState {
     #[input_instructions]
     pub(super) input_instructions: HashMap<VariableName, PushInstruction>,
 
+    #[instruction_step_limit]
     max_instruction_steps: usize,
 }
 
@@ -176,7 +177,7 @@ mod tests {
         ];
 
         let plushy = Plushy::new(genes);
-        let mut state = PushState::builder()
+        let state = PushState::builder()
             .with_max_stack_size(16)
             .with_program(Vec::<PushProgram>::from(plushy))
             .unwrap()
@@ -187,8 +188,8 @@ mod tests {
             .with_int_input("y", 8)
             .with_int_input("x", 5)
             .with_float_input("f", OrderedFloat(0.75))
+            .with_instruction_step_limit(1_000)
             .build();
-        state.set_max_instruction_steps(1_000);
 
         let state = state.run_to_completion().unwrap();
 
@@ -232,7 +233,7 @@ mod tests {
         ];
 
         let plushy = Plushy::new(genes);
-        let mut state = PushState::builder()
+        let state = PushState::builder()
             .with_max_stack_size(16)
             .with_program(Vec::<PushProgram>::from(plushy))
             .unwrap()
@@ -243,8 +244,8 @@ mod tests {
             .with_int_input("y", 8)
             .with_int_input("x", 5)
             .with_float_input("f", OrderedFloat(0.75))
+            .with_instruction_step_limit(0)
             .build();
-        state.set_max_instruction_steps(0);
         let initial_state = state.clone();
 
         let state = state.run_to_completion().unwrap();

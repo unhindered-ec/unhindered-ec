@@ -19,6 +19,7 @@ fn add() {
         .with_int_values([x, y])
         .unwrap()
         .with_no_program()
+        .with_instruction_step_limit(1000)
         .build();
     let result = IntInstruction::Add.perform(state).unwrap();
     assert_eq!(result.stack::<i64>().size(), 1);
@@ -34,6 +35,7 @@ fn add_overflows() {
         .with_int_values([x, y])
         .unwrap()
         .with_no_program()
+        .with_instruction_step_limit(1000)
         .build();
 
     let result = IntInstruction::Add.perform(state).unwrap_err();
@@ -55,6 +57,7 @@ fn inc_overflows() {
         .with_int_values(std::iter::once(x))
         .unwrap()
         .with_no_program()
+        .with_instruction_step_limit(1000)
         .build();
 
     let result = IntInstruction::Inc.perform(state).unwrap_err();
@@ -78,6 +81,7 @@ fn dec_overflows() {
         .with_int_values(std::iter::once(x))
         .unwrap()
         .with_no_program()
+        .with_instruction_step_limit(1000)
         .build();
     let result = IntInstruction::Dec.perform(state).unwrap_err();
     assert_eq!(result.state().stack::<i64>().size(), 1);
@@ -103,6 +107,7 @@ fn sqr(#[any] x: i64) {
         .with_int_values(std::iter::once(x))
         .unwrap()
         .with_no_program()
+        .with_instruction_step_limit(1000)
         .build();
     let result = IntInstruction::Square.perform(state);
     if let Some(x_squared) = x.checked_mul(x) {
@@ -132,6 +137,7 @@ fn add_does_not_crash(#[any] x: i64, #[any] y: i64) {
         .with_int_values([x, y])
         .unwrap()
         .with_no_program()
+        .with_instruction_step_limit(1000)
         .build();
     let _ = IntInstruction::Add.perform(state);
 }
@@ -143,6 +149,7 @@ fn add_adds_or_does_nothing(#[any] x: i64, #[any] y: i64) {
         .with_int_values([x, y])
         .unwrap()
         .with_no_program()
+        .with_instruction_step_limit(1000)
         .build();
     let result = IntInstruction::Add.perform(state);
     if let Some(expected_result) = x.checked_add(y) {
@@ -174,6 +181,7 @@ fn subtract_subs_or_does_nothing(#[any] x: i64, #[any] y: i64) {
         .with_int_values([x, y])
         .unwrap()
         .with_no_program()
+        .with_instruction_step_limit(1000)
         .build();
     let result = IntInstruction::Subtract.perform(state);
     if let Some(expected_result) = x.checked_sub(y) {
@@ -205,6 +213,7 @@ fn multiply_works_or_does_nothing(#[any] x: i64, #[any] y: i64) {
         .with_int_values([x, y])
         .unwrap()
         .with_no_program()
+        .with_instruction_step_limit(1000)
         .build();
     let result = IntInstruction::Multiply.perform(state);
     if let Some(expected_result) = x.checked_mul(y) {
@@ -236,6 +245,7 @@ fn protected_divide_zero_denominator(#[any] x: i64) {
         .with_int_values([x, 0])
         .unwrap()
         .with_no_program()
+        .with_instruction_step_limit(1000)
         .build();
     let result = IntInstruction::ProtectedDivide.perform(state);
     let output = result.unwrap().stack_mut::<i64>().pop().unwrap();
@@ -250,6 +260,7 @@ fn protected_divide_works_or_does_nothing(#[any] x: i64, #[any] y: i64) {
         .with_int_values([x, y])
         .unwrap()
         .with_no_program()
+        .with_instruction_step_limit(1000)
         .build();
     let result = IntInstruction::ProtectedDivide.perform(state);
     if let Some(expected_result) = x.checked_div(y) {
@@ -281,6 +292,7 @@ fn mod_zero_denominator(#[any] x: i64) {
         .with_int_values([0, x])
         .unwrap()
         .with_no_program()
+        .with_instruction_step_limit(1000)
         .build();
     let result = IntInstruction::Mod.perform(state);
     let output = result.unwrap().stack_mut::<i64>().pop().unwrap();
@@ -295,6 +307,7 @@ fn mod_rems_or_does_nothing(#[any] x: i64, #[any] y: i64) {
         .with_int_values([x, y])
         .unwrap()
         .with_no_program()
+        .with_instruction_step_limit(1000)
         .build();
     let result = IntInstruction::Mod.perform(state);
     if let Some(expected_result) = x.checked_rem(y) {
@@ -330,6 +343,7 @@ fn inc_does_not_crash(#[any] x: i64) {
         .with_int_values(std::iter::once(x))
         .unwrap()
         .with_no_program()
+        .with_instruction_step_limit(1000)
         .build();
     let _ = IntInstruction::Inc.perform(state);
 }
@@ -348,6 +362,7 @@ fn int_ops_do_not_crash(
         .with_bool_values(std::iter::once(b))
         .unwrap()
         .with_no_program()
+        .with_instruction_step_limit(1000)
         .build();
     let _ = instr.perform(state);
 }

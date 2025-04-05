@@ -126,6 +126,7 @@ mod tests {
             .unwrap()
             .with_bool_values([true])
             .unwrap()
+            .with_instruction_step_limit(1000)
             .build();
         let result_state = Unless.perform(state).unwrap();
         assert!(result_state.bool.is_empty());
@@ -140,6 +141,7 @@ mod tests {
             .unwrap()
             .with_bool_values([false])
             .unwrap()
+            .with_instruction_step_limit(1000)
             .build();
         let result_state = Unless.perform(state.clone()).unwrap();
         assert!(result_state.bool.is_empty());
@@ -153,6 +155,7 @@ mod tests {
             .with_no_program()
             .with_bool_values([true])
             .unwrap()
+            .with_instruction_step_limit(1000)
             .build();
         let result_state = Unless.perform(state.clone()).unwrap();
         assert_eq!(result_state, state);
@@ -165,6 +168,7 @@ mod tests {
             .with_no_program()
             .with_bool_values([false])
             .unwrap()
+            .with_instruction_step_limit(1000)
             .build();
         let result_state = Unless.perform(state.clone()).unwrap();
         assert_eq!(result_state, state);
@@ -177,6 +181,7 @@ mod tests {
             .with_max_stack_size(1)
             .with_program([ExecInstruction::noop()])
             .unwrap()
+            .with_instruction_step_limit(1000)
             .build();
         let result_state = Unless.perform(state.clone()).unwrap();
         assert_eq!(result_state, state);
@@ -189,6 +194,7 @@ mod tests {
             .with_no_program()
             .with_bool_values([])
             .unwrap()
+            .with_instruction_step_limit(1000)
             .build();
         let result_error = Unless.perform(state.clone()).unwrap_err();
         assert!(result_error.is_recoverable());

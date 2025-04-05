@@ -67,6 +67,7 @@ fn build_push_state(
         .with_program(program)
         .unwrap()
         .with_float_input("x", input)
+        .with_instruction_step_limit(1000)
         .build()
 }
 

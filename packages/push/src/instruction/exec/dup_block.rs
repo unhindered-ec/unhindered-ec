@@ -91,6 +91,7 @@ mod tests {
             .with_max_stack_size(2)
             .with_program([ExecInstruction::noop()])
             .unwrap()
+            .with_instruction_step_limit(1000)
             .build();
         let result_state = DupBlock.perform(state).unwrap();
         assert_eq!(
@@ -104,6 +105,7 @@ mod tests {
         let state = PushState::builder()
             .with_max_stack_size(0)
             .with_no_program()
+            .with_instruction_step_limit(1000)
             .build();
         let result_error = DupBlock.perform(state).unwrap_err();
         assert!(result_error.is_recoverable());
@@ -119,6 +121,7 @@ mod tests {
             .with_max_stack_size(1)
             .with_program([ExecInstruction::noop()])
             .unwrap()
+            .with_instruction_step_limit(1000)
             .build();
         let result_error = DupBlock.perform(state).unwrap_err();
         assert!(result_error.is_fatal());

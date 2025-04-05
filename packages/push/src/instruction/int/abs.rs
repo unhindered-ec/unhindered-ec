@@ -116,6 +116,7 @@ mod tests {
             .with_int_values(std::iter::once(input))
             .unwrap()
             .with_no_program()
+            .with_instruction_step_limit(1000)
             .build();
         let result = Abs.perform(state).unwrap();
         assert_eq!(result.stack::<i64>().size(), 1);
@@ -132,6 +133,7 @@ mod tests {
             .with_int_values(std::iter::once(x))
             .unwrap()
             .with_no_program()
+            .with_instruction_step_limit(1000)
             .build();
         let result = Abs.perform(state).unwrap();
         prop_assert_eq!(result.stack::<i64>().size(), 1);
