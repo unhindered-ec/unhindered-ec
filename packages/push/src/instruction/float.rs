@@ -7,11 +7,13 @@ use super::{
         dup::Dup, flush::Flush, is_empty::IsEmpty, pop::Pop, push_value::PushValue,
         stack_depth::StackDepth, swap::Swap,
     },
+    printing::Print,
 };
 use crate::{
     error::{Error, InstructionResult},
     push_vm::{
         HasStack,
+        push_io::HasStdout,
         stack::{PushOnto, Stack, StackDiscard, StackError},
     },
 };
@@ -28,6 +30,7 @@ pub enum FloatInstruction {
     IsEmpty(IsEmpty<OrderedFloat<f64>>),
     StackDepth(StackDepth<OrderedFloat<f64>>),
     Flush(Flush<OrderedFloat<f64>>),
+    Print(Print<OrderedFloat<f64>>),
 
     Add,
     Subtract,
@@ -133,7 +136,7 @@ impl From<Flush<OrderedFloat<f64>>> for FloatInstruction {
 
 impl<S> Instruction<S> for FloatInstruction
 where
-    S: Clone + HasStack<OrderedFloat<f64>> + HasStack<bool> + HasStack<i64>,
+    S: Clone + HasStack<OrderedFloat<f64>> + HasStack<bool> + HasStack<i64> + HasStdout,
 {
     type Error = PushInstructionError;
 
@@ -146,6 +149,7 @@ where
             Self::IsEmpty(is_empty) => is_empty.perform(state),
             Self::StackDepth(stack_depth) => stack_depth.perform(state),
             Self::Flush(flush) => flush.perform(state),
+            Self::Print(print) => print.perform(state),
 
             // All these instructions pop at least one value from the float stack, so we're
             // guaranteed that there will be space for the result. So we don't have to check that

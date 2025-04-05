@@ -13,10 +13,14 @@ use super::{
         dup::Dup, flush::Flush, is_empty::IsEmpty, pop::Pop, push_value::PushValue,
         stack_depth::StackDepth, swap::Swap,
     },
+    printing::Print,
 };
 use crate::{
     error::{Error, InstructionResult},
-    push_vm::stack::{HasStack, PushOnto, Stack, StackDiscard, StackError},
+    push_vm::{
+        push_io::HasStdout,
+        stack::{HasStack, PushOnto, Stack, StackDiscard, StackError},
+    },
 };
 
 #[derive(Debug, strum_macros::Display, Copy, Clone, PartialEq, Eq, EnumIter)]
@@ -32,6 +36,7 @@ pub enum IntInstruction {
     IsEmpty(IsEmpty<i64>),
     StackDepth(StackDepth<i64>),
     Flush(Flush<i64>),
+    Print(Print<i64>),
 
     Negate(Negate),
     Abs(Abs),
@@ -174,7 +179,7 @@ pub enum IntInstructionError {
 
 impl<S> Instruction<S> for IntInstruction
 where
-    S: Clone + HasStack<i64> + HasStack<bool>,
+    S: Clone + HasStack<i64> + HasStack<bool> + HasStdout,
 {
     type Error = PushInstructionError;
 
@@ -191,6 +196,8 @@ where
             Self::IsEmpty(is_empty) => is_empty.perform(state),
             Self::StackDepth(stack_depth) => stack_depth.perform(state),
             Self::Flush(flush) => flush.perform(state),
+            Self::Print(print) => print.perform(state),
+
             Self::Negate(negate) => negate.perform(state),
             Self::Abs(abs) => abs.perform(state),
             Self::Clamp(clamp) => clamp.perform(state),
