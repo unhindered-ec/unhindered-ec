@@ -144,7 +144,6 @@ where
 
             let mut current_best_result = initial_winner
                 .test_results()
-                .results
                 .get(test_case_index)
                 .ok_or(LexicaseError::MissingTestCase {
                     total_cases: self.num_test_cases,
@@ -152,7 +151,7 @@ where
                 })?;
 
             for c in remaining {
-                let this_result = c.test_results().results.get(test_case_index).ok_or(
+                let this_result = c.test_results().get(test_case_index).ok_or(
                     LexicaseError::MissingTestCase {
                         total_cases: self.num_test_cases,
                         current_index: test_case_index,
@@ -235,7 +234,7 @@ mod tests {
     ) -> Vec<EcIndividual<usize, TestResults<i32>>> {
         scores
             .into_iter()
-            .map(TestResults::<i32>::from)
+            .map(TestResults::<i32>::from_iter)
             // We'll use the index as the "genome".
             .enumerate()
             .map(EcIndividual::from)
@@ -348,7 +347,9 @@ mod tests {
         collection::vec([any::<u8>(), any::<u8>()], pop_size).prop_map(|pop_scores| {
             pop_scores
                 .into_iter()
-                .map(|scores| EcIndividual::new(format!("{scores:?}"), TestResults::from(scores)))
+                .map(|scores| {
+                    EcIndividual::new(format!("{scores:?}"), TestResults::from_iter(scores))
+                })
                 .collect::<Vec<_>>()
         })
     }
@@ -373,8 +374,10 @@ mod tests {
         winning_scores[score_to_increase] =
             winning_scores[score_to_increase].checked_add(1).unwrap();
         let winning_label = format!("{winning_scores:?}");
-        let winning_individual: TestIndividual =
-            EcIndividual::new(winning_label.clone(), TestResults::from(winning_scores));
+        let winning_individual: TestIndividual = EcIndividual::new(
+            winning_label.clone(),
+            TestResults::from_iter(winning_scores),
+        );
         (winning_label, winning_individual)
     }
 
@@ -383,7 +386,7 @@ mod tests {
     fn largest_test_case_value(population: &[TestIndividual], index: usize) -> u16 {
         population
             .iter()
-            .map(|i| i.test_results.results[index])
+            .map(|i| i.test_results[index])
             .max()
             .unwrap()
     }
