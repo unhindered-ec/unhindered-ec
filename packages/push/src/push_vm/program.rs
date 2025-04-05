@@ -154,6 +154,7 @@ mod test {
         let state = PushState::builder()
             .with_max_stack_size(3)
             .with_no_program()
+            .with_instruction_step_limit(1000)
             .build();
         let mut result = block.perform(state).unwrap();
         let exec_stack = result.stack_mut::<PushProgram>();
@@ -176,6 +177,7 @@ mod test {
             // Set the max stack size to 2, so when we execute the block it overflows
             .with_max_stack_size(0)
             .with_no_program()
+            .with_instruction_step_limit(1000)
             .build();
 
         assert!(

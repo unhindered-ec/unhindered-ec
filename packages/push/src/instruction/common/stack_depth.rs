@@ -117,6 +117,7 @@ mod tests {
         let state = PushState::builder()
             .with_max_stack_size(1)
             .with_no_program()
+            .with_instruction_step_limit(1000)
             .build();
         let stack_depth = StackDepth::<bool>::new();
         let state = stack_depth.perform(state).unwrap();
@@ -143,6 +144,7 @@ mod tests {
             .with_int_values(values)
             .unwrap()
             .with_no_program()
+            .with_instruction_step_limit(1000)
             .build();
         let stack_depth = StackDepth::<i64>::new();
         let state = stack_depth.perform(state).unwrap();
@@ -168,6 +170,7 @@ mod tests {
             .with_bool_values(values)
             .unwrap()
             .with_no_program()
+            .with_instruction_step_limit(1000)
             .build();
         let stack_depth = StackDepth::<bool>::new();
         let state = stack_depth.perform(state).unwrap();
@@ -187,6 +190,7 @@ mod tests {
             .with_int_values([0, 1, 2])
             .unwrap()
             .with_no_program()
+            .with_instruction_step_limit(1000)
             .build();
         let stack_depth = StackDepth::<bool>::default();
         let result = stack_depth.perform(state).unwrap_err();

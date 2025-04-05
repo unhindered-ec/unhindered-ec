@@ -70,6 +70,7 @@ fn build_push_state(
         // We arguably should check that and return an error here.
         .unwrap()
         .with_float_input("x", input)
+        .with_instruction_step_limit(1_000)
         .build()
 }
 

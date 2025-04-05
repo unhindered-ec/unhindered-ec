@@ -26,6 +26,7 @@ fn push_float() {
     let state = PushState::builder()
         .with_max_stack_size(1)
         .with_no_program()
+        .with_instruction_step_limit(1000)
         .build();
     let result = FloatInstruction::push_ordered_float(x)
         .perform(state)
@@ -43,6 +44,7 @@ fn add() {
         .with_float_values([x, y])
         .unwrap()
         .with_no_program()
+        .with_instruction_step_limit(1000)
         .build();
     let result = FloatInstruction::Add.perform(state).unwrap();
     assert_eq!(result.stack::<OrderedFloat<f64>>().size(), 1);
@@ -62,6 +64,7 @@ fn overflow_bool_stack() {
         .with_bool_values([false, false])
         .unwrap()
         .with_no_program()
+        .with_instruction_step_limit(1000)
         .build();
     let result = FloatInstruction::Equal.perform(state).unwrap_err();
     assert_eq!(
@@ -78,6 +81,7 @@ fn dup() {
         .with_float_values(std::iter::once(x))
         .unwrap()
         .with_no_program()
+        .with_instruction_step_limit(1000)
         .build();
     let mut result = FloatInstruction::dup().perform(state).unwrap();
     assert_eq!(result.stack::<OrderedFloat<f64>>().size(), 2);
@@ -95,6 +99,7 @@ fn add_prop(#[any] x: OrderedFloat<f64>, #[any] y: OrderedFloat<f64>) {
         .with_float_values([x, y])
         .unwrap()
         .with_no_program()
+        .with_instruction_step_limit(1000)
         .build();
     let result = FloatInstruction::Add.perform(state).unwrap();
     let output = result.stack::<OrderedFloat<f64>>().top().unwrap();
@@ -109,6 +114,7 @@ fn subtract_prop(#[any] x: OrderedFloat<f64>, #[any] y: OrderedFloat<f64>) {
         .with_float_values([x, y])
         .unwrap()
         .with_no_program()
+        .with_instruction_step_limit(1000)
         .build();
     let result = FloatInstruction::Subtract.perform(state).unwrap();
     let output = result.stack::<OrderedFloat<f64>>().top().unwrap();
@@ -123,6 +129,7 @@ fn multiply_prop(#[any] x: OrderedFloat<f64>, #[any] y: OrderedFloat<f64>) {
         .with_float_values([x, y])
         .unwrap()
         .with_no_program()
+        .with_instruction_step_limit(1000)
         .build();
     let result = FloatInstruction::Multiply.perform(state).unwrap();
     let output = result.stack::<OrderedFloat<f64>>().top().unwrap();
@@ -137,6 +144,7 @@ fn protected_divide_prop(#[any] x: OrderedFloat<f64>, #[any] y: OrderedFloat<f64
         .with_float_values([x, y])
         .unwrap()
         .with_no_program()
+        .with_instruction_step_limit(1000)
         .build();
     let result = FloatInstruction::ProtectedDivide.perform(state).unwrap();
     let output = result.stack::<OrderedFloat<f64>>().top().unwrap();
@@ -151,6 +159,7 @@ fn equal_prop(#[any] x: OrderedFloat<f64>, #[any] y: OrderedFloat<f64>) {
         .with_float_values([x, y])
         .unwrap()
         .with_no_program()
+        .with_instruction_step_limit(1000)
         .build();
     let result = FloatInstruction::Equal.perform(state).unwrap();
     let output = result.stack::<bool>().top().unwrap();
@@ -165,6 +174,7 @@ fn not_equal_prop(#[any] x: OrderedFloat<f64>, #[any] y: OrderedFloat<f64>) {
         .with_float_values([x, y])
         .unwrap()
         .with_no_program()
+        .with_instruction_step_limit(1000)
         .build();
     let result = FloatInstruction::NotEqual.perform(state).unwrap();
     let output = result.stack::<bool>().top().unwrap();
@@ -179,6 +189,7 @@ fn greater_than_prop(#[any] x: OrderedFloat<f64>, #[any] y: OrderedFloat<f64>) {
         .with_float_values([x, y])
         .unwrap()
         .with_no_program()
+        .with_instruction_step_limit(1000)
         .build();
     let result = FloatInstruction::GreaterThan.perform(state).unwrap();
     let output = result.stack::<bool>().top().unwrap();
@@ -193,6 +204,7 @@ fn less_than_prop(#[any] x: OrderedFloat<f64>, #[any] y: OrderedFloat<f64>) {
         .with_float_values([x, y])
         .unwrap()
         .with_no_program()
+        .with_instruction_step_limit(1000)
         .build();
     let result = FloatInstruction::LessThan.perform(state).unwrap();
     let output = result.stack::<bool>().top().unwrap();
@@ -207,6 +219,7 @@ fn greater_than_or_equal_prop(#[any] x: OrderedFloat<f64>, #[any] y: OrderedFloa
         .with_float_values([x, y])
         .unwrap()
         .with_no_program()
+        .with_instruction_step_limit(1000)
         .build();
     let result = FloatInstruction::GreaterThanOrEqual.perform(state).unwrap();
     let output = result.stack::<bool>().top().unwrap();
@@ -221,6 +234,7 @@ fn less_than_or_equal_prop(#[any] x: OrderedFloat<f64>, #[any] y: OrderedFloat<f
         .with_float_values([x, y])
         .unwrap()
         .with_no_program()
+        .with_instruction_step_limit(1000)
         .build();
     let result = FloatInstruction::LessThanOrEqual.perform(state).unwrap();
     let output = result.stack::<bool>().top().unwrap();

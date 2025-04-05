@@ -97,6 +97,7 @@ mod test {
             .with_int_values([5, 10, 20])
             .unwrap()
             .with_no_program()
+            .with_instruction_step_limit(1000)
             .build();
         let result = Clamp.perform(state).unwrap();
         assert_eq!(result.stack::<i64>().top().unwrap(), &10);
@@ -110,6 +111,7 @@ mod test {
             .with_int_values([25, 10, 20])
             .unwrap()
             .with_no_program()
+            .with_instruction_step_limit(1000)
             .build();
         let result = Clamp.perform(state).unwrap();
         assert_eq!(result.stack::<i64>().top().unwrap(), &20);
@@ -123,6 +125,7 @@ mod test {
             .with_int_values([15, 10, 20])
             .unwrap()
             .with_no_program()
+            .with_instruction_step_limit(1000)
             .build();
         let result = Clamp.perform(state).unwrap();
         assert_eq!(result.stack::<i64>().top().unwrap(), &15);
@@ -136,6 +139,7 @@ mod test {
             .with_int_values([15, 10, 10])
             .unwrap()
             .with_no_program()
+            .with_instruction_step_limit(1000)
             .build();
         let result = Clamp.perform(state).unwrap();
         assert_eq!(result.stack::<i64>().top().unwrap(), &10);
@@ -147,6 +151,7 @@ mod test {
         let state = PushState::builder()
             .with_max_stack_size(0)
             .with_no_program()
+            .with_instruction_step_limit(1000)
             .build();
         let result = Clamp.perform(state).unwrap_err();
         assert!(result.is_recoverable());
@@ -166,6 +171,7 @@ mod test {
             .with_int_values([1])
             .unwrap()
             .with_no_program()
+            .with_instruction_step_limit(1000)
             .build();
         let result = Clamp.perform(state).unwrap_err();
         assert!(result.is_recoverable());
@@ -185,6 +191,7 @@ mod test {
             .with_int_values([1, 2])
             .unwrap()
             .with_no_program()
+            .with_instruction_step_limit(1000)
             .build();
         let result = Clamp.perform(state).unwrap_err();
         assert!(result.is_recoverable());
@@ -204,6 +211,7 @@ mod test {
             .with_int_values([value, min, max])
             .unwrap()
             .with_no_program()
+            .with_instruction_step_limit(1000)
             .build();
         let result = Clamp.perform(state).unwrap();
         let (min, max) = if max < min { (max, min) } else { (min, max) };

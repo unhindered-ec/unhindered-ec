@@ -96,7 +96,8 @@ pub fn push_state(
         .into());
     };
 
-    let (stacks, exec_stack, input_instructions) = parse_fields(fields, macro_span, &macro_flags)?;
+    let (stacks, exec_stack, input_instructions, max_instruction_steps) =
+        parse_fields(fields, macro_span, &macro_flags)?;
 
     let has_stack_derives = macro_flags
         .has_stack
@@ -113,6 +114,7 @@ pub fn push_state(
                 &stacks,
                 &exec_stack,
                 input_instructions,
+                max_instruction_steps,
             )
         })
         .transpose()?;

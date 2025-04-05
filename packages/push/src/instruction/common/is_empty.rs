@@ -98,6 +98,7 @@ mod tests {
         let state = PushState::builder()
             .with_max_stack_size(1)
             .with_no_program()
+            .with_instruction_step_limit(1000)
             .build();
         let is_empty = IsEmpty::<i64>::default();
         let result = is_empty.perform(state).unwrap();
@@ -113,6 +114,7 @@ mod tests {
             .with_int_values([7])
             .unwrap()
             .with_no_program()
+            .with_instruction_step_limit(1000)
             .build();
         let is_empty = IsEmpty::<i64>::default();
         let result = is_empty.perform(state).unwrap();
@@ -127,6 +129,7 @@ mod tests {
         let state = PushState::builder()
             .with_max_stack_size(1)
             .with_no_program()
+            .with_instruction_step_limit(1000)
             .build();
         let is_empty = IsEmpty::<bool>::default();
         let result = is_empty.perform(state).unwrap();
@@ -141,6 +144,7 @@ mod tests {
             .with_bool_values([true])
             .unwrap()
             .with_no_program()
+            .with_instruction_step_limit(1000)
             .build();
         let is_empty = IsEmpty::<bool>::default();
         let result = is_empty.perform(state).unwrap();
@@ -155,6 +159,7 @@ mod tests {
             .with_bool_values([true])
             .unwrap()
             .with_no_program()
+            .with_instruction_step_limit(1000)
             .build();
         let is_empty = IsEmpty::<i64>::default();
         let result = is_empty.perform(state).unwrap_err();

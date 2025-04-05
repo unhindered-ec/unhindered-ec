@@ -206,6 +206,7 @@ mod property_tests {
             .unwrap()
             .with_int_values([i])
             .unwrap()
+            .with_instruction_step_limit(1000)
             .build();
 
         instr.perform(state).unwrap();
@@ -218,6 +219,7 @@ mod property_tests {
             .with_no_program()
             .with_bool_values([x, y])
             .unwrap()
+            .with_instruction_step_limit(1000)
             .build();
         let result_state = BoolInstruction::And.perform(state).unwrap();
 
@@ -232,6 +234,7 @@ mod property_tests {
             .with_no_program()
             .with_bool_values([x, y])
             .unwrap()
+            .with_instruction_step_limit(1000)
             .build();
         let result_state = BoolInstruction::Implies.perform(state).unwrap();
 

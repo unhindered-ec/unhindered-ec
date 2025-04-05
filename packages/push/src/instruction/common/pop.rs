@@ -95,6 +95,7 @@ mod tests {
         let state = PushState::builder()
             .with_max_stack_size(0)
             .with_no_program()
+            .with_instruction_step_limit(1000)
             .build();
         let pop = Pop::<i64>::default();
         let result = pop.perform(state).unwrap_err();
@@ -115,6 +116,7 @@ mod tests {
             .with_int_values([17])
             .unwrap()
             .with_no_program()
+            .with_instruction_step_limit(1000)
             .build();
         let pop = Pop::<i64>::default();
         let result = pop.perform(state).unwrap();
@@ -129,6 +131,7 @@ mod tests {
             .with_int_values(values.clone().into_iter().rev())
             .unwrap()
             .with_no_program()
+            .with_instruction_step_limit(1000)
             .build();
         let pop = Pop::<i64>::default();
         let result = pop.perform(state).unwrap();

@@ -90,6 +90,7 @@ mod test {
             .with_int_values([1, 2, 3])
             .unwrap()
             .with_no_program()
+            .with_instruction_step_limit(1000)
             .build();
         let flush = Flush::<i64>::new();
         let state = flush.perform(state).unwrap();
@@ -101,6 +102,7 @@ mod test {
         let state = PushState::builder()
             .with_max_stack_size(0)
             .with_no_program()
+            .with_instruction_step_limit(1000)
             .build();
         let flush = Flush::<i64>::new();
         let state = flush.perform(state).unwrap();
