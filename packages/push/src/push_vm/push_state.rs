@@ -1,4 +1,4 @@
-use std::{collections::HashMap, io::Cursor, str::Utf8Error, string::FromUtf8Error};
+use std::{collections::HashMap, io::Cursor, string::FromUtf8Error};
 
 pub use ordered_float::OrderedFloat;
 
