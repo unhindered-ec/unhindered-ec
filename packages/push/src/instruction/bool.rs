@@ -8,7 +8,7 @@ use super::{
         dup::Dup, flush::Flush, is_empty::IsEmpty, pop::Pop, push_value::PushValue,
         stack_depth::StackDepth, swap::Swap,
     },
-    printing::Print,
+    printing::print::Print,
 };
 use crate::{
     error::{InstructionResult, MapInstructionError},

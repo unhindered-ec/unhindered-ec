@@ -1,14 +1,15 @@
 use std::{fmt::Display, io::Write, marker::PhantomData};
 
-use super::{Instruction, instruction_error::PushInstructionError};
+use super::super::instruction_error::PushInstructionError;
 use crate::{
     error::{Error, InstructionResult},
+    instruction::Instruction,
     push_vm::{HasStack, push_io::HasStdout},
 };
 
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
 pub struct Print<T> {
-    _p: PhantomData<T>,
+    pub(crate) _p: PhantomData<T>,
 }
 
 impl<State, T> Instruction<State> for Print<T>
@@ -32,7 +33,7 @@ where
 
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
 pub struct PrintLn<T> {
-    _p: PhantomData<T>,
+    pub(crate) _p: PhantomData<T>,
 }
 
 impl<State, T> Instruction<State> for PrintLn<T>
@@ -50,48 +51,6 @@ where
         let stdout = state.stdout();
         // We need to remove this `unwrap()`.
         writeln!(stdout, "{value}").unwrap();
-        Ok(state)
-    }
-}
-
-#[derive(Debug, Default, Clone, PartialEq, Eq)]
-pub struct PrintChar<const CHAR: char>;
-
-impl<const CHAR: char> PrintChar<CHAR> {
-    pub const fn new() -> Self {
-        Self {}
-    }
-}
-
-impl<State, const CHAR: char> Instruction<State> for PrintChar<CHAR>
-where
-    State: HasStdout,
-{
-    type Error = PushInstructionError;
-
-    fn perform(&self, mut state: State) -> InstructionResult<State, Self::Error> {
-        // We need to remove this `unwrap()`.
-        writeln!(state.stdout(), "{CHAR}").unwrap();
-        Ok(state)
-    }
-}
-
-pub type PrintSpace = PrintChar<' '>;
-pub type PrintNewline = PrintChar<'n'>;
-
-#[derive(Debug, Default, Clone, PartialEq, Eq)]
-pub struct PrintString(pub String);
-
-impl<State> Instruction<State> for PrintString
-where
-    State: HasStdout,
-{
-    type Error = PushInstructionError;
-
-    fn perform(&self, mut state: State) -> InstructionResult<State, Self::Error> {
-        let stdout = state.stdout();
-        // We need to remove this `unwrap()`.
-        writeln!(stdout, "{}", self.0).unwrap();
         Ok(state)
     }
 }

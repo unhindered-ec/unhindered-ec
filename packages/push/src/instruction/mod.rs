@@ -1,5 +1,8 @@
 use ordered_float::OrderedFloat;
-use printing::{PrintNewline, PrintSpace, PrintString};
+use printing::{
+    print_char::{PrintNewline, PrintSpace},
+    print_string::PrintString,
+};
 
 pub use self::{
     bool::BoolInstruction,
