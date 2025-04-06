@@ -19,3 +19,51 @@ where
         Ok(state)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::push_vm::push_state::PushState;
+
+    #[test]
+    fn print_string_works() {
+        let state = PushState::builder()
+            .with_max_stack_size(0)
+            .with_no_program()
+            .with_instruction_step_limit(10)
+            .build();
+
+        let print_hello = PrintString("Hello, world!".to_string());
+        let mut result = print_hello.perform(state).unwrap();
+        let output = result.stdout_string().unwrap();
+        assert_eq!(output, "Hello, world!\n");
+    }
+
+    #[test]
+    fn print_empty_string_works() {
+        let state = PushState::builder()
+            .with_max_stack_size(0)
+            .with_no_program()
+            .with_instruction_step_limit(10)
+            .build();
+
+        let print_empty = PrintString(String::new());
+        let mut result = print_empty.perform(state).unwrap();
+        let output = result.stdout_string().unwrap();
+        assert_eq!(output, "\n");
+    }
+
+    #[test]
+    fn print_string_with_newline_works() {
+        let state = PushState::builder()
+            .with_max_stack_size(0)
+            .with_no_program()
+            .with_instruction_step_limit(10)
+            .build();
+
+        let print_newline = PrintString("Line 1\nLine 2".to_string());
+        let mut result = print_newline.perform(state).unwrap();
+        let output = result.stdout_string().unwrap();
+        assert_eq!(output, "Line 1\nLine 2\n");
+    }
+}

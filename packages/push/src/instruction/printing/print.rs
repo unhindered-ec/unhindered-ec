@@ -3,7 +3,7 @@ use std::{fmt::Display, io::Write, marker::PhantomData};
 use super::super::instruction_error::PushInstructionError;
 use crate::{
     error::{Error, InstructionResult},
-    instruction::{Instruction, PushInstruction},
+    instruction::Instruction,
     push_vm::{HasStack, push_io::HasStdout},
 };
 
