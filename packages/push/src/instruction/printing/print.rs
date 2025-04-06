@@ -3,7 +3,7 @@ use std::{fmt::Display, io::Write, marker::PhantomData};
 use super::super::instruction_error::PushInstructionError;
 use crate::{
     error::{Error, InstructionResult},
-    instruction::Instruction,
+    instruction::{Instruction, PushInstruction},
     push_vm::{HasStack, push_io::HasStdout},
 };
 
@@ -60,7 +60,12 @@ mod tests {
     use ordered_float::OrderedFloat;
 
     use super::*;
-    use crate::push_vm::{push_state::PushState, stack::StackError};
+    use crate::{
+        genome::plushy::{Plushy, PushGene},
+        instruction::{BoolInstruction, IntInstruction},
+        list_into::vec_into,
+        push_vm::{State, program::PushProgram, push_state::PushState, stack::StackError},
+    };
 
     #[test]
     fn print_int() {
@@ -190,5 +195,30 @@ mod tests {
                 num_present: 0
             })
         );
+    }
+
+    #[test]
+    fn print_multiple_values() {
+        let genes: Vec<PushGene> = vec_into![
+            IntInstruction::Print(Print::<i64>::default()),
+            BoolInstruction::Print(Print::<bool>::default()),
+            IntInstruction::PrintLn(PrintLn::<i64>::default()),
+            IntInstruction::Print(Print::<i64>::default()),
+        ];
+        let program = Vec::<PushProgram>::from(Plushy::new(genes));
+        let push_state = PushState::builder()
+            .with_max_stack_size(4)
+            .with_bool_values([false])
+            .unwrap()
+            .with_int_values([5, 8, 9])
+            .unwrap()
+            .with_program(program)
+            .unwrap()
+            .with_instruction_step_limit(10)
+            .build();
+        let mut result = push_state.run_to_completion().unwrap();
+        assert_eq!(result.stack::<bool>().size(), 0);
+        let output = result.stdout_string().unwrap();
+        assert_eq!(output, "5false8\n9");
     }
 }
