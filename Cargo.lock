@@ -872,6 +872,7 @@ dependencies = [
  "push_macros",
  "rand 0.9.0",
  "static_assertions",
+ "strsim",
  "strum",
  "strum_macros",
  "test-case",
