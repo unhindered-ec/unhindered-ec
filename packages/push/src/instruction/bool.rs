@@ -8,7 +8,7 @@ use super::{
         dup::Dup, flush::Flush, is_empty::IsEmpty, pop::Pop, push_value::PushValue,
         stack_depth::StackDepth, swap::Swap,
     },
-    printing::print::Print,
+    printing::print::{Print, PrintLn},
 };
 use crate::{
     error::{InstructionResult, MapInstructionError},
@@ -31,6 +31,7 @@ pub enum BoolInstruction {
     StackDepth(StackDepth<bool>),
     Flush(Flush<bool>),
     Print(Print<bool>),
+    Println(PrintLn<bool>),
 
     Not,
     Or,
@@ -165,6 +166,7 @@ where
             Self::StackDepth(stack_depth) => stack_depth.perform(state),
             Self::Flush(flush) => flush.perform(state),
             Self::Print(print) => print.perform(state),
+            Self::Println(println) => println.perform(state),
 
             Self::Not => bool_stack.pop().map(Not::not).push_onto(state),
             Self::And => bool_stack.pop2().map(|(x, y)| x && y).push_onto(state),

@@ -13,7 +13,7 @@ use super::{
         dup::Dup, flush::Flush, is_empty::IsEmpty, pop::Pop, push_value::PushValue,
         stack_depth::StackDepth, swap::Swap,
     },
-    printing::print::Print,
+    printing::print::{Print, PrintLn},
 };
 use crate::{
     error::{Error, InstructionResult},
@@ -37,6 +37,7 @@ pub enum IntInstruction {
     StackDepth(StackDepth<i64>),
     Flush(Flush<i64>),
     Print(Print<i64>),
+    PrintLn(PrintLn<i64>),
 
     Negate(Negate),
     Abs(Abs),
@@ -197,6 +198,7 @@ where
             Self::StackDepth(stack_depth) => stack_depth.perform(state),
             Self::Flush(flush) => flush.perform(state),
             Self::Print(print) => print.perform(state),
+            Self::PrintLn(println) => println.perform(state),
 
             Self::Negate(negate) => negate.perform(state),
             Self::Abs(abs) => abs.perform(state),

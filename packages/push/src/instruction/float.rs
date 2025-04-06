@@ -31,7 +31,9 @@ pub enum FloatInstruction {
     StackDepth(StackDepth<OrderedFloat<f64>>),
     Flush(Flush<OrderedFloat<f64>>),
     Print(Print<OrderedFloat<f64>>),
+    PrintLn(Print<OrderedFloat<f64>>),
 
+    // Arithmetic instructions)
     Add,
     Subtract,
     Multiply,
@@ -150,6 +152,7 @@ where
             Self::StackDepth(stack_depth) => stack_depth.perform(state),
             Self::Flush(flush) => flush.perform(state),
             Self::Print(print) => print.perform(state),
+            Self::PrintLn(println) => println.perform(state),
 
             // All these instructions pop at least one value from the float stack, so we're
             // guaranteed that there will be space for the result. So we don't have to check that
