@@ -7,7 +7,7 @@ use super::{
         dup::Dup, flush::Flush, is_empty::IsEmpty, pop::Pop, push_value::PushValue,
         stack_depth::StackDepth, swap::Swap,
     },
-    printing::print::Print,
+    printing::Print,
 };
 use crate::{
     error::{Error, InstructionResult},

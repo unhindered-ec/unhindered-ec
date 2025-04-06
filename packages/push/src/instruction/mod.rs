@@ -1,8 +1,5 @@
 use ordered_float::OrderedFloat;
-use printing::{
-    print_char::{PrintNewline, PrintSpace},
-    print_string::PrintString,
-};
+use printing::{PrintNewline, PrintSpace, PrintString};
 
 pub use self::{
     bool::BoolInstruction,
@@ -19,7 +16,7 @@ mod exec;
 mod float;
 pub mod instruction_error;
 mod int;
-mod printing;
+pub mod printing;
 pub mod variable_name;
 
 /*
