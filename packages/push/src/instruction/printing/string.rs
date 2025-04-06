@@ -1,8 +1,58 @@
 use std::io::Write;
 
 use super::super::{Instruction, instruction_error::PushInstructionError};
-use crate::{error::InstructionResult, push_vm::push_io::HasStdout};
+use crate::{error::InstructionResult, instruction::NumOpens, push_vm::push_io::HasStdout};
 
+/// An instruction that "prints" a specified string.
+///
+/// # Inputs
+///
+/// The `PrintString` instruction doesn't take any
+/// inputs because the string to print is specified in
+/// when the instruction is created.
+///
+/// # Behavior
+///
+/// The `PrintString` instruction "prints" a specified string to an internal
+/// buffer in the state.
+///
+/// When we support a `String` stack then `Print<String>` will print the
+/// top value of that stack. This instruction is intended more for printing
+/// "constant" strings that are specified when the instruction is created.
+/// This is potentially use for problems with strings that are embedded in
+/// the problem statement such as "Fizz" and "Buzz" for the Fizz Buzz problem.
+///
+/// ## Action Table
+///
+/// `PrintString` doesn't affect any of the stacks.
+///
+/// # Examples
+///
+/// ```
+/// # use push::{
+/// #    instruction::{Instruction, printing::PrintString},
+/// #    push_vm::{push_io::HasStdout, push_state::PushState},
+/// # };
+/// #
+/// // Build an initial state with empty stacks stack.
+/// let push_state = PushState::builder()
+///     .with_max_stack_size(0)
+///     .with_no_program()
+///     .with_instruction_step_limit(10)
+///     .build();
+/// // Print the string "Hello".
+/// let mut result = PrintString("Hello".to_string())
+///     .perform(push_state)
+///     .unwrap();
+/// // Extract the printed output.
+/// let output = result.stdout_string().unwrap();
+/// // Assert that this is equal to "Hello".
+/// assert_eq!(output, "Hello");
+/// ```
+/// # Panics
+///
+/// This currently panics (due to an `unwrap()`) if attempting
+/// to write the character fails.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct PrintString(pub String);
 
@@ -15,8 +65,14 @@ where
     fn perform(&self, mut state: State) -> InstructionResult<State, Self::Error> {
         let stdout = state.stdout();
         // We need to remove this `unwrap()`.
-        writeln!(stdout, "{}", self.0).unwrap();
+        write!(stdout, "{}", self.0).unwrap();
         Ok(state)
+    }
+}
+
+impl NumOpens for PrintString {
+    fn num_opens(&self) -> usize {
+        0
     }
 }
 
@@ -36,7 +92,7 @@ mod tests {
         let print_hello = PrintString("Hello, world!".to_string());
         let mut result = print_hello.perform(state).unwrap();
         let output = result.stdout_string().unwrap();
-        assert_eq!(output, "Hello, world!\n");
+        assert_eq!(output, "Hello, world!");
     }
 
     #[test]
@@ -50,7 +106,7 @@ mod tests {
         let print_empty = PrintString(String::new());
         let mut result = print_empty.perform(state).unwrap();
         let output = result.stdout_string().unwrap();
-        assert_eq!(output, "\n");
+        assert_eq!(output, "");
     }
 
     #[test]
@@ -64,6 +120,6 @@ mod tests {
         let print_newline = PrintString("Line 1\nLine 2".to_string());
         let mut result = print_newline.perform(state).unwrap();
         let output = result.stdout_string().unwrap();
-        assert_eq!(output, "Line 1\nLine 2\n");
+        assert_eq!(output, "Line 1\nLine 2");
     }
 }
