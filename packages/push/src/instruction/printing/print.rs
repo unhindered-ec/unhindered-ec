@@ -7,6 +7,47 @@ use crate::{
     push_vm::{HasStack, push_io::HasStdout},
 };
 
+/// An instruction that "prints" the top value of the stack
+/// of type `T` to an internal buffer in the state.
+///
+/// # Inputs
+///
+/// The `Print<T>` instruction takes the following inputs:
+///    - `T` stack
+///      - One value
+///
+/// # Behavior
+///
+/// The `Print<T>` instruction "prints" the top value of
+/// the stack of type `T` to an internal buffer in the state.
+///
+/// This does _not_ put a newline after the printed value;
+/// see `PrintLn` for that behavior.
+///
+/// ## Action Table
+///
+/// The table below indicates the behavior in each of the different
+/// cases.
+///
+///    - The `Stack<T>` column indicates the value of the top of the `T` stack,
+///      or whether it exists.
+///    - The "Success" column indicates whether the instruction succeeds, and if
+///      not what kind of error is returned:
+///       - ✅: success
+///       - ❗: recoverable error, with links to the error kind
+///       - ‼️: fatal error, with links to the error kind
+///    - The "Note" column briefly summarizes the action state in that case
+///
+/// | `Stack<T>`  |  Success | Note |
+/// | ------------- | ------------- | ------------- |
+/// | exists    | ✅ | Prints the value to the internal buffer |
+/// | missing | [❗..](crate::push_vm::stack::StackError::Underflow) | State is unchanged |
+///
+/// # Errors
+///
+/// Returns a
+/// [`StackError::Underflow`](crate::push_vm::stack::StackError::Underflow)
+/// error when the `Stack<T>` is empty.
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
 pub struct Print<T> {
     pub(crate) _p: PhantomData<T>,
@@ -31,6 +72,49 @@ where
     }
 }
 
+/// An instruction that "prints" the top value of the stack
+/// of type `T` to an internal buffer in the state, followed
+/// by a newline.
+///
+/// # Inputs
+///
+/// The `PrintLn<T>` instruction takes the following inputs:
+///    - `T` stack
+///      - One value
+///
+/// # Behavior
+///
+/// The `PrintLn<T>` instruction "prints" the top value of
+/// the stack of type `T` to an internal buffer in the state,
+/// followed by a newline.
+///
+/// See `Print` for similar behavior that does not automatically
+/// include a newline after the value.
+///
+/// ## Action Table
+///
+/// The table below indicates the behavior in each of the different
+/// cases.
+///
+///    - The `Stack<T>` column indicates the value of the top of the `T` stack,
+///      or whether it exists.
+///    - The "Success" column indicates whether the instruction succeeds, and if
+///      not what kind of error is returned:
+///       - ✅: success
+///       - ❗: recoverable error, with links to the error kind
+///       - ‼️: fatal error, with links to the error kind
+///    - The "Note" column briefly summarizes the action state in that case
+///
+/// | `Stack<T>`  |  Success | Note |
+/// | ------------- | ------------- | ------------- |
+/// | exists    | ✅ | Prints the value to the internal buffer followed by a newline |
+/// | missing | [❗..](crate::push_vm::stack::StackError::Underflow) | State is unchanged |
+///
+/// # Errors
+///
+/// Returns a
+/// [`StackError::Underflow`](crate::push_vm::stack::StackError::Underflow)
+/// error when the `Stack<T>` is empty.
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
 pub struct PrintLn<T> {
     pub(crate) _p: PhantomData<T>,
