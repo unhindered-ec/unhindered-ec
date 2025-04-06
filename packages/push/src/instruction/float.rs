@@ -7,7 +7,7 @@ use super::{
         dup::Dup, flush::Flush, is_empty::IsEmpty, pop::Pop, push_value::PushValue,
         stack_depth::StackDepth, swap::Swap,
     },
-    printing::Print,
+    printing::{Print, PrintLn},
 };
 use crate::{
     error::{Error, InstructionResult},
@@ -31,7 +31,7 @@ pub enum FloatInstruction {
     StackDepth(StackDepth<OrderedFloat<f64>>),
     Flush(Flush<OrderedFloat<f64>>),
     Print(Print<OrderedFloat<f64>>),
-    PrintLn(Print<OrderedFloat<f64>>),
+    PrintLn(PrintLn<OrderedFloat<f64>>),
 
     // Arithmetic instructions)
     Add,
@@ -44,6 +44,8 @@ pub enum FloatInstruction {
     LessThan,
     GreaterThanOrEqual,
     LessThanOrEqual,
+
+    FromIntApprox,
 }
 
 impl FloatInstruction {
@@ -142,7 +144,7 @@ where
 {
     type Error = PushInstructionError;
 
-    fn perform(&self, state: S) -> InstructionResult<S, Self::Error> {
+    fn perform(&self, mut state: S) -> InstructionResult<S, Self::Error> {
         match self {
             Self::Pop(pop) => pop.perform(state),
             Self::Push(push) => push.perform(state),
@@ -178,6 +180,21 @@ where
             Self::LessThan => Self::binary_predicate(state, std::cmp::PartialOrd::lt),
             Self::GreaterThanOrEqual => Self::binary_predicate(state, std::cmp::PartialOrd::ge),
             Self::LessThanOrEqual => Self::binary_predicate(state, std::cmp::PartialOrd::le),
+
+            Self::FromIntApprox => {
+                let int_stack = state.stack_mut::<i64>();
+                #[expect(
+                    clippy::as_conversions,
+                    clippy::cast_precision_loss,
+                    reason = "This instruction is meant to be an approximate conversion"
+                )]
+                int_stack
+                    .top()
+                    .map_err(PushInstructionError::from)
+                    .map(|&i| OrderedFloat(i as f64))
+                    .push_onto(state)
+                    .with_stack_discard::<i64>(1)
+            }
         }
     }
 }

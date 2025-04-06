@@ -4,6 +4,7 @@ mod negate;
 
 use clamp::Clamp;
 use miette::Diagnostic;
+use ordered_float::OrderedFloat;
 use strum_macros::EnumIter;
 
 use self::{abs::Abs, negate::Negate};
@@ -70,6 +71,7 @@ pub enum IntInstruction {
     GreaterThanEqual,
 
     FromBoolean,
+    FromFloatApprox,
 }
 
 impl IntInstruction {
@@ -180,7 +182,7 @@ pub enum IntInstructionError {
 
 impl<S> Instruction<S> for IntInstruction
 where
-    S: Clone + HasStack<i64> + HasStack<bool> + HasStdout,
+    S: Clone + HasStack<i64> + HasStack<bool> + HasStack<OrderedFloat<f64>> + HasStdout,
 {
     type Error = PushInstructionError;
 
@@ -443,6 +445,20 @@ where
                     .map(|&b| i64::from(b))
                     .push_onto(state)
                     .with_stack_discard::<bool>(1)
+            }
+            Self::FromFloatApprox => {
+                let float_stack = state.stack_mut::<OrderedFloat<f64>>();
+                #[expect(
+                    clippy::as_conversions,
+                    clippy::cast_possible_truncation,
+                    reason = "This instruction is meant to be an approximate conversion"
+                )]
+                float_stack
+                    .top()
+                    .map_err(PushInstructionError::from)
+                    .map(|&OrderedFloat(f)| f as i64)
+                    .push_onto(state)
+                    .with_stack_discard::<OrderedFloat<f64>>(1)
             }
         }
     }
