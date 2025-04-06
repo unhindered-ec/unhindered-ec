@@ -3,7 +3,7 @@ mod string;
 
 use std::{fmt::Display, io::Write, marker::PhantomData};
 
-pub use char::{PrintChar, PrintNewline, PrintSpace};
+pub use char::{PrintChar, PrintNewline, PrintPeriod, PrintSpace};
 pub use string::PrintString;
 
 use super::{NumOpens, instruction_error::PushInstructionError};
@@ -80,6 +80,11 @@ use crate::{
 /// Returns a
 /// [`StackError::Underflow`](crate::push_vm::stack::StackError::Underflow)
 /// error when the `Stack<T>` is empty.
+///
+/// # Panics
+///
+/// This currently panics (due to an `unwrap()`) if attempting
+/// to write the character fails.
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
 pub struct Print<T> {
     pub(crate) _p: PhantomData<T>,
@@ -178,6 +183,11 @@ impl<T> NumOpens for Print<T> {
 /// Returns a
 /// [`StackError::Underflow`](crate::push_vm::stack::StackError::Underflow)
 /// error when the `Stack<T>` is empty.
+///
+/// # Panics
+///
+/// This currently panics (due to an `unwrap()`) if attempting
+/// to write the character fails.
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
 pub struct PrintLn<T> {
     pub(crate) _p: PhantomData<T>,
