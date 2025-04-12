@@ -103,8 +103,21 @@ impl PushState {
         self.max_instruction_steps
     }
 
-    pub const fn set_max_instruction_steps(&mut self, max_instruction_steps: usize) {
-        self.max_instruction_steps = max_instruction_steps;
+    // TODO: I thought about unwrapping here instead of returning a `Result`.
+    //   It seems that if the only way we put things in our `Cursor` is through
+    //   `write!()` calls, then the results in the `Cursor` should be legal.
+    //   Evolution is weird, though, so it might still make sense to return
+    //   a `Result` just in case we evolve something that breaks the interpretation
+    //   of the `Cursor` as a `String`.
+    //
+    /// Return the contents of `stdout` as a `String`
+    ///
+    /// # Errors
+    ///
+    /// Returns a `FromUtf8Error` if there is a problem converting
+    /// the contents of `Self::Stdout` into a `String`.
+    pub fn stdout_string(&mut self) -> Result<String, FromUtf8Error> {
+        String::from_utf8(self.stdout.clone().into_inner())
     }
 }
 
@@ -138,19 +151,6 @@ impl HasStdout for PushState {
 
     fn stdout(&mut self) -> &mut Self::Stdout {
         &mut self.stdout
-    }
-
-    // TODO: Can we avoid the `clone()` here? It's not a huge deal (we'll
-    //   only call it once at the end of running the program), but it would
-    //   still be nice to avoid it if possible.
-    // TODO: I thought about unwrapping here instead of returning a `Result`.
-    //   It seems that if the only way we put things in our `Cursor` is through
-    //   `write!()` calls, then the results in the `Cursor` should be legal.
-    //   Evolution is weird, though, so it might still make sense to return
-    //   a `Result` just in case we evolve something that breaks the interpretation
-    //   of the `Cursor` as a `String`.
-    fn stdout_string(&mut self) -> Result<String, FromUtf8Error> {
-        String::from_utf8(self.stdout.clone().into_inner())
     }
 }
 

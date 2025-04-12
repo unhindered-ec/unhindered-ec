@@ -1,15 +1,14 @@
-use std::{io::Write, string::FromUtf8Error};
+use std::io::Write;
 
 pub trait HasStdout {
     type Stdout: Write;
 
+    /// Return a mutable reference to this instance's associated
+    /// `Stdout` type.
+    ///
+    /// The associated `Stdout` type must implement the `std::io::Write` trait.
+    /// This allows callers to then call writing functions (like the `write!`
+    /// macro) to add content to this `Stdout` value, similar to using
+    /// `print!()` and `println!()` for the normal `stdout`.
     fn stdout(&mut self) -> &mut Self::Stdout;
-
-    /// Return the contents of `stdout` as a `String`
-    ///
-    /// # Errors
-    ///
-    /// Returns a `FromUtf8Error` if there is a problem converting
-    /// the contents of `Self::Stdout` into a `String`.
-    fn stdout_string(&mut self) -> Result<String, FromUtf8Error>;
 }
