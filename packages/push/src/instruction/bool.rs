@@ -8,10 +8,14 @@ use super::{
         dup::Dup, flush::Flush, is_empty::IsEmpty, pop::Pop, push_value::PushValue,
         stack_depth::StackDepth, swap::Swap,
     },
+    printing::{Print, PrintLn},
 };
 use crate::{
     error::{InstructionResult, MapInstructionError},
-    push_vm::stack::{HasStack, PushOnto},
+    push_vm::{
+        push_io::HasStdout,
+        stack::{HasStack, PushOnto},
+    },
 };
 
 #[derive(Debug, strum_macros::Display, Clone, PartialEq, Eq, EnumIter)]
@@ -26,6 +30,8 @@ pub enum BoolInstruction {
     IsEmpty(IsEmpty<bool>),
     StackDepth(StackDepth<bool>),
     Flush(Flush<bool>),
+    Print(Print<bool>),
+    Println(PrintLn<bool>),
 
     Not,
     Or,
@@ -96,7 +102,7 @@ impl From<Flush<bool>> for BoolInstruction {
 
 impl<S> Instruction<S> for BoolInstruction
 where
-    S: Clone + HasStack<bool> + HasStack<i64>,
+    S: Clone + HasStack<bool> + HasStack<i64> + HasStdout,
 {
     type Error = PushInstructionError;
 
@@ -159,6 +165,8 @@ where
             Self::IsEmpty(is_empty) => is_empty.perform(state),
             Self::StackDepth(stack_depth) => stack_depth.perform(state),
             Self::Flush(flush) => flush.perform(state),
+            Self::Print(print) => print.perform(state),
+            Self::Println(println) => println.perform(state),
 
             Self::Not => bool_stack.pop().map(Not::not).push_onto(state),
             Self::And => bool_stack.pop2().map(|(x, y)| x && y).push_onto(state),

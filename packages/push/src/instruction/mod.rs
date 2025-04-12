@@ -1,4 +1,5 @@
 use ordered_float::OrderedFloat;
+use printing::{PrintNewline, PrintPeriod, PrintSpace, PrintString};
 
 pub use self::{
     bool::BoolInstruction,
@@ -15,6 +16,7 @@ mod exec;
 mod float;
 pub mod instruction_error;
 mod int;
+pub mod printing;
 pub mod variable_name;
 
 /*
@@ -66,6 +68,10 @@ pub enum PushInstruction {
     BoolInstruction(BoolInstruction),
     IntInstruction(IntInstruction),
     FloatInstruction(FloatInstruction),
+    PrintSpace(PrintSpace),
+    PrintNewline(PrintNewline),
+    PrintPeriod(PrintPeriod),
+    PrintString(PrintString),
 }
 
 impl PushInstruction {
@@ -104,6 +110,10 @@ impl Instruction<PushState> for PushInstruction {
             Self::BoolInstruction(i) => i.perform(state),
             Self::IntInstruction(i) => i.perform(state),
             Self::FloatInstruction(i) => i.perform(state),
+            Self::PrintString(i) => i.perform(state),
+            Self::PrintSpace(i) => i.perform(state),
+            Self::PrintNewline(i) => i.perform(state),
+            Self::PrintPeriod(i) => i.perform(state),
         }
     }
 }
@@ -133,6 +143,10 @@ impl std::fmt::Display for PushInstruction {
             Self::BoolInstruction(instruction) => write!(f, "Bool-{instruction}"),
             Self::IntInstruction(instruction) => write!(f, "Int-{instruction}"),
             Self::FloatInstruction(instruction) => write!(f, "Float-{instruction}"),
+            Self::PrintString(instruction) => write!(f, "PrintString({})", instruction.0),
+            Self::PrintSpace(_) => write!(f, "PrintSpace"),
+            Self::PrintNewline(_) => write!(f, "PrintNewline"),
+            Self::PrintPeriod(_) => write!(f, "PrintPeriod"),
         }
     }
 }

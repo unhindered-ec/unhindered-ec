@@ -7,11 +7,13 @@ use super::{
         dup::Dup, flush::Flush, is_empty::IsEmpty, pop::Pop, push_value::PushValue,
         stack_depth::StackDepth, swap::Swap,
     },
+    printing::{Print, PrintLn},
 };
 use crate::{
     error::{Error, InstructionResult},
     push_vm::{
         HasStack,
+        push_io::HasStdout,
         stack::{PushOnto, Stack, StackDiscard, StackError},
     },
 };
@@ -28,7 +30,10 @@ pub enum FloatInstruction {
     IsEmpty(IsEmpty<OrderedFloat<f64>>),
     StackDepth(StackDepth<OrderedFloat<f64>>),
     Flush(Flush<OrderedFloat<f64>>),
+    Print(Print<OrderedFloat<f64>>),
+    PrintLn(PrintLn<OrderedFloat<f64>>),
 
+    // Arithmetic instructions)
     Add,
     Subtract,
     Multiply,
@@ -39,6 +44,8 @@ pub enum FloatInstruction {
     LessThan,
     GreaterThanOrEqual,
     LessThanOrEqual,
+
+    FromIntApprox,
 }
 
 impl FloatInstruction {
@@ -133,11 +140,11 @@ impl From<Flush<OrderedFloat<f64>>> for FloatInstruction {
 
 impl<S> Instruction<S> for FloatInstruction
 where
-    S: Clone + HasStack<OrderedFloat<f64>> + HasStack<bool> + HasStack<i64>,
+    S: Clone + HasStack<OrderedFloat<f64>> + HasStack<bool> + HasStack<i64> + HasStdout,
 {
     type Error = PushInstructionError;
 
-    fn perform(&self, state: S) -> InstructionResult<S, Self::Error> {
+    fn perform(&self, mut state: S) -> InstructionResult<S, Self::Error> {
         match self {
             Self::Pop(pop) => pop.perform(state),
             Self::Push(push) => push.perform(state),
@@ -146,6 +153,8 @@ where
             Self::IsEmpty(is_empty) => is_empty.perform(state),
             Self::StackDepth(stack_depth) => stack_depth.perform(state),
             Self::Flush(flush) => flush.perform(state),
+            Self::Print(print) => print.perform(state),
+            Self::PrintLn(println) => println.perform(state),
 
             // All these instructions pop at least one value from the float stack, so we're
             // guaranteed that there will be space for the result. So we don't have to check that
@@ -171,6 +180,21 @@ where
             Self::LessThan => Self::binary_predicate(state, std::cmp::PartialOrd::lt),
             Self::GreaterThanOrEqual => Self::binary_predicate(state, std::cmp::PartialOrd::ge),
             Self::LessThanOrEqual => Self::binary_predicate(state, std::cmp::PartialOrd::le),
+
+            Self::FromIntApprox => {
+                let int_stack = state.stack_mut::<i64>();
+                #[expect(
+                    clippy::as_conversions,
+                    clippy::cast_precision_loss,
+                    reason = "This instruction is meant to be an approximate conversion"
+                )]
+                int_stack
+                    .top()
+                    .map_err(PushInstructionError::from)
+                    .map(|&i| OrderedFloat(i as f64))
+                    .push_onto(state)
+                    .with_stack_discard::<i64>(1)
+            }
         }
     }
 }

@@ -4,6 +4,7 @@ use crate::{
 };
 
 pub mod program;
+pub mod push_io;
 pub mod push_state;
 pub mod stack;
 
