@@ -16,6 +16,9 @@ use crate::{
 /// An instruction that "prints" the top value of the stack
 /// of type `T` to an internal buffer in the state.
 ///
+/// This requires that `T: Display` and uses the `Display` implementation
+/// of `T` to convert the value on the top of the stack to a `String`.
+///
 /// # Inputs
 ///
 /// The `Print<T>` instruction takes the following inputs:
@@ -26,6 +29,9 @@ use crate::{
 ///
 /// The `Print<T>` instruction "prints" the top value of
 /// the stack of type `T` to an internal buffer in the state.
+///
+/// This requires that `T: Display` and uses the `Display` implementation
+/// of `T` to convert the value on the top of the stack to a `String`.
 ///
 /// This does _not_ put a newline after the printed value;
 /// see `PrintLn` for that behavior.
@@ -90,6 +96,13 @@ pub struct Print<T> {
     pub(crate) _p: PhantomData<T>,
 }
 
+impl<T> Print<T> {
+    #[must_use]
+    pub const fn new() -> Self {
+        Self { _p: PhantomData }
+    }
+}
+
 impl<State, T> Instruction<State> for Print<T>
 where
     T: Display,
@@ -119,6 +132,9 @@ impl<T> NumOpens for Print<T> {
 /// of type `T` to an internal buffer in the state, followed
 /// by a newline.
 ///
+/// This requires that `T: Display` and uses the `Display` implementation
+/// of `T` to convert the value on the top of the stack to a `String`.
+///
 /// # Inputs
 ///
 /// The `PrintLn<T>` instruction takes the following inputs:
@@ -130,6 +146,9 @@ impl<T> NumOpens for Print<T> {
 /// The `PrintLn<T>` instruction "prints" the top value of
 /// the stack of type `T` to an internal buffer in the state,
 /// followed by a newline.
+///
+/// This requires that `T: Display` and uses the `Display` implementation
+/// of `T` to convert the value on the top of the stack to a `String`.
 ///
 /// See `Print` for similar behavior that does not automatically
 /// include a newline after the value.
@@ -174,7 +193,7 @@ impl<T> NumOpens for Print<T> {
 /// // Extract the printed output.
 /// let output = result.stdout_string().unwrap();
 /// // Assert that this is equal to the printed version of the one value
-/// // that was on the integer stack, i.e., `"42"`.
+/// // that was on the integer stack, i.e., `"42"`, followed by a newline.
 /// assert_eq!(output, "42\n");
 /// ```
 ///
@@ -191,6 +210,13 @@ impl<T> NumOpens for Print<T> {
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
 pub struct PrintLn<T> {
     pub(crate) _p: PhantomData<T>,
+}
+
+impl<T> PrintLn<T> {
+    #[must_use]
+    pub const fn new() -> Self {
+        Self { _p: PhantomData }
+    }
 }
 
 impl<State, T> Instruction<State> for PrintLn<T>
