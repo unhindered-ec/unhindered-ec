@@ -23,9 +23,7 @@ use push::{
     evaluation::{Case, Cases, WithTargetFn},
     genome::plushy::{GeneGenerator, Plushy},
     instruction::{FloatInstruction, IntInstruction, PushInstruction, variable_name::VariableName},
-    push_vm::{
-        State, program::PushProgram, push_io::HasStdout, push_state::PushState, stack::StackError,
-    },
+    push_vm::{State, program::PushProgram, push_state::PushState, stack::StackError},
 };
 use rand::{
     distr::{Distribution, Uniform},
@@ -36,7 +34,8 @@ use strum::IntoEnumIterator;
 
 use crate::args::{CliArgs, RunModel};
 
-// An input for this problem is a tuple of four `i64`s.
+// An input for this problem is a single integer
+// (`i64`) and float (`f64`).
 #[derive(Debug, Copy, Clone)]
 struct Input {
     i: i64,
@@ -71,11 +70,12 @@ impl Distribution<Input> for (Uniform<i64>, Uniform<f64>) {
     }
 }
 
-// An output for this problem is an `i64`.
+// An output for this problem is a `String`, namely the
+// value that is "printed" to the `PushState::Stdout`.
 #[derive(Debug, Clone)]
 struct Output(String);
 
-// This is an implementation of the "smallest" problem from Tom Helmuth's
+// This is an implementation of the Number IO problem from Tom Helmuth's
 // software synthesis benchmark suite (PSB1):
 //
 // T. Helmuth and L. Spector. General Program Synthesis Benchmark Suite. In
@@ -87,8 +87,8 @@ struct Output(String);
 // Software Engineering, vol. 41, no. 12, pp. 1236-1256, Dec. 1 2015.
 // doi: 10.1109/TSE.2015.2454513
 //
-// This problem is quite easy if you have a `Min` instruction, but can be
-// more a bit more difficult without that instruction.
+// This problem is quite easy as it only requires teh ability to convert
+// an integer value to a float, add the two values, and print the result.
 fn main() -> miette::Result<()> {
     let CliArgs {
         run_model,
@@ -107,7 +107,8 @@ fn main() -> miette::Result<()> {
     #[expect(
         clippy::as_conversions,
         clippy::cast_precision_loss,
-        reason = "I'm OK with just converting these with `as` for now."
+        reason = "I'm OK with potentially losing precision here because the bounds are usually \
+                  small and easily convert to `f64`s."
     )]
     let training_cases = (
         Uniform::new(lower_input_bound, upper_input_bound).into_diagnostic()?,
@@ -134,7 +135,7 @@ fn main() -> miette::Result<()> {
 
     ensure!(
         !population.is_empty(),
-        "An initial populaiton is always required"
+        "An initial population is always required"
     );
 
     let best = Best.select(&population, &mut rng)?;
@@ -182,12 +183,6 @@ fn main() -> miette::Result<()> {
             break;
         }
     }
-
-    println!(
-        "DL with no newline: {}",
-        damerau_levenshtein("frog", "frog")
-    );
-    println!("DL with newline: {}", damerau_levenshtein("frog", "frog\n"));
 
     Ok(())
 }
@@ -243,10 +238,7 @@ fn compute_error(final_state: &mut PushState, penalty_value: usize, expected: &s
 }
 
 fn instructions() -> impl Iterator<Item = PushInstruction> {
-    let int_instructions = IntInstruction::iter()
-        // Restore this line to remove `Min` from the instruction set.
-        // .filter(|&i| i != IntInstruction::Min)
-        .map(Into::into);
+    let int_instructions = IntInstruction::iter().map(Into::into);
     let float_instruction = FloatInstruction::iter().map(Into::into);
 
     let variables = ["i", "f"]
