@@ -3,7 +3,8 @@ use std::io::Write;
 use super::super::{Instruction, instruction_error::PushInstructionError};
 use crate::{error::InstructionResult, instruction::NumOpens, push_vm::push_io::HasStdout};
 
-/// An instruction that "prints" a specified string.
+/// An instruction that "prints" a string specified when the instruction
+/// is created.
 ///
 /// # Inputs
 ///
@@ -55,6 +56,13 @@ use crate::{error::InstructionResult, instruction::NumOpens, push_vm::push_io::H
 /// to write the character fails.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct PrintString(pub String);
+
+impl PrintString {
+    #[must_use]
+    pub const fn new(string: String) -> Self {
+        Self(string)
+    }
+}
 
 impl<State> Instruction<State> for PrintString
 where

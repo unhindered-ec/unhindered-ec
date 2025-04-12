@@ -3,7 +3,7 @@ use std::io::Write;
 use super::super::{Instruction, instruction_error::PushInstructionError};
 use crate::{error::InstructionResult, instruction::NumOpens, push_vm::push_io::HasStdout};
 
-/// An instruction that "prints" a single character.
+/// An instruction that "prints" a single predetermined character.
 ///
 /// # Inputs
 ///
@@ -51,7 +51,7 @@ pub struct PrintChar<const CHAR: char>;
 impl<const CHAR: char> PrintChar<CHAR> {
     #[must_use]
     pub const fn new() -> Self {
-        Self {}
+        Self
     }
 }
 
