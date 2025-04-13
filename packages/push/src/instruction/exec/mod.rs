@@ -22,6 +22,7 @@ use crate::{
 
 #[derive(Debug, strum_macros::Display, Clone, Eq, PartialEq, EnumIter)]
 #[must_use]
+#[non_exhaustive]
 pub enum ExecInstruction {
     // "Common" instructions specialized for the integer stack
     Pop(Pop<PushProgram>),
@@ -42,22 +43,39 @@ pub enum ExecInstruction {
 }
 
 impl ExecInstruction {
+    pub const fn pop() -> Self {
+        Self::Pop(Pop::<PushProgram>::new())
+    }
+    pub fn push(value: PushProgram) -> Self {
+        Self::Push(Box::new(PushValue::<PushProgram>::new(value)))
+    }
+    pub const fn dup() -> Self {
+        Self::Dup(Dup::<PushProgram>::new())
+    }
+    pub const fn swap() -> Self {
+        Self::Swap(Swap::<PushProgram>::new())
+    }
+    pub const fn is_empty() -> Self {
+        Self::IsEmpty(IsEmpty::<PushProgram>::new())
+    }
+    pub const fn stack_depth() -> Self {
+        Self::StackDepth(StackDepth::<PushProgram>::new())
+    }
+    pub const fn flush() -> Self {
+        Self::Flush(Flush::<PushProgram>::new())
+    }
     pub const fn noop() -> Self {
         Self::Noop(Noop)
     }
-
     pub const fn dup_block() -> Self {
         Self::DupBlock(DupBlock)
     }
-
     pub const fn when() -> Self {
         Self::When(When)
     }
-
     pub const fn unless() -> Self {
         Self::Unless(Unless)
     }
-
     pub const fn if_else() -> Self {
         Self::IfElse(IfElse)
     }

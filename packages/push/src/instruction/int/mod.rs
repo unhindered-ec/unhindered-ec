@@ -76,43 +76,112 @@ pub enum IntInstruction {
 
 impl IntInstruction {
     pub const fn pop() -> Self {
-        Self::Pop(Pop::new())
+        Self::Pop(Pop::<i64>::new())
     }
-
     pub const fn push(value: i64) -> Self {
-        Self::Push(PushValue(value))
+        Self::Push(PushValue::<i64>::new(value))
     }
-
     pub const fn dup() -> Self {
-        Self::Dup(Dup::new())
+        Self::Dup(Dup::<i64>::new())
     }
-
     pub const fn swap() -> Self {
-        Self::Swap(Swap::new())
+        Self::Swap(Swap::<i64>::new())
     }
-
     pub const fn is_empty() -> Self {
-        Self::IsEmpty(IsEmpty::new())
+        Self::IsEmpty(IsEmpty::<i64>::new())
     }
-
     pub const fn stack_depth() -> Self {
-        Self::StackDepth(StackDepth::new())
+        Self::StackDepth(StackDepth::<i64>::new())
     }
-
     pub const fn flush() -> Self {
-        Self::Flush(Flush::new())
+        Self::Flush(Flush::<i64>::new())
     }
-
+    pub const fn print() -> Self {
+        Self::Print(Print::<i64>::new())
+    }
+    pub const fn print_ln() -> Self {
+        Self::PrintLn(PrintLn::<i64>::new())
+    }
     pub const fn negate() -> Self {
-        Self::Negate(Negate)
+        Self::Negate(Negate::new())
     }
-
     pub const fn abs() -> Self {
-        Self::Abs(Abs)
+        Self::Abs(Abs::new())
     }
-
+    pub const fn min() -> Self {
+        Self::Min
+    }
+    pub const fn max() -> Self {
+        Self::Max
+    }
     pub const fn clamp() -> Self {
-        Self::Clamp(Clamp)
+        Self::Clamp(Clamp::new())
+    }
+    pub const fn inc() -> Self {
+        Self::Inc
+    }
+    pub const fn dec() -> Self {
+        Self::Dec
+    }
+    pub const fn add() -> Self {
+        Self::Add
+    }
+    pub const fn subtract() -> Self {
+        Self::Subtract
+    }
+    pub const fn multiply() -> Self {
+        Self::Multiply
+    }
+    pub const fn protected_divide() -> Self {
+        Self::ProtectedDivide
+    }
+    pub const fn r#mod() -> Self {
+        Self::Mod
+    }
+    pub const fn power() -> Self {
+        Self::Power
+    }
+    pub const fn square() -> Self {
+        Self::Square
+    }
+    pub const fn is_zero() -> Self {
+        Self::IsZero
+    }
+    pub const fn is_positive() -> Self {
+        Self::IsPositive
+    }
+    pub const fn is_negative() -> Self {
+        Self::IsNegative
+    }
+    pub const fn is_even() -> Self {
+        Self::IsEven
+    }
+    pub const fn is_odd() -> Self {
+        Self::IsOdd
+    }
+    pub const fn equal() -> Self {
+        Self::Equal
+    }
+    pub const fn not_equal() -> Self {
+        Self::NotEqual
+    }
+    pub const fn less_than() -> Self {
+        Self::LessThan
+    }
+    pub const fn less_than_equal() -> Self {
+        Self::LessThanEqual
+    }
+    pub const fn greater_than() -> Self {
+        Self::GreaterThan
+    }
+    pub const fn greater_than_equal() -> Self {
+        Self::GreaterThanEqual
+    }
+    pub const fn from_boolean() -> Self {
+        Self::FromBoolean
+    }
+    pub const fn from_float_approx() -> Self {
+        Self::FromFloatApprox
     }
 }
 

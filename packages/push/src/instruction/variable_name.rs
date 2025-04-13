@@ -5,6 +5,12 @@ use super::PushInstruction;
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct VariableName(Arc<str>);
 
+impl VariableName {
+    pub fn new(string: impl AsRef<str>) -> Self {
+        Self(string.as_ref().into())
+    }
+}
+
 impl From<&str> for VariableName {
     fn from(s: &str) -> Self {
         Self(Arc::from(s))

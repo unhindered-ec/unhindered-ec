@@ -1,7 +1,11 @@
 use std::io::Write;
 
 use super::super::{Instruction, instruction_error::PushInstructionError};
-use crate::{error::InstructionResult, instruction::NumOpens, push_vm::push_io::HasStdout};
+use crate::{
+    error::InstructionResult,
+    instruction::{NumOpens, PushInstruction},
+    push_vm::push_io::HasStdout,
+};
 
 /// An instruction that "prints" a single predetermined character.
 ///
@@ -75,8 +79,28 @@ impl<const CHAR: char> NumOpens for PrintChar<CHAR> {
 }
 
 pub type PrintSpace = PrintChar<' '>;
+
+impl From<PrintSpace> for PushInstruction {
+    fn from(value: PrintSpace) -> Self {
+        Self::PrintSpace(value)
+    }
+}
+
 pub type PrintNewline = PrintChar<'\n'>;
+
+impl From<PrintNewline> for PushInstruction {
+    fn from(value: PrintNewline) -> Self {
+        Self::PrintNewline(value)
+    }
+}
+
 pub type PrintPeriod = PrintChar<'.'>;
+
+impl From<PrintPeriod> for PushInstruction {
+    fn from(value: PrintPeriod) -> Self {
+        Self::PrintPeriod(value)
+    }
+}
 
 #[cfg(test)]
 mod tests {

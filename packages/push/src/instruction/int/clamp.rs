@@ -60,6 +60,12 @@ use crate::{
 #[derive(Debug, Default, Copy, Clone, Eq, PartialEq)]
 pub struct Clamp;
 
+impl Clamp {
+    pub const fn new() -> Self {
+        Self
+    }
+}
+
 impl<S> Instruction<S> for Clamp
 where
     S: Clone + HasStack<i64>,
