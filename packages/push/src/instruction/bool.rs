@@ -20,6 +20,7 @@ use crate::{
 
 #[derive(Debug, strum_macros::Display, Clone, PartialEq, Eq, EnumIter)]
 #[non_exhaustive]
+#[must_use]
 pub enum BoolInstruction {
     // "Common" instructions specialized for the integer stack
     Pop(Pop<bool>),
@@ -46,9 +47,50 @@ pub enum BoolInstruction {
 }
 
 impl BoolInstruction {
-    #[must_use]
+    pub const fn pop() -> Self {
+        Self::Pop(Pop::<bool>::new())
+    }
     pub const fn push(value: bool) -> Self {
-        Self::Push(PushValue(value))
+        Self::Push(PushValue::<bool>::new(value))
+    }
+    pub const fn dup() -> Self {
+        Self::Dup(Dup::<bool>::new())
+    }
+    pub const fn swap() -> Self {
+        Self::Swap(Swap::<bool>::new())
+    }
+    pub const fn is_empty() -> Self {
+        Self::IsEmpty(IsEmpty::<bool>::new())
+    }
+    pub const fn stack_depth() -> Self {
+        Self::StackDepth(StackDepth::<bool>::new())
+    }
+    pub const fn flush() -> Self {
+        Self::Flush(Flush::<bool>::new())
+    }
+    pub const fn print() -> Self {
+        Self::Print(Print::<bool>::new())
+    }
+    pub const fn println() -> Self {
+        Self::Println(PrintLn::<bool>::new())
+    }
+    pub const fn not() -> Self {
+        Self::Not
+    }
+    pub const fn or() -> Self {
+        Self::Or
+    }
+    pub const fn and() -> Self {
+        Self::And
+    }
+    pub const fn xor() -> Self {
+        Self::Xor
+    }
+    pub const fn implies() -> Self {
+        Self::Implies
+    }
+    pub const fn from_int() -> Self {
+        Self::FromInt
     }
 }
 
