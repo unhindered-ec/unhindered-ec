@@ -14,7 +14,6 @@ use crate::{operator::selector::Selector, population::Population};
 /// This is a very general type that can be used in many different ways. If you
 /// are looking for a specific usage example take a look at the (selector
 /// impl)[`WeightedPair::select`] on this type.
-///
 #[derive(Debug, Copy, Clone)]
 pub struct WeightedPair<A, B> {
     a: A,

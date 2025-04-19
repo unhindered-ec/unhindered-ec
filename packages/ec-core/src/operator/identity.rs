@@ -33,7 +33,7 @@ impl<T> Operator<T> for Identity {
     /// This [`Operator`] can't fail
     type Error = Infallible;
 
-    /// Apply this [`Indentity`] [`Operator`], always returning the input value.
+    /// Apply this [`Identity`] [`Operator`], always returning the input value.
     ///
     /// ```
     /// # use ec_core::operator::{Operator, identity::Identity};
