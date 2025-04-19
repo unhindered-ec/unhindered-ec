@@ -310,11 +310,11 @@ mod score_error_tests {
 
 /// A test result for a single test. Can be either a [`Score`] or [`Error`].
 ///
-/// This type doesn't implement [`Ord`], since the [`TestResults::Score`] and
-/// [`TestResults::Error`] variants are not comparable.
+/// This type doesn't implement [`Ord`], since the [`TestResult::Score`] and
+/// [`TestResult::Error`] variants are not comparable.
 ///
-/// If comparing two [`TestResults::Score`] variants, bigger is better,
-/// if comparing two [`TestResults::Error`] variants, smaller is better.
+/// If comparing two [`TestResult::Score`] variants, bigger is better,
+/// if comparing two [`TestResult::Error`] variants, smaller is better.
 ///
 /// If you don't need the ability to have both bigger-is-better and
 /// smaller-is-better semantics, take a look at using
