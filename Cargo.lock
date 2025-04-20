@@ -342,7 +342,7 @@ checksum = "72852736692ec862655eca398c9bb1b476161b563c9f80f45f4808b9629750d6"
 
 [[package]]
 name = "ec-core"
-version = "0.1.0-course.4"
+version = "0.1.0-course.5"
 dependencies = [
  "criterion",
  "ec_macros",
@@ -361,7 +361,7 @@ dependencies = [
 
 [[package]]
 name = "ec-linear"
-version = "0.1.0-course.4"
+version = "0.1.0-course.5"
 dependencies = [
  "clap",
  "ec-core",
@@ -374,7 +374,7 @@ dependencies = [
 
 [[package]]
 name = "ec_macros"
-version = "0.1.0-course.4"
+version = "0.1.0-course.5"
 dependencies = [
  "manyhow",
  "proc-macro2",
@@ -855,7 +855,7 @@ dependencies = [
 
 [[package]]
 name = "push"
-version = "0.1.0-course.4"
+version = "0.1.0-course.5"
 dependencies = [
  "clap",
  "collectable",
@@ -882,7 +882,7 @@ dependencies = [
 
 [[package]]
 name = "push_macros"
-version = "0.1.0-course.4"
+version = "0.1.0-course.5"
 dependencies = [
  "ident_case_conversions",
  "itertools 0.13.0",
