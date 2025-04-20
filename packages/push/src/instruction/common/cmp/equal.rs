@@ -73,8 +73,8 @@ use crate::{
 /// cases where the two values being compared are being taken from _different_
 /// stacks.
 ///
-///    - The "Stack<T>" column indicates "X", the top of the `T` stack.
-///    - The "Stack<U>" column indicates "Y", the top of the `U` stack.
+///    - The `Stack<T>` column indicates "X", the top of the `T` stack.
+///    - The `Stack<U>` column indicates "Y", the top of the `U` stack.
 ///    - The "Result" column indicates the value left on the top of the boolean
 ///      stack.
 ///    - The "Success" column indicates whether the instruction succeeds, and if
@@ -95,13 +95,13 @@ use crate::{
 /// ## `Equal<T, T>`
 ///
 /// Returns a
-/// [`StackError::Underflow`](crate::push_vm::stack::StackError::Underflow)
+/// [`StackError::Underflow`]
 /// error when the `T` stack contains fewer than two items.
 ///
 /// ## `Equal<T, U>` where T ≠ U
 ///
 /// Returns a
-/// [`StackError::Underflow`](crate::push_vm::stack::StackError::Underflow)
+/// [`StackError::Underflow`]
 /// error when either the `T` stack or the `U` stack is empty.
 #[derive(Debug, Default, Copy, Clone, PartialEq, Eq)]
 pub struct Equal<T, U = T> {
