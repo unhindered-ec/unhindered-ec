@@ -6,32 +6,32 @@ use crate::{
     push_vm::{HasStack, stack::StackError},
 };
 
-/// An instruction that check if one value is greater than another.
+/// An instruction that check if one value is greater than or equal to another.
 ///
 /// This instruction works similarly to Rust's [`PartialOrd`].
 ///
-/// `GreaterThan<T>` (which
-/// is just a shorthand for `GreaterThan<T,T>`) compares the top
+/// `GreaterThanEqual<T>` (which
+/// is just a shorthand for `GreaterThanEqual<T,T>`) compares the top
 /// two values of `Stack<T>`, pushing the result onto the boolean
-/// stack. The comparison will be `x > y`, where `x` is the top value
+/// stack. The comparison will be `x >= y`, where `x` is the top value
 /// on the stack, and `y` is the second value on the stack.
 ///
-/// If we instead use two different types, like in `GreaterThan<T,U>`, this
-/// can compare across stacks as long as `T: PartialOrd<U>`, comparing T > U
+/// If we instead use two different types, like in `GreaterThanEqual<T,U>`, this
+/// can compare across stacks as long as `T: PartialOrd<U>`, comparing T >= U
 /// using the top values of the respective stacks. Again the result is pushed
 /// onto the boolean stack.
 ///
 /// # Inputs
 ///
-/// ## `GreaterThan<T, T>`
+/// ## `GreaterThanEqual<T, T>`
 ///
-/// The `GreaterThan<T, T>` instruction takes the following inputs:
+/// The `GreaterThanEqual<T, T>` instruction takes the following inputs:
 ///    - `T` stack
 ///      - Two values
 ///
-/// ## `GreaterThan<T, U>`
+/// ## `GreaterThanEqual<T, U>`
 ///
-/// The `GreaterThan<T, U>` instruction takes the following inputs:
+/// The `GreaterThanEqual<T, U>` instruction takes the following inputs:
 ///    - `T` stack
 ///       - One value
 ///    - `U` stack
@@ -39,15 +39,15 @@ use crate::{
 ///
 /// # Behavior
 ///
-/// The `GreaterThan` instruction takes top two values from the `T`
+/// The `GreaterThanEqual` instruction takes top two values from the `T`
 /// stack (`x` from the top and `y` below it), or one from the `T` stack (`x`)
 /// and one from the `U` stack (`y`),
 /// compares those values, and pushes the result onto the boolean
-/// stack (`true` if `x > y`, and `false` otherwise).
+/// stack (`true` if `x >= y`, and `false` otherwise).
 ///
 /// ## Action Table
 ///
-/// ### `GreaterThan<T, T>`
+/// ### `GreaterThanEqual<T, T>`
 ///
 /// The table below indicates the behavior in each of the different
 /// cases where the two values being compared are being taken from the same
@@ -66,11 +66,11 @@ use crate::{
 ///
 /// | X  | Y | Result | Success | Note |
 /// | ------------- | ------------- | ------------- | ------------- | ------------- | ------------- |
-/// | exists | exists | X = Y | ✅ | The value of X>Y is pushed onto the boolean stack |
+/// | exists | exists | X = Y | ✅ | The value of X>=Y is pushed onto the boolean stack |
 /// | missing | irrelevant | irrelevant | [❗…](crate::push_vm::stack::StackError::Underflow) | State is unchanged |
 /// | present | missing | irrelevant | [❗…](crate::push_vm::stack::StackError::Underflow) | State is unchanged |
 ///
-/// ### `GreaterThan<T, U>`, where T ≠ U
+/// ### `GreaterThanEqual<T, U>`, where T ≠ U
 ///
 ///
 /// The table below indicates the behavior in each of the different
@@ -90,29 +90,29 @@ use crate::{
 ///
 /// | "X": `Stack<T>`  | "Y": `Stack<U>` | Result | Success | Note |
 /// | ------------- | ------------- | ------------- | ------------- | ------------- | ------------- |
-/// | exists | exists | X = Y | ✅ | The value of X>Y is pushed onto the boolean stack |
+/// | exists | exists | X = Y | ✅ | The value of X>=Y is pushed onto the boolean stack |
 /// | missing | irrelevant | irrelevant | [❗…](crate::push_vm::stack::StackError::Underflow) | State is unchanged |
 /// | present | missing | irrelevant | [❗…](crate::push_vm::stack::StackError::Underflow) | State is unchanged |
 ///
 /// # Errors
 ///
-/// ## `GreaterThan<T, T>`
+/// ## `GreaterThanEqual<T, T>`
 ///
 /// Returns a
 /// [`StackError::Underflow`](crate::push_vm::stack::StackError::Underflow)
 /// error when the `T` stack contains fewer than two items.
 ///
-/// ## `GreaterThan<T, U>` where T ≠ U
+/// ## `GreaterThanEqual<T, U>` where T ≠ U
 ///
 /// Returns a
 /// [`StackError::Underflow`](crate::push_vm::stack::StackError::Underflow)
 /// error when either the `T` stack or the `U` stack is empty.
 #[derive(Debug, Default, Copy, Clone, PartialEq, Eq)]
-pub struct GreaterThan<T, U = T> {
+pub struct GreaterThanEqual<T, U = T> {
     _p: PhantomData<(T, U)>,
 }
 
-impl<S, First, Second> Instruction<S> for GreaterThan<First, Second>
+impl<S, First, Second> Instruction<S> for GreaterThanEqual<First, Second>
 where
     S: Clone + HasStack<Second> + HasStack<First> + HasStack<bool>,
     First: PartialOrd<Second> + 'static,
@@ -173,7 +173,7 @@ where
             Err(error) => return Err(Error::fatal(state, error)),
         };
 
-        state.with_push(first > second).map_err_into()
+        state.with_push(first >= second).map_err_into()
     }
 }
 
@@ -182,7 +182,7 @@ mod test {
     use proptest::prelude::*;
     use test_strategy::proptest;
 
-    use super::GreaterThan;
+    use super::GreaterThanEqual;
     use crate::{
         instruction::{Instruction, instruction_error::PushInstructionError},
         push_vm::{HasStack, push_state::PushState, stack::StackError},
@@ -197,9 +197,9 @@ mod test {
             .unwrap()
             .with_no_program()
             .build();
-        let result = GreaterThan::<i64>::default().perform(state).unwrap();
+        let result = GreaterThanEqual::<i64>::default().perform(state).unwrap();
         assert!(result.stack::<i64>().is_empty());
-        assert_eq!(result.stack::<bool>(), &[false]);
+        assert_eq!(result.stack::<bool>(), &[true]);
     }
 
     #[test]
@@ -211,7 +211,7 @@ mod test {
             .unwrap()
             .with_no_program()
             .build();
-        let result = GreaterThan::<i64>::default().perform(state).unwrap();
+        let result = GreaterThanEqual::<i64>::default().perform(state).unwrap();
         assert!(result.stack::<i64>().is_empty());
         assert_eq!(result.stack::<bool>(), &[false]);
     }
@@ -225,7 +225,7 @@ mod test {
             .unwrap()
             .with_no_program()
             .build();
-        let result = GreaterThan::<i64>::default().perform(state).unwrap();
+        let result = GreaterThanEqual::<i64>::default().perform(state).unwrap();
         assert!(result.stack::<i64>().is_empty());
         assert_eq!(result.stack::<bool>(), &[true]);
     }
@@ -238,7 +238,9 @@ mod test {
             .with_max_stack_size(1)
             .with_no_program()
             .build();
-        let result = GreaterThan::<i64>::default().perform(state).unwrap_err();
+        let result = GreaterThanEqual::<i64>::default()
+            .perform(state)
+            .unwrap_err();
         assert!(result.is_recoverable());
         assert_eq!(
             result.error(),
@@ -258,7 +260,9 @@ mod test {
             .unwrap()
             .with_no_program()
             .build();
-        let result = GreaterThan::<i64>::default().perform(state).unwrap_err();
+        let result = GreaterThanEqual::<i64>::default()
+            .perform(state)
+            .unwrap_err();
         assert!(result.is_recoverable());
         assert_eq!(
             result.error(),
@@ -281,7 +285,9 @@ mod test {
             .unwrap()
             .with_no_program()
             .build();
-        let result = GreaterThan::<i64>::default().perform(state).unwrap_err();
+        let result = GreaterThanEqual::<i64>::default()
+            .perform(state)
+            .unwrap_err();
         assert!(!result.is_recoverable());
         assert_eq!(
             result.error(),
@@ -298,8 +304,8 @@ mod test {
             .unwrap()
             .with_no_program()
             .build();
-        let result = GreaterThan::<i64>::default().perform(state).unwrap();
-        prop_assert_eq!(result.stack::<bool>().top().unwrap(), &(a > b));
+        let result = GreaterThanEqual::<i64>::default().perform(state).unwrap();
+        prop_assert_eq!(result.stack::<bool>().top().unwrap(), &(a >= b));
         prop_assert_eq!(result.stack::<bool>().size(), 1);
     }
 }
