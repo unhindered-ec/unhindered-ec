@@ -186,7 +186,7 @@ mod test {
     };
 
     #[test]
-    fn not_equal_same_stack_equal() {
+    fn equal() {
         let state = PushState::builder()
             .with_instruction_step_limit(1)
             .with_max_stack_size(2)
@@ -200,7 +200,7 @@ mod test {
     }
 
     #[test]
-    fn not_equal_same_stack_not_equal() {
+    fn not_equal() {
         let state = PushState::builder()
             .with_instruction_step_limit(1)
             .with_max_stack_size(2)
@@ -214,7 +214,7 @@ mod test {
     }
 
     #[test]
-    fn not_equal_same_stack_empty_stack() {
+    fn empty_stack() {
         let state = PushState::builder()
             .with_instruction_step_limit(1)
             // This has to be 1 to ensure that there's room on the bool stack for the result.
@@ -233,7 +233,7 @@ mod test {
     }
 
     #[test]
-    fn not_equal_same_stack_singleton_stack() {
+    fn singleton_stack() {
         let state = PushState::builder()
             .with_instruction_step_limit(1)
             .with_max_stack_size(1)
@@ -253,7 +253,7 @@ mod test {
     }
 
     #[test]
-    fn not_equal_bool_stack_overflow() {
+    fn bool_stack_overflow() {
         let state = PushState::builder()
             .with_instruction_step_limit(1)
             .with_max_stack_size(2)
@@ -273,7 +273,7 @@ mod test {
     }
 
     #[proptest]
-    fn not_equal_proptest_same_stack(a: i64, b: i64) {
+    fn not_equal_proptest(a: i64, b: i64) {
         let state = PushState::builder()
             .with_instruction_step_limit(1)
             .with_max_stack_size(2)
