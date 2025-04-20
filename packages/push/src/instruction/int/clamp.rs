@@ -33,9 +33,12 @@ use crate::{
 /// The table below indicates the behavior in each of the different
 /// cases.
 ///
-///    - The "Value" column indicates the value being clamped.
-///    - The "Min" column indicates the minimum value of the range.
-///    - The "Max" column indicates the maximum value of the range.
+///    - The "Value" column indicates the value being clamped, and is the top of
+///      the `i64` stack.
+///    - The "Min" column indicates the minimum value of the range and is the
+///      second value on the `i64` stack.
+///    - The "Max" column indicates the maximum value of the range and is the
+///      third value on the `i64` stack.
 ///    - The "Result" column indicates the value left on the top of the stack.
 ///    - The "Success" column indicates whether the instruction succeeds, and if
 ///      not what kind of error is returned:
@@ -49,7 +52,9 @@ use crate::{
 /// | Less than Min | exists | exists | Min | ✅ | Value is replaced by Min |
 /// | Greater than Max | exists | exists | Max | ✅ | Value is replaced by Max |
 /// | In range [Min, Max] | exists | exists | Value | ✅ | Value remains unchanged |
-/// | missing | irrelevant | irrelevant | irrelevant| [❗…](crate::push_vm::stack::StackError::Underflow) | State is unchanged |
+/// | missing | irrelevant | irrelevant | irrelevant | [❗…](crate::push_vm::stack::StackError::Underflow) | State is unchanged |
+/// | present | missing | irrelevant | irrelevant | [❗…](crate::push_vm::stack::StackError::Underflow) | State is unchanged |
+/// | present | present | missing | irrelevant | [❗…](crate::push_vm::stack::StackError::Underflow) | State is unchanged |
 ///
 /// # Errors
 ///

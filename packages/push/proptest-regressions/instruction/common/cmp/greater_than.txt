@@ -1,0 +1,7 @@
+# Seeds for failure cases proptest has generated in the past. It is
+# automatically read and these particular cases re-run before any
+# novel cases are generated.
+#
+# It is recommended to check this file in to source control so that
+# everyone who runs the test benefits from these saved cases.
+cc a5d334a4f15758f8f190a26bc01241d6a15e60b8f00bc186c5d5236abddb6244 # shrinks to input = _ProptestSameStackArgs { a: 0, b: -1 }
