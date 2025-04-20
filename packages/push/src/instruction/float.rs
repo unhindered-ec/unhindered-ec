@@ -20,6 +20,7 @@ use crate::{
 
 #[derive(Debug, strum_macros::Display, Copy, Clone, EnumIter, Eq, PartialEq)]
 #[non_exhaustive]
+#[must_use]
 pub enum FloatInstruction {
     // "Common" instructions specialized for the integer stack
     Pop(Pop<OrderedFloat<f64>>),
@@ -33,7 +34,7 @@ pub enum FloatInstruction {
     Print(Print<OrderedFloat<f64>>),
     PrintLn(PrintLn<OrderedFloat<f64>>),
 
-    // Arithmetic instructions)
+    // Arithmetic instructions
     Add,
     Subtract,
     Multiply,
@@ -49,44 +50,68 @@ pub enum FloatInstruction {
 }
 
 impl FloatInstruction {
-    #[must_use]
     pub const fn pop() -> Self {
-        Self::Pop(Pop::new())
+        Self::Pop(Pop::<OrderedFloat<f64>>::new())
     }
-
-    #[must_use]
     pub const fn push(value: f64) -> Self {
-        Self::Push(PushValue(OrderedFloat(value)))
+        Self::Push(PushValue::<OrderedFloat<f64>>::new(OrderedFloat(value)))
     }
-
-    #[must_use]
     pub const fn push_ordered_float(value: OrderedFloat<f64>) -> Self {
-        Self::Push(PushValue(value))
+        Self::Push(PushValue::<OrderedFloat<f64>>::new(value))
     }
-
-    #[must_use]
     pub const fn dup() -> Self {
-        Self::Dup(Dup::new())
+        Self::Dup(Dup::<OrderedFloat<f64>>::new())
     }
-
-    #[must_use]
     pub const fn swap() -> Self {
-        Self::Swap(Swap::new())
+        Self::Swap(Swap::<OrderedFloat<f64>>::new())
     }
-
-    #[must_use]
     pub const fn is_empty() -> Self {
-        Self::IsEmpty(IsEmpty::new())
+        Self::IsEmpty(IsEmpty::<OrderedFloat<f64>>::new())
     }
-
-    #[must_use]
     pub const fn stack_depth() -> Self {
-        Self::StackDepth(StackDepth::new())
+        Self::StackDepth(StackDepth::<OrderedFloat<f64>>::new())
     }
-
-    #[must_use]
     pub const fn flush() -> Self {
-        Self::Flush(Flush::new())
+        Self::Flush(Flush::<OrderedFloat<f64>>::new())
+    }
+    pub const fn print() -> Self {
+        Self::Print(Print::<OrderedFloat<f64>>::new())
+    }
+    pub const fn print_ln() -> Self {
+        Self::PrintLn(PrintLn::<OrderedFloat<f64>>::new())
+    }
+    pub const fn add() -> Self {
+        Self::Add
+    }
+    pub const fn subtract() -> Self {
+        Self::Subtract
+    }
+    pub const fn multiply() -> Self {
+        Self::Multiply
+    }
+    pub const fn protected_divide() -> Self {
+        Self::ProtectedDivide
+    }
+    pub const fn equal() -> Self {
+        Self::Equal
+    }
+    pub const fn not_equal() -> Self {
+        Self::NotEqual
+    }
+    pub const fn greater_than() -> Self {
+        Self::GreaterThan
+    }
+    pub const fn less_than() -> Self {
+        Self::LessThan
+    }
+    pub const fn greater_than_or_equal() -> Self {
+        Self::GreaterThanOrEqual
+    }
+    pub const fn less_than_or_equal() -> Self {
+        Self::LessThanOrEqual
+    }
+    pub const fn from_int_approx() -> Self {
+        Self::FromIntApprox
     }
 }
 

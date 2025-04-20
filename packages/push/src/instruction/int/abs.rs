@@ -75,6 +75,12 @@ use crate::{
 #[derive(Debug, Default, Copy, Clone, PartialEq, Eq)]
 pub struct Abs;
 
+impl Abs {
+    pub const fn new() -> Self {
+        Self
+    }
+}
+
 impl<S> Instruction<S> for Abs
 where
     S: Clone + HasStack<i64>,

@@ -75,6 +75,12 @@ use crate::{
 #[derive(Debug, Default, Copy, Clone, PartialEq, Eq)]
 pub struct Negate;
 
+impl Negate {
+    pub const fn new() -> Self {
+        Self
+    }
+}
+
 impl<S> Instruction<S> for Negate
 where
     S: Clone + HasStack<i64>,
