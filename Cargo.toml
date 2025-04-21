@@ -19,7 +19,7 @@ debug = true
 
 [workspace.dependencies]
 clap = "4.5.1"
-rand = "0.9.0"
+rand = "0.9.1"
 num-traits = "0.2.18"
 thiserror = "1.0.69"
 itertools = "0.13.0"
