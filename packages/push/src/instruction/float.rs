@@ -259,7 +259,7 @@ impl FloatInstruction {
             .map_err(PushInstructionError::from)
             .map(|(x, y)| op(x, y))
             .push_onto(state)
-            .with_stack_discard::<OrderedFloat<f64>>(1)
+            .with_stack_discard::<OrderedFloat<f64>>(2)
     }
 }
 
