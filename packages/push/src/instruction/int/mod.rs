@@ -465,42 +465,42 @@ where
                         .map_err(PushInstructionError::from)
                         .map(|(&x, &y)| x == y)
                         .push_onto(state)
-                        .with_stack_discard::<i64>(1),
+                        .with_stack_discard::<i64>(2),
 
                     Self::NotEqual => int_stack
                         .top2()
                         .map_err(PushInstructionError::from)
                         .map(|(&x, &y)| x != y)
                         .push_onto(state)
-                        .with_stack_discard::<i64>(1),
+                        .with_stack_discard::<i64>(2),
 
                     Self::LessThan => int_stack
                         .top2()
                         .map_err(PushInstructionError::from)
                         .map(|(&x, &y)| x < y)
                         .push_onto(state)
-                        .with_stack_discard::<i64>(1),
+                        .with_stack_discard::<i64>(2),
 
                     Self::LessThanEqual => int_stack
                         .top2()
                         .map_err(PushInstructionError::from)
                         .map(|(&x, &y)| x <= y)
                         .push_onto(state)
-                        .with_stack_discard::<i64>(1),
+                        .with_stack_discard::<i64>(2),
 
                     Self::GreaterThan => int_stack
                         .top2()
                         .map_err(PushInstructionError::from)
                         .map(|(&x, &y)| x > y)
                         .push_onto(state)
-                        .with_stack_discard::<i64>(1),
+                        .with_stack_discard::<i64>(2),
 
                     Self::GreaterThanEqual => int_stack
                         .top2()
                         .map_err(PushInstructionError::from)
                         .map(|(&x, &y)| x >= y)
                         .push_onto(state)
-                        .with_stack_discard::<i64>(1),
+                        .with_stack_discard::<i64>(2),
                     _ => unreachable!(
                         "We failed to implement a boolean-valued operation on integers: {self:?}"
                     ),
