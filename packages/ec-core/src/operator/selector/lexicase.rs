@@ -3,22 +3,64 @@ use std::cmp::Ordering;
 use miette::Diagnostic;
 use rand::{Rng, prelude::SliceRandom};
 
-use super::{Selector, error::EmptyPopulation};
+use super::{Selector, error::EmptyPopulation, random::Random};
 use crate::{individual::Individual, population::Population, test_results::TestResults};
 
-#[derive(Debug)]
+/// Lexicase selector.
+///
+/// This selector works by selecting a random test case and throwing out all
+/// individuals that don't have the best score there, repeating that until only
+/// one individual is left or all test cases have been compared.
+/// In case more than one individual is left, one is selected randomly.
+///
+/// In case there are no test cases (i.e `num_test_cases` is zero) this devolves
+/// to a random selection.
+///
+/// # Examples
+/// ```
+/// # use ec_core::{
+/// #     individual::ec::EcIndividual,
+/// #     operator::selector::{Selector, lexicase::Lexicase},
+/// #     test_results::TestResults
+/// # };
+/// let population = [
+///     EcIndividual::new(100, TestResults::<i32>::from_iter([4, 10])),
+///     EcIndividual::new(100, TestResults::<i32>::from_iter([2, 10])),
+///     EcIndividual::new(100, TestResults::<i32>::from_iter([4, 5])),
+///     EcIndividual::new(100, TestResults::<i32>::from_iter([2, 5])),
+/// ];
+///
+/// let lexicase = Lexicase::new(2);
+///
+/// let selected = lexicase.select(&population, &mut rand::rng())?;
+///
+/// assert_eq!(
+///     selected,
+///     &EcIndividual::new(100, TestResults::from_iter([4, 10]))
+/// );
+/// # Ok::<(), Box<dyn std::error::Error>>(())
+/// ```
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 pub struct Lexicase {
     num_test_cases: usize,
 }
 
 impl Lexicase {
+    /// Create a new Lexicase selector using the given number of test cases.
+    ///
+    /// Make sure your population you are intending to select from actually has
+    /// this number of test cases, or else selection might error.
     #[must_use]
     pub const fn new(num_test_cases: usize) -> Self {
         Self { num_test_cases }
     }
 }
 
-#[derive(Debug, thiserror::Error, Diagnostic)]
+/// Error that can occur during [`Lexicase`] selection:
+/// - [`EmptyPopulation`] when trying to select from an empty population, or
+/// - `MissingTestCase` when using a lexicase selector with a higher number of
+///   test cases set than every individual in the population actually provides.
+#[derive(Debug, thiserror::Error, Diagnostic, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum LexicaseError {
     #[error(transparent)]
     #[diagnostic(transparent)]
@@ -56,6 +98,14 @@ where
 {
     type Error = LexicaseError;
 
+    /// Select an Individual from the given Population using this selector.
+    ///
+    /// # Errors
+    /// - [`LexicaseError::EmptyPopulation`] if trying to select from an empty
+    ///   population
+    /// - [`LexicaseError::MissingTestCase`] if passing a population where an
+    ///   individual has fewer test cases than the given `num_test_cases` from
+    ///   this selector.
     fn select<'pop, R: Rng + ?Sized>(
         &self,
         population: &'pop P,
@@ -88,7 +138,6 @@ where
 
             let mut current_best_result = initial_winner
                 .test_results()
-                .results
                 .get(test_case_index)
                 .ok_or(LexicaseError::MissingTestCase {
                     total_cases: self.num_test_cases,
@@ -96,7 +145,7 @@ where
                 })?;
 
             for c in remaining {
-                let this_result = c.test_results().results.get(test_case_index).ok_or(
+                let this_result = c.test_results().get(test_case_index).ok_or(
                     LexicaseError::MissingTestCase {
                         total_cases: self.num_test_cases,
                         current_index: test_case_index,
@@ -128,12 +177,8 @@ where
             std::mem::swap(&mut candidates, &mut winners);
         }
 
-        candidates.shuffle(rng);
-        candidates
-            .first()
-            .copied()
-            .ok_or(EmptyPopulation)
-            .map_err(Into::into)
+        // use random selection on remaining candidates
+        Random.select(&candidates, rng).copied().map_err(Into::into)
     }
 }
 
@@ -180,7 +225,7 @@ mod tests {
     ) -> Vec<EcIndividual<usize, TestResults<i32>>> {
         scores
             .into_iter()
-            .map(TestResults::<i32>::from)
+            .map(TestResults::<i32>::from_iter)
             // We'll use the index as the "genome".
             .enumerate()
             .map(EcIndividual::from)
@@ -293,7 +338,9 @@ mod tests {
         collection::vec([any::<u8>(), any::<u8>()], pop_size).prop_map(|pop_scores| {
             pop_scores
                 .into_iter()
-                .map(|scores| EcIndividual::new(format!("{scores:?}"), TestResults::from(scores)))
+                .map(|scores| {
+                    EcIndividual::new(format!("{scores:?}"), TestResults::from_iter(scores))
+                })
                 .collect::<Vec<_>>()
         })
     }
@@ -318,8 +365,10 @@ mod tests {
         winning_scores[score_to_increase] =
             winning_scores[score_to_increase].checked_add(1).unwrap();
         let winning_label = format!("{winning_scores:?}");
-        let winning_individual: TestIndividual =
-            EcIndividual::new(winning_label.clone(), TestResults::from(winning_scores));
+        let winning_individual: TestIndividual = EcIndividual::new(
+            winning_label.clone(),
+            TestResults::from_iter(winning_scores),
+        );
         (winning_label, winning_individual)
     }
 
@@ -328,7 +377,7 @@ mod tests {
     fn largest_test_case_value(population: &[TestIndividual], index: usize) -> u16 {
         population
             .iter()
-            .map(|i| i.test_results.results[index])
+            .map(|i| i.test_results[index])
             .max()
             .unwrap()
     }
