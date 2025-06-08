@@ -29,6 +29,23 @@ impl<GeneGenerator> Umad<GeneGenerator> {
         }
     }
 
+    /// Construct `Umad` with "balanced" deletion rate derived from addition
+    /// rate
+    ///
+    /// If the deletion rate is set to `addition_rate` / (1 + `addition_rate`)
+    /// then on average the child genome will have the same length as the
+    /// parent genome. This constructor just takes an `addition_rate`
+    /// and computes the balanced deletion rate.
+    pub const fn new_with_balanced_deletion(
+        addition_rate: f64,
+        gene_generator: GeneGenerator,
+    ) -> Self {
+        // Using this deletion means that _on average_ the child genome
+        // will have the same length as the parent genome.
+        let deletion_rate = addition_rate / (1.0 + addition_rate);
+        Self::new(addition_rate, deletion_rate, gene_generator)
+    }
+
     pub const fn new_with_empty_rate(
         addition_rate: f64,
         empty_addition_rate: f64,
