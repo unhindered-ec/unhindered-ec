@@ -22,12 +22,44 @@ with both fixed-length and variable-length genomes.
 ## Recombination operators
 
 This crate includes a few recombination operators based on the
-`Crossover` trait:
+`Crossover` trait.
 
-- `Uniform`, which chooses elements uniformly from
-  two parents
-- `TwoPointXo`, which chooses two random locations
-  along the parent genomes, and swaps sections as illustrated
-  below.
+### `UniformXo`
 
-![Illustration of two-point crossover over](../../images/Two_point_crossover.svg)
+`UniformXo` chooses genes uniformly from two parents as illustrated below:
+
+![Illustration of uniform crossover](../../images/UniformCrossover.svg.excalidraw.svg)
+
+### `TwoPointXo`
+
+`TwoPointXo` chooses two random locations along the parent genomes, and swaps sections as illustrated below.
+
+![Illustration of two-point crossover](../../images/Two_point_crossover.svg)
+
+---
+
+## Examples
+
+The [examples directory](examples/) has two examples of performing
+evolution on bitstrings:
+
+- [`count_ones`](examples/count_ones/main.rs), an implementation of
+  [the classic OneMax problem](https://schlosserpg.github.io/Heuristic/benchmark.html#onemax-problem),
+  where the goal is to maximize the number of 1s in a bitstring
+- [`hiff`](examples/hiff/main.rs), based on [Watson's Hierarchical If-and-only-if problem](https://doi.org/10.1109/CEC.1999.782647)
+
+To run an example:
+
+```bash
+cargo run --release --example <name> -- <parameter settings>
+```
+
+where `name` is replaced by the name of the example (e.g., `hiff`).
+Problems provide a set of optional parameter settings that allow you to
+set things like the population size and the maximum number of generations.
+
+To see the available parameters for a given example:
+
+```bash
+cargo run --release --example <name> -- --help
+```
