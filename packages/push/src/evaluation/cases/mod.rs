@@ -182,7 +182,7 @@ impl<Input, Output> Cases<Input, Output> {
     ///
     /// assert!(iter.eq(&[Case::new("Hello", 10), Case::new("People", 12)]));
     /// ```
-    pub fn iter_mut(&mut self) -> std::slice::IterMut<Case<Input, Output>> {
+    pub fn iter_mut(&mut self) -> std::slice::IterMut<'_, Case<Input, Output>> {
         self.cases.iter_mut()
     }
 
