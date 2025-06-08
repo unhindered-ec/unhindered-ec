@@ -112,7 +112,7 @@ fn main() -> miette::Result<()> {
     let best = Best.select(&population, &mut rng)?;
     println!("Best initial individual is {best}");
 
-    let umad = Umad::new(0.1, 0.1, &gene_generator);
+    let umad = Umad::new_with_balanced_deletion(0.1, &gene_generator);
 
     let make_new_individual = Select::new(lexicase)
         .then(GenomeExtractor)
@@ -197,6 +197,8 @@ fn instructions() -> impl Iterator<Item = PushInstruction> {
     let int_instructions = IntInstruction::iter()
         // Restore this line to remove `Min` from the instruction set.
         // .filter(|&i| i != IntInstruction::Min)
+        // Restore this line to remove `Clamp` from the instruction set.
+        // .filter(|&i| i != IntInstruction::clamp())
         .map(Into::into);
     let bool_instructions = BoolInstruction::iter().map(Into::into);
     let exec_instructions = ExecInstruction::iter()

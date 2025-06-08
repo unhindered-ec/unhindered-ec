@@ -162,7 +162,7 @@ fn main() -> miette::Result<()> {
     let best = Best.select(&population, &mut rng)?;
     println!("Best initial individual is {best}");
 
-    let umad = Umad::new(0.1, 0.1, &gene_generator);
+    let umad = Umad::new_with_balanced_deletion(0.1, &gene_generator);
 
     let make_new_individual = Select::new(selector)
         .then(GenomeExtractor)
