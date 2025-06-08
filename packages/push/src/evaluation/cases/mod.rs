@@ -122,7 +122,7 @@ impl<Input, Output> Cases<Input, Output> {
     /// assert!(cases.is_empty());
     /// ```
     #[must_use]
-    pub fn is_empty(&self) -> bool {
+    pub const fn is_empty(&self) -> bool {
         self.cases.is_empty()
     }
 
@@ -139,7 +139,7 @@ impl<Input, Output> Cases<Input, Output> {
     /// assert_eq!(cases.len(), 3);
     /// ```
     #[must_use]
-    pub fn len(&self) -> usize {
+    pub const fn len(&self) -> usize {
         self.cases.len()
     }
 }
