@@ -26,6 +26,7 @@ miette = { workspace = true }
 [dev-dependencies]
 miette = { workspace = true, features = ["fancy"] }
 clap = { workspace = true, features = ["derive"] }
+test-case = { workspace = true }
 
 [lints]
 workspace = true

@@ -138,6 +138,7 @@ where
 mod test {
     use ec_core::uniform_distribution_of;
     use rand::rng;
+    use test_case::test_case;
 
     use super::*;
     use crate::genome::vector::Vector;
@@ -195,6 +196,33 @@ mod test {
         assert!(
             num_missing.unwrap() > 0,
             "There should have been at least one character dropped from the parent in {child:?}"
+        );
+    }
+
+    #[test]
+    #[should_panic(expected = "`addition_rate` must be between 0.0 and 1.0 inclusive, but was 1.1")]
+    fn panic_if_addition_rate_too_high() {
+        let _ = Umad::new_with_balanced_deletion(1.1, ());
+    }
+
+    #[test]
+    #[should_panic(
+        expected = "`addition_rate` must be between 0.0 and 1.0 inclusive, but was -0.2"
+    )]
+    fn panic_if_addition_rate_too_low() {
+        let _ = Umad::new_with_balanced_deletion(-0.2, ());
+    }
+
+    #[test_case(0.1, 0.1 / (1.0 + 0.1); "small addition rate")]
+    #[test_case(0.0, 0.0; "zero addition rate")]
+    #[test_case(1.0, 0.5; "full addition rate")]
+    fn correct_balanced_rate_calculation(addition_rate: f64, deletion_rate: f64) {
+        let umad = Umad::new_with_balanced_deletion(addition_rate, ());
+
+        assert!(
+            (umad.deletion_rate - deletion_rate).abs() < f64::EPSILON,
+            "Expected deletion rate {deletion_rate} but got deletion rate {}",
+            umad.deletion_rate
         );
     }
 }
