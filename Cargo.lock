@@ -369,6 +369,7 @@ dependencies = [
  "num-traits",
  "rand 0.9.1",
  "static_assertions",
+ "test-case",
  "thiserror",
 ]
 

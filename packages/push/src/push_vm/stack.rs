@@ -256,19 +256,19 @@ impl<T> Stack<T> {
 
     /// Returns the size of this stack.
     #[must_use]
-    pub fn size(&self) -> usize {
+    pub const fn size(&self) -> usize {
         self.values.len()
     }
 
     /// Returns `true` if the stack contains no elements.
     #[must_use]
-    pub fn is_empty(&self) -> bool {
+    pub const fn is_empty(&self) -> bool {
         self.values.is_empty()
     }
 
     /// Returns `true` if the stack has `max_stack_size()` elements.
     #[must_use]
-    pub fn is_full(&self) -> bool {
+    pub const fn is_full(&self) -> bool {
         self.size() == self.max_stack_size
     }
 

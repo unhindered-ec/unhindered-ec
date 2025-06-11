@@ -232,12 +232,12 @@ static_assertions::assert_impl_all!(TestResults<()>: Clone);
 
 impl<R> TestResults<R> {
     /// Get the number of test results
-    pub fn len(&self) -> usize {
+    pub const fn len(&self) -> usize {
         self.results.len()
     }
 
     /// Check if no test results were stored
-    pub fn is_empty(&self) -> bool {
+    pub const fn is_empty(&self) -> bool {
         self.results.is_empty()
     }
 }

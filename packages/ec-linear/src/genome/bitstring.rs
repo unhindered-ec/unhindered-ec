@@ -63,11 +63,11 @@ impl Bitstring {
             .sample(rng)
     }
 
-    pub fn iter(&self) -> std::slice::Iter<bool> {
+    pub fn iter(&self) -> std::slice::Iter<'_, bool> {
         self.bits.iter()
     }
 
-    pub fn iter_mut(&mut self) -> std::slice::IterMut<bool> {
+    pub fn iter_mut(&mut self) -> std::slice::IterMut<'_, bool> {
         self.bits.iter_mut()
     }
 }

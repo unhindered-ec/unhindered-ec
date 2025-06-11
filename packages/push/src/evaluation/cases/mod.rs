@@ -122,7 +122,7 @@ impl<Input, Output> Cases<Input, Output> {
     /// assert!(cases.is_empty());
     /// ```
     #[must_use]
-    pub fn is_empty(&self) -> bool {
+    pub const fn is_empty(&self) -> bool {
         self.cases.is_empty()
     }
 
@@ -139,7 +139,7 @@ impl<Input, Output> Cases<Input, Output> {
     /// assert_eq!(cases.len(), 3);
     /// ```
     #[must_use]
-    pub fn len(&self) -> usize {
+    pub const fn len(&self) -> usize {
         self.cases.len()
     }
 }
@@ -182,7 +182,7 @@ impl<Input, Output> Cases<Input, Output> {
     ///
     /// assert!(iter.eq(&[Case::new("Hello", 10), Case::new("People", 12)]));
     /// ```
-    pub fn iter_mut(&mut self) -> std::slice::IterMut<Case<Input, Output>> {
+    pub fn iter_mut(&mut self) -> std::slice::IterMut<'_, Case<Input, Output>> {
         self.cases.iter_mut()
     }
 
