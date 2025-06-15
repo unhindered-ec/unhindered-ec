@@ -122,7 +122,14 @@ where
                     _ => None,
                 };
 
-                [old_gene, new_gene]
+                // This randomly decides with a 50/50 probability which side of the old gene
+                // to place the new gene. This provides consistency with the definition of UMAD
+                // in Helmuth et al, lines 6-10 of Algorithm 1.
+                if rng.random::<bool>() {
+                    [old_gene, new_gene]
+                } else {
+                    [new_gene, old_gene]
+                }
             })
             .flatten()
             .collect::<G>())
