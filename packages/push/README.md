@@ -40,7 +40,7 @@ To run an example:
 cargo run --release --example <name> -- <parameter settings>
 ```
 
-where `name` is replaced by the name of the example (e.g., `median`).
+where `<name>` is replaced by the name of the example (e.g., `median`).
 Problems provide a set of optional parameter settings that allow you to
 set things like the population size and the maximum number of generations.
 One parameter to consider is `max-initial-instructions`. This defaults to
