@@ -5,17 +5,116 @@ use rand::{Rng, prelude::Distribution};
 
 use crate::genome::Linear;
 
-/// UMAD = Uniform Mutation through random Addition and Deletion
+/// The UMAD mutation operator as described in
+/// [the paper by T. Helmuth et al.](https://doi.org/10.1145/3205455.3205603)[^paper-ref]
+///
+/// The UMAD (Uniform Mutation by Addition and Deletion) operator acts
+/// on variable length linear genomes, inserting new genes and deleting existing
+/// genes in a random fashion.
+///
+/// New genes are generated using a user-provided `GeneGenerator`.
+///
+/// # Behavior
+///
+/// For each gene in the initial genome, a decision is made about
+///
+/// - Whether to keep or delete that gene, and
+/// - Whether to insert a new gene, either to the existing gene's left or right.
+///
+/// Note that this can change the length of the genome, with the child
+/// potentially being shorter or longer than the parent.
+///
+/// ## Parameters
+///
+/// There are several parameters which can be used to tune the mutation
+/// operator:
+///
+/// - The addition rate, i.e., the likelihood of adding a new gene next to each
+///   of the existing genes
+/// - The deletion rate, i.e., the likelihood of deleting each gene in the
+///   genome, including newly added genes
+/// - The empty addition rate, i.e., the likelihood of adding a new gene when
+///   the initial genome is empty. This is optional, and if it is not provided
+///   then new genes will never be added to empty genomes. See below for further
+///   discussion of this feature.
+///
+/// ## Balance
+///
+/// If the addition rate is much higher than the
+/// deletion rate then the new genome is likely to be considerably
+/// longer than the original genome. Similarly, if the deletion rate
+/// is much higher than the addition rate then the genome is likely
+/// to shrink.
+///
+/// If the deletion rate is set to `addition_rate / (1 + addition_rate)`,
+/// then the expected length of the new child genome is the same as that of the
+/// initial parent genome. The [`Umad::new_with_balanced_deletion`] constructor
+/// sets the deletion rate according to this formula.
+///
+/// ## Differences from published UMAD definition
+///
+/// The one difference between this implementation and the published definition
+/// is that we support the addition of a randomly generated gene if the initial
+/// genome is empty. In the published definition, an empty genome would remain
+/// empty. The likelihood of adding a gene to an empty genome is set by the
+/// `empty_addition_rate` parameter; setting this to `None` will effectively
+/// disable this feature, behaving the same as the published definition.
+///
+/// # Example
+///
+/// In this example we create an instance of `Umad` using [`Umad::new`] that
+/// mutates vectors of characters.
+///
+/// ```
+/// # use ec_core::{operator::mutator::Mutator, uniform_distribution_of};
+/// # use ec_linear::{genome::vector::Vector, mutator::umad::Umad};
+/// #
+/// // Use a 30% chance of inserting a gene at each location.
+/// let addition_rate = 0.3;
+/// // Use a 30% chance of deleting each gene.
+/// let deletion_rate = 0.3;
+/// // This is our `GeneGenerator`, which will always just produce
+/// // a character `x`.
+/// let gene_generator = uniform_distribution_of!['x'];
+///
+/// // Create an instance of `Umad` using these parameters.
+/// let umad = Umad::new(addition_rate, deletion_rate, gene_generator);
+///
+/// // Create a `Vec` of characters to use as a parent genome.
+/// let parent_chars = "Mutate first, ask questions later.".chars().collect();
+/// // Create a parent genome
+/// let parent_genome = Vector {
+///     genes: parent_chars,
+/// };
+///
+/// // Mutate the parent genome to create a child genome
+/// let child_genome = umad.mutate(parent_genome, &mut rand::rng()).unwrap();
+/// ```
+///
+/// [^paper-ref]: Thomas Helmuth, Nicholas Freitag McPhee, and Lee Spector. 2018.
+///   Program synthesis using uniform mutation by addition and deletion. In
+///   Proceedings of the Genetic and Evolutionary Computation Conference
+///   (GECCO '18). Association for Computing Machinery, New York, NY, USA,
+///   1127–1134. <https://doi.org/10.1145/3205455.3205603>
 pub struct Umad<GeneGenerator> {
+    /// The likelihood of adding a new gene next to each gene in the original
+    /// genome
     addition_rate: f64,
+    /// The likelihood of deleting each gene in the genome, including newly
+    /// added genes
     deletion_rate: f64,
+    /// The likelihood of adding a single new gene when the initial genome is
+    /// empty. This is optional, and if its value is `None` then new genes
+    /// will never be added to empty genomes.
     empty_addition_rate: Option<f64>,
-    // Provides the generator needed to generate a new, random gene
-    // during the addition phase.
+    /// The generator used to generate new, random genes
+    /// during the addition phase.
     gene_generator: GeneGenerator,
 }
 
 impl<GeneGenerator> Umad<GeneGenerator> {
+    /// Construct an instance of `Umad` with empty addition rate the same as
+    /// addition rate.
     pub const fn new(
         addition_rate: f64,
         deletion_rate: f64,
@@ -32,7 +131,7 @@ impl<GeneGenerator> Umad<GeneGenerator> {
     /// Construct `Umad` with "balanced" deletion rate derived from addition
     /// rate
     ///
-    /// If the deletion rate is set to `addition_rate` / (1 + `addition_rate`)
+    /// If the deletion rate is set to `addition_rate / (1 + addition_rate)`
     /// then on average the child genome will have the same length as the
     /// parent genome. This constructor just takes an `addition_rate`
     /// and computes the balanced deletion rate.
