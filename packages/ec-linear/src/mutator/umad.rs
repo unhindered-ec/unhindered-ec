@@ -50,7 +50,7 @@ impl<GeneGenerator> Umad<GeneGenerator> {
         Self::new(addition_rate, deletion_rate, gene_generator)
     }
 
-    pub const fn new_with_empty_rate(
+    pub const fn new_with_empty_addition_rate(
         addition_rate: f64,
         empty_addition_rate: f64,
         deletion_rate: f64,
@@ -64,7 +64,7 @@ impl<GeneGenerator> Umad<GeneGenerator> {
         }
     }
 
-    pub const fn new_without_empty(
+    pub const fn new_without_empty_addition_rate(
         addition_rate: f64,
         deletion_rate: f64,
         gene_generator: GeneGenerator,
