@@ -1,0 +1,79 @@
+default_job = "clippy-all"
+env.CARGO_TERM_COLOR = "always"
+
+
+[jobs.doc-watch]
+command = [
+    "cargo",
+    "doc",
+    "--workspace",
+    "--no-deps",
+]
+need_stdout = false
+
+[jobs.doc]
+command = [
+    "cargo",
+    "doc",
+    "--workspace",
+    "--no-deps",
+    "--open",
+]
+on_success = "job:doc-watch"
+need_stdout = false
+
+[jobs.private-doc-watch]
+command = [
+    "cargo",
+    "doc",
+    "--workspace",
+    "--no-deps",
+    "--document-private-items",
+]
+need_stdout = false
+
+[jobs.private-doc]
+command = [
+    "cargo",
+    "doc",
+    "--workspace",
+    "--no-deps",
+    "--document-private-items",
+    "--open",
+]
+on_success = "job:private-doc-watch"
+need_stdout = false
+
+[jobs.clippy]
+command = ["cargo", "clippy"]
+need_stdout = false
+
+[jobs.clippy-all]
+command = ["cargo", "clippy", "--all-targets"]
+need_stdout = false
+
+[jobs.test]
+command = ["cargo", "test"]
+need_stdout = true
+
+[jobs.nextest]
+command = [
+    "cargo", "nextest", "run",
+    "--hide-progress-bar", "--failure-output", "final"
+]
+need_stdout = true
+analyzer = "nextest"
+
+[jobs.ex]
+command = ["cargo", "run", "--release", "--example"]
+need_stdout = true
+allow_warnings = true
+
+[keybindings]
+c = "job:clippy-all"
+d = "job:doc"
+n = "job:nextest"
+t = "job:test"
+
+
+alt-d = "job:private-doc"
