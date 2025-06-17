@@ -21,6 +21,8 @@ command = [
 ]
 on_success = "job:doc-watch"
 need_stdout = false
+allow_failures = true
+allow_warnings = true
 
 [jobs.private-doc-watch]
 command = [
@@ -43,6 +45,8 @@ command = [
 ]
 on_success = "job:private-doc-watch"
 need_stdout = false
+allow_failures = true
+allow_warnings = true
 
 [jobs.clippy]
 command = ["cargo", "clippy"]
