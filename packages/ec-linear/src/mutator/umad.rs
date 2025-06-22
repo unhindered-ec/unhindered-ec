@@ -157,13 +157,17 @@ impl<GeneGenerator> Umad<GeneGenerator> {
         }
     }
 
-    /// Construct `Umad` with "balanced" deletion rate derived from addition
-    /// rate
+    /// Construct `Umad` with a "balanced" deletion rate derived from the
+    /// addition rate
     ///
-    /// If the deletion rate is set to `addition_rate / (1 + addition_rate)`
-    /// then on average the child genome will have the same length as the
-    /// parent genome. This constructor just takes an `addition_rate`
-    /// and computes the balanced deletion rate.
+    /// This constructor just takes an `addition_rate`
+    /// and computes a "balanced" deletion rate that ensures that on average
+    /// child genomes will have the same length as their parent genomes.
+    /// This is accomplished by setting the deletion rate to
+    /// `addition_rate / (1 + addition_rate)`.
+    ///
+    /// For more information see [the Balance section in the main `Umad`
+    /// docs](Umad#balance).
     ///
     /// # Panics
     ///
