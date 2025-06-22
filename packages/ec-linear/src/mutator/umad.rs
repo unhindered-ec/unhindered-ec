@@ -141,6 +141,23 @@ impl<GeneGenerator> Umad<GeneGenerator> {
     ///
     /// This panics if the `addition_rate` isn't a legal probability value
     /// (i.e., in range 0..=1).
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use ec_core::operator::mutator::Mutator;
+    /// # use ec_linear::mutator::umad::Umad;
+    /// #
+    /// let addition_rate = 0.25;
+    /// let expected_deletion_rate = addition_rate / (1.0 + addition_rate);
+    /// let umad = Umad::new_with_balanced_deletion(addition_rate, ());
+    ///
+    /// assert!(
+    ///     (umad.deletion_rate() - expected_deletion_rate).abs() < f64::EPSILON,
+    ///     "Expected deletion rate {expected_deletion_rate} but got deletion rate {}",
+    ///     umad.deletion_rate()
+    /// );
+    /// ```
     pub fn new_with_balanced_deletion(addition_rate: f64, gene_generator: GeneGenerator) -> Self {
         assert!(
             matches!(addition_rate, 0.0..=1.0),
@@ -150,12 +167,52 @@ impl<GeneGenerator> Umad<GeneGenerator> {
         Self::new(addition_rate, deletion_rate, gene_generator)
     }
 
-    pub const fn new_with_empty_addition_rate(
+    /// Construct `Umad` with a given empty addition rate
+    ///
+    /// # Panics
+    ///
+    /// This panics if any of the `addition_rate`, `empty_addition_rate`, or
+    /// `deletion_rate` isn't a legal probability value (i.e., in range
+    /// 0..=1).
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use ec_linear::mutator::umad::Umad;
+    /// #
+    /// let addition_rate = 0.25;
+    /// let empty_addition_rate = 0.1;
+    /// let deletion_rate = 0.2;
+    /// let umad =
+    ///     Umad::new_with_empty_addition_rate(addition_rate, empty_addition_rate, deletion_rate, ());
+    ///
+    /// assert_eq!(
+    ///     umad.empty_addition_rate(),
+    ///     Some(empty_addition_rate),
+    ///     "Expected the given empty addition rate since we used the new_with_empty_addition_rate() \
+    ///      constructor"
+    /// );
+    /// ```
+    pub fn new_with_empty_addition_rate(
         addition_rate: f64,
         empty_addition_rate: f64,
         deletion_rate: f64,
         gene_generator: GeneGenerator,
     ) -> Self {
+        assert!(
+            matches!(addition_rate, 0.0..=1.0),
+            "`addition_rate` must be between 0.0 and 1.0 inclusive, but was {addition_rate}"
+        );
+        assert!(
+            matches!(empty_addition_rate, 0.0..=1.0),
+            "`empty_addition_rate` must be between 0.0 and 1.0 inclusive, but was \
+             {empty_addition_rate}"
+        );
+        assert!(
+            matches!(deletion_rate, 0.0..=1.0),
+            "`deletion_rate` must be between 0.0 and 1.0 inclusive, but was {deletion_rate}"
+        );
+
         Self {
             addition_rate,
             deletion_rate,
@@ -164,11 +221,43 @@ impl<GeneGenerator> Umad<GeneGenerator> {
         }
     }
 
-    pub const fn new_without_empty_addition_rate(
+    /// Construct `Umad` without an empty addition rate
+    ///
+    /// # Panics
+    ///
+    /// This panics if any of the `addition_rate` or
+    /// `deletion_rate` isn't a legal probability value (i.e., in range
+    /// 0..=1).
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use ec_linear::mutator::umad::Umad;
+    /// #
+    /// let addition_rate = 0.25;
+    /// let deletion_rate = 0.2;
+    /// let umad = Umad::new_without_empty_addition_rate(addition_rate, deletion_rate, ());
+    ///
+    /// assert!(
+    ///     umad.empty_addition_rate().is_none(),
+    ///     "Expected an empty addition rate since we used the new_without_empty_addition_rate() \
+    ///      constructor"
+    /// );
+    /// ```
+    pub fn new_without_empty_addition_rate(
         addition_rate: f64,
         deletion_rate: f64,
         gene_generator: GeneGenerator,
     ) -> Self {
+        assert!(
+            matches!(addition_rate, 0.0..=1.0),
+            "`addition_rate` must be between 0.0 and 1.0 inclusive, but was {addition_rate}"
+        );
+        assert!(
+            matches!(deletion_rate, 0.0..=1.0),
+            "`deletion_rate` must be between 0.0 and 1.0 inclusive, but was {deletion_rate}"
+        );
+
         Self {
             addition_rate,
             deletion_rate,
@@ -177,6 +266,7 @@ impl<GeneGenerator> Umad<GeneGenerator> {
         }
     }
 
+    #[must_use]
     fn new_gene<G, R>(&self, rng: &mut R) -> G::Gene
     where
         G: Genome,
