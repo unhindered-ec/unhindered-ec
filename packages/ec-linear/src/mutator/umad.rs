@@ -114,13 +114,41 @@ pub struct Umad<GeneGenerator> {
 }
 
 impl<GeneGenerator> Umad<GeneGenerator> {
-    /// Construct an instance of `Umad` with empty addition rate the same as
-    /// addition rate.
-    pub const fn new(
-        addition_rate: f64,
-        deletion_rate: f64,
-        gene_generator: GeneGenerator,
-    ) -> Self {
+    /// Construct an instance of `Umad` with the empty addition rate set to be
+    /// the same as the addition rate.
+    ///
+    /// # Panics
+    ///
+    /// This panics if either the `addition_rate` or the `deletion_rate` isn't a
+    /// legal probability value (i.e., in range 0..=1).
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use ec_core::operator::mutator::Mutator;
+    /// # use ec_linear::mutator::umad::Umad;
+    /// #
+    /// let addition_rate = 0.25;
+    /// let deletion_rate = 0.2;
+    /// let umad = Umad::new(addition_rate, deletion_rate, ());
+    ///
+    /// assert_eq!(
+    ///     umad.empty_addition_rate(),
+    ///     Some(addition_rate),
+    ///     "Expected the `new` constructor to set the default empty addition rate to be the same as \
+    ///      the given addition rate",
+    /// );
+    /// ```
+    pub fn new(addition_rate: f64, deletion_rate: f64, gene_generator: GeneGenerator) -> Self {
+        assert!(
+            matches!(addition_rate, 0.0..=1.0),
+            "`addition_rate` must be between 0.0 and 1.0 inclusive, but was {addition_rate}"
+        );
+        assert!(
+            matches!(deletion_rate, 0.0..=1.0),
+            "`deletion_rate` must be between 0.0 and 1.0 inclusive, but was {deletion_rate}"
+        );
+
         Self {
             addition_rate,
             deletion_rate,
