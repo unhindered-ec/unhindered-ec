@@ -355,4 +355,34 @@ mod test {
             umad.deletion_rate
         );
     }
+
+    #[test]
+    fn test_no_empty_addition_rate() {
+        let mut rng = rng();
+        // This generates "genes" that are always the character 'x'.
+        let char_options = uniform_distribution_of!['x'];
+        let umad = Umad::new_without_empty_addition_rate(0.1, 0.1, char_options);
+        // A parent with an empty genome
+        let parent = Vector { genes: Vec::new() };
+
+        // Since we don't add genes to empty genomes, this should still be an empty
+        // genome
+        let Ok(child) = umad.mutate(parent, &mut rng);
+        assert!(child.genes.is_empty());
+    }
+
+    #[test]
+    fn test_always_add_to_empty_genome() {
+        let mut rng = rng();
+        // This generates "genes" that are always the character 'x'.
+        let char_options = uniform_distribution_of!['x'];
+        let umad = Umad::new_with_empty_addition_rate(0.1, 1.0, 0.1, char_options);
+        // A parent with an empty genome
+        let parent = Vector { genes: Vec::new() };
+
+        // Since we don't add genes to empty genomes, this should still be an empty
+        // genome
+        let Ok(child) = umad.mutate(parent, &mut rng);
+        assert_eq!(child.genes, ['x']);
+    }
 }
