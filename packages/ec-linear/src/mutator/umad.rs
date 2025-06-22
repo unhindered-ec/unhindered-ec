@@ -96,6 +96,7 @@ use crate::genome::Linear;
 ///   Proceedings of the Genetic and Evolutionary Computation Conference
 ///   (GECCO '18). Association for Computing Machinery, New York, NY, USA,
 ///   1127–1134. <https://doi.org/10.1145/3205455.3205603>
+#[must_use]
 pub struct Umad<GeneGenerator> {
     /// The likelihood of adding a new gene next to each gene in the original
     /// genome
