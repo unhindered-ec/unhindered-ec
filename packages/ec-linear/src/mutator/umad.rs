@@ -503,8 +503,8 @@ mod test {
         // A parent with an empty genome
         let parent = Vector { genes: Vec::new() };
 
-        // Since we don't add genes to empty genomes, this should still be an empty
-        // genome
+        // With an empty_addition_rate of 1.0, a new gene should always be added to an
+        // empty genome.
         let Ok(child) = umad.mutate(parent, &mut rng);
         assert_eq!(child.genes, ['x']);
     }
