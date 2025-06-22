@@ -184,6 +184,30 @@ impl<GeneGenerator> Umad<GeneGenerator> {
     {
         self.gene_generator.sample(rng)
     }
+
+    /// The probability (in the range 0..=1) of adding a new gene next to each
+    /// gene in the original genome
+    #[must_use]
+    pub const fn addition_rate(&self) -> f64 {
+        self.addition_rate
+    }
+
+    /// The probability (in the range 0..=1) of deleting each gene in the
+    /// genome, including newly added genes
+    #[must_use]
+    pub const fn deletion_rate(&self) -> f64 {
+        self.deletion_rate
+    }
+
+    /// The probability (in the range 0..=1) of adding a single new gene when
+    /// the initial genome is empty.
+    ///
+    /// This is optional, and if its value is
+    /// `None` then new genes will never be added to empty genomes.
+    #[must_use]
+    pub const fn empty_addition_rate(&self) -> Option<f64> {
+        self.empty_addition_rate
+    }
 }
 
 impl<G, GeneGenerator> Mutator<G> for Umad<GeneGenerator>
