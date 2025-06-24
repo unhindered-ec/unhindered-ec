@@ -23,3 +23,7 @@ The following steps are usually required:
   > You'll need to publish packages in the order that the dependency graph in the workspace flows, since if you don't the packages published won't find their dependencies in the registry.
   > 
   > A good choice is usually the order `ec_macros -> ec-core -> ec-linear -> push_macros -> push`.
+
+## Publishing v1.0.0
+
+Once we publish any of this to crates.io we need to replace some links with actual urls to docs.rs which aren't vailid yet since the packages don't exist yet. For that search for  `(#)` in the code.

@@ -3,6 +3,24 @@ use rayon::prelude::{FromParallelIterator, ParallelIterator};
 
 use crate::{operator::Operator, population::Population};
 
+/// Collection of data about each iteration in the evolution process.
+///
+/// Notably, this includes the Population of the current Generation, as well as
+/// a child maker `Generator` which describes how to generate tne next
+/// generation from this.
+///
+/// Take a look at [`Generation::par_next`] and [`Generation::serial_next`] for
+/// further information on how this is used to generate new generations.
+///
+/// # Example[^ec-linear-usage]
+/// ```
+/// ```
+///
+///
+/// [^ec-linear-usage]: Note that this example uses [`ec-linear`](#) which is not a
+///     dependency of this package to demonstrate some concepts which need
+///     concrete implementations. If you want to replicate this example, make
+///     sure [`ec-linear`](#) is installed.
 pub struct Generation<P, C> {
     population: P,
     child_maker: C,
