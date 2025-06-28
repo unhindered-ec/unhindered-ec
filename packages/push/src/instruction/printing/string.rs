@@ -1,7 +1,11 @@
 use std::io::Write;
 
-use super::super::{Instruction, instruction_error::PushInstructionError};
-use crate::{error::InstructionResult, instruction::NumOpens, push_vm::push_io::HasStdout};
+use super::{super::Instruction, error::AppendStdoutError};
+use crate::{
+    error::{Error, InstructionResult},
+    instruction::NumOpens,
+    push_vm::push_io::HasStdout,
+};
 
 /// An instruction that "prints" a string specified when the instruction
 /// is created.
@@ -68,13 +72,13 @@ impl<State> Instruction<State> for PrintString
 where
     State: HasStdout,
 {
-    type Error = PushInstructionError;
+    type Error = AppendStdoutError;
 
     fn perform(&self, mut state: State) -> InstructionResult<State, Self::Error> {
-        let stdout = state.stdout();
-        // We need to remove this `unwrap()`.
-        write!(stdout, "{}", self.0).unwrap();
-        Ok(state)
+        match write!(state.stdout(), "{}", self.0) {
+            Ok(()) => Ok(state),
+            Err(e) => Err(Error::fatal(state, e)),
+        }
     }
 }
 

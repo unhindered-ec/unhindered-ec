@@ -61,6 +61,7 @@ pub struct IsEmpty<T> {
 }
 
 impl<T> IsEmpty<T> {
+    #[must_use]
     pub const fn new() -> Self {
         Self { _p: PhantomData }
     }

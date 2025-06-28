@@ -74,6 +74,7 @@ pub struct Dup<T> {
 }
 
 impl<T> Dup<T> {
+    #[must_use]
     pub const fn new() -> Self {
         Self { _p: PhantomData }
     }

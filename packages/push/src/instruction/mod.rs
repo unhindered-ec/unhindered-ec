@@ -8,16 +8,20 @@ pub use self::{
     int::{IntInstruction, IntInstructionError},
 };
 use self::{instruction_error::PushInstructionError, variable_name::VariableName};
-use crate::{error::InstructionResult, push_vm::push_state::PushState};
+use crate::{
+    error::{InstructionResult, MapInstructionError},
+    push_vm::push_state::PushState,
+};
 
-mod bool;
-mod common;
-mod exec;
-mod float;
+pub mod common;
 pub mod instruction_error;
-mod int;
 pub mod printing;
 pub mod variable_name;
+
+mod bool;
+mod exec;
+mod float;
+mod int;
 
 /*
  * exec_if requires a boolean and two (additional) values on the exec stack.
@@ -110,10 +114,10 @@ impl Instruction<PushState> for PushInstruction {
             Self::BoolInstruction(i) => i.perform(state),
             Self::IntInstruction(i) => i.perform(state),
             Self::FloatInstruction(i) => i.perform(state),
-            Self::PrintString(i) => i.perform(state),
-            Self::PrintSpace(i) => i.perform(state),
-            Self::PrintNewline(i) => i.perform(state),
-            Self::PrintPeriod(i) => i.perform(state),
+            Self::PrintString(i) => i.perform(state).map_err_into(),
+            Self::PrintSpace(i) => i.perform(state).map_err_into(),
+            Self::PrintNewline(i) => i.perform(state).map_err_into(),
+            Self::PrintPeriod(i) => i.perform(state).map_err_into(),
         }
     }
 }

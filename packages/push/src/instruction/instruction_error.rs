@@ -1,6 +1,9 @@
 use miette::Diagnostic;
 
-use super::IntInstructionError;
+use super::{
+    IntInstructionError,
+    printing::{AppendStdoutError, PrintingError},
+};
 use crate::push_vm::stack::StackError;
 
 /// An error that can occur when performing a `PushInstruction`.
@@ -29,4 +32,17 @@ pub enum PushInstructionError {
         #[diagnostic_source]
         IntInstructionError,
     ),
+
+    #[error(transparent)]
+    Printing(
+        #[from]
+        #[diagnostic_source]
+        PrintingError,
+    ),
+}
+
+impl From<AppendStdoutError> for PushInstructionError {
+    fn from(value: AppendStdoutError) -> Self {
+        Self::Printing(value.into())
+    }
 }

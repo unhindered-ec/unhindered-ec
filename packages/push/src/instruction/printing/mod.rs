@@ -1,12 +1,14 @@
 mod char;
+mod error;
 mod string;
 
 use std::{fmt::Display, io::Write, marker::PhantomData};
 
 pub use char::{PrintChar, PrintNewline, PrintPeriod, PrintSpace};
+pub use error::{AppendStdoutError, PrintingError};
 pub use string::PrintString;
 
-use super::{NumOpens, instruction_error::PushInstructionError};
+use super::NumOpens;
 use crate::{
     error::{Error, InstructionResult},
     instruction::Instruction,
@@ -108,17 +110,17 @@ where
     T: Display,
     State: HasStack<T> + HasStdout,
 {
-    type Error = PushInstructionError;
+    type Error = PrintingError;
 
     fn perform(&self, mut state: State) -> InstructionResult<State, Self::Error> {
         let value = match state.stack_mut::<T>().pop() {
             Ok(value) => value,
             Err(error) => return Err(Error::recoverable(state, error)),
         };
-        let stdout = state.stdout();
-        // We need to remove this `unwrap()`.
-        write!(stdout, "{value}").unwrap();
-        Ok(state)
+        match write!(state.stdout(), "{value}") {
+            Ok(()) => Ok(state),
+            Err(e) => Err(Error::fatal(state, AppendStdoutError::from(e))),
+        }
     }
 }
 
@@ -224,17 +226,17 @@ where
     T: Display,
     State: HasStack<T> + HasStdout,
 {
-    type Error = PushInstructionError;
+    type Error = PrintingError;
 
     fn perform(&self, mut state: State) -> InstructionResult<State, Self::Error> {
         let value = match state.stack_mut::<T>().pop() {
             Ok(value) => value,
             Err(error) => return Err(Error::recoverable(state, error)),
         };
-        let stdout = state.stdout();
-        // We need to remove this `unwrap()`.
-        writeln!(stdout, "{value}").unwrap();
-        Ok(state)
+        match writeln!(state.stdout(), "{value}") {
+            Ok(()) => Ok(state),
+            Err(e) => Err(Error::fatal(state, AppendStdoutError::from(e))),
+        }
     }
 }
 
@@ -314,7 +316,7 @@ mod tests {
         assert!(result.is_recoverable());
         assert_eq!(
             result.error(),
-            &PushInstructionError::StackError(StackError::Underflow {
+            &PrintingError::StackError(StackError::Underflow {
                 num_requested: 1,
                 num_present: 0
             })
@@ -379,7 +381,7 @@ mod tests {
         assert!(result.is_recoverable());
         assert_eq!(
             result.error(),
-            &PushInstructionError::StackError(StackError::Underflow {
+            &PrintingError::StackError(StackError::Underflow {
                 num_requested: 1,
                 num_present: 0
             })

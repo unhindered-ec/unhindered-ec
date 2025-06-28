@@ -53,6 +53,7 @@ pub struct Swap<T> {
 }
 
 impl<T> Swap<T> {
+    #[must_use]
     pub const fn new() -> Self {
         Self { _p: PhantomData }
     }
