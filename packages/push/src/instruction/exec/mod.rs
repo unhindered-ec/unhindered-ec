@@ -9,10 +9,7 @@ use strum_macros::EnumIter;
 use self::{dup_block::DupBlock, ifelse::IfElse, noop::Noop, unless::Unless, when::When};
 use super::{
     Instruction, NumOpens, PushInstruction,
-    common::{
-        dup::Dup, flush::Flush, is_empty::IsEmpty, pop::Pop, push_value::PushValue,
-        stack_depth::StackDepth, swap::Swap,
-    },
+    common::{Dup, Flush, IsEmpty, Pop, PushValue, StackDepth, Swap},
     instruction_error::PushInstructionError,
 };
 use crate::{

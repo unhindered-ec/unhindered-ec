@@ -49,6 +49,7 @@ pub struct Flush<T> {
 }
 
 impl<T> Flush<T> {
+    #[must_use]
     pub const fn new() -> Self {
         Self { _p: PhantomData }
     }

@@ -10,14 +10,11 @@ use strum_macros::EnumIter;
 use self::{abs::Abs, negate::Negate};
 use super::{
     Instruction, PushInstruction, PushInstructionError,
-    common::{
-        dup::Dup, flush::Flush, is_empty::IsEmpty, pop::Pop, push_value::PushValue,
-        stack_depth::StackDepth, swap::Swap,
-    },
+    common::{Dup, Flush, IsEmpty, Pop, PushValue, StackDepth, Swap},
     printing::{Print, PrintLn},
 };
 use crate::{
-    error::{Error, InstructionResult},
+    error::{Error, InstructionResult, MapInstructionError},
     push_vm::{
         push_io::HasStdout,
         stack::{HasStack, PushOnto, Stack, StackDiscard, StackError},
@@ -268,8 +265,8 @@ where
             Self::IsEmpty(is_empty) => is_empty.perform(state),
             Self::StackDepth(stack_depth) => stack_depth.perform(state),
             Self::Flush(flush) => flush.perform(state),
-            Self::Print(print) => print.perform(state),
-            Self::PrintLn(println) => println.perform(state),
+            Self::Print(print) => print.perform(state).map_err_into(),
+            Self::PrintLn(println) => println.perform(state).map_err_into(),
 
             Self::Negate(negate) => negate.perform(state),
             Self::Abs(abs) => abs.perform(state),

@@ -1,8 +1,8 @@
 use std::io::Write;
 
-use super::super::{Instruction, instruction_error::PushInstructionError};
+use super::{super::Instruction, error::AppendStdoutError};
 use crate::{
-    error::InstructionResult,
+    error::{Error, InstructionResult},
     instruction::{NumOpens, PushInstruction},
     push_vm::push_io::HasStdout,
 };
@@ -63,12 +63,13 @@ impl<State, const CHAR: char> Instruction<State> for PrintChar<CHAR>
 where
     State: HasStdout,
 {
-    type Error = PushInstructionError;
+    type Error = AppendStdoutError;
 
     fn perform(&self, mut state: State) -> InstructionResult<State, Self::Error> {
-        // We need to remove this `unwrap()`.
-        write!(state.stdout(), "{CHAR}").unwrap();
-        Ok(state)
+        match write!(state.stdout(), "{CHAR}") {
+            Ok(()) => Ok(state),
+            Err(e) => Err(Error::fatal(state, e)),
+        }
     }
 }
 

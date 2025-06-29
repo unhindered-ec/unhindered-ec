@@ -4,10 +4,7 @@ use strum_macros::EnumIter;
 
 use super::{
     Instruction, PushInstruction, PushInstructionError,
-    common::{
-        dup::Dup, flush::Flush, is_empty::IsEmpty, pop::Pop, push_value::PushValue,
-        stack_depth::StackDepth, swap::Swap,
-    },
+    common::{Dup, Flush, IsEmpty, Pop, PushValue, StackDepth, Swap},
     printing::{Print, PrintLn},
 };
 use crate::{
@@ -207,8 +204,8 @@ where
             Self::IsEmpty(is_empty) => is_empty.perform(state),
             Self::StackDepth(stack_depth) => stack_depth.perform(state),
             Self::Flush(flush) => flush.perform(state),
-            Self::Print(print) => print.perform(state),
-            Self::Println(println) => println.perform(state),
+            Self::Print(print) => print.perform(state).map_err_into(),
+            Self::Println(println) => println.perform(state).map_err_into(),
 
             Self::Not => bool_stack.pop().map(Not::not).push_onto(state),
             Self::And => bool_stack.pop2().map(|(x, y)| x && y).push_onto(state),

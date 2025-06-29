@@ -3,14 +3,11 @@ use strum_macros::EnumIter;
 
 use super::{
     Instruction, PushInstruction, PushInstructionError,
-    common::{
-        dup::Dup, flush::Flush, is_empty::IsEmpty, pop::Pop, push_value::PushValue,
-        stack_depth::StackDepth, swap::Swap,
-    },
+    common::{Dup, Flush, IsEmpty, Pop, PushValue, StackDepth, Swap},
     printing::{Print, PrintLn},
 };
 use crate::{
-    error::{Error, InstructionResult},
+    error::{Error, InstructionResult, MapInstructionError},
     push_vm::{
         HasStack,
         push_io::HasStdout,
@@ -178,8 +175,8 @@ where
             Self::IsEmpty(is_empty) => is_empty.perform(state),
             Self::StackDepth(stack_depth) => stack_depth.perform(state),
             Self::Flush(flush) => flush.perform(state),
-            Self::Print(print) => print.perform(state),
-            Self::PrintLn(println) => println.perform(state),
+            Self::Print(print) => print.perform(state).map_err_into(),
+            Self::PrintLn(println) => println.perform(state).map_err_into(),
 
             // All these instructions pop at least one value from the float stack, so we're
             // guaranteed that there will be space for the result. So we don't have to check that
