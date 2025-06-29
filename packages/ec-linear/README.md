@@ -24,17 +24,28 @@ with both fixed-length and variable-length genomes.
 This crate includes a few recombination operators based on the
 `Crossover` trait.
 
-### `UniformXo`
+### `UniformXo`: Uniform crossover
 
-`UniformXo` chooses genes uniformly from two parents as illustrated below:
+`UniformXo` implements uniform crossover, choosing genes uniformly from two parents as illustrated below:
 
 ![Illustration of uniform crossover](../../images/UniformCrossover.svg.excalidraw.svg)
 
-### `TwoPointXo`
+### `TwoPointXo`: Two-point crossover
 
-`TwoPointXo` chooses two random locations along the parent genomes, and swaps sections as illustrated below.
+`TwoPointXo` implements two-point crossover, choosing two random locations along the parent genomes, and swapping sections as illustrated below.
 
-![Illustration of two-point crossover](../../images/Two_point_crossover.svg)
+
+ <figure>
+
+ ![Illustration of two-point crossover](../../images/Two_point_crossover.svg)
+
+  <figcaption>
+
+  *Illustration of two-point crossover. Alternatively see
+  [this animation](../../images/TwoPointCrossover.avif).*
+
+  </figcaption>
+</figure>
 
 ---
 
