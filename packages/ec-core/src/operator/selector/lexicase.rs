@@ -1,7 +1,12 @@
 use std::cmp::Ordering;
 
 use miette::Diagnostic;
-use rand::{Rng, prelude::SliceRandom};
+use rand::{
+    Rng,
+    distr::uniform::{UniformSampler, UniformUsize},
+    prelude::SliceRandom,
+    seq::IndexedRandom,
+};
 
 use super::{Selector, error::EmptyPopulation};
 use crate::{individual::Individual, population::Population, test_results::TestResults};
@@ -71,12 +76,14 @@ where
         // Go until you get to a single individual or you run
         // out of test cases.
         let mut case_indices: Vec<usize> = (0..self.num_test_cases).collect();
-        case_indices.shuffle(rng);
 
         let mut candidates: Vec<_> = population.into_iter().collect();
         let mut winners = Vec::with_capacity(candidates.len());
 
-        for test_case_index in case_indices {
+        while let Some(test_case_index) = UniformUsize::sample_single(0, case_indices.len(), rng)
+            .ok()
+            .map(|idx| case_indices.swap_remove(idx))
+        {
             let (&initial_winner, remaining) = candidates.split_first().ok_or(EmptyPopulation)?;
 
             if remaining.is_empty() {
@@ -128,9 +135,8 @@ where
             std::mem::swap(&mut candidates, &mut winners);
         }
 
-        candidates.shuffle(rng);
         candidates
-            .first()
+            .choose(rng)
             .copied()
             .ok_or(EmptyPopulation)
             .map_err(Into::into)
