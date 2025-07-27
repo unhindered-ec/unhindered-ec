@@ -4,7 +4,6 @@ use miette::Diagnostic;
 use rand::{
     Rng,
     distr::uniform::{UniformSampler, UniformUsize},
-    prelude::SliceRandom,
     seq::IndexedRandom,
 };
 
