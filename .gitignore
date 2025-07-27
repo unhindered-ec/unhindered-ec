@@ -3,6 +3,12 @@
 tarpaulin-report.html
 
 flamegraph.svg
+flamegraph-*.svg
+
+perf.data
+perf-*.data
+perf.data.*
+perf-*.data.*
 
 report.html
 
