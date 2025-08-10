@@ -67,7 +67,7 @@ use crate::genome::Linear;
 ///
 /// ```
 /// # use ec_core::{operator::mutator::Mutator, uniform_distribution_of};
-/// # use ec_linear::{genome::vector::Vector, mutator::umad::Umad};
+/// # use ec_linear::mutator::umad::Umad;
 /// #
 /// // Use a 30% chance of inserting a gene at each location.
 /// let addition_rate = 0.3;
@@ -81,14 +81,10 @@ use crate::genome::Linear;
 /// let umad = Umad::new(addition_rate, deletion_rate, gene_generator);
 ///
 /// // Create a `Vec` of characters to use as a parent genome.
-/// let parent_chars = "Mutate first, ask questions later.".chars().collect();
-/// // Create a parent genome
-/// let parent_genome = Vector {
-///     genes: parent_chars,
-/// };
+/// let parent: Vec<char> = "Mutate first, ask questions later.".chars().collect();
 ///
 /// // Mutate the parent genome to create a child genome
-/// let child_genome = umad.mutate(parent_genome, &mut rand::rng()).unwrap();
+/// let child_genome = umad.mutate(parent, &mut rand::rng()).unwrap();
 /// ```
 ///
 /// [^paper-ref]: Thomas Helmuth, Nicholas Freitag McPhee, and Lee Spector. 2018.
@@ -394,7 +390,6 @@ mod test {
     use test_case::test_case;
 
     use super::*;
-    use crate::genome::vector::Vector;
 
     fn count_missing(short: &[char], long: &[char]) -> Option<usize> {
         let mut short_index = 0;
@@ -419,32 +414,28 @@ mod test {
         let char_options = uniform_distribution_of!['x'];
         let umad = Umad::new(0.3, 0.3, char_options);
 
-        let parent_chars = "Morris, Minnesota".chars().collect::<Vec<_>>();
-        let parent = Vector {
-            genes: parent_chars.clone(),
-        };
+        let parent = "Morris, Minnesota".chars().collect::<Vec<_>>();
 
-        let child = umad.mutate(parent, &mut rng).unwrap();
+        let child = umad.mutate(parent.clone(), &mut rng).unwrap();
 
         // println!("{child:?}");
-        let num_xs = child.genes.iter().filter(|c| **c == 'x').count();
+        let num_xs = child.iter().filter(|c| **c == 'x').count();
         assert!(
             num_xs > 0,
             "Expected at least one 'x' to be added, but none were."
         );
         let remaining_chars = child
-            .genes
             .iter()
             .filter(|c| **c != 'x')
             .copied()
             .collect::<Vec<_>>();
         // println!("There were {num_xs} 'x's.");
         // println!("The remaining characters were {remaining_chars:?}");
-        let num_missing = count_missing(&remaining_chars, &parent_chars);
+        let num_missing = count_missing(&remaining_chars, &parent);
         assert!(
             num_missing.is_some(),
-            "The remaining chars {remaining_chars:?} should have beenan ordered subsequence of \
-             the parent chars {parent_chars:?}."
+            "The remaining chars {remaining_chars:?} should have been an ordered subsequence of \
+             the parent chars {parent:?}."
         );
         assert!(
             num_missing.unwrap() > 0,
@@ -486,12 +477,12 @@ mod test {
         let char_options = uniform_distribution_of!['x'];
         let umad = Umad::new_without_empty_addition_rate(0.1, 0.1, char_options);
         // A parent with an empty genome
-        let parent = Vector { genes: Vec::new() };
+        let parent = Vec::new();
 
         // Since we don't add genes to empty genomes, this should still be an empty
         // genome
         let Ok(child) = umad.mutate(parent, &mut rng);
-        assert!(child.genes.is_empty());
+        assert!(child.is_empty());
     }
 
     #[test]
@@ -501,11 +492,11 @@ mod test {
         let char_options = uniform_distribution_of!['x'];
         let umad = Umad::new_with_empty_addition_rate(0.1, 1.0, 0.1, char_options);
         // A parent with an empty genome
-        let parent = Vector { genes: Vec::new() };
+        let parent = Vec::new();
 
         // With an empty_addition_rate of 1.0, a new gene should always be added to an
         // empty genome.
         let Ok(child) = umad.mutate(parent, &mut rng);
-        assert_eq!(child.genes, ['x']);
+        assert_eq!(child, ['x']);
     }
 }

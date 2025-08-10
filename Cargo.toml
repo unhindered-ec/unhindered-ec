@@ -51,7 +51,6 @@ complexity = { level = "warn", priority = -1 }
 correctness = { level = "deny", priority = -1 }
 style = { level = "warn", priority = -1 }
 
-
 # Individual lints
 dbg_macro = "warn"
 clone_on_ref_ptr = "warn"
@@ -90,6 +89,11 @@ as_conversions = "deny"
 # ci builds if we need to change anything
 allow_attributes_without_reason = "warn"
 allow_attributes = "deny"
+
+# This lint is temporarily disabled until an
+# issue in how this is triggered from inside proptest.
+# See https://github.com/rust-lang/rust-clippy/issues/15168 for more.
+explicit_deref_methods = "allow"
 
 [workspace.metadata.example_runner]
 default = [

@@ -9,25 +9,6 @@ pub struct WithRate {
     mutation_rate: f32,
 }
 
-// TODO: Get rid of this guy when we're just using the new
-//   struct-based `Bitstring` type.
-impl<T> Mutator<Vec<T>> for WithRate
-where
-    T: Not<Output = T>,
-{
-    type Error = Infallible;
-
-    fn mutate<R: Rng + ?Sized>(&self, genome: Vec<T>, rng: &mut R) -> Result<Vec<T>, Self::Error> {
-        Ok(genome
-            .into_iter()
-            .map(|bit| {
-                let r: f32 = rng.random();
-                if r < self.mutation_rate { !bit } else { bit }
-            })
-            .collect())
-    }
-}
-
 // TODO: We should change this so that it mutates `genome` "in place".
 //   We own `genome`, so there's no need to make a new one every time.
 //   See the `Crossover` trait for the key idea.
