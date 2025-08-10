@@ -15,27 +15,6 @@ pub struct WithOneOverLength;
 #[diagnostic(help = "Make sure the genome size is representable by an f32 when using this mutator")]
 pub struct GenomeSizeConversionError(usize);
 
-impl<T> Mutator<Vec<T>> for WithOneOverLength
-where
-    T: Not<Output = T>,
-{
-    type Error = GenomeSizeConversionError;
-
-    fn mutate<R: Rng + ?Sized>(&self, genome: Vec<T>, rng: &mut R) -> Result<Vec<T>, Self::Error> {
-        let genome_length = genome
-            .len()
-            .to_f32()
-            .ok_or(GenomeSizeConversionError(genome.len()))?;
-        let mutation_rate = 1.0 / genome_length;
-        let mutator = WithRate::new(mutation_rate);
-        mutator
-            .mutate(genome, rng)
-            // This can't happen, as the only error is the conversion error
-            // since `WithRate::mutator` can't fail.
-            .map_err(|_: Infallible| unreachable!())
-    }
-}
-
 impl<T> Mutator<T> for WithOneOverLength
 where
     T: Linear + FromIterator<T::Gene> + IntoIterator<Item = T::Gene>,
