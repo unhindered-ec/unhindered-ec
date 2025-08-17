@@ -1,16 +1,15 @@
-use std::fmt::Display;
+use std::{fmt::Display, ops::Range};
 
 use ec_core::{
     distributions::collection::{self, ConvertToCollectionGenerator},
     genome::Genome,
 };
-use miette::Diagnostic;
 use rand::{Rng, distr::StandardUniform, prelude::Distribution};
 
 use super::Linear;
 use crate::recombinator::{
     crossover::{Crossover, try_get_mut},
-    errors::{GeneAccess, MultipleGeneAccess},
+    errors::MultipleGeneAccess,
 };
 
 // TODO: Ought to have `LinearGenome<T>` so that `Bitstring` is just
@@ -138,39 +137,6 @@ impl Linear for Bitstring {
     }
 }
 
-#[derive(Debug)]
-enum ErrorSource {
-    Lhs,
-    Rhs,
-}
-
-// #[derive(Debug, thiserror::Error, Diagnostic)]
-// #[error(
-//     "Index {index} out of bounds for a bitstring of size {bitstring_size} for
-// the {error_source} \      in crossover"
-// )]
-// #[diagnostic(
-//     help = "Ensure that your indices are legal, i.e., at least zero and less
-// than the size of the \             bitstring"
-// )]
-// pub struct GeneAccess {
-//     index: usize,
-//     bitstring_size: usize,
-//     error_source: ErrorSource,
-// }
-
-// #[derive(Debug, thiserror::Error, Diagnostic)]
-// #[error("Range {}..{} out of bounds for a bitstring of size {bitstring_size}
-// for the {error_source} in crossover", range.start, range.end)] #[diagnostic(
-//     help("Ensure that your range bounds are legal, i.e., the start {} must be
-// at least zero and \             the end {} must be at most the size of the
-// bitstring {bitstring_size}", range.start, range.end) )]
-// pub struct GeneAccessRange {
-//     range: std::ops::Range<usize>,
-//     bitstring_size: usize,
-//     error_source: ErrorSource,
-// }
-
 impl Crossover for Bitstring {
     type GeneCrossoverError = MultipleGeneAccess<usize, Self>;
 
@@ -185,25 +151,15 @@ impl Crossover for Bitstring {
         Ok(())
     }
 
-    type SegmentCrossoverError = GeneAccessRange;
+    type SegmentCrossoverError = MultipleGeneAccess<Range<usize>, Self>;
 
     fn crossover_segment(
         &mut self,
         other: &mut Self,
-        range: std::ops::Range<usize>,
+        range: Range<usize>,
     ) -> Result<(), Self::SegmentCrossoverError> {
-        // TODO: Replace use of square brackets with `.get_mut()` to check the ranges
-        // appropriately.
-        let lhs = &mut self.bits[range.clone()];
-        let rhs = &mut other.bits[range.clone()];
-        if lhs.len() == rhs.len() {
-            lhs.swap_with_slice(rhs);
-            Ok(())
-        } else {
-            Err(GeneAccessRange {
-                range,
-                bitstring_size: self.size(),
-            })
-        }
+        let (lhs, rhs) = try_get_mut(&mut self.bits, &mut other.bits, range)?;
+        lhs.swap_with_slice(rhs);
+        Ok(())
     }
 }

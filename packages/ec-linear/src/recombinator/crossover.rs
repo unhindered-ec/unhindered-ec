@@ -1,10 +1,4 @@
-use std::{
-    fmt::Debug,
-    ops::{Index, IndexMut, Range},
-    slice::SliceIndex,
-};
-
-use miette::Diagnostic;
+use std::{fmt::Debug, ops::Range, slice::SliceIndex};
 
 use crate::{
     genome::Linear,
@@ -69,29 +63,29 @@ where
     }
 }
 
-// impl<T> Crossover for Vec<T> {
-//     type GeneCrossoverError = GeneAccess<usize, Self>;
+impl<T: 'static> Crossover for Vec<T> {
+    type GeneCrossoverError = MultipleGeneAccess<usize, Self>;
 
-//     type SegmentCrossoverError = GeneAccess<Range<usize>, Self>;
+    fn crossover_gene(
+        &mut self,
+        other: &mut Self,
+        index: usize,
+    ) -> Result<(), Self::GeneCrossoverError> {
+        let (lhs, rhs) = try_get_mut(self, other, index)?;
 
-//     fn crossover_gene(
-//         &mut self,
-//         other: &mut Self,
-//         index: usize,
-//     ) -> Result<(), Self::GeneCrossoverError> {
-//         todo!()
-//     }
+        std::mem::swap(lhs, rhs);
+        Ok(())
+    }
 
-//     fn crossover_segment(
-//         &mut self,
-//         other: &mut Self,
-//         range: Range<usize>,
-//     ) -> Result<(), Self::SegmentCrossoverError> {
-//         self.get_mut(range)
-//             .ok_or_else(|| GeneAccessRange {
-//                 range,
-//                 size: self.len(),
-//             })?
-//             .swap_with_slice(other.get_mut(range).ok_or(todo!())?);
-//     }
-// }
+    type SegmentCrossoverError = MultipleGeneAccess<Range<usize>, Self>;
+
+    fn crossover_segment(
+        &mut self,
+        other: &mut Self,
+        range: Range<usize>,
+    ) -> Result<(), Self::SegmentCrossoverError> {
+        let (lhs, rhs) = try_get_mut(self, other, range)?;
+        lhs.swap_with_slice(rhs);
+        Ok(())
+    }
+}
