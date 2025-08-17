@@ -40,11 +40,17 @@ pub trait Crossover: Linear {
     ) -> Result<(), Self::SegmentCrossoverError>;
 }
 
+#[expect(type_alias_bounds, reason = "needed for type checking.")]
+type LhsRhsResult<'a, 'b, I, Gene>
+where
+    I: SliceIndex<[Gene]>,
+= (&'a mut I::Output, &'b mut I::Output);
+
 pub(crate) fn try_get_mut<'a, 'b, I, Genome, Gene, ErrorGenome>(
     lhs: &'a mut Genome,
     rhs: &'b mut Genome,
     index: I,
-) -> Result<(&'a mut I::Output, &'b mut I::Output), MultipleGeneAccess<I, ErrorGenome>>
+) -> Result<LhsRhsResult<'a, 'b, I, Gene>, MultipleGeneAccess<I, ErrorGenome>>
 where
     I: SliceIndex<[Gene]> + Debug + Clone,
     Genome: AsMut<[Gene]>,

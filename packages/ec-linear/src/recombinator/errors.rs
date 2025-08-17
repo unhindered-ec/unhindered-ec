@@ -108,15 +108,18 @@ where
 #[diagnostic(
     help = "Ensure that your indices {index:?} are legal, i.e., within the range 0..{size}"
 )]
-pub struct GeneAccess<Index: Debug, Genome> {
+pub struct GeneAccess<Index, Genome>
+where
+    Index: Debug,
+{
     index: Index,
     size: usize,
     _p: PhantomData<Genome>,
 }
 
 impl<Index: Debug, Genome> GeneAccess<Index, Genome> {
-    pub fn new(index: Index, size: usize) -> Self {
-        GeneAccess {
+    pub const fn new(index: Index, size: usize) -> Self {
+        Self {
             index,
             size,
             _p: PhantomData,
