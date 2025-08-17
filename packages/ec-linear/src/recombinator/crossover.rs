@@ -46,11 +46,11 @@ pub trait Crossover: Linear {
     ) -> Result<(), Self::SegmentCrossoverError>;
 }
 
-pub(crate) fn try_get_mut<'a, 'b, I, Genome, Gene>(
+pub(crate) fn try_get_mut<'a, 'b, I, Genome, Gene, ErrorGenome>(
     lhs: &'a mut Genome,
     rhs: &'b mut Genome,
     index: I,
-) -> Result<(&'a mut I::Output, &'b mut I::Output), MultipleGeneAccess<I, Genome>>
+) -> Result<(&'a mut I::Output, &'b mut I::Output), MultipleGeneAccess<I, ErrorGenome>>
 where
     I: SliceIndex<[Gene]> + Debug + Clone,
     Genome: AsMut<[Gene]>,
@@ -67,16 +67,6 @@ where
             rhs: GeneAccess::new(index, rhs_size),
         }),
     }
-
-    // let Some(lhs) = self.gene_mut(index) else {
-    //     return Err(MultipleGeneAccess::Lhs(GeneAccess::new(index,
-    // self.size()))); };
-    // let Some(rhs) = other.gene_mut(index) else {
-    //     return Err(MultipleGeneAccess::Rhs(GeneAccess::new(
-    //         index,
-    //         other.size(),
-    //     )));
-    // };
 }
 
 // impl<T> Crossover for Vec<T> {

@@ -181,23 +181,6 @@ impl Crossover for Bitstring {
     ) -> Result<(), Self::GeneCrossoverError> {
         let (lhs, rhs) = try_get_mut(&mut self.bits, &mut other.bits, index)?;
 
-        // let Some(lhs) = self.gene_mut(index) else {
-        //     return Err(MultipleGeneAccess::Lhs(GeneAccess::new(index, self.size())));
-        // };
-        // let Some(rhs) = other.gene_mut(index) else {
-        //     return Err(MultipleGeneAccess::Rhs(GeneAccess::new(
-        //         index,
-        //         other.size(),
-        //     )));
-        // };
-        // let Some(rhs) = other.gene_mut(index) else {
-        //     return Err(GeneAccess {
-        //         index,
-        //         bitstring_size: other.size(),
-        //         error_source: ErrorSource::Rhs,
-        //     });
-        // };
-
         std::mem::swap(lhs, rhs);
         Ok(())
     }
