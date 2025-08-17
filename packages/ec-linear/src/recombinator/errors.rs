@@ -117,6 +117,21 @@ where
     _p: PhantomData<Genome>,
 }
 
+impl<Index, Genome> GeneAccess<Index, Genome>
+where
+    Index: Debug,
+{
+    /// Changes the contained `PhantomData` genome type captured for the error
+    /// message to another one.
+    pub(crate) fn for_genome_type<NewGenome>(self) -> GeneAccess<Index, NewGenome> {
+        GeneAccess {
+            index: self.index,
+            size: self.size,
+            _p: PhantomData,
+        }
+    }
+}
+
 impl<Index: Debug, Genome> GeneAccess<Index, Genome> {
     pub const fn new(index: Index, size: usize) -> Self {
         Self {
@@ -170,6 +185,24 @@ impl<Index: Debug, Genome> Debug for MultipleGeneAccess<Index, Genome> {
                 .field("lhs", lhs)
                 .field("rhs", rhs)
                 .finish(),
+        }
+    }
+}
+
+impl<Index, Genome> MultipleGeneAccess<Index, Genome>
+where
+    Index: Debug,
+{
+    /// Changes the contained `PhantomData` genome type captured for the error
+    /// message to another one.
+    pub(crate) fn for_genome_type<NewGenome>(self) -> MultipleGeneAccess<Index, NewGenome> {
+        match self {
+            Self::Lhs(gene_access) => MultipleGeneAccess::Lhs(gene_access.for_genome_type()),
+            Self::Rhs(gene_access) => MultipleGeneAccess::Rhs(gene_access.for_genome_type()),
+            Self::Both { lhs, rhs } => MultipleGeneAccess::Both {
+                lhs: lhs.for_genome_type(),
+                rhs: rhs.for_genome_type(),
+            },
         }
     }
 }

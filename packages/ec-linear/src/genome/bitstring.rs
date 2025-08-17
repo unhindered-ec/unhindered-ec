@@ -7,10 +7,7 @@ use ec_core::{
 use rand::{Rng, distr::StandardUniform, prelude::Distribution};
 
 use super::Linear;
-use crate::recombinator::{
-    crossover::{Crossover, try_get_mut},
-    errors::MultipleGeneAccess,
-};
+use crate::recombinator::{crossover::Crossover, errors::MultipleGeneAccess};
 
 // TODO: Ought to have `LinearGenome<T>` so that `Bitstring` is just
 //   `LinearGenome<bool>`.
@@ -145,10 +142,9 @@ impl Crossover for Bitstring {
         other: &mut Self,
         index: usize,
     ) -> Result<(), Self::GeneCrossoverError> {
-        let (lhs, rhs) = try_get_mut(&mut self.bits, &mut other.bits, index)?;
-
-        std::mem::swap(lhs, rhs);
-        Ok(())
+        self.bits
+            .crossover_gene(&mut other.bits, index)
+            .map_err(MultipleGeneAccess::for_genome_type)
     }
 
     type SegmentCrossoverError = MultipleGeneAccess<Range<usize>, Self>;
@@ -158,8 +154,8 @@ impl Crossover for Bitstring {
         other: &mut Self,
         range: Range<usize>,
     ) -> Result<(), Self::SegmentCrossoverError> {
-        let (lhs, rhs) = try_get_mut(&mut self.bits, &mut other.bits, range)?;
-        lhs.swap_with_slice(rhs);
-        Ok(())
+        self.bits
+            .crossover_segment(&mut other.bits, range)
+            .map_err(MultipleGeneAccess::for_genome_type)
     }
 }

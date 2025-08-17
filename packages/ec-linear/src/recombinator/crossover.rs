@@ -1,4 +1,4 @@
-use std::{fmt::Debug, ops::Range, slice::SliceIndex};
+use std::ops::Range;
 
 use crate::{
     genome::Linear,
@@ -40,35 +40,6 @@ pub trait Crossover: Linear {
     ) -> Result<(), Self::SegmentCrossoverError>;
 }
 
-#[expect(type_alias_bounds, reason = "needed for type checking.")]
-type LhsRhsResult<'a, 'b, I, Gene>
-where
-    I: SliceIndex<[Gene]>,
-= (&'a mut I::Output, &'b mut I::Output);
-
-pub(crate) fn try_get_mut<'a, 'b, I, Genome, Gene, ErrorGenome>(
-    lhs: &'a mut Genome,
-    rhs: &'b mut Genome,
-    index: I,
-) -> Result<LhsRhsResult<'a, 'b, I, Gene>, MultipleGeneAccess<I, ErrorGenome>>
-where
-    I: SliceIndex<[Gene]> + Debug + Clone,
-    Genome: AsMut<[Gene]>,
-    Gene: 'a + 'b,
-{
-    let (lhs, rhs) = (lhs.as_mut(), rhs.as_mut());
-    let (lhs_size, rhs_size) = (lhs.len(), rhs.len());
-    match (lhs.get_mut(index.clone()), rhs.get_mut(index.clone())) {
-        (Some(lhs), Some(rhs)) => Ok((lhs, rhs)),
-        (None, Some(_)) => Err(MultipleGeneAccess::Lhs(GeneAccess::new(index, lhs_size))),
-        (Some(_), None) => Err(MultipleGeneAccess::Rhs(GeneAccess::new(index, rhs_size))),
-        (None, None) => Err(MultipleGeneAccess::Both {
-            lhs: GeneAccess::new(index.clone(), lhs_size),
-            rhs: GeneAccess::new(index, rhs_size),
-        }),
-    }
-}
-
 impl<T: 'static> Crossover for Vec<T> {
     type GeneCrossoverError = MultipleGeneAccess<usize, Self>;
 
@@ -77,7 +48,18 @@ impl<T: 'static> Crossover for Vec<T> {
         other: &mut Self,
         index: usize,
     ) -> Result<(), Self::GeneCrossoverError> {
-        let (lhs, rhs) = try_get_mut(self, other, index)?;
+        let (lhs, rhs) = match (self.gene_mut(index), other.gene_mut(index)) {
+            (Some(lhs), Some(rhs)) => Ok((lhs, rhs)),
+            (None, Some(_)) => Err(MultipleGeneAccess::Lhs(GeneAccess::new(index, self.size()))),
+            (Some(_), None) => Err(MultipleGeneAccess::Rhs(GeneAccess::new(
+                index,
+                other.size(),
+            ))),
+            (None, None) => Err(MultipleGeneAccess::Both {
+                lhs: GeneAccess::new(index, self.size()),
+                rhs: GeneAccess::new(index, other.size()),
+            }),
+        }?;
 
         std::mem::swap(lhs, rhs);
         Ok(())
@@ -90,7 +72,19 @@ impl<T: 'static> Crossover for Vec<T> {
         other: &mut Self,
         range: Range<usize>,
     ) -> Result<(), Self::SegmentCrossoverError> {
-        let (lhs, rhs) = try_get_mut(self, other, range)?;
+        let (lhs, rhs) = match (self.get_mut(range.clone()), other.get_mut(range.clone())) {
+            (Some(lhs), Some(rhs)) => Ok((lhs, rhs)),
+            (None, Some(_)) => Err(MultipleGeneAccess::Lhs(GeneAccess::new(range, self.size()))),
+            (Some(_), None) => Err(MultipleGeneAccess::Rhs(GeneAccess::new(
+                range,
+                other.size(),
+            ))),
+            (None, None) => Err(MultipleGeneAccess::Both {
+                lhs: GeneAccess::new(range.clone(), self.size()),
+                rhs: GeneAccess::new(range, other.size()),
+            }),
+        }?;
+
         lhs.swap_with_slice(rhs);
         Ok(())
     }
