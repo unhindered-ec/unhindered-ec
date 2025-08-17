@@ -1,6 +1,7 @@
 use std::{
     error::Error,
     fmt::{Debug, Display},
+    marker::PhantomData,
 };
 
 use miette::{Diagnostic, LabeledSpan, Severity, SourceCode};
@@ -98,6 +99,74 @@ where
         match self {
             Self::DifferentGenomeLength(unnamed, ..) => unnamed.diagnostic_source(),
             Self::Crossover(unnamed, ..) => unnamed.diagnostic_source(),
+        }
+    }
+}
+
+#[derive(thiserror::Error, Diagnostic)]
+#[error("Genome access failed for genome of type {name} with size {size} at {index:?}", name = std::any::type_name::<Genome>(),)]
+#[diagnostic(
+    help = "Ensure that your indices {index:?} are legal, i.e., within the range 0..{size}"
+)]
+pub struct GeneAccess<Index: Debug, Genome> {
+    index: Index,
+    size: usize,
+    _p: PhantomData<Genome>,
+}
+
+impl<Index: Debug, Genome> GeneAccess<Index, Genome> {
+    pub fn new(index: Index, size: usize) -> Self {
+        GeneAccess {
+            index,
+            size,
+            _p: PhantomData,
+        }
+    }
+}
+
+impl<Index: Debug, Genome> Debug for GeneAccess<Index, Genome> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("GeneAccess")
+            .field("index", &self.index)
+            .field("size", &self.size)
+            .field("_p", &self._p)
+            .finish()
+    }
+}
+
+#[derive(thiserror::Error, Diagnostic)]
+pub enum MultipleGeneAccess<Index: Debug + 'static, Genome: 'static> {
+    #[error("Gene access on the lhs genome (self) failed")]
+    Lhs(
+        #[source]
+        #[diagnostic_source]
+        GeneAccess<Index, Genome>,
+    ),
+    #[error("Gene access on the rhs genome (other) failed")]
+    Rhs(
+        #[source]
+        #[diagnostic_source]
+        GeneAccess<Index, Genome>,
+    ),
+    #[error("Gene access on both genomes, lhs (self) and rhs (other), failed")]
+    Both {
+        #[source]
+        #[diagnostic_source]
+        lhs: GeneAccess<Index, Genome>,
+        rhs: GeneAccess<Index, Genome>,
+    },
+}
+
+impl<Index: Debug, Genome> Debug for MultipleGeneAccess<Index, Genome> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Lhs(lhs) => f.debug_tuple("Lhs").field(lhs).finish(),
+            Self::Rhs(rhs) => f.debug_tuple("Rhs").field(rhs).finish(),
+            Self::Both { lhs, rhs } => f
+                .debug_struct("Both")
+                .field("lhs", lhs)
+                .field("rhs", rhs)
+                .finish(),
         }
     }
 }
