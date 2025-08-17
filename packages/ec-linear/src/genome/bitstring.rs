@@ -8,7 +8,10 @@ use miette::Diagnostic;
 use rand::{Rng, distr::StandardUniform, prelude::Distribution};
 
 use super::Linear;
-use crate::recombinator::crossover::Crossover;
+use crate::recombinator::{
+    crossover::{Crossover, try_get_mut},
+    errors::{GeneAccess, MultipleGeneAccess},
+};
 
 // TODO: Ought to have `LinearGenome<T>` so that `Bitstring` is just
 //   `LinearGenome<bool>`.
@@ -135,45 +138,68 @@ impl Linear for Bitstring {
     }
 }
 
-#[derive(Debug, thiserror::Error, Diagnostic)]
-#[error("Index {index} out of bounds for a bitstring of size {bitstring_size}")]
-#[diagnostic(
-    help = "Ensure that your indices are legal, i.e., at least zero and less than the size of the \
-            bitstring"
-)]
-pub struct GeneAccess {
-    index: usize,
-    bitstring_size: usize,
+#[derive(Debug)]
+enum ErrorSource {
+    Lhs,
+    Rhs,
 }
 
-#[derive(Debug, thiserror::Error, Diagnostic)]
-#[error("Range {}..{} out of bounds for a bitstring of size {bitstring_size}", range.start, range.end)]
-#[diagnostic(
-    help("Ensure that your range bounds are legal, i.e., the start {} must be at least zero and \
-            the end {} must be at most the size of the bitstring {bitstring_size}", range.start, range.end)
-)]
-pub struct GeneAccessRange {
-    range: std::ops::Range<usize>,
-    bitstring_size: usize,
-}
+// #[derive(Debug, thiserror::Error, Diagnostic)]
+// #[error(
+//     "Index {index} out of bounds for a bitstring of size {bitstring_size} for
+// the {error_source} \      in crossover"
+// )]
+// #[diagnostic(
+//     help = "Ensure that your indices are legal, i.e., at least zero and less
+// than the size of the \             bitstring"
+// )]
+// pub struct GeneAccess {
+//     index: usize,
+//     bitstring_size: usize,
+//     error_source: ErrorSource,
+// }
+
+// #[derive(Debug, thiserror::Error, Diagnostic)]
+// #[error("Range {}..{} out of bounds for a bitstring of size {bitstring_size}
+// for the {error_source} in crossover", range.start, range.end)] #[diagnostic(
+//     help("Ensure that your range bounds are legal, i.e., the start {} must be
+// at least zero and \             the end {} must be at most the size of the
+// bitstring {bitstring_size}", range.start, range.end) )]
+// pub struct GeneAccessRange {
+//     range: std::ops::Range<usize>,
+//     bitstring_size: usize,
+//     error_source: ErrorSource,
+// }
 
 impl Crossover for Bitstring {
-    type GeneCrossoverError = GeneAccess;
+    type GeneCrossoverError = MultipleGeneAccess<usize, Self>;
 
     fn crossover_gene(
         &mut self,
         other: &mut Self,
         index: usize,
     ) -> Result<(), Self::GeneCrossoverError> {
-        if let (Some(lhs), Some(rhs)) = (self.gene_mut(index), other.gene_mut(index)) {
-            std::mem::swap(lhs, rhs);
-            Ok(())
-        } else {
-            Err(GeneAccess {
-                index,
-                bitstring_size: self.size(),
-            })
-        }
+        let (lhs, rhs) = try_get_mut(&mut self.bits, &mut other.bits, index)?;
+
+        // let Some(lhs) = self.gene_mut(index) else {
+        //     return Err(MultipleGeneAccess::Lhs(GeneAccess::new(index, self.size())));
+        // };
+        // let Some(rhs) = other.gene_mut(index) else {
+        //     return Err(MultipleGeneAccess::Rhs(GeneAccess::new(
+        //         index,
+        //         other.size(),
+        //     )));
+        // };
+        // let Some(rhs) = other.gene_mut(index) else {
+        //     return Err(GeneAccess {
+        //         index,
+        //         bitstring_size: other.size(),
+        //         error_source: ErrorSource::Rhs,
+        //     });
+        // };
+
+        std::mem::swap(lhs, rhs);
+        Ok(())
     }
 
     type SegmentCrossoverError = GeneAccessRange;
@@ -183,6 +209,8 @@ impl Crossover for Bitstring {
         other: &mut Self,
         range: std::ops::Range<usize>,
     ) -> Result<(), Self::SegmentCrossoverError> {
+        // TODO: Replace use of square brackets with `.get_mut()` to check the ranges
+        // appropriately.
         let lhs = &mut self.bits[range.clone()];
         let rhs = &mut other.bits[range.clone()];
         if lhs.len() == rhs.len() {
