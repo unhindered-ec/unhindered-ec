@@ -200,3 +200,141 @@ where
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use std::ops::Range;
+
+    use super::*;
+
+    // Dummy structs for testing genome types
+    struct GenomeA;
+    struct GenomeB;
+
+    #[test]
+    fn gene_access_new() {
+        let access = GeneAccess::<usize>::new::<GenomeA>(10, 20);
+        assert_eq!(access.index, 10);
+        assert_eq!(access.size, 20);
+        assert!(access.genome_type.contains("GenomeA"));
+    }
+
+    #[test]
+    fn gene_access_for_genome_type() {
+        let access = GeneAccess::<usize>::new::<GenomeA>(10, 20);
+        let original_genome_type = access.genome_type;
+
+        let updated_access = access.for_genome_type::<GenomeB>();
+
+        assert_eq!(updated_access.index, 10);
+        assert_eq!(updated_access.size, 20);
+        assert!(updated_access.genome_type.contains("GenomeB"));
+        assert_ne!(original_genome_type, updated_access.genome_type);
+    }
+
+    #[test]
+    fn gene_access_display_contains_info() {
+        let access = GeneAccess::<usize>::new::<GenomeA>(10, 20);
+        let display_str = format!("{access}");
+        assert!(display_str.contains("10"));
+        assert!(display_str.contains("20"));
+        assert!(display_str.contains("GenomeA"));
+    }
+
+    #[test]
+    fn gene_access_display_range_contains_info() {
+        let access = GeneAccess::<Range<usize>>::new::<GenomeA>(10..15, 20);
+        let display_str = format!("{access}");
+        assert!(display_str.contains("10..15"));
+        assert!(display_str.contains("20"));
+        assert!(display_str.contains("GenomeA"));
+    }
+
+    #[test]
+    fn multiple_gene_access_lhs() {
+        let err = MultipleGeneAccess::<usize>::lhs::<GenomeA>(10, 20);
+        if let MultipleGeneAccess::Lhs(access) = err {
+            assert_eq!(access.index, 10);
+            assert_eq!(access.size, 20);
+            assert!(access.genome_type.contains("GenomeA"));
+        } else {
+            panic!("Expected MultipleGeneAccess::Lhs");
+        }
+    }
+
+    #[test]
+    fn multiple_gene_access_rhs() {
+        let err = MultipleGeneAccess::<usize>::rhs::<GenomeA>(10, 20);
+        if let MultipleGeneAccess::Rhs(access) = err {
+            assert_eq!(access.index, 10);
+            assert_eq!(access.size, 20);
+            assert!(access.genome_type.contains("GenomeA"));
+        } else {
+            panic!("Expected MultipleGeneAccess::Rhs");
+        }
+    }
+
+    #[test]
+    fn multiple_gene_access_both() {
+        let err = MultipleGeneAccess::<usize>::both::<GenomeA>(10, 20, 30);
+        if let MultipleGeneAccess::Both { lhs, rhs } = err {
+            assert_eq!(lhs.index, 10);
+            assert_eq!(lhs.size, 20);
+            assert!(lhs.genome_type.contains("GenomeA"));
+            assert_eq!(rhs.index, 10);
+            assert_eq!(rhs.size, 30);
+            assert!(rhs.genome_type.contains("GenomeA"));
+        } else {
+            panic!("Expected MultipleGeneAccess::Both");
+        }
+    }
+
+    #[test]
+    fn multiple_gene_access_for_genome_type_lhs() {
+        let err = MultipleGeneAccess::<usize>::lhs::<GenomeA>(10, 20);
+        let updated_err = err.for_genome_type::<GenomeB>();
+        if let MultipleGeneAccess::Lhs(access) = updated_err {
+            assert!(access.genome_type.contains("GenomeB"));
+        } else {
+            panic!("Expected MultipleGeneAccess::Lhs");
+        }
+    }
+
+    #[test]
+    fn multiple_gene_access_for_genome_type_rhs() {
+        let err = MultipleGeneAccess::<usize>::rhs::<GenomeA>(10, 20);
+        let updated_err = err.for_genome_type::<GenomeB>();
+        if let MultipleGeneAccess::Rhs(access) = updated_err {
+            assert!(access.genome_type.contains("GenomeB"));
+        } else {
+            panic!("Expected MultipleGeneAccess::Rhs");
+        }
+    }
+
+    #[test]
+    fn multiple_gene_access_for_genome_type_both() {
+        let err = MultipleGeneAccess::<usize>::both::<GenomeA>(10, 20, 30);
+        let updated_err = err.for_genome_type::<GenomeB>();
+        if let MultipleGeneAccess::Both { lhs, rhs } = updated_err {
+            assert!(lhs.genome_type.contains("GenomeB"));
+            assert!(rhs.genome_type.contains("GenomeB"));
+        } else {
+            panic!("Expected MultipleGeneAccess::Both");
+        }
+    }
+
+    #[test]
+    fn multiple_gene_access_display() {
+        let lhs_err = MultipleGeneAccess::<usize>::lhs::<GenomeA>(10, 20);
+        assert!(format!("{lhs_err}").contains("lhs"));
+
+        let rhs_err = MultipleGeneAccess::<usize>::rhs::<GenomeA>(10, 20);
+        assert!(format!("{rhs_err}").contains("rhs"));
+
+        let both_err = MultipleGeneAccess::<usize>::both::<GenomeA>(10, 20, 30);
+        let display_str = format!("{both_err}");
+        assert!(display_str.contains("both"));
+        assert!(display_str.contains("lhs"));
+        assert!(display_str.contains("rhs"));
+    }
+}
