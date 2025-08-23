@@ -1,9 +1,6 @@
 use std::ops::Range;
 
-use crate::{
-    genome::Linear,
-    recombinator::errors::{GeneAccess, MultipleGeneAccess},
-};
+use crate::{genome::Linear, recombinator::errors::MultipleGeneAccess};
 
 // TODO: Does `Crossover` need to be visible outside
 //   this module? If not, should `pub` be replaced/removed?
@@ -48,24 +45,19 @@ impl<T: 'static> Crossover for Vec<T> {
         other: &mut Self,
         index: usize,
     ) -> Result<(), Self::GeneCrossoverError> {
-        let (lhs, rhs) = match (self.gene_mut(index), other.gene_mut(index)) {
-            (Some(lhs), Some(rhs)) => Ok((lhs, rhs)),
-            (None, Some(_)) => Err(MultipleGeneAccess::Lhs(GeneAccess::new::<Self>(
+        match (self.gene_mut(index), other.gene_mut(index)) {
+            (Some(lhs), Some(rhs)) => {
+                std::mem::swap(lhs, rhs);
+                Ok(())
+            }
+            (None, Some(_)) => Err(MultipleGeneAccess::lhs::<Self>(index, self.size())),
+            (Some(_), None) => Err(MultipleGeneAccess::rhs::<Self>(index, other.size())),
+            (None, None) => Err(MultipleGeneAccess::both::<Self>(
                 index,
                 self.size(),
-            ))),
-            (Some(_), None) => Err(MultipleGeneAccess::Rhs(GeneAccess::new::<Self>(
-                index,
                 other.size(),
-            ))),
-            (None, None) => Err(MultipleGeneAccess::Both {
-                lhs: GeneAccess::new::<Self>(index, self.size()),
-                rhs: GeneAccess::new::<Self>(index, other.size()),
-            }),
-        }?;
-
-        std::mem::swap(lhs, rhs);
-        Ok(())
+            )),
+        }
     }
 
     type SegmentCrossoverError = MultipleGeneAccess<Range<usize>>;
@@ -75,23 +67,18 @@ impl<T: 'static> Crossover for Vec<T> {
         other: &mut Self,
         range: Range<usize>,
     ) -> Result<(), Self::SegmentCrossoverError> {
-        let (lhs, rhs) = match (self.get_mut(range.clone()), other.get_mut(range.clone())) {
-            (Some(lhs), Some(rhs)) => Ok((lhs, rhs)),
-            (None, Some(_)) => Err(MultipleGeneAccess::Lhs(GeneAccess::new::<Self>(
+        match (self.get_mut(range.clone()), other.get_mut(range.clone())) {
+            (Some(lhs), Some(rhs)) => {
+                lhs.swap_with_slice(rhs);
+                Ok(())
+            }
+            (None, Some(_)) => Err(MultipleGeneAccess::lhs::<Self>(range, self.size())),
+            (Some(_), None) => Err(MultipleGeneAccess::rhs::<Self>(range, other.size())),
+            (None, None) => Err(MultipleGeneAccess::both::<Self>(
                 range,
                 self.size(),
-            ))),
-            (Some(_), None) => Err(MultipleGeneAccess::Rhs(GeneAccess::new::<Self>(
-                range,
                 other.size(),
-            ))),
-            (None, None) => Err(MultipleGeneAccess::Both {
-                lhs: GeneAccess::new::<Self>(range.clone(), self.size()),
-                rhs: GeneAccess::new::<Self>(range, other.size()),
-            }),
-        }?;
-
-        lhs.swap_with_slice(rhs);
-        Ok(())
+            )),
+        }
     }
 }
