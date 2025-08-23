@@ -167,6 +167,24 @@ impl<Index> MultipleGeneAccess<Index>
 where
     Index: Debug,
 {
+    pub(crate) fn lhs<Genome>(index: Index, size: usize) -> Self {
+        Self::Lhs(GeneAccess::new::<Genome>(index, size))
+    }
+
+    pub(crate) fn rhs<Genome>(index: Index, size: usize) -> Self {
+        Self::Rhs(GeneAccess::new::<Genome>(index, size))
+    }
+
+    pub(crate) fn both<Genome>(index: Index, lhs_size: usize, rhs_size: usize) -> Self
+    where
+        Index: Clone,
+    {
+        Self::Both {
+            lhs: GeneAccess::new::<Genome>(index.clone(), lhs_size),
+            rhs: GeneAccess::new::<Genome>(index, rhs_size),
+        }
+    }
+
     /// Changes the contained `genome_type` captured for the
     /// error message to another genome type. This is necessary
     /// when the actual type being recombined (e.g., `Vec<bool>`)
