@@ -135,7 +135,7 @@ impl Linear for Bitstring {
 }
 
 impl Crossover for Bitstring {
-    type GeneCrossoverError = MultipleGeneAccess<usize, Self>;
+    type GeneCrossoverError = MultipleGeneAccess<usize>;
 
     fn crossover_gene(
         &mut self,
@@ -144,10 +144,10 @@ impl Crossover for Bitstring {
     ) -> Result<(), Self::GeneCrossoverError> {
         self.bits
             .crossover_gene(&mut other.bits, index)
-            .map_err(MultipleGeneAccess::for_genome_type)
+            .map_err(MultipleGeneAccess::for_genome_type::<Self>)
     }
 
-    type SegmentCrossoverError = MultipleGeneAccess<Range<usize>, Self>;
+    type SegmentCrossoverError = MultipleGeneAccess<Range<usize>>;
 
     fn crossover_segment(
         &mut self,
@@ -156,6 +156,6 @@ impl Crossover for Bitstring {
     ) -> Result<(), Self::SegmentCrossoverError> {
         self.bits
             .crossover_segment(&mut other.bits, range)
-            .map_err(MultipleGeneAccess::for_genome_type)
+            .map_err(MultipleGeneAccess::for_genome_type::<Self>)
     }
 }

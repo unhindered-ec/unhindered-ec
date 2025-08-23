@@ -1,7 +1,6 @@
 use std::{
     error::Error,
     fmt::{Debug, Display},
-    marker::PhantomData,
 };
 
 use miette::{Diagnostic, LabeledSpan, Severity, SourceCode};
@@ -103,105 +102,82 @@ where
     }
 }
 
-#[derive(thiserror::Error, Diagnostic)]
-#[error("Genome access failed for genome of type {name} with size {size} at {index:?}", name = std::any::type_name::<Genome>(),)]
+#[derive(Debug, thiserror::Error, Diagnostic)]
+#[error("Genome access failed for genome of type {genome_type} with size {size} at {index:?}")]
 #[diagnostic(
     help = "Ensure that your indices {index:?} are legal, i.e., within the range 0..{size}"
 )]
-pub struct GeneAccess<Index, Genome>
+pub struct GeneAccess<Index>
 where
     Index: Debug,
 {
-    index: Index,
-    size: usize,
-    _p: PhantomData<Genome>,
+    pub index: Index,
+    pub size: usize,
+    genome_type: &'static str,
 }
 
-impl<Index, Genome> GeneAccess<Index, Genome>
+impl<Index> GeneAccess<Index>
 where
     Index: Debug,
 {
-    /// Changes the contained `PhantomData` genome type captured for the error
-    /// message to another one.
-    pub(crate) fn for_genome_type<NewGenome>(self) -> GeneAccess<Index, NewGenome> {
-        GeneAccess {
-            index: self.index,
-            size: self.size,
-            _p: PhantomData,
-        }
+    /// Changes the contained `genome_type` captured for the
+    /// error message to another genome type. This is necessary
+    /// when the actual type being recombined (e.g., `Vec<bool>`)
+    /// is wrapped in a container type like `Bitstring`.
+    pub(crate) fn for_genome_type<NewGenome>(mut self) -> Self {
+        self.genome_type = std::any::type_name::<NewGenome>();
+        self
     }
 }
 
-impl<Index: Debug, Genome> GeneAccess<Index, Genome> {
-    pub const fn new(index: Index, size: usize) -> Self {
+impl<Index: Debug> GeneAccess<Index> {
+    pub fn new<Genome>(index: Index, size: usize) -> Self {
         Self {
             index,
             size,
-            _p: PhantomData,
+            genome_type: std::any::type_name::<Genome>(),
         }
     }
 }
 
-impl<Index: Debug, Genome> Debug for GeneAccess<Index, Genome> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("GeneAccess")
-            .field("index", &self.index)
-            .field("size", &self.size)
-            .field("_p", &self._p)
-            .finish()
-    }
-}
-
-#[derive(thiserror::Error, Diagnostic)]
-pub enum MultipleGeneAccess<Index: Debug + 'static, Genome: 'static> {
+#[derive(Debug, thiserror::Error, Diagnostic)]
+pub enum MultipleGeneAccess<Index: Debug + 'static> {
     #[error("Gene access on the lhs genome (self) failed")]
     Lhs(
         #[source]
         #[diagnostic_source]
-        GeneAccess<Index, Genome>,
+        GeneAccess<Index>,
     ),
     #[error("Gene access on the rhs genome (other) failed")]
     Rhs(
         #[source]
         #[diagnostic_source]
-        GeneAccess<Index, Genome>,
+        GeneAccess<Index>,
     ),
     #[error("Gene access on both genomes, lhs (self) and rhs (other), failed")]
     Both {
         #[source]
         #[diagnostic_source]
-        lhs: GeneAccess<Index, Genome>,
-        rhs: GeneAccess<Index, Genome>,
+        lhs: GeneAccess<Index>,
+        rhs: GeneAccess<Index>,
     },
 }
 
-impl<Index: Debug, Genome> Debug for MultipleGeneAccess<Index, Genome> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::Lhs(lhs) => f.debug_tuple("Lhs").field(lhs).finish(),
-            Self::Rhs(rhs) => f.debug_tuple("Rhs").field(rhs).finish(),
-            Self::Both { lhs, rhs } => f
-                .debug_struct("Both")
-                .field("lhs", lhs)
-                .field("rhs", rhs)
-                .finish(),
-        }
-    }
-}
-
-impl<Index, Genome> MultipleGeneAccess<Index, Genome>
+impl<Index> MultipleGeneAccess<Index>
 where
     Index: Debug,
 {
-    /// Changes the contained `PhantomData` genome type captured for the error
-    /// message to another one.
-    pub(crate) fn for_genome_type<NewGenome>(self) -> MultipleGeneAccess<Index, NewGenome> {
+    /// Changes the contained `genome_type` captured for the
+    /// error message to another genome type. This is necessary
+    /// when the actual type being recombined (e.g., `Vec<bool>`)
+    /// is wrapped in a container type like `Bitstring`.
+    pub(crate) fn for_genome_type<NewGenome>(self) -> Self {
         match self {
-            Self::Lhs(gene_access) => MultipleGeneAccess::Lhs(gene_access.for_genome_type()),
-            Self::Rhs(gene_access) => MultipleGeneAccess::Rhs(gene_access.for_genome_type()),
-            Self::Both { lhs, rhs } => MultipleGeneAccess::Both {
-                lhs: lhs.for_genome_type(),
-                rhs: rhs.for_genome_type(),
+            Self::Lhs(gene_access) => Self::Lhs(gene_access.for_genome_type::<NewGenome>()),
+            Self::Rhs(gene_access) => Self::Rhs(gene_access.for_genome_type::<NewGenome>()),
+            Self::Both { lhs, rhs } => Self::Both {
+                lhs: lhs.for_genome_type::<NewGenome>(),
+                rhs: rhs.for_genome_type::<NewGenome>(),
             },
         }
     }

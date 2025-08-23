@@ -41,7 +41,7 @@ pub trait Crossover: Linear {
 }
 
 impl<T: 'static> Crossover for Vec<T> {
-    type GeneCrossoverError = MultipleGeneAccess<usize, Self>;
+    type GeneCrossoverError = MultipleGeneAccess<usize>;
 
     fn crossover_gene(
         &mut self,
@@ -50,14 +50,17 @@ impl<T: 'static> Crossover for Vec<T> {
     ) -> Result<(), Self::GeneCrossoverError> {
         let (lhs, rhs) = match (self.gene_mut(index), other.gene_mut(index)) {
             (Some(lhs), Some(rhs)) => Ok((lhs, rhs)),
-            (None, Some(_)) => Err(MultipleGeneAccess::Lhs(GeneAccess::new(index, self.size()))),
-            (Some(_), None) => Err(MultipleGeneAccess::Rhs(GeneAccess::new(
+            (None, Some(_)) => Err(MultipleGeneAccess::Lhs(GeneAccess::new::<Self>(
+                index,
+                self.size(),
+            ))),
+            (Some(_), None) => Err(MultipleGeneAccess::Rhs(GeneAccess::new::<Self>(
                 index,
                 other.size(),
             ))),
             (None, None) => Err(MultipleGeneAccess::Both {
-                lhs: GeneAccess::new(index, self.size()),
-                rhs: GeneAccess::new(index, other.size()),
+                lhs: GeneAccess::new::<Self>(index, self.size()),
+                rhs: GeneAccess::new::<Self>(index, other.size()),
             }),
         }?;
 
@@ -65,7 +68,7 @@ impl<T: 'static> Crossover for Vec<T> {
         Ok(())
     }
 
-    type SegmentCrossoverError = MultipleGeneAccess<Range<usize>, Self>;
+    type SegmentCrossoverError = MultipleGeneAccess<Range<usize>>;
 
     fn crossover_segment(
         &mut self,
@@ -74,14 +77,17 @@ impl<T: 'static> Crossover for Vec<T> {
     ) -> Result<(), Self::SegmentCrossoverError> {
         let (lhs, rhs) = match (self.get_mut(range.clone()), other.get_mut(range.clone())) {
             (Some(lhs), Some(rhs)) => Ok((lhs, rhs)),
-            (None, Some(_)) => Err(MultipleGeneAccess::Lhs(GeneAccess::new(range, self.size()))),
-            (Some(_), None) => Err(MultipleGeneAccess::Rhs(GeneAccess::new(
+            (None, Some(_)) => Err(MultipleGeneAccess::Lhs(GeneAccess::new::<Self>(
+                range,
+                self.size(),
+            ))),
+            (Some(_), None) => Err(MultipleGeneAccess::Rhs(GeneAccess::new::<Self>(
                 range,
                 other.size(),
             ))),
             (None, None) => Err(MultipleGeneAccess::Both {
-                lhs: GeneAccess::new(range.clone(), self.size()),
-                rhs: GeneAccess::new(range, other.size()),
+                lhs: GeneAccess::new::<Self>(range.clone(), self.size()),
+                rhs: GeneAccess::new::<Self>(range, other.size()),
             }),
         }?;
 
