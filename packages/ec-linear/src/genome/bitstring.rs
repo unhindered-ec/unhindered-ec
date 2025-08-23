@@ -162,57 +162,201 @@ impl Crossover for Bitstring {
 
 #[cfg(test)]
 mod tests {
-    use crate::{
-        genome::bitstring::Bitstring,
-        recombinator::{crossover::Crossover, errors::MultipleGeneAccess},
-    };
+    use super::*;
+    use crate::recombinator::{crossover::Crossover, errors::MultipleGeneAccess};
+
+    #[test]
+    fn display_format() {
+        let bs: Bitstring = [true, false, true, true, false].into_iter().collect();
+        assert_eq!(bs.to_string(), "10110");
+    }
+
+    #[test]
+    fn from_iterator() {
+        let bits = vec![true, false, true];
+        let bs: Bitstring = bits.clone().into_iter().collect();
+        assert_eq!(bs.bits, bits);
+    }
+
+    #[test]
+    fn linear_trait_impl() {
+        let mut bs: Bitstring = [true, false, true].into_iter().collect();
+        assert_eq!(bs.size(), 3);
+
+        let gene = bs.gene_mut(1);
+        assert_eq!(gene, Some(&mut false));
+        if let Some(g) = gene {
+            *g = true;
+        }
+        assert_eq!(bs.gene_mut(1), Some(&mut true));
+
+        assert_eq!(bs.gene_mut(5), None);
+    }
+
+    #[test]
+    fn random_with_probability_all_true() {
+        let mut rng = rand::rng();
+        let size = 100;
+        let bs = Bitstring::random_with_probability(size, 1.0, &mut rng);
+        assert_eq!(bs.size(), size);
+        assert!(bs.iter().all(|&b| b));
+    }
+
+    #[test]
+    fn random_with_probability_all_false() {
+        let mut rng = rand::rng();
+        let size = 100;
+        let bs = Bitstring::random_with_probability(size, 0.0, &mut rng);
+        assert_eq!(bs.size(), size);
+        assert!(bs.iter().all(|&b| !b));
+    }
+
+    // --- Crossover Tests ---
+
+    #[test]
+    fn crossover_gene_success() {
+        let mut first: Bitstring = [true, false, true].into_iter().collect();
+        let mut second: Bitstring = [false, true, false].into_iter().collect();
+
+        let result = first.crossover_gene(&mut second, 1);
+
+        assert!(result.is_ok());
+        assert_eq!(first.bits, vec![true, true, true]);
+        assert_eq!(second.bits, vec![false, false, false]);
+    }
+
+    #[test]
+    fn crossover_segment_success() {
+        let mut first: Bitstring = [true, false, true, false, true].into_iter().collect();
+        let mut second: Bitstring = [false, true, false, true, false].into_iter().collect();
+
+        let result = first.crossover_segment(&mut second, 1..4);
+
+        assert!(result.is_ok());
+        assert_eq!(first.bits, vec![true, true, false, true, true]);
+        assert_eq!(second.bits, vec![false, false, true, false, false]);
+    }
 
     #[test]
     fn gene_access_error_both() {
-        let mut rng = rand::rng();
         let size = 20;
-        let mut first = Bitstring::random(size, &mut rng);
-        let mut second = Bitstring::random(size, &mut rng);
+        let mut first = Bitstring::from_iter(vec![false; size]);
+        let mut second = Bitstring::from_iter(vec![false; size]);
+
         let MultipleGeneAccess::Both { lhs, rhs } =
             first.crossover_gene(&mut second, size).unwrap_err()
         else {
             panic!("Didn't get `MultipleGeneAccess::Both` as expected");
         };
+
         assert_eq!(lhs.index, size);
         assert_eq!(lhs.size, size);
+        assert!(format!("{lhs}").contains("Bitstring"));
+
         assert_eq!(rhs.index, size);
         assert_eq!(rhs.size, size);
+        assert!(format!("{rhs}").contains("Bitstring"));
     }
 
     #[test]
     fn gene_access_error_lhs() {
-        let mut rng = rand::rng();
         let first_size = 20;
         let second_size = 30;
-        let mut first = Bitstring::random(first_size, &mut rng);
-        let mut second = Bitstring::random(second_size, &mut rng);
+        let mut first = Bitstring::from_iter(vec![false; first_size]);
+        let mut second = Bitstring::from_iter(vec![false; second_size]);
+
         let MultipleGeneAccess::Lhs(lhs) =
             first.crossover_gene(&mut second, first_size).unwrap_err()
         else {
             panic!("Didn't get `MultipleGeneAccess::Lhs` as expected");
         };
+
         assert_eq!(lhs.index, first_size);
         assert_eq!(lhs.size, first_size);
+        assert!(format!("{lhs}").contains("Bitstring"));
     }
 
     #[test]
     fn gene_access_error_rhs() {
-        let mut rng = rand::rng();
         let first_size = 30;
         let second_size = 20;
-        let mut first = Bitstring::random(first_size, &mut rng);
-        let mut second = Bitstring::random(second_size, &mut rng);
+        let mut first = Bitstring::from_iter(vec![false; first_size]);
+        let mut second = Bitstring::from_iter(vec![false; second_size]);
+
         let MultipleGeneAccess::Rhs(rhs) =
             first.crossover_gene(&mut second, second_size).unwrap_err()
         else {
             panic!("Didn't get `MultipleGeneAccess::Rhs` as expected");
         };
+
         assert_eq!(rhs.index, second_size);
         assert_eq!(rhs.size, second_size);
+        assert!(format!("{rhs}").contains("Bitstring"));
+    }
+
+    #[test]
+    fn segment_access_error_both() {
+        let size = 20;
+        let mut first = Bitstring::from_iter(vec![false; size]);
+        let mut second = Bitstring::from_iter(vec![false; size]);
+        let range = 15..25;
+
+        let err = first
+            .crossover_segment(&mut second, range.clone())
+            .unwrap_err();
+
+        if let MultipleGeneAccess::Both { lhs, rhs } = err {
+            assert_eq!(lhs.index, range);
+            assert_eq!(lhs.size, size);
+            assert!(format!("{lhs}").contains("Bitstring"));
+
+            assert_eq!(rhs.index, range);
+            assert_eq!(rhs.size, size);
+            assert!(format!("{rhs}").contains("Bitstring"));
+        } else {
+            panic!("Expected MultipleGeneAccess::Both, got {err:?}");
+        }
+    }
+
+    #[test]
+    fn segment_access_error_lhs() {
+        let first_size = 20;
+        let second_size = 30;
+        let mut first = Bitstring::from_iter(vec![false; first_size]);
+        let mut second = Bitstring::from_iter(vec![false; second_size]);
+        let range = 15..25;
+
+        let err = first
+            .crossover_segment(&mut second, range.clone())
+            .unwrap_err();
+
+        if let MultipleGeneAccess::Lhs(lhs) = err {
+            assert_eq!(lhs.index, range);
+            assert_eq!(lhs.size, first_size);
+            assert!(format!("{lhs}").contains("Bitstring"));
+        } else {
+            panic!("Expected MultipleGeneAccess::Lhs, got {err:?}");
+        }
+    }
+
+    #[test]
+    fn segment_access_error_rhs() {
+        let first_size = 30;
+        let second_size = 20;
+        let mut first = Bitstring::from_iter(vec![false; first_size]);
+        let mut second = Bitstring::from_iter(vec![false; second_size]);
+        let range = 15..25;
+
+        let err = first
+            .crossover_segment(&mut second, range.clone())
+            .unwrap_err();
+
+        if let MultipleGeneAccess::Rhs(rhs) = err {
+            assert_eq!(rhs.index, range);
+            assert_eq!(rhs.size, second_size);
+            assert!(format!("{rhs}").contains("Bitstring"));
+        } else {
+            panic!("Expected MultipleGeneAccess::Rhs, got {err:?}");
+        }
     }
 }
