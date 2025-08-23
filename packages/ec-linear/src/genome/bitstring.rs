@@ -159,3 +159,60 @@ impl Crossover for Bitstring {
             .map_err(MultipleGeneAccess::for_genome_type::<Self>)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::{
+        genome::bitstring::Bitstring,
+        recombinator::{crossover::Crossover, errors::MultipleGeneAccess},
+    };
+
+    #[test]
+    fn gene_access_error_both() {
+        let mut rng = rand::rng();
+        let size = 20;
+        let mut first = Bitstring::random(size, &mut rng);
+        let mut second = Bitstring::random(size, &mut rng);
+        let MultipleGeneAccess::Both { lhs, rhs } =
+            first.crossover_gene(&mut second, size).unwrap_err()
+        else {
+            panic!("Didn't get `MultipleGeneAccess::Both` as expected");
+        };
+        assert_eq!(lhs.index, size);
+        assert_eq!(lhs.size, size);
+        assert_eq!(rhs.index, size);
+        assert_eq!(rhs.size, size);
+    }
+
+    #[test]
+    fn gene_access_error_lhs() {
+        let mut rng = rand::rng();
+        let first_size = 20;
+        let second_size = 30;
+        let mut first = Bitstring::random(first_size, &mut rng);
+        let mut second = Bitstring::random(second_size, &mut rng);
+        let MultipleGeneAccess::Lhs(lhs) =
+            first.crossover_gene(&mut second, first_size).unwrap_err()
+        else {
+            panic!("Didn't get `MultipleGeneAccess::Lhs` as expected");
+        };
+        assert_eq!(lhs.index, first_size);
+        assert_eq!(lhs.size, first_size);
+    }
+
+    #[test]
+    fn gene_access_error_rhs() {
+        let mut rng = rand::rng();
+        let first_size = 30;
+        let second_size = 20;
+        let mut first = Bitstring::random(first_size, &mut rng);
+        let mut second = Bitstring::random(second_size, &mut rng);
+        let MultipleGeneAccess::Rhs(rhs) =
+            first.crossover_gene(&mut second, second_size).unwrap_err()
+        else {
+            panic!("Didn't get `MultipleGeneAccess::Rhs` as expected");
+        };
+        assert_eq!(rhs.index, second_size);
+        assert_eq!(rhs.size, second_size);
+    }
+}
