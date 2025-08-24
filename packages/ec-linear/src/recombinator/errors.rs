@@ -124,14 +124,14 @@ where
     /// error message to another genome type. This is necessary
     /// when the actual type being recombined (e.g., `Vec<bool>`)
     /// is wrapped in a container type like `Bitstring`.
-    pub(crate) fn for_genome_type<NewGenome>(mut self) -> Self {
+    pub(crate) fn for_genome_type<NewGenome: 'static>(mut self) -> Self {
         self.genome_type = std::any::type_name::<NewGenome>();
         self
     }
 }
 
 impl<Index: Debug> GeneAccess<Index> {
-    pub fn new<Genome>(index: Index, size: usize) -> Self {
+    pub fn new<Genome: 'static>(index: Index, size: usize) -> Self {
         Self {
             index,
             size,
@@ -167,15 +167,15 @@ impl<Index> MultipleGeneAccess<Index>
 where
     Index: Debug,
 {
-    pub(crate) fn lhs<Genome>(index: Index, size: usize) -> Self {
+    pub(crate) fn lhs<Genome: 'static>(index: Index, size: usize) -> Self {
         Self::Lhs(GeneAccess::new::<Genome>(index, size))
     }
 
-    pub(crate) fn rhs<Genome>(index: Index, size: usize) -> Self {
+    pub(crate) fn rhs<Genome: 'static>(index: Index, size: usize) -> Self {
         Self::Rhs(GeneAccess::new::<Genome>(index, size))
     }
 
-    pub(crate) fn both<Genome>(index: Index, lhs_size: usize, rhs_size: usize) -> Self
+    pub(crate) fn both<Genome: 'static>(index: Index, lhs_size: usize, rhs_size: usize) -> Self
     where
         Index: Clone,
     {
@@ -189,7 +189,7 @@ where
     /// error message to another genome type. This is necessary
     /// when the actual type being recombined (e.g., `Vec<bool>`)
     /// is wrapped in a container type like `Bitstring`.
-    pub(crate) fn for_genome_type<NewGenome>(self) -> Self {
+    pub(crate) fn for_genome_type<NewGenome: 'static>(self) -> Self {
         match self {
             Self::Lhs(gene_access) => Self::Lhs(gene_access.for_genome_type::<NewGenome>()),
             Self::Rhs(gene_access) => Self::Rhs(gene_access.for_genome_type::<NewGenome>()),
