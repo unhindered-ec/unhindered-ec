@@ -8,46 +8,6 @@ use super::{
 
 pub struct UniformXo;
 
-// TODO: We should get rid of the `Vec<T>` versions when
-//   we've completed the migration to a struct-based `Bitstring`.
-impl<T: Clone> Recombinator<[Vec<T>; 2]> for UniformXo {
-    type Output = Vec<T>;
-    type Error = DifferentGenomeLength;
-
-    fn recombine<R: Rng + ?Sized>(
-        &self,
-        [first_genome, second_genome]: [Vec<T>; 2],
-        rng: &mut R,
-    ) -> Result<Self::Output, Self::Error> {
-        let len = first_genome.len();
-        if len != second_genome.len() {
-            return Err(DifferentGenomeLength(len, second_genome.len()));
-        }
-        Ok((0..len)
-            .map(|pos| {
-                if rng.random::<bool>() {
-                    first_genome[pos].clone()
-                } else {
-                    second_genome[pos].clone()
-                }
-            })
-            .collect())
-    }
-}
-
-impl<T: Clone> Recombinator<(Vec<T>, Vec<T>)> for UniformXo {
-    type Output = Vec<T>;
-    type Error = <Self as Recombinator<[Vec<T>; 2]>>::Error;
-
-    fn recombine<R: Rng + ?Sized>(
-        &self,
-        genomes: (Vec<T>, Vec<T>),
-        rng: &mut R,
-    ) -> Result<Self::Output, Self::Error> {
-        self.recombine(<[Vec<T>; 2]>::from(genomes), rng)
-    }
-}
-
 impl<G> Recombinator<[G; 2]> for UniformXo
 where
     G: Crossover,
