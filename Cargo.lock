@@ -377,6 +377,7 @@ version = "0.1.0"
 dependencies = [
  "clap",
  "ec-core",
+ "itertools 0.13.0",
  "miette",
  "num-traits",
  "rand 0.9.1",
