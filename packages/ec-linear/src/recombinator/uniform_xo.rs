@@ -5,12 +5,13 @@ use super::{
     crossover::Crossover,
     errors::{CrossoverGeneError, DifferentGenomeLength},
 };
+use crate::genome::Linear;
 
 pub struct UniformXo;
 
 impl<G> Recombinator<[G; 2]> for UniformXo
 where
-    G: Crossover,
+    G: Crossover + Linear,
 {
     type Output = G;
     type Error = CrossoverGeneError<G::GeneCrossoverError>;
@@ -38,7 +39,7 @@ where
 
 impl<G> Recombinator<(G, G)> for UniformXo
 where
-    G: Crossover,
+    G: Crossover + Linear,
 {
     type Output = G;
     type Error = <Self as Recombinator<[G; 2]>>::Error;
