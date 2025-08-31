@@ -5,6 +5,7 @@ use super::{
     crossover::Crossover,
     errors::{CrossoverGeneError, DifferentGenomeLength},
 };
+use crate::genome::Linear;
 
 pub struct TwoPointXo;
 
@@ -22,7 +23,7 @@ pub struct TwoPointXo;
 //   operator than this one, though.
 impl<G> Recombinator<[G; 2]> for TwoPointXo
 where
-    G: Crossover,
+    G: Crossover + Linear,
 {
     type Output = G;
     type Error = CrossoverGeneError<G::SegmentCrossoverError>;
@@ -52,7 +53,7 @@ where
 
 impl<G> Recombinator<(G, G)> for TwoPointXo
 where
-    G: Crossover,
+    G: Crossover + Linear,
 {
     type Output = G;
     type Error = <Self as Recombinator<[G; 2]>>::Error;
