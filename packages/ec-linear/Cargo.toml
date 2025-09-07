@@ -23,6 +23,8 @@ ec-core = { workspace = true }
 thiserror = { workspace = true }
 miette = { workspace = true }
 
+itertools.workspace = true
+
 [dev-dependencies]
 miette = { workspace = true, features = ["fancy"] }
 clap = { workspace = true, features = ["derive"] }
