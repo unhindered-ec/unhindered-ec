@@ -27,6 +27,7 @@ miette = { workspace = true }
 miette = { workspace = true, features = ["fancy"] }
 clap = { workspace = true, features = ["derive"] }
 test-case = { workspace = true }
+itertools = { workspace = true }
 
 [lints]
 workspace = true
