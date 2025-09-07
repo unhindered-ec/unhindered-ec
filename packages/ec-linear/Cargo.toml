@@ -27,7 +27,11 @@ miette = { workspace = true }
 miette = { workspace = true, features = ["fancy"] }
 clap = { workspace = true, features = ["derive"] }
 test-case = { workspace = true }
-itertools = { workspace = true }
+divan = "0.1.21"
+
+[[bench]]
+name = "n_point_xo"
+harness = false
 
 [lints]
 workspace = true
