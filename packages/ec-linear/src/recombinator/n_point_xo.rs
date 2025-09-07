@@ -1,7 +1,4 @@
-use std::iter::once;
-
 use ec_core::operator::recombinator::Recombinator;
-use itertools::Itertools;
 use rand::{Rng, seq::IteratorRandom};
 
 use super::{
@@ -22,6 +19,21 @@ impl<const N: usize> NPointXo<N> {
     }
 }
 
+#[derive(Debug)]
+enum CurrentParent {
+    First,
+    Second,
+}
+
+impl CurrentParent {
+    const fn swap_inplace(&mut self) {
+        *self = match *self {
+            Self::First => Self::Second,
+            Self::Second => Self::First,
+        }
+    }
+}
+
 impl<G, const N: usize> Recombinator<[G; 2]> for NPointXo<N>
 where
     G: Crossover + Linear,
@@ -39,28 +51,27 @@ where
             return Err(DifferentGenomeLength(len, second_genome.size()).into());
         }
 
-        // let s = N + 2;
-        // let mut crossover_points = vec![0; s];
-
         let mut crossover_points = [0; N];
         (0..len).choose_multiple_fill(rng, &mut crossover_points);
         crossover_points.sort_unstable();
 
-        // for crossover_point in crossover_points {
-        //     first_genome
-        //         .crossover_segment(&mut second_genome, crossover_point..len)
-        //         .map_err(CrossoverGeneError::Crossover)?;
-        // }
+        let mut current_parent = CurrentParent::First;
+        for i in 0..const { N + 2 } {
+            let start = i
+                .checked_sub(1)
+                .and_then(|i| crossover_points.get(i))
+                .copied()
+                .unwrap_or(0);
 
-        let segments = once(0).chain(crossover_points).chain(once(len)).chunks(2);
-        for mut segment in &segments {
-            let Some(start) = segment.next() else { break };
-            let Some(end) = segment.next() else { break };
-            // let start = segment.next().unwrap();
-            // let end = segment.next().unwrap();
-            first_genome
-                .crossover_segment(&mut second_genome, start..end)
-                .map_err(CrossoverGeneError::Crossover)?;
+            let end = crossover_points.get(i).copied().unwrap_or(len);
+
+            if matches!(current_parent, CurrentParent::Second) {
+                first_genome
+                    .crossover_segment(&mut second_genome, start..end)
+                    .map_err(CrossoverGeneError::Crossover)?;
+            }
+
+            current_parent.swap_inplace();
         }
 
         Ok(first_genome)
