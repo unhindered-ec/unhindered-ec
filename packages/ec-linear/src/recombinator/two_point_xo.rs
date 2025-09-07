@@ -1,5 +1,5 @@
 use ec_core::operator::recombinator::Recombinator;
-use rand::Rng;
+use rand::{Rng, seq::IteratorRandom};
 
 use super::{
     crossover::Crossover,
@@ -43,6 +43,15 @@ where
         if second < first {
             (first, second) = (second, first);
         }
+
+        // let mut crossover_points = [0; 2];
+        // (1..len).choose_multiple_fill(rng, &mut crossover_points);
+        // // crossover_points.sort_unstable();
+        // let [mut first, mut second] = crossover_points;
+        // if second < first {
+        //     (first, second) = (second, first);
+        // }
+
         first_genome
             .crossover_segment(&mut second_genome, first..second)
             .map_err(CrossoverGeneError::Crossover)?;
