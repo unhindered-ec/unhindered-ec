@@ -1,10 +1,11 @@
 use ec_core::operator::recombinator::Recombinator;
-use rand::Rng;
+use rand::{Rng, seq::IteratorRandom};
 
 use super::{
     crossover::Crossover,
     errors::{CrossoverGeneError, DifferentGenomeLength},
 };
+use crate::genome::Linear;
 
 pub struct TwoPointXo;
 
@@ -22,7 +23,7 @@ pub struct TwoPointXo;
 //   operator than this one, though.
 impl<G> Recombinator<[G; 2]> for TwoPointXo
 where
-    G: Crossover,
+    G: Crossover + Linear,
 {
     type Output = G;
     type Error = CrossoverGeneError<G::SegmentCrossoverError>;
@@ -42,6 +43,15 @@ where
         if second < first {
             (first, second) = (second, first);
         }
+
+        // let mut crossover_points = [0; 2];
+        // (1..len).choose_multiple_fill(rng, &mut crossover_points);
+        // // crossover_points.sort_unstable();
+        // let [mut first, mut second] = crossover_points;
+        // if second < first {
+        //     (first, second) = (second, first);
+        // }
+
         first_genome
             .crossover_segment(&mut second_genome, first..second)
             .map_err(CrossoverGeneError::Crossover)?;
@@ -52,7 +62,7 @@ where
 
 impl<G> Recombinator<(G, G)> for TwoPointXo
 where
-    G: Crossover,
+    G: Crossover + Linear,
 {
     type Output = G;
     type Error = <Self as Recombinator<[G; 2]>>::Error;
