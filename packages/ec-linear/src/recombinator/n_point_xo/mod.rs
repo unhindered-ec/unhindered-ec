@@ -1,3 +1,5 @@
+mod sample_distinct_uniform;
+
 use std::iter::once;
 
 use ec_core::operator::recombinator::Recombinator;
@@ -201,6 +203,61 @@ where
         let mut crossover_points = [0; N];
         (1..len).choose_multiple_fill(rng, &mut crossover_points);
         crossover_points.sort_unstable();
+
+        // let mut current_parent = CurrentParent::First;
+        for i in (0..const { N + 2 }).step_by(2) {
+            let start = i
+                .checked_sub(1)
+                .and_then(|i| crossover_points.get(i))
+                .copied()
+                .unwrap_or(0);
+
+            let end = crossover_points.get(i).copied().unwrap_or(len);
+
+            // if matches!(current_parent, CurrentParent::Second) {
+            first_genome
+                .crossover_segment(&mut second_genome, start..end)
+                .map_err(CrossoverGeneError::Crossover)?;
+            // }
+
+            // current_parent.swap_inplace();
+        }
+
+        Ok(first_genome)
+    }
+}
+
+pub struct NPointXoPrimitiveFloyds<const N: usize>(());
+
+impl<const N: usize> NPointXoPrimitiveFloyds<N> {
+    #[must_use]
+    pub const fn new() -> Option<Self> {
+        if N == 0 {
+            return None;
+        }
+        Some(Self(()))
+    }
+}
+impl<G, const N: usize> Recombinator<[G; 2]> for NPointXoPrimitiveFloyds<N>
+where
+    G: Crossover + Linear,
+{
+    type Output = G;
+    type Error = CrossoverGeneError<G::SegmentCrossoverError>;
+
+    fn recombine<R: Rng + ?Sized>(
+        &self,
+        [mut first_genome, mut second_genome]: [G; 2],
+        rng: &mut R,
+    ) -> Result<Self::Output, Self::Error> {
+        let len = first_genome.size();
+        if len != second_genome.size() {
+            return Err(DifferentGenomeLength(len, second_genome.size()).into());
+        }
+
+        let crossover_points = sample_distinct_uniform::SampleDistinctUniform::new(1, len)
+            .sample_array::<_, N>(rng)
+            .unwrap();
 
         // let mut current_parent = CurrentParent::First;
         for i in (0..const { N + 2 }).step_by(2) {
