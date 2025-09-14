@@ -10,7 +10,10 @@ use super::{
     crossover::Crossover,
     errors::{CrossoverGeneError, DifferentGenomeLength},
 };
-use crate::genome::Linear;
+use crate::{
+    genome::Linear,
+    recombinator::n_point_xo::sample_distinct_uniform::sample_distinct_uniform_sorted_inplace,
+};
 
 // TODO: Assert that len >= N + 1
 
@@ -255,9 +258,8 @@ where
             return Err(DifferentGenomeLength(len, second_genome.size()).into());
         }
 
-        let crossover_points = sample_distinct_uniform::SampleDistinctUniform::new(1, len)
-            .sample_array::<_, N>(rng)
-            .unwrap();
+        #[expect(clippy::arithmetic_side_effects, reason = "frogs")]
+        let crossover_points = sample_distinct_uniform_sorted_inplace::<_, N>(len - 1, rng);
 
         // let mut current_parent = CurrentParent::First;
         for i in (0..const { N + 2 }).step_by(2) {
