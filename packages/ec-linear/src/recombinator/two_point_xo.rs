@@ -28,6 +28,7 @@ where
     type Output = G;
     type Error = CrossoverGeneError<G::SegmentCrossoverError>;
 
+    #[expect(clippy::arithmetic_side_effects, reason = "frogs")]
     fn recombine<R: Rng + ?Sized>(
         &self,
         [mut first_genome, mut second_genome]: [G; 2],
@@ -38,9 +39,11 @@ where
             return Err(DifferentGenomeLength(len, second_genome.size()).into());
         }
 
-        let mut first = rng.random_range(0..len);
-        let mut second = rng.random_range(0..len);
-        if second < first {
+        let mut first = rng.random_range(1..len - 1);
+        let mut second = rng.random_range(1..len);
+        if first == second {
+            second = len - 1;
+        } else if second < first {
             (first, second) = (second, first);
         }
 
