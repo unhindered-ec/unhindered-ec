@@ -13,7 +13,7 @@ mod n_point_xo {
     use divan::Bencher;
     use ec_core::operator::recombinator::Recombinator;
     use ec_linear::recombinator::{
-        n_point_xo::{NPointXoChunks, NPointXoMultiSwap, NPointXoPrimitive, NPointXoWindows},
+        n_point_xo::{NPointXo, NPointXoStartEnd, NPointXoZero},
         two_point_xo::TwoPointXo,
     };
 
@@ -21,13 +21,13 @@ mod n_point_xo {
     const GENOME_SIZE: usize = 10_000;
 
     #[divan::bench(consts = NUM_CROSSOVERS)]
-    fn chunks<const N: usize>(bencher: Bencher) {
+    fn n_point_xo<const N: usize>(bencher: Bencher) {
         bencher
             .with_inputs(|| {
                 let first_parent = vec![0; GENOME_SIZE];
                 let second_parent = vec![1; GENOME_SIZE];
 
-                let crossover_operator = NPointXoChunks::<N>::new().unwrap();
+                let crossover_operator = NPointXo::<N>::new().unwrap();
 
                 let rng = rand::rng();
 
@@ -41,13 +41,13 @@ mod n_point_xo {
     }
 
     #[divan::bench(consts = NUM_CROSSOVERS)]
-    fn multi_swap<const N: usize>(bencher: Bencher) {
+    fn start_at_zero<const N: usize>(bencher: Bencher) {
         bencher
             .with_inputs(|| {
                 let first_parent = vec![0; GENOME_SIZE];
                 let second_parent = vec![1; GENOME_SIZE];
 
-                let crossover_operator = NPointXoMultiSwap::<N>::new().unwrap();
+                let crossover_operator = NPointXoZero::<N>::new().unwrap();
 
                 let rng = rand::rng();
 
@@ -61,13 +61,13 @@ mod n_point_xo {
     }
 
     #[divan::bench(consts = NUM_CROSSOVERS)]
-    fn windows<const N: usize>(bencher: Bencher) {
+    fn start_end<const N: usize>(bencher: Bencher) {
         bencher
             .with_inputs(|| {
                 let first_parent = vec![0; GENOME_SIZE];
                 let second_parent = vec![1; GENOME_SIZE];
 
-                let crossover_operator = NPointXoWindows::<N>::new().unwrap();
+                let crossover_operator = NPointXoStartEnd::<N>::new().unwrap();
 
                 let rng = rand::rng();
 
@@ -80,25 +80,26 @@ mod n_point_xo {
             });
     }
 
-    #[divan::bench(consts = NUM_CROSSOVERS)]
-    fn primitive<const N: usize>(bencher: Bencher) {
-        bencher
-            .with_inputs(|| {
-                let first_parent = vec![0; GENOME_SIZE];
-                let second_parent = vec![1; GENOME_SIZE];
+    //     #[divan::bench(consts = NUM_CROSSOVERS)]
+    //     fn primitive<const N: usize>(bencher: Bencher) {
+    //         bencher
+    //             .with_inputs(|| {
+    //                 let first_parent = vec![0; GENOME_SIZE];
+    //                 let second_parent = vec![1; GENOME_SIZE];
 
-                let crossover_operator = NPointXoPrimitive::<N>::new().unwrap();
+    //                 let crossover_operator =
+    // NPointXoPrimitive::<N>::new().unwrap();
 
-                let rng = rand::rng();
+    //                 let rng = rand::rng();
 
-                ([first_parent, second_parent], crossover_operator, rng)
-            })
-            .bench_values(|(parents, crossover_operator, mut rng)| {
-                crossover_operator
-                    .recombine(divan::black_box(parents), &mut rng)
-                    .unwrap()
-            });
-    }
+    //                 ([first_parent, second_parent], crossover_operator, rng)
+    //             })
+    //             .bench_values(|(parents, crossover_operator, mut rng)| {
+    //                 crossover_operator
+    //                     .recombine(divan::black_box(parents), &mut rng)
+    //                     .unwrap()
+    //             });
+    //     }
 
     #[divan::bench]
     fn two_point(bencher: Bencher) {
