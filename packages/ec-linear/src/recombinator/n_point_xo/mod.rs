@@ -3,8 +3,7 @@ mod sample_distinct_uniform;
 use std::iter::once;
 
 use ec_core::operator::recombinator::Recombinator;
-use itertools::Itertools;
-use rand::{Rng, seq::IteratorRandom};
+use rand::Rng;
 
 use super::{
     crossover::Crossover,
@@ -12,14 +11,17 @@ use super::{
 };
 use crate::{
     genome::Linear,
-    recombinator::n_point_xo::sample_distinct_uniform::sample_distinct_uniform_sorted_inplace,
+    recombinator::n_point_xo::sample_distinct_uniform::{
+        sample_distinct_uniform_sorted_inplace, sample_distinct_uniform_sorted_inplace_start_at_0,
+        sample_distinct_uniform_sorted_inplace_start_end,
+    },
 };
 
 // TODO: Assert that len >= N + 1
 
-pub struct NPointXoChunks<const N: usize>(());
+pub struct NPointXo<const N: usize>(());
 
-impl<const N: usize> NPointXoChunks<N> {
+impl<const N: usize> NPointXo<N> {
     #[must_use]
     pub const fn new() -> Option<Self> {
         if N == 0 {
@@ -29,7 +31,7 @@ impl<const N: usize> NPointXoChunks<N> {
     }
 }
 
-impl<G, const N: usize> Recombinator<[G; 2]> for NPointXoChunks<N>
+impl<G, const N: usize> Recombinator<[G; 2]> for NPointXo<N>
 where
     G: Crossover + Linear,
 {
@@ -46,105 +48,13 @@ where
             return Err(DifferentGenomeLength(len, second_genome.size()).into());
         }
 
-        #[expect(clippy::arithmetic_side_effects, reason = "frogs")]
+        // TODO: Move the `len-1` into the function?
         let crossover_points = sample_distinct_uniform_sorted_inplace::<_, N>(len - 1, rng);
 
-        let segments = once(0).chain(crossover_points).chain(once(len)).chunks(2);
-        for mut segment in &segments {
-            let Some(start) = segment.next() else { break };
-            let Some(end) = segment.next() else { break };
-            // let start = segment.next().unwrap();
-            // let end = segment.next().unwrap();
-            first_genome
-                .crossover_segment(&mut second_genome, start..end)
-                .map_err(CrossoverGeneError::Crossover)?;
-        }
-
-        Ok(first_genome)
-    }
-}
-
-pub struct NPointXoMultiSwap<const N: usize>(());
-
-impl<const N: usize> NPointXoMultiSwap<N> {
-    #[must_use]
-    pub const fn new() -> Option<Self> {
-        if N == 0 {
-            return None;
-        }
-        Some(Self(()))
-    }
-}
-
-impl<G, const N: usize> Recombinator<[G; 2]> for NPointXoMultiSwap<N>
-where
-    G: Crossover + Linear,
-{
-    type Output = G;
-    type Error = CrossoverGeneError<G::SegmentCrossoverError>;
-
-    fn recombine<R: Rng + ?Sized>(
-        &self,
-        [mut first_genome, mut second_genome]: [G; 2],
-        rng: &mut R,
-    ) -> Result<Self::Output, Self::Error> {
-        let len = first_genome.size();
-        if len != second_genome.size() {
-            return Err(DifferentGenomeLength(len, second_genome.size()).into());
-        }
-
-        #[expect(clippy::arithmetic_side_effects, reason = "frogs")]
-        let crossover_points = sample_distinct_uniform_sorted_inplace::<_, N>(len - 1, rng);
-
-        for crossover_point in crossover_points {
-            first_genome
-                .crossover_segment(&mut second_genome, crossover_point..len)
-                .map_err(CrossoverGeneError::Crossover)?;
-        }
-
-        Ok(first_genome)
-    }
-}
-
-pub struct NPointXoWindows<const N: usize>(());
-
-impl<const N: usize> NPointXoWindows<N> {
-    #[must_use]
-    pub const fn new() -> Option<Self> {
-        if N == 0 {
-            return None;
-        }
-        Some(Self(()))
-    }
-}
-
-impl<G, const N: usize> Recombinator<[G; 2]> for NPointXoWindows<N>
-where
-    G: Crossover + Linear,
-{
-    type Output = G;
-    type Error = CrossoverGeneError<G::SegmentCrossoverError>;
-
-    fn recombine<R: Rng + ?Sized>(
-        &self,
-        [mut first_genome, mut second_genome]: [G; 2],
-        rng: &mut R,
-    ) -> Result<Self::Output, Self::Error> {
-        let len = first_genome.size();
-        if len != second_genome.size() {
-            return Err(DifferentGenomeLength(len, second_genome.size()).into());
-        }
-
-        #[expect(clippy::arithmetic_side_effects, reason = "frogs")]
-        let crossover_points = sample_distinct_uniform_sorted_inplace::<_, N>(len - 1, rng);
-
-        #[expect(clippy::unwrap_used, reason = "frogs")]
-        let a = [0, *crossover_points.first().unwrap()];
-        #[expect(clippy::unwrap_used, reason = "frogs")]
-        let z = [*crossover_points.last().unwrap(), len];
-        let iter = once(a.as_slice())
-            .chain(crossover_points.windows(2))
-            .chain(once(z.as_slice()))
+        let last_crossover_pair = [*crossover_points.last().unwrap(), len];
+        let iter = crossover_points
+            .windows(2)
+            .chain(once(last_crossover_pair.as_slice()))
             .step_by(2);
 
         for point in iter {
@@ -156,24 +66,9 @@ where
     }
 }
 
-#[derive(Debug)]
-enum CurrentParent {
-    First,
-    Second,
-}
+pub struct NPointXoZero<const N: usize>(());
 
-impl CurrentParent {
-    const fn swap_inplace(&mut self) {
-        *self = match *self {
-            Self::First => Self::Second,
-            Self::Second => Self::First,
-        }
-    }
-}
-
-pub struct NPointXoPrimitive<const N: usize>(());
-
-impl<const N: usize> NPointXoPrimitive<N> {
+impl<const N: usize> NPointXoZero<N> {
     #[must_use]
     pub const fn new() -> Option<Self> {
         if N == 0 {
@@ -183,7 +78,7 @@ impl<const N: usize> NPointXoPrimitive<N> {
     }
 }
 
-impl<G, const N: usize> Recombinator<[G; 2]> for NPointXoPrimitive<N>
+impl<G, const N: usize> Recombinator<[G; 2]> for NPointXoZero<N>
 where
     G: Crossover + Linear,
 {
@@ -200,33 +95,74 @@ where
             return Err(DifferentGenomeLength(len, second_genome.size()).into());
         }
 
-        #[expect(clippy::arithmetic_side_effects, reason = "frogs")]
-        let crossover_points = sample_distinct_uniform_sorted_inplace::<_, N>(len - 1, rng);
+        // TODO: Move the `len-1` into the function?
+        let crossover_points =
+            sample_distinct_uniform_sorted_inplace_start_at_0::<_, N>(len - 1, rng);
 
-        // let mut current_parent = CurrentParent::First;
-        for i in (0..const { N + 2 }).step_by(2) {
-            let start = i
-                .checked_sub(1)
-                .and_then(|i| crossover_points.get(i))
-                .copied()
-                .unwrap_or(0);
+        let last_crossover_pair = [*crossover_points.last().unwrap(), len - 1];
+        let iter = crossover_points
+            .windows(2)
+            .chain(once(last_crossover_pair.as_slice()))
+            .step_by(2);
 
-            let end = crossover_points.get(i).copied().unwrap_or(len);
-
-            // if matches!(current_parent, CurrentParent::Second) {
+        for point in iter {
             first_genome
-                .crossover_segment(&mut second_genome, start..end)
+                .crossover_segment(&mut second_genome, (point[0] + 1)..(point[1] + 1))
                 .map_err(CrossoverGeneError::Crossover)?;
-            // }
-
-            // current_parent.swap_inplace();
         }
-
         Ok(first_genome)
     }
 }
 
-impl<G, const N: usize> Recombinator<(G, G)> for NPointXoWindows<N>
+pub struct NPointXoStartEnd<const N: usize>(());
+
+impl<const N: usize> NPointXoStartEnd<N> {
+    #[must_use]
+    pub const fn new() -> Option<Self> {
+        if N == 0 {
+            return None;
+        }
+        Some(Self(()))
+    }
+}
+
+impl<G, const N: usize> Recombinator<[G; 2]> for NPointXoStartEnd<N>
+where
+    G: Crossover + Linear,
+{
+    type Output = G;
+    type Error = CrossoverGeneError<G::SegmentCrossoverError>;
+
+    fn recombine<R: Rng + ?Sized>(
+        &self,
+        [mut first_genome, mut second_genome]: [G; 2],
+        rng: &mut R,
+    ) -> Result<Self::Output, Self::Error> {
+        let len = first_genome.size();
+        if len != second_genome.size() {
+            return Err(DifferentGenomeLength(len, second_genome.size()).into());
+        }
+
+        // TODO: Move the `len-1` into the function?
+        let crossover_points =
+            sample_distinct_uniform_sorted_inplace_start_end::<_, N>(1, len, rng);
+
+        let last_crossover_pair = [*crossover_points.last().unwrap(), len];
+        let iter = crossover_points
+            .windows(2)
+            .chain(once(last_crossover_pair.as_slice()))
+            .step_by(2);
+
+        for point in iter {
+            first_genome
+                .crossover_segment(&mut second_genome, point[0]..point[1])
+                .map_err(CrossoverGeneError::Crossover)?;
+        }
+        Ok(first_genome)
+    }
+}
+
+impl<G, const N: usize> Recombinator<(G, G)> for NPointXo<N>
 where
     G: Crossover + Linear,
 {
