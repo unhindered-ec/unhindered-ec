@@ -226,21 +226,21 @@ where
     }
 }
 
-// impl<G, const N: usize> Recombinator<(G, G)> for NPointXo<N>
-// where
-//     G: Crossover + Linear,
-// {
-//     type Output = G;
-//     type Error = <Self as Recombinator<[G; 2]>>::Error;
+impl<G, const N: usize> Recombinator<(G, G)> for NPointXoWindows<N>
+where
+    G: Crossover + Linear,
+{
+    type Output = G;
+    type Error = <Self as Recombinator<[G; 2]>>::Error;
 
-//     fn recombine<R: Rng + ?Sized>(
-//         &self,
-//         genomes: (G, G),
-//         rng: &mut R,
-//     ) -> Result<Self::Output, Self::Error> {
-//         self.recombine(<[G; 2]>::from(genomes), rng)
-//     }
-// }
+    fn recombine<R: Rng + ?Sized>(
+        &self,
+        genomes: (G, G),
+        rng: &mut R,
+    ) -> Result<Self::Output, Self::Error> {
+        self.recombine(<[G; 2]>::from(genomes), rng)
+    }
+}
 
 // #[cfg(test)]
 // mod tests {
