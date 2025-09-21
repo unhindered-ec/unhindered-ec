@@ -10,6 +10,7 @@
         "doctest",
         "doctests",
         "esitsu",
+        "flamegraph",
         "Freitag",
         "GECCO",
         "genericize",
