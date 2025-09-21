@@ -242,34 +242,91 @@ where
     }
 }
 
-// #[cfg(test)]
-// mod tests {
-//     use ec_core::{operator::recombinator::Recombinator,
-// population::Population};
+#[cfg(test)]
+mod tests {
+    use ec_core::{operator::recombinator::Recombinator, population::Population};
 
-//     use crate::recombinator::n_point_xo::NPointXo;
+    use crate::recombinator::n_point_xo::{NPointXo, NPointXoStartEnd, NPointXoZero};
 
-//     #[test]
-//     pub fn recombine_one_point() {
-//         const GENOME_SIZE: usize = 10;
+    #[test]
+    pub fn recombine_one_point() {
+        const GENOME_SIZE: usize = 10;
 
-//         let first_parent = vec![0; GENOME_SIZE];
-//         let second_parent = vec![1; GENOME_SIZE];
+        let first_parent = vec![0; GENOME_SIZE];
+        let second_parent = vec![1; GENOME_SIZE];
 
-//         let crossover_operator = NPointXo::<1>::new().unwrap();
+        let crossover_operator = NPointXo::<1>::new().unwrap();
 
-//         let mut rng = rand::rng();
+        let mut rng = rand::rng();
 
-//         let child = crossover_operator
-//             .recombine([first_parent, second_parent], &mut rng)
-//             .unwrap();
+        let child = crossover_operator
+            .recombine([first_parent, second_parent], &mut rng)
+            .unwrap();
 
-//         // Confirm that the child has the same size as the parents
-//         assert_eq!(child.size(), GENOME_SIZE);
+        // Confirm that the child has the same size as the parents
+        assert_eq!(child.size(), GENOME_SIZE);
 
-//         // Splits the child up into segments of equal values
-//         let segments = child.chunk_by(|a, b| a == b);
-//         // With one crossover point there should be exactly two segments.
-//         assert_eq!(segments.count(), 2);
-//     }
-// }
+        // Splits the child up into segments of equal values
+        let mut segments = child.chunk_by(|a, b| a == b);
+        // With one crossover point there should be exactly two segments.
+        assert_eq!(segments.clone().count(), 2);
+        assert_eq!(segments.next().unwrap().iter().next().unwrap(), &0);
+        assert_eq!(segments.next().unwrap().iter().next().unwrap(), &1);
+    }
+
+    #[test]
+    pub fn recombine_two_point() {
+        const GENOME_SIZE: usize = 10;
+
+        let first_parent = vec![0; GENOME_SIZE];
+        let second_parent = vec![1; GENOME_SIZE];
+
+        let crossover_operator = NPointXo::<2>::new().unwrap();
+
+        let mut rng = rand::rng();
+
+        let child = crossover_operator
+            .recombine([first_parent, second_parent], &mut rng)
+            .unwrap();
+
+        // Confirm that the child has the same size as the parents
+        assert_eq!(child.size(), GENOME_SIZE);
+
+        // Splits the child up into segments of equal values
+        let mut segments = child.chunk_by(|a, b| a == b);
+        // With one crossover point there should be exactly two segments.
+        assert_eq!(segments.clone().count(), 3);
+        assert_eq!(segments.next().unwrap().iter().next().unwrap(), &0);
+        assert_eq!(segments.next().unwrap().iter().next().unwrap(), &1);
+        assert_eq!(segments.next().unwrap().iter().next().unwrap(), &0);
+    }
+
+    #[test]
+    pub fn recombine_four_point() {
+        const GENOME_SIZE: usize = 6;
+
+        let first_parent = vec![0; GENOME_SIZE];
+        let second_parent = vec![1; GENOME_SIZE];
+
+        let crossover_operator = NPointXoStartEnd::<4>::new().unwrap();
+
+        let mut rng = rand::rng();
+
+        let child = crossover_operator
+            .recombine([first_parent, second_parent], &mut rng)
+            .unwrap();
+
+        // Confirm that the child has the same size as the parents
+        assert_eq!(child.size(), GENOME_SIZE);
+
+        // Splits the child up into segments of equal values
+        let mut segments = child.chunk_by(|a, b| a == b);
+        // With one crossover point there should be exactly two segments.
+        assert_eq!(segments.clone().count(), 5);
+        assert_eq!(segments.next().unwrap().iter().next().unwrap(), &0);
+        assert_eq!(segments.next().unwrap().iter().next().unwrap(), &1);
+        assert_eq!(segments.next().unwrap().iter().next().unwrap(), &0);
+        assert_eq!(segments.next().unwrap().iter().next().unwrap(), &1);
+        assert_eq!(segments.next().unwrap().iter().next().unwrap(), &0);
+    }
+}
