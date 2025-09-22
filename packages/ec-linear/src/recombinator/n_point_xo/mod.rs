@@ -11,9 +11,13 @@ use super::{
 };
 use crate::{
     genome::Linear,
-    recombinator::n_point_xo::sample_distinct_uniform::{
-        sample_distinct_uniform_sorted_inplace, sample_distinct_uniform_sorted_inplace_start_at_0,
-        sample_distinct_uniform_sorted_inplace_start_end,
+    recombinator::{
+        errors::GenomeLengthTooShort,
+        n_point_xo::sample_distinct_uniform::{
+            sample_distinct_uniform_sorted_inplace,
+            sample_distinct_uniform_sorted_inplace_start_at_0,
+            sample_distinct_uniform_sorted_inplace_start_end,
+        },
     },
 };
 
@@ -23,11 +27,20 @@ pub struct NPointXo<const N: usize>(());
 
 impl<const N: usize> NPointXo<N> {
     #[must_use]
-    pub const fn new() -> Option<Self> {
-        if N == 0 {
-            return None;
+    pub const fn new() -> Self {
+        const {
+            assert!(
+                N >= 1,
+                "Need at least one crossover point but got less than 1 points."
+            );
         }
-        Some(Self(()))
+        Self(())
+    }
+}
+
+impl<const N: usize> Default for NPointXo<N> {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -47,10 +60,35 @@ where
         if len != second_genome.size() {
             return Err(DifferentGenomeLength(len, second_genome.size()).into());
         }
+        // This should be checked in the constructor but since it is const and as such
+        // no runtime cost just check again here just to make sure
+        const {
+            assert!(
+                N >= 1,
+                "Need at least one crossover point but got less than 1 points."
+            );
+        }
+        // Since N >= 1 (as checked in the constructor, invariant!) we know that len >=
+        // N + 1 <=> len  >= 2;
+        if len < const { N + 1 } {
+            return Err(GenomeLengthTooShort {
+                min_size: const { N + 1 },
+                genome_length: len,
+            }
+            .into());
+        }
 
-        // TODO: Move the `len-1` into the function?
+        #[expect(
+            clippy::arithmetic_side_effects,
+            reason = "Per above invariant len >= 2, as such len - 1 >= 1 and can't wrap"
+        )]
         let crossover_points = sample_distinct_uniform_sorted_inplace::<_, N>(len - 1, rng);
 
+        #[expect(
+            clippy::unwrap_used,
+            reason = "Per above invariant N >= 1 and as such the array of size N always has at \
+                      least one (the last) element."
+        )]
         let last_crossover_pair = [*crossover_points.last().unwrap(), len];
         let iter = crossover_points
             .windows(2)
@@ -70,11 +108,20 @@ pub struct NPointXoZero<const N: usize>(());
 
 impl<const N: usize> NPointXoZero<N> {
     #[must_use]
-    pub const fn new() -> Option<Self> {
-        if N == 0 {
-            return None;
+    pub const fn new() -> Self {
+        const {
+            assert!(
+                N >= 1,
+                "Need at least one crossover point but got less than 1 points."
+            );
         }
-        Some(Self(()))
+        Self(())
+    }
+}
+
+impl<const N: usize> Default for NPointXoZero<N> {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -94,18 +141,58 @@ where
         if len != second_genome.size() {
             return Err(DifferentGenomeLength(len, second_genome.size()).into());
         }
+        // This should be checked in the constructor but since it is const and as such
+        // no runtime cost just check again here just to make sure
+        const {
+            assert!(
+                N >= 1,
+                "Need at least one crossover point but got less than 1 points."
+            );
+        }
+        // Since N >= 1 (as checked in the constructor, invariant!) we know that len >=
+        // N + 1 <=> len  >= 2;
+        if len < const { N + 1 } {
+            return Err(GenomeLengthTooShort {
+                min_size: const { N + 1 },
+                genome_length: len,
+            }
+            .into());
+        }
 
-        // TODO: Move the `len-1` into the function?
+        #[expect(
+            clippy::arithmetic_side_effects,
+            reason = "Per above invariant len >= 2, as such len - 1 >= 1 and can't wrap"
+        )]
         let crossover_points =
             sample_distinct_uniform_sorted_inplace_start_at_0::<_, N>(len - 1, rng);
 
+        #[expect(
+            clippy::unwrap_used,
+            reason = "Per above invariant N >= 1 and as such the array of size N always has at \
+                      least one (the last) element."
+        )]
+        #[expect(
+            clippy::arithmetic_side_effects,
+            reason = "Per above invariant len >= 2, as such len - 1 >= 1 and can't wrap"
+        )]
         let last_crossover_pair = [*crossover_points.last().unwrap(), len - 1];
+        // Invariant: \forall (p, q) in Iterator . p < len && q < len
+        // <= \forall p \in sample_distinct_uniform_sorted_inplace_start_at_0(len - 1) .
+        //        p < len
+        //   \and len - 1  < len
         let iter = crossover_points
             .windows(2)
             .chain(once(last_crossover_pair.as_slice()))
             .step_by(2);
 
         for point in iter {
+            #[expect(
+                clippy::arithmetic_side_effects,
+                reason = "Per above invariant is point[0] & point[1] < len, as such x < len  => x \
+                          + 1 <= len and since len and points are of the same data type we know \
+                          that length is representable wrt. to that datatype and as such x + 1 is \
+                          also representable without wrapping wrt. to the same datatype"
+            )]
             first_genome
                 .crossover_segment(&mut second_genome, (point[0] + 1)..(point[1] + 1))
                 .map_err(CrossoverGeneError::Crossover)?;
@@ -118,11 +205,20 @@ pub struct NPointXoStartEnd<const N: usize>(());
 
 impl<const N: usize> NPointXoStartEnd<N> {
     #[must_use]
-    pub const fn new() -> Option<Self> {
-        if N == 0 {
-            return None;
+    pub const fn new() -> Self {
+        const {
+            assert!(
+                N >= 1,
+                "Need at least one crossover point but got less than 1 points."
+            );
         }
-        Some(Self(()))
+        Self(())
+    }
+}
+
+impl<const N: usize> Default for NPointXoStartEnd<N> {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -142,11 +238,32 @@ where
         if len != second_genome.size() {
             return Err(DifferentGenomeLength(len, second_genome.size()).into());
         }
+        // This should be checked in the constructor but since it is const and as such
+        // no runtime cost just check again here just to make sure
+        const {
+            assert!(
+                N >= 1,
+                "Need at least one crossover point but got less than 1 points."
+            );
+        }
+        // Since N >= 1 (as checked in the constructor, invariant!) we know that len >=
+        // N + 1 <=> len  >= 2;
+        if len < const { N + 1 } {
+            return Err(GenomeLengthTooShort {
+                min_size: const { N + 1 },
+                genome_length: len,
+            }
+            .into());
+        }
 
-        // TODO: Move the `len-1` into the function?
         let crossover_points =
             sample_distinct_uniform_sorted_inplace_start_end::<_, N>(1, len, rng);
 
+        #[expect(
+            clippy::unwrap_used,
+            reason = "Per above invariant N >= 1 and as such the array of size N always has at \
+                      least one (the last) element."
+        )]
         let last_crossover_pair = [*crossover_points.last().unwrap(), len];
         let iter = crossover_points
             .windows(2)
@@ -182,7 +299,7 @@ where
 mod tests {
     use ec_core::{operator::recombinator::Recombinator, population::Population};
 
-    use crate::recombinator::n_point_xo::{NPointXo, NPointXoStartEnd, NPointXoZero};
+    use crate::recombinator::n_point_xo::{NPointXo, NPointXoStartEnd};
 
     #[test]
     pub fn recombine_one_point() {
@@ -191,7 +308,7 @@ mod tests {
         let first_parent = vec![0; GENOME_SIZE];
         let second_parent = vec![1; GENOME_SIZE];
 
-        let crossover_operator = NPointXo::<1>::new().unwrap();
+        let crossover_operator = NPointXo::<0>::new();
 
         let mut rng = rand::rng();
 
@@ -217,7 +334,7 @@ mod tests {
         let first_parent = vec![0; GENOME_SIZE];
         let second_parent = vec![1; GENOME_SIZE];
 
-        let crossover_operator = NPointXo::<2>::new().unwrap();
+        let crossover_operator = NPointXo::<2>::new();
 
         let mut rng = rand::rng();
 
@@ -244,7 +361,7 @@ mod tests {
         let first_parent = vec![0; GENOME_SIZE];
         let second_parent = vec![1; GENOME_SIZE];
 
-        let crossover_operator = NPointXoStartEnd::<4>::new().unwrap();
+        let crossover_operator = NPointXoStartEnd::<4>::new();
 
         let mut rng = rand::rng();
 

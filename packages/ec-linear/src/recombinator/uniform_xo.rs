@@ -1,11 +1,8 @@
 use ec_core::operator::recombinator::Recombinator;
 use rand::Rng;
 
-use super::{
-    crossover::Crossover,
-    errors::{CrossoverGeneError, DifferentGenomeLength},
-};
-use crate::genome::Linear;
+use super::{crossover::Crossover, errors::CrossoverGeneError};
+use crate::{genome::Linear, recombinator::errors::DifferentGenomeLength};
 
 pub struct UniformXo;
 

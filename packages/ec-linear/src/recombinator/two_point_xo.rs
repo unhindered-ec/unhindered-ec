@@ -1,11 +1,11 @@
 use ec_core::operator::recombinator::Recombinator;
-use rand::{Rng, seq::IteratorRandom};
+use rand::Rng;
 
 use super::{
     crossover::Crossover,
     errors::{CrossoverGeneError, DifferentGenomeLength},
 };
-use crate::genome::Linear;
+use crate::{genome::Linear, recombinator::errors::GenomeLengthTooShort};
 
 pub struct TwoPointXo;
 
@@ -28,7 +28,6 @@ where
     type Output = G;
     type Error = CrossoverGeneError<G::SegmentCrossoverError>;
 
-    #[expect(clippy::arithmetic_side_effects, reason = "frogs")]
     fn recombine<R: Rng + ?Sized>(
         &self,
         [mut first_genome, mut second_genome]: [G; 2],
@@ -38,22 +37,31 @@ where
         if len != second_genome.size() {
             return Err(DifferentGenomeLength(len, second_genome.size()).into());
         }
+        if len < 3 {
+            return Err(GenomeLengthTooShort {
+                min_size: 3,
+                genome_length: len,
+            }
+            .into());
+        }
 
+        // One unrolled step of floyds sampling algorithm (see NPointXo for more
+        // information on that) to generate 2 distinct random, sorted numbers.
+        #[expect(
+            clippy::arithmetic_side_effects,
+            reason = "We check that len >= 3 above, as such len - 1 >= 2 => won't wrap."
+        )]
         let mut first = rng.random_range(1..len - 1);
         let mut second = rng.random_range(1..len);
+        #[expect(
+            clippy::arithmetic_side_effects,
+            reason = "We check that len >= 3 above, as such len - 1 >= 2 => won't wrap."
+        )]
         if first == second {
             second = len - 1;
         } else if second < first {
             (first, second) = (second, first);
         }
-
-        // let mut crossover_points = [0; 2];
-        // (1..len).choose_multiple_fill(rng, &mut crossover_points);
-        // // crossover_points.sort_unstable();
-        // let [mut first, mut second] = crossover_points;
-        // if second < first {
-        //     (first, second) = (second, first);
-        // }
 
         first_genome
             .crossover_segment(&mut second_genome, first..second)
