@@ -27,7 +27,7 @@ mod n_point_xo {
                 let first_parent = vec![0; GENOME_SIZE];
                 let second_parent = vec![1; GENOME_SIZE];
 
-                let crossover_operator = NPointXo::<N>::new().unwrap();
+                let crossover_operator = NPointXo::<0>::new();
 
                 let rng = rand::rng();
 
@@ -47,7 +47,7 @@ mod n_point_xo {
                 let first_parent = vec![0; GENOME_SIZE];
                 let second_parent = vec![1; GENOME_SIZE];
 
-                let crossover_operator = NPointXoZero::<N>::new().unwrap();
+                let crossover_operator = NPointXoZero::<N>::new();
 
                 let rng = rand::rng();
 
@@ -67,7 +67,7 @@ mod n_point_xo {
                 let first_parent = vec![0; GENOME_SIZE];
                 let second_parent = vec![1; GENOME_SIZE];
 
-                let crossover_operator = NPointXoStartEnd::<N>::new().unwrap();
+                let crossover_operator = NPointXoStartEnd::<N>::new();
 
                 let rng = rand::rng();
 
