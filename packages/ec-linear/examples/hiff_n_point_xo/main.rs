@@ -1,4 +1,3 @@
-#![expect(clippy::use_debug, reason = "Debug printing is useful for examples.")]
 #![expect(
     clippy::arithmetic_side_effects,
     reason = "The tradeoff safety <> ease of writing arguably lies on the ease of writing side \
@@ -28,7 +27,7 @@ use ec_linear::{
     genome::bitstring::Bitstring, mutator::with_one_over_length::WithOneOverLength,
     recombinator::n_point_xo::NPointXo,
 };
-use miette::{ensure, miette};
+use miette::ensure;
 use rand::{
     distr::{Distribution, StandardUniform},
     rng,
@@ -98,12 +97,7 @@ fn main() -> miette::Result<()> {
     let make_new_individual = Select::new(selector)
         .apply_twice()
         .then_map(GenomeExtractor)
-        .then(Recombine::new(NPointXo::<8>::new().ok_or_else(|| {
-            miette!(
-                help = "Make sure you have at least one crossover point",
-                "Failed to construct recombinator"
-            )
-        })?))
+        .then(Recombine::new(NPointXo::<0>::new()))
         .then(Mutate::new(WithOneOverLength))
         .wrap::<GenomeScorer<_, _>>(scorer);
 
