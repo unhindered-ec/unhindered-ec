@@ -10,10 +10,26 @@ use miette::{Diagnostic, LabeledSpan, Severity, SourceCode};
 #[diagnostic(help = "Ensure your genomes are of uniform length")]
 pub struct DifferentGenomeLength(pub usize, pub usize);
 
+#[derive(Debug, thiserror::Error, Diagnostic)]
+#[error(
+    "Attempted to perform TwoPointXo with more crossover points than possible for the current \
+     genome length {genome_length}. Need a minimum of {min_size} > {genome_length}"
+)]
+#[diagnostic(help = "Ensure your genomes are long enough or use less crossover points.")]
+pub struct GenomeLengthTooShort {
+    pub genome_length: usize,
+    pub min_size: usize,
+}
+
+// TODO: Split this in 2 so that we don't have the unneeded 2nd variant for for
+// example UniformXo.
 #[derive(Debug)]
 pub enum CrossoverGeneError<E> {
     /// Attempted to crossover genomes with differing lengths
     DifferentGenomeLength(DifferentGenomeLength),
+    /// Attempted to crossover too short of a genome for the crossover point
+    /// count.
+    GenomeLengthTooShort(GenomeLengthTooShort),
     /// Some other error specific to a crossover operation
     Crossover(E),
 }
@@ -31,6 +47,7 @@ where
     fn source(&self) -> ::core::option::Option<&(dyn Error + 'static)> {
         match self {
             Self::DifferentGenomeLength(transparent) => Error::source(transparent),
+            Self::GenomeLengthTooShort(transparent) => Error::source(transparent),
             Self::Crossover(source) => Some(source),
         }
     }
@@ -39,6 +56,7 @@ impl<E> Display for CrossoverGeneError<E> {
     fn fmt(&self, formatter: &mut ::core::fmt::Formatter) -> ::core::fmt::Result {
         match self {
             Self::DifferentGenomeLength(g) => Display::fmt(&g, formatter),
+            Self::GenomeLengthTooShort(g) => Display::fmt(&g, formatter),
             Self::Crossover(_) => formatter.write_str("Failed to crossover segment"),
         }
     }
@@ -48,6 +66,11 @@ impl<E> From<DifferentGenomeLength> for CrossoverGeneError<E> {
         Self::DifferentGenomeLength(source)
     }
 }
+impl<E> From<GenomeLengthTooShort> for CrossoverGeneError<E> {
+    fn from(source: GenomeLengthTooShort) -> Self {
+        Self::GenomeLengthTooShort(source)
+    }
+}
 impl<E> Diagnostic for CrossoverGeneError<E>
 where
     E: Error + Diagnostic + 'static,
@@ -55,48 +78,56 @@ where
     fn code(&self) -> Option<Box<dyn Display + '_>> {
         match self {
             Self::DifferentGenomeLength(unnamed, ..) => unnamed.code(),
+            Self::GenomeLengthTooShort(unnamed) => unnamed.code(),
             Self::Crossover(unnamed, ..) => unnamed.code(),
         }
     }
     fn help(&self) -> Option<Box<dyn Display + '_>> {
         match self {
             Self::DifferentGenomeLength(unnamed, ..) => unnamed.help(),
+            Self::GenomeLengthTooShort(unnamed) => unnamed.help(),
             Self::Crossover(unnamed, ..) => unnamed.help(),
         }
     }
     fn severity(&self) -> Option<Severity> {
         match self {
             Self::DifferentGenomeLength(unnamed, ..) => unnamed.severity(),
+            Self::GenomeLengthTooShort(unnamed) => unnamed.severity(),
             Self::Crossover(unnamed, ..) => unnamed.severity(),
         }
     }
     fn labels(&self) -> Option<Box<dyn Iterator<Item = LabeledSpan> + '_>> {
         match self {
             Self::DifferentGenomeLength(unnamed, ..) => unnamed.labels(),
+            Self::GenomeLengthTooShort(unnamed) => unnamed.labels(),
             Self::Crossover(unnamed, ..) => unnamed.labels(),
         }
     }
     fn source_code(&self) -> Option<&dyn SourceCode> {
         match self {
             Self::DifferentGenomeLength(unnamed, ..) => unnamed.source_code(),
+            Self::GenomeLengthTooShort(unnamed) => unnamed.source_code(),
             Self::Crossover(unnamed, ..) => unnamed.source_code(),
         }
     }
     fn related(&self) -> Option<Box<dyn Iterator<Item = &dyn Diagnostic> + '_>> {
         match self {
             Self::DifferentGenomeLength(unnamed, ..) => unnamed.related(),
+            Self::GenomeLengthTooShort(unnamed) => unnamed.related(),
             Self::Crossover(unnamed, ..) => unnamed.related(),
         }
     }
     fn url(&self) -> Option<Box<dyn Display + '_>> {
         match self {
             Self::DifferentGenomeLength(unnamed, ..) => unnamed.url(),
+            Self::GenomeLengthTooShort(unnamed) => unnamed.url(),
             Self::Crossover(unnamed, ..) => unnamed.url(),
         }
     }
     fn diagnostic_source(&self) -> Option<&dyn Diagnostic> {
         match self {
             Self::DifferentGenomeLength(unnamed, ..) => unnamed.diagnostic_source(),
+            Self::GenomeLengthTooShort(unnamed) => unnamed.diagnostic_source(),
             Self::Crossover(unnamed, ..) => unnamed.diagnostic_source(),
         }
     }

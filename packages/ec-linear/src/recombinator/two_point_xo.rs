@@ -5,6 +5,7 @@ use super::{
     crossover::Crossover,
     errors::{CrossoverGeneError, DifferentGenomeLength},
 };
+use crate::{genome::Linear, recombinator::errors::GenomeLengthTooShort};
 
 pub struct TwoPointXo;
 
@@ -22,7 +23,7 @@ pub struct TwoPointXo;
 //   operator than this one, though.
 impl<G> Recombinator<[G; 2]> for TwoPointXo
 where
-    G: Crossover,
+    G: Crossover + Linear,
 {
     type Output = G;
     type Error = CrossoverGeneError<G::SegmentCrossoverError>;
@@ -36,12 +37,32 @@ where
         if len != second_genome.size() {
             return Err(DifferentGenomeLength(len, second_genome.size()).into());
         }
+        if len < 3 {
+            return Err(GenomeLengthTooShort {
+                min_size: 3,
+                genome_length: len,
+            }
+            .into());
+        }
 
-        let mut first = rng.random_range(0..len);
-        let mut second = rng.random_range(0..len);
-        if second < first {
+        // One unrolled step of floyds sampling algorithm (see NPointXo for more
+        // information on that) to generate 2 distinct random, sorted numbers.
+        #[expect(
+            clippy::arithmetic_side_effects,
+            reason = "We check that len >= 3 above, as such len - 1 >= 2 => won't wrap."
+        )]
+        let mut first = rng.random_range(1..len - 1);
+        let mut second = rng.random_range(1..len);
+        #[expect(
+            clippy::arithmetic_side_effects,
+            reason = "We check that len >= 3 above, as such len - 1 >= 2 => won't wrap."
+        )]
+        if first == second {
+            second = len - 1;
+        } else if second < first {
             (first, second) = (second, first);
         }
+
         first_genome
             .crossover_segment(&mut second_genome, first..second)
             .map_err(CrossoverGeneError::Crossover)?;
@@ -52,7 +73,7 @@ where
 
 impl<G> Recombinator<(G, G)> for TwoPointXo
 where
-    G: Crossover,
+    G: Crossover + Linear,
 {
     type Output = G;
     type Error = <Self as Recombinator<[G; 2]>>::Error;
