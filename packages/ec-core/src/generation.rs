@@ -44,7 +44,7 @@ where
 
         // this is the code that should work, but currently doesn't because of NLL
         // limitations (should compile in future versions of rust just fine)
-        // let population = rayon::iter::repeatn(&self.population,
+        // let population = rayon::iter::repeat_n(&self.population,
         // self.population.size())     .map_init(rand::rng, |rng, p|
         // self.child_maker.apply(p, rng))     .collect::<Result<_, _>>()?;
 
@@ -53,7 +53,7 @@ where
         let new_population = polonius!(
             |alias| -> Result<(), <C as Operator<&'polonius P>>::Error> {
                 polonius_try!(
-                    rayon::iter::repeatn(&alias.population, alias.population.size())
+                    rayon::iter::repeat_n(&alias.population, alias.population.size())
                         .map_init(rand::rng, |rng, p| alias.child_maker.apply(p, rng))
                         .collect::<Result<_, _>>()
                 )
