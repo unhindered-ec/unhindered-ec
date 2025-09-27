@@ -3,12 +3,47 @@ use rayon::prelude::{FromParallelIterator, ParallelIterator};
 
 use crate::{operator::Operator, population::Population};
 
-pub struct Generation<P, C> {
-    population: P,
+/// Collection of data about each iteration in the evolution process.
+///
+/// Notably, this includes the Population of the current Generation, as well as
+/// a child maker `Generator` which describes how to generate tne next
+/// generation from this.
+///
+/// Take a look at [`Generation::par_next`] and [`Generation::serial_next`] for
+/// further information on how this is used to generate new generations.
+///
+/// # Example[^ec-linear-usage]
+/// ```
+/// let make_new_individual = Select::new(selector)
+///     .apply_twice()
+///     .then_map(GenomeExtractor)
+///     .then(Recombine::new(TwoPointXo))
+///     .then(Mutate::new(WithOneOverLength))
+///     .wrap::<GenomeScorer<_, _>>(scorer);
+///
+/// let generation =
+/// ```
+///
+/// [^ec-linear-usage]: Note that this example uses [`ec-linear`](#) which is not a
+///     dependency of this package to demonstrate some concepts which need
+///     concrete implementations. If you want to replicate this example, make
+///     sure [`ec-linear`](#) is installed.
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Default)]
+pub struct Generation<C, P> {
     child_maker: C,
+    population: P,
 }
 
-impl<P, C> Generation<P, C> {
+impl<C, P> From<(C, P)> for Generation<C, P> {
+    fn from((child_maker, population): (C, P)) -> Self {
+        Self {
+            child_maker,
+            population,
+        }
+    }
+}
+
+impl<P, C> Generation<C, P> {
     pub const fn population(&self) -> &P {
         &self.population
     }
@@ -18,16 +53,16 @@ impl<P, C> Generation<P, C> {
     }
 }
 
-impl<P, C> Generation<P, C> {
+impl<P, C> Generation<C, P> {
     pub const fn new(child_maker: C, population: P) -> Self {
         Self {
-            population,
             child_maker,
+            population,
         }
     }
 }
 
-impl<P, C> Generation<P, C>
+impl<P, C> Generation<C, P>
 where
     P: Population + FromParallelIterator<P::Individual> + Send + Sync,
     P::Individual: Send,
@@ -70,7 +105,7 @@ where
     }
 }
 
-impl<P, C> Generation<P, C>
+impl<P, C> Generation<C, P>
 where
     P: Population + FromIterator<P::Individual>,
     C: for<'a> Operator<&'a P, Output = P::Individual>,
