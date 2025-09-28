@@ -4,7 +4,7 @@ use crate::{genome::Linear, recombinator::errors::MultipleGeneAccess};
 
 // TODO: Does `Crossover` need to be visible outside
 //   this module? If not, should `pub` be replaced/removed?
-pub trait Crossover: Linear {
+pub trait Crossover {
     /// Error that can happen when calling [`Crossover::crossover_gene`].
     type GeneCrossoverError;
 

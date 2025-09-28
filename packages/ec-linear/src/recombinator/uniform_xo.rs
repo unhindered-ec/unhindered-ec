@@ -1,16 +1,14 @@
 use ec_core::operator::recombinator::Recombinator;
 use rand::Rng;
 
-use super::{
-    crossover::Crossover,
-    errors::{CrossoverGeneError, DifferentGenomeLength},
-};
+use super::{crossover::Crossover, errors::CrossoverGeneError};
+use crate::{genome::Linear, recombinator::errors::DifferentGenomeLength};
 
 pub struct UniformXo;
 
 impl<G> Recombinator<[G; 2]> for UniformXo
 where
-    G: Crossover,
+    G: Crossover + Linear,
 {
     type Output = G;
     type Error = CrossoverGeneError<G::GeneCrossoverError>;
@@ -38,7 +36,7 @@ where
 
 impl<G> Recombinator<(G, G)> for UniformXo
 where
-    G: Crossover,
+    G: Crossover + Linear,
 {
     type Output = G;
     type Error = <Self as Recombinator<[G; 2]>>::Error;

@@ -23,10 +23,17 @@ ec-core = { workspace = true }
 thiserror = { workspace = true }
 miette = { workspace = true }
 
+itertools.workspace = true
+
 [dev-dependencies]
 miette = { workspace = true, features = ["fancy"] }
 clap = { workspace = true, features = ["derive"] }
 test-case = { workspace = true }
+divan = "0.1.21"
+
+[[bench]]
+name = "n_point_xo"
+harness = false
 
 [lints]
 workspace = true
