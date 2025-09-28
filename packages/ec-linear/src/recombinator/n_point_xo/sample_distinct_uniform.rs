@@ -1,3 +1,5 @@
+use std::ops::Not;
+
 use rand::Rng;
 
 /// Sample `N` distinct values from range `1..=length` returning sorted result
@@ -33,16 +35,20 @@ pub fn sample_distinct_uniform_sorted_inplace<R: Rng + ?Sized, const N: usize>(
                   the same data type so we know i + 1 won't overflow.
 
             pos + 1:
-                since we iterate over (length - N)..length which is of size N we know that the loop
-                will have exactly N iterations (to fill the entire array)
+                Since we iterate over (length - N)..length which is of size N we know that the loop
+                will have exactly N iterations (to fill the entire array).
 
-                As such, in the last iteration (where the array is biggest and as such pos which \
-                  is a index of the array can be largest) we are still searching in a sub-slice \
-                  of the array, namely..filled of length less than N. (since filled <= N (loop \
-                  counter & loop count reasoning from above) and upper bound is exclusive). So we \
-                  know that pos < filled and as such pos + 1 <= filled which is of the same data \
-                  type as filled and as such is also representable without wrapping (overflow) \
-                  (see reasoning for i+1).
+                Throughout the `for` loop we know:
+                  - `filled < N`
+                  - `pos<=filled` because it is in the range `0..=filled`,
+
+                Then the `copy_within` call is passed `pos..filled` as the source range and
+                  `pos + 1` as the start of the destination range; thus the destination range
+                  is `(pos + 1)..(filled + 1)`. All four range ends are at most `N` because
+                  (as shown above) `pos <= filled < N`.
+
+                We also know that `pos <= filled < N`, so `pos + 1 <= N`, so it can't overflow
+                since both `N` and `pos` are of type `usize`.
         "
     )]
     for (filled, i) in ((length - N)..length).enumerate() {
@@ -160,7 +166,7 @@ pub fn sample_distinct_uniform_sorted_inplace_start_end<R: Rng + ?Sized, const N
     let length = end - start;
 
     assert!(
-        length >= N,
+        length >= N, // i.e., length - N >= 0
         "Can't sample {N} > {length} distinct values from a set of {start}..{end} values."
     );
 
@@ -175,27 +181,36 @@ pub fn sample_distinct_uniform_sorted_inplace_start_end<R: Rng + ?Sized, const N
                   and won't underflow.
 
             i + start:
-                we know that i is in the range (length - N)..length and as such i < length (the \
-                  upper bound is exclusive), and as such i < end - start.
-                Therefore, we know that i + start < (end - start) + start = end which is \
-                  representable without wrapping (we got end as a function parameter and haven't \
-                  done maths to it) and i + start is of the same data type as end so that is also \
-                  representable without wrapping
+                Since `i` is in the range `((length - N)..length)`, we know `i < length`.
+                  Then we can bound `i+start` by:
+                    i + start < length + start
+                              = (end - start) + start
+                              = end
+                  so `i + start < end`. Thus `i + start` can't overflow because `end` is a legal \
+                  value of type `usize`.
 
             pos + 1:
-                since we iterate over (length - N)..length which is of size N we know that the loop
-                will have exactly N iterations (to fill the entire array)
+                Since we iterate over (length - N)..length which is of size N we know that the loop
+                will have exactly N iterations (to fill the entire array).
 
-                As such, in the last iteration (where the array is biggest and as such pos which \
-                  is a index of the array can be largest) we are still searching in a sub-slice \
-                  of the array, namely..filled of length less than N. (since filled <= N (loop \
-                  counter & loop count reasoning from above) and upper bound is exclusive). So we \
-                  know that pos < filled and as such pos + 1 <= filled which is of the same data \
-                  type as filled and as such is also representable without wrapping (overflow) \
-                  (see reasoning for i+start).
+                Throughout the `for` loop we know:
+                  - `filled < N`
+                  - `pos<=filled` because it is in the range `0..=filled`,
+
+                Then the `copy_within` call is passed `pos..filled` as the source range and
+                  `pos + 1` as the start of the destination range; thus the destination range
+                  is `(pos + 1)..(filled + 1)`. All four range ends are at most `N` because
+                  (as shown above) `pos <= filled < N`.
+
+                We also know that `pos <= filled < N`, so `pos + 1 <= N`, so it can't overflow
+                since both `N` and `pos` are of type `usize`.
         "
     )]
     for (filled, i) in ((length - N)..length).enumerate() {
+        debug_assert!(i + start < end);
+        debug_assert!((start..=(i + start)).is_empty().not());
+        // Since `i: usize` and thus `i >= 0`, `start..=(i+start)` always has at least
+        // one element, namely `start`.
         let t = rng.random_range(start..=(i + start));
 
         // See if the selected value `t` is already in `result`, i.e., we've already
@@ -210,6 +225,8 @@ pub fn sample_distinct_uniform_sorted_inplace_start_end<R: Rng + ?Sized, const N
             // We haven't selected this before, so we have to insert it into the correct location,
             // shifting all the larger values one position to the right.
             Err(pos) => {
+                debug_assert!(pos <= filled);
+                debug_assert!(pos < N); // i.e., pos + 1 <= N
                 result.copy_within(pos..filled, pos + 1);
                 result[pos] = t;
             }
