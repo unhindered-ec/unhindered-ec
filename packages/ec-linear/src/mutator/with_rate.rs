@@ -5,9 +5,48 @@ use rand::Rng;
 
 use crate::genome::Linear;
 
+/// Linear, boolish mutator which inverts each gene in a genome with the given
+/// rate (probability).
+///
+/// # Example
+/// ```
+/// # use ec_linear::{
+/// #     mutator::with_rate::WithRate,
+/// #     genome::bitstring::Bitstring
+/// # };
+/// # use ec_core::operator::mutator::Mutator;
+/// #
+/// let mut rng = rand::rng();
+///
+/// let genome = Bitstring::random(100, &mut rng);
+///
+/// // Flip bits with probability `1.0`, i.e. flip every bit
+/// let mutator = WithRate::new(1.0);
+/// let Ok(mutated_genome) = mutator.mutate(genome.clone(), &mut rng);
+///
+/// assert_ne!(genome, mutated_genome);
+/// ```
 #[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Default)]
 pub struct WithRate {
     mutation_rate: f32,
+}
+
+impl WithRate {
+    /// Create a new [`WithRate`] mutator from the given mutation rate
+    /// (probability)
+    ///
+    /// # Example
+    /// ```
+    /// # use ec_linear::mutator::with_rate::WithRate;
+    /// // Flip each bit with a probability of `0.5`, i.e.
+    /// // flip on average half the bits
+    /// let mutator = WithRate::new(0.5);
+    /// # let _ = mutator;
+    /// ```
+    #[must_use]
+    pub const fn new(mutation_rate: f32) -> Self {
+        Self { mutation_rate }
+    }
 }
 
 // TODO: We should change this so that it mutates `genome` "in place".
@@ -28,13 +67,6 @@ where
                 if r < self.mutation_rate { !bit } else { bit }
             })
             .collect())
-    }
-}
-
-impl WithRate {
-    #[must_use]
-    pub const fn new(mutation_rate: f32) -> Self {
-        Self { mutation_rate }
     }
 }
 
