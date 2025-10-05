@@ -3,7 +3,7 @@ use rand::Rng;
 
 use super::{
     crossover::Crossover,
-    errors::{CrossoverGeneError, DifferentGenomeLength},
+    errors::{DifferentGenomeLength, NPointCrossoverError},
 };
 use crate::{genome::Linear, recombinator::errors::GenomeLengthTooShort};
 
@@ -26,7 +26,7 @@ where
     G: Crossover + Linear,
 {
     type Output = G;
-    type Error = CrossoverGeneError<G::SegmentCrossoverError>;
+    type Error = NPointCrossoverError<G::SegmentCrossoverError>;
 
     fn recombine<R: Rng + ?Sized>(
         &self,
@@ -65,7 +65,7 @@ where
 
         first_genome
             .crossover_segment(&mut second_genome, first..second)
-            .map_err(CrossoverGeneError::Crossover)?;
+            .map_err(NPointCrossoverError::Crossover)?;
 
         Ok(first_genome)
     }
