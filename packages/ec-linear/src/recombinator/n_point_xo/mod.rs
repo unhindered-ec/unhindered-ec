@@ -7,7 +7,7 @@ use rand::Rng;
 
 use super::{
     crossover::Crossover,
-    errors::{CrossoverGeneError, DifferentGenomeLength},
+    errors::{DifferentGenomeLength, NPointCrossoverError},
 };
 use crate::{
     genome::Linear,
@@ -43,14 +43,13 @@ where
     G: Crossover + Linear,
 {
     type Output = G;
-    type Error = CrossoverGeneError<G::SegmentCrossoverError>;
+    type Error = NPointCrossoverError<G::SegmentCrossoverError>;
 
     fn recombine<R: Rng + ?Sized>(
         &self,
         [mut first_genome, mut second_genome]: [G; 2],
         rng: &mut R,
     ) -> Result<Self::Output, Self::Error> {
-        assert!(N > 0, "You need to select at least one crossover point.");
         let len = first_genome.size();
         if len != second_genome.size() {
             return Err(DifferentGenomeLength(len, second_genome.size()).into());
@@ -89,7 +88,7 @@ where
         for point in iter {
             first_genome
                 .crossover_segment(&mut second_genome, point[0]..point[1])
-                .map_err(CrossoverGeneError::Crossover)?;
+                .map_err(NPointCrossoverError::Crossover)?;
         }
         Ok(first_genome)
     }

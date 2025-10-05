@@ -1,7 +1,7 @@
 use ec_core::operator::recombinator::Recombinator;
 use rand::Rng;
 
-use super::{crossover::Crossover, errors::CrossoverGeneError};
+use super::{crossover::Crossover, errors::UniformCrossoverError};
 use crate::{genome::Linear, recombinator::errors::DifferentGenomeLength};
 
 pub struct UniformXo;
@@ -11,7 +11,7 @@ where
     G: Crossover + Linear,
 {
     type Output = G;
-    type Error = CrossoverGeneError<G::GeneCrossoverError>;
+    type Error = UniformCrossoverError<G::GeneCrossoverError>;
 
     fn recombine<R: Rng + ?Sized>(
         &self,
@@ -26,7 +26,7 @@ where
             if rng.random::<bool>() {
                 first_genome
                     .crossover_gene(&mut second_genome, i)
-                    .map_err(CrossoverGeneError::Crossover)?;
+                    .map_err(UniformCrossoverError::Crossover)?;
             }
         }
 
