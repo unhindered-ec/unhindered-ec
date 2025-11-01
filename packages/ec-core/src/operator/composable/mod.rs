@@ -60,10 +60,6 @@ pub trait Composable {
     {
         T::construct(self, context)
     }
-
-    // fn and_select<S>(self, selector: S) -> Then<Self, Select<S>> {
-    //     Then::new(self, Select::new(selector))
-    // }
 }
 
 static_assertions::assert_obj_safe!(Composable);
