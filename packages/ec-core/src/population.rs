@@ -1,10 +1,55 @@
+/// A collection of `Individual`s
+///
+/// This trait is auto-implemented for all collections with both the `&T:
+/// IntoIterator<Item = &Individual>` trait and the `T: IntoIterator<Item =
+/// Individual>` trait implemented.
+///
+/// # Example
+/// ```
+/// # use ec_core::{individual::ec::EcIndividual, population::Population};
+/// #
+/// // Vec<T> implements the Population trait
+/// let my_population = vec![
+///     EcIndividual::new(0b11001110, 5),
+///     EcIndividual::new(0b11001111, 6),
+///     EcIndividual::new(0b10000011, 3),
+/// ];
+///
+/// fn check_not_empty(population: &impl Population) -> bool {
+///     population.is_empty()
+/// }
+///
+/// assert_eq!(check_not_empty(&my_population), my_population.is_empty())
+/// ```
 pub trait Population {
+    /// The type of the individual of this population
     type Individual;
 
+    /// Returns `true` if this Population doesn't contain any individuals
+    ///
+    /// # Example
+    /// ```
+    /// # use ec_core::population::Population;
+    /// #
+    /// // Vec<T> implements the Population trait
+    /// let my_population = vec![1, 2, 3];
+    ///
+    /// assert!(!Population::is_empty(&my_population))
+    /// ```
     fn is_empty(&self) -> bool {
         self.size() == 0
     }
 
+    /// Returns the number of individuals in this [`Population`]
+    /// # Example
+    /// ```
+    /// # use ec_core::population::Population;
+    /// #
+    /// // Vec<T> implements the Population trait
+    /// let my_population = vec![1, 2, 3];
+    ///
+    /// assert_eq!(Population::size(&my_population), 3)
+    /// ```
     fn size(&self) -> usize;
 }
 
@@ -64,7 +109,7 @@ mod tests {
         let range = -10..25;
         let vec_pop: Vec<_> = range.to_collection(population_size).sample(&mut rng);
 
-        assert_eq!(population_size, vec_pop.size());
+        assert_eq!(population_size, Population::size(&vec_pop));
         for i in vec_pop {
             assert!(range.contains(&i.val));
         }
