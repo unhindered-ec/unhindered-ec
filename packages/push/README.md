@@ -8,7 +8,7 @@ interpreter and the algorithms that allow us to evolve Push
 programs.
 
 There has been a _lot_ of discussion of the design of the Push
-interpreter, and that would absolutely be considered WIP and
+interpreter, and that would absolutely be considered _work in progress_ and
 liable to change without notice.
 
 The current interpreter has support for integer, floating point,
