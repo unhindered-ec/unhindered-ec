@@ -206,9 +206,7 @@ where
 ///
 /// ```
 /// # use std::convert::Infallible;
-/// # use rand::{Rng, thread_rng};
-/// #
-/// # use rand::{rngs::ThreadRng, rng};
+/// # use rand::{Rng, rng};
 /// #
 /// # use ec_core::operator::{Composable, Operator, selector::{error::EmptyPopulation, Select, Selector}};
 /// #

@@ -57,7 +57,7 @@ jobs:
         with:
           components: clippy
           toolchain: nightly
-      - run: chmod +x scripts/cargo-rustdoc-clippy && export PATH="$(pwd)/scripts/:$PATH" && cargo rustdoc-clippy -- -Dwarnings
+      - run: chmod +x scripts/cargo-rustdoc-clippy && export PATH="$(pwd)/scripts/:$PATH" && cargo rustdoc-clippy -- -- -Dwarnings
   rustdoc:
     name: rustdoc
     runs-on: ubuntu-latest

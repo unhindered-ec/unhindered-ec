@@ -43,11 +43,12 @@ then
     shift
   done
 
-  CLIPPYFLAGS="$(IFS="\x1E"; echo "${clippy_args[*]}")" RUSTDOCFLAGS="--no-run --nocapture --test-builder "$0" -Z unstable-options ${rustdoc_args[@]}" exec cargo test --doc "${cargo_args[@]}"
+  CLIPPYFLAGS="$(IFS="\x1E"; echo "${clippy_args[*]}")" RUSTDOCFLAGS="-Z unstable-options --no-run --no-capture --test-builder "$0"  ${rustdoc_args[@]}" exec cargo test --verbose --doc "${cargo_args[@]}"
 else
   if [[ "$CLIPPYFLAGS" != "" ]]
   then
-    exec clippy-driver "${(@s:\x1E:)CLIPPYFLAGS}" "${@}"
+    IFS=$'\x1E' read -r -a clippyflags <<< "$CLIPPYFLAGS"
+    exec clippy-driver "${clippyflags[@]}" "$@"
   else
     exec clippy-driver "${@}"
   fi

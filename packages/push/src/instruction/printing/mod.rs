@@ -62,7 +62,7 @@ use crate::{
 /// ```
 /// # use push::{
 /// #    instruction::{Instruction, printing::Print},
-/// #    push_vm::{HasStack, push_io::HasStdout, push_state::PushState, stack::StackError},
+/// #    push_vm::{HasStack, push_state::PushState},
 /// # };
 /// #
 /// // Build an initial state with one value (`42`) on the integer (`i64`) stack.
@@ -177,7 +177,7 @@ impl<T> NumOpens for Print<T> {
 /// ```
 /// # use push::{
 /// #    instruction::{Instruction, printing::PrintLn},
-/// #    push_vm::{HasStack, push_io::HasStdout, push_state::PushState, stack::StackError},
+/// #    push_vm::{HasStack, push_state::PushState},
 /// # };
 /// #
 /// // Build an initial state with one value (`42`) on the integer (`i64`) stack.
