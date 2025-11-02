@@ -28,6 +28,7 @@
         "recombinators",
         "repr",
         "rngs",
+        "rustup",
         "rustversion",
         "Scorable",
         "scottmcm's",
