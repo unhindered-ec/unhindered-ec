@@ -44,6 +44,26 @@ that provide support for the other packages. These should typically not be used 
 
 ## Aspirations/goals
 
+We would ultimately like to be able to replicate key PushGP research
+using the PSB1 and PSB2 benchmark suites. This requires:
+
+- A more complete set of Push types and instructions
+  - In particular, we would need to add or complete the `char`, `String`,
+    and `Vector` types
+- A larger collection of operators (e.g., selection, mutation, and recombination)
+  - In particular, we don't yet provide epsilon-lexicase,
+    down-sampled lexicase, and related selection operators.
+- Better support for downloading remote training data and
+    loading training data from files
+
+It would be valuable to support other genetic programming representations such as [grammatical evolution](https://en.wikipedia.org/wiki/Grammatical_evolution) [^ge_archive], [linear GP](https://en.wikipedia.org/wiki/Linear_genetic_programming) [^linear_gp_archive],
+and [tree-based GP](https://archive.org/details/AFieldGuideToGeneticProgramming).
+
+[^ge_archive]: Archived on [Internet Archive at 2025-10-09](https://web.archive.org/web/20251009050335/https://en.wikipedia.org/wiki/Grammatical_evolution).
+[^linear_gp_archive]: Archived on [Internet Archive at 2025-08-27](https://web.archive.org/web/20250827032953/https://en.wikipedia.org/wiki/Linear_genetic_programming).
+
+If you have other ideas or applications feel free to reach out.
+
 ---
 
 ## How to get started
