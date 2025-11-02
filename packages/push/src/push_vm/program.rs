@@ -10,7 +10,7 @@ use crate::{
 #[derive(Debug, strum_macros::Display, Clone, Eq, PartialEq)]
 pub enum PushProgram {
     Instruction(PushInstruction),
-    Block(Vec<PushProgram>),
+    Block(Vec<Self>),
 }
 
 impl Default for PushProgram {
