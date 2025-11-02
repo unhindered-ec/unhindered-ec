@@ -29,7 +29,7 @@ use crate::{
 /// ```
 /// # use push::{
 /// #    instruction::{Instruction, printing::PrintChar},
-/// #    push_vm::{push_io::HasStdout, push_state::PushState},
+/// #    push_vm::push_state::PushState,
 /// # };
 /// #
 /// // Build an initial state with empty stacks stack.
@@ -39,7 +39,7 @@ use crate::{
 ///     .with_instruction_step_limit(10)
 ///     .build();
 /// // Print the character 'x'.
-/// let mut result = PrintChar::<'x'>::default().perform(push_state).unwrap();
+/// let mut result = PrintChar::<'x'>.perform(push_state).unwrap();
 /// // Extract the printed output.
 /// let output = result.stdout_string().unwrap();
 /// // Assert that this is equal to "x".

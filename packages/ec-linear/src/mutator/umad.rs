@@ -85,6 +85,7 @@ use crate::genome::Linear;
 ///
 /// // Mutate the parent genome to create a child genome
 /// let child_genome = umad.mutate(parent, &mut rand::rng()).unwrap();
+/// # let _ = child_genome;
 /// ```
 ///
 /// [^paper-ref]: Thomas Helmuth, Nicholas Freitag McPhee, and Lee Spector. 2018.
@@ -121,7 +122,6 @@ impl<GeneGenerator> Umad<GeneGenerator> {
     /// # Example
     ///
     /// ```
-    /// # use ec_core::operator::mutator::Mutator;
     /// # use ec_linear::mutator::umad::Umad;
     /// #
     /// let addition_rate = 0.25;
@@ -173,7 +173,6 @@ impl<GeneGenerator> Umad<GeneGenerator> {
     /// # Example
     ///
     /// ```
-    /// # use ec_core::operator::mutator::Mutator;
     /// # use ec_linear::mutator::umad::Umad;
     /// #
     /// let addition_rate = 0.25;

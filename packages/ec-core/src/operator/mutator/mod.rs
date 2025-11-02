@@ -60,7 +60,7 @@ pub use erased::*;
 /// }
 ///
 /// let genome = [true, false, false, true];
-/// let child_genome = FlipOne.mutate(genome.clone(), &mut rng()).unwrap();
+/// let child_genome = FlipOne.mutate(genome, &mut rng()).unwrap();
 /// let num_diffs = genome
 ///     .iter()
 ///     .zip(child_genome.iter()) // Pair up corresponding elements from the two genomes
@@ -129,11 +129,11 @@ pub trait Mutator<G> {
 /// }
 ///
 /// let genome = [true, false, false, true];
-/// let mutator_result = FlipFirst.mutate(genome.clone(), &mut rng()).unwrap();
+/// let mutator_result = FlipFirst.mutate(genome, &mut rng()).unwrap();
 ///
 /// // Create a `Mutate` operator from the `FlipFirst` mutator
 /// let mutate = Mutate::new(FlipFirst);
-/// let operator_result = mutate.apply(genome.clone(), &mut rng()).unwrap();
+/// let operator_result = mutate.apply(genome, &mut rng()).unwrap();
 ///
 /// assert_eq!(mutator_result, operator_result);
 /// ```

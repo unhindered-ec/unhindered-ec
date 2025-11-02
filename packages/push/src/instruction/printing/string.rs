@@ -36,7 +36,7 @@ use crate::{
 /// ```
 /// # use push::{
 /// #    instruction::{Instruction, printing::PrintString},
-/// #    push_vm::{push_io::HasStdout, push_state::PushState},
+/// #    push_vm::push_state::PushState,
 /// # };
 /// #
 /// // Build an initial state with empty stacks stack.

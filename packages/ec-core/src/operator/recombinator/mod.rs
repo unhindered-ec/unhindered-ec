@@ -157,8 +157,7 @@ pub trait Recombinator<GS> {
 /// let second_parent = [1, 1, 1, 1];
 ///
 /// let recombinator = SwapFirst;
-/// let recombinator_result =
-///     recombinator.recombine((first_parent.clone(), second_parent.clone()), &mut rng())?;
+/// let recombinator_result = recombinator.recombine((first_parent, second_parent), &mut rng())?;
 ///
 /// // Wrap the recombinator in a `Recombine` to make it an `Operator`.
 /// let recombine = Recombine::new(recombinator);
