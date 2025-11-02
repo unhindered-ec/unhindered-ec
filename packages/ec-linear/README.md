@@ -28,7 +28,7 @@ This crate includes a few recombination operators based on the
 
 `UniformXo` implements uniform crossover, choosing genes uniformly from two parents as illustrated below:
 
-![Illustration of uniform crossover](../../images/UniformCrossover.svg.excalidraw.svg)
+![Illustration of uniform crossover](../../images/UniformCrossover.excalidraw.svg)
 
 ### `TwoPointXo`: Two-point crossover
 
