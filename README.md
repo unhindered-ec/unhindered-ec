@@ -114,6 +114,12 @@ compile and run some of those examples.
 
 ---
 
+## Socials
+
+To contact us [join our Discord server](https://discord.gg/2drhrXQkRr), or open a GitHub issue, pull request, or discussion.
+
+---
+
 ## License
 
 Licensed under either of
