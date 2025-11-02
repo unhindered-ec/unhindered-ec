@@ -15,7 +15,7 @@ then
   cargo_args=()
   while [[ $# -gt 0 && "$1" != "--" ]]
   do
-    cargo_args+="$1"
+    cargo_args+=("$1")
     shift
   done
 
@@ -27,7 +27,7 @@ then
   rustdoc_args=()
   while [[ $# -gt 0 && "$1" != "--" ]]
   do
-    rustdoc_args+="$1"
+    rustdoc_args+=("$1")
     shift
   done
 
@@ -39,7 +39,7 @@ then
   clippy_args=()
   while [[ $# -gt 0 ]]
   do
-    clippy_args+="$1"
+    clippy_args+=("$1")
     shift
   done
 
