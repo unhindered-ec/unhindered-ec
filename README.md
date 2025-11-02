@@ -59,14 +59,58 @@ using the PSB1 and PSB2 benchmark suites. This requires:
 It would be valuable to support other genetic programming representations such as [grammatical evolution](https://en.wikipedia.org/wiki/Grammatical_evolution) [^ge_archive], [linear GP](https://en.wikipedia.org/wiki/Linear_genetic_programming) [^linear_gp_archive],
 and [tree-based GP](https://archive.org/details/AFieldGuideToGeneticProgramming).
 
+It would also be useful if we could create Python wrappers around
+the appropriate parts of these libraries so that researchers familiar
+with Python could benefit from the performance of
+these libraries without having to learn Rust.
+
 [^ge_archive]: Archived on [Internet Archive at 2025-10-09](https://web.archive.org/web/20251009050335/https://en.wikipedia.org/wiki/Grammatical_evolution).
 [^linear_gp_archive]: Archived on [Internet Archive at 2025-08-27](https://web.archive.org/web/20250827032953/https://en.wikipedia.org/wiki/Linear_genetic_programming).
+
+It would be nice to have more detailed "Getting started" documentation
+that walked through the creation of a simple evolutionary experiment,
+explaining all the key steps.
 
 If you have other ideas or applications feel free to reach out.
 
 ---
 
 ## How to get started
+
+To see evolution in action:
+
+- Install Rust
+- Run `cargo run --release --example count_ones`
+
+### Pre-requisites
+
+To use this library you will need to have [the latest stable
+version of Rust installed](https://rust-lang.org/tools/install/).
+We strongly encourage the use of `rustup` to install the latest
+version, since versions provided by your system package manager
+might be out of date.
+
+### Running the system
+
+Probably the first question is whether you're evolving fixed-length
+structures like bitstrings as used in genetic algorithms, or you're
+evolving variable-length structures as used in genetic programming.
+
+If you're evolving fixed-length structures, then you'll probably want
+to use [the `ec-linear` package](packages/ec-linear/README.md), which provides both that
+representation and several basic operators. See [the
+`ec-linear/examples` folder](packages/ec-linear/examples) for several examples showing how to
+set up evolution of fixed-length structures. [The `ec-linear`
+README](packages/ec-linear/README.md#Examples) shows how to
+compile and run some of those examples.
+
+If you're evolving variable-length structures, we currently support
+variable length linear structures in [the `push` package](packages/push/README.md), focusing
+primarily on evolving Push programs. See [the `push/examples`
+folder](packages/push/examples) for several examples showing how to
+set up evolution of Push programs. [The `push`
+README](packages/push/README.md#Examples) shows how to
+compile and run some of those examples.
 
 ---
 
