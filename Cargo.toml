@@ -95,6 +95,10 @@ allow_attributes = "deny"
 # See https://github.com/rust-lang/rust-clippy/issues/15168 for more.
 explicit_deref_methods = "allow"
 
+[workspace.lints.rust]
+# has current false-positives https://github.com/rust-lang/rust/issues/147648
+unused_assignments = "allow"
+
 [workspace.metadata.example_runner]
 default = [
   { template = "balanced" },
