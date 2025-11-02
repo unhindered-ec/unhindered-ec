@@ -71,7 +71,7 @@ pub fn dyn_ref_impls(a: proc_macro2::TokenStream, tokens: syn::ItemImpl) -> many
         .flat_map(|m| prelim_mods.iter().map(|s1m| m.apply(s1m.apply(ty.clone()))))
         .map(|t| {
             let mut out = tokens.clone();
-            out.self_ty = Box::new(t);
+            *out.self_ty = t;
             out
         });
 
