@@ -29,7 +29,7 @@ proptest = "1.8.0"
 criterion = "0.7.0"
 miette = "7.6.0"
 test-case = "3.3.1"
-polonius-the-crab = "0.4.2"
+polonius-the-crab = "0.5.0"
 static_assertions = "1.1.0"
 
 ec-core = { path = "packages/ec-core" }
