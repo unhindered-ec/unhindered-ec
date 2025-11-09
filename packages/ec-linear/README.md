@@ -74,3 +74,40 @@ To see the available parameters for a given example:
 ```bash
 cargo run --release --example <name> -- --help
 ```
+
+## Creating your own project
+
+If you want to create your own Rust project that has `unhindered-ec`
+as a dependency, you need to:
+
+- Create a new Rust project with
+
+  ```bash
+  cargo init <my-project>
+  ```
+
+  (where you replace `<my-project>` with the name of your project).
+- To enter your newly created project directory:
+
+  ```bash
+  cd <my-project>
+  ```
+
+- Add the `ec-core` and `ec-linear` packages from `unhindered-ec`
+  as dependencies with
+
+  ```bash
+  cargo add --git https://github.com/unhindered-ec/unhindered-ec.git ec-core ec-linear
+  ```
+
+- Add the `rand` crate as a dependency with
+
+  ```bash
+  cargo add rand
+  ```
+
+  The `rand` crate provides random number generation and selection
+  tools, which are necessary to do things like generate random initial
+  populations.
+
+-
