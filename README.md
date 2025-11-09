@@ -90,6 +90,15 @@ We strongly encourage the use of `rustup` to install the latest
 version, since versions provided by your system package manager
 might be out of date.
 
+There are three other tools that you might need to install depending
+on your system:
+
+- To install `rustup` you will need the `curl` utility
+- To download and interact with the `unhindered-ec` code,
+  you'll probably want to use `git`
+- To build the system, the Rust compiler requires `cc`, so you will
+  a C toolchain like `gcc` or `clang`.
+
 ### Running the system
 
 Probably the first question is whether you're evolving fixed-length
