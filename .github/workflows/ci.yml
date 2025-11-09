@@ -9,8 +9,8 @@ env:
   RUSTFLAGS: -Dwarnings
 
 jobs:
-  build_and_test:
-    name: unhindered-ec - latest
+  build:
+    name: cargo build
     runs-on: ubuntu-latest
     strategy:
       # This ensures that all three toolchains will run even if one of
@@ -30,22 +30,147 @@ jobs:
         # date: 2024-12-16
       - uses: dtolnay/rust-toolchain@a54c7afa936fefeb4456b2dd8068152669aa8203
         with:
-          components: clippy, rustfmt
           toolchain: ${{ matrix.toolchain }}
-      - run: cargo build --verbose
-      - run: cargo test --all-targets --verbose
-      - run: cargo test --doc --verbose
+      - run: cargo build
+  nextest:
+    name: cargo nextest
+    runs-on: ubuntu-latest
+    strategy:
+      # This ensures that all three toolchains will run even if one of
+      # them fails. This, for example, prevents a `nightly` failure
+      # from blocking `stable` and `beta` from running.
+      fail-fast: false
+      matrix:
+        toolchain:
+          - stable
+          - beta
+          - nightly
+    env:
+      CARGO_TERM_COLOR: always
+    steps:
+        # tag: v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+        # date: 2024-12-16
+      - uses: dtolnay/rust-toolchain@a54c7afa936fefeb4456b2dd8068152669aa8203
+        with:
+          toolchain: ${{ matrix.toolchain }}
+      - uses: taiki-e/install-action@44c6d64aa62cd779e873306675c7a58e86d6d532
+        with:
+          tool: cargo-nextest
+      - run: cargo nextest --workspace --all-targets --profile ci
+  doctests:
+    name: cargo test --doc
+    runs-on: ubuntu-latest
+    strategy:
+      # This ensures that all three toolchains will run even if one of
+      # them fails. This, for example, prevents a `nightly` failure
+      # from blocking `stable` and `beta` from running.
+      fail-fast: false
+      matrix:
+        toolchain:
+          - stable
+          - beta
+          - nightly
+    env:
+      CARGO_TERM_COLOR: always
+    steps:
+        # tag: v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+        # date: 2024-12-16
+      - uses: dtolnay/rust-toolchain@a54c7afa936fefeb4456b2dd8068152669aa8203
+        with:
+          toolchain: ${{ matrix.toolchain }}
+      - run: cargo test --doc
+  clippy:
+    name: cargo clippy
+    runs-on: ubuntu-latest
+    strategy:
+      # This ensures that all three toolchains will run even if one of
+      # them fails. This, for example, prevents a `nightly` failure
+      # from blocking `stable` and `beta` from running.
+      fail-fast: false
+      matrix:
+        toolchain:
+          - stable
+          - beta
+          - nightly
+    env:
+      CARGO_TERM_COLOR: always
+    steps:
+        # tag: v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+        # date: 2024-12-16
+      - uses: dtolnay/rust-toolchain@a54c7afa936fefeb4456b2dd8068152669aa8203
+        with:
+          components: clippy
+          toolchain: ${{ matrix.toolchain }}
       - run: cargo clippy --all-targets
-      - run: cargo install rustfmt-unstable
-      # Currently (v1.x) rustfmt accepts unstable features as
-      # arguments only, this wrapper reads the file and passes
-      # them as arguments. Rustfmt v2.x won't have this limitation
-      # anymore and then this wrapper can be removed.
+  rustfmt:
+    name: cargo fmt
+    runs-on: ubuntu-latest
+    strategy:
+      # This ensures that all three toolchains will run even if one of
+      # them fails. This, for example, prevents a `nightly` failure
+      # from blocking `stable` and `beta` from running.
+      fail-fast: false
+      matrix:
+        toolchain:
+          - stable
+          - beta
+          - nightly
+    env:
+      CARGO_TERM_COLOR: always
+    steps:
+        # tag: v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+        # date: 2024-12-16
+      - uses: dtolnay/rust-toolchain@a54c7afa936fefeb4456b2dd8068152669aa8203
+        with:
+          components: rustfmt
+          toolchain: ${{ matrix.toolchain }}
+      - uses: taiki-e/install-action@44c6d64aa62cd779e873306675c7a58e86d6d532
+        with:
+          tool: rustfmt-unstable
       - run: rustfmt-unstable --config-file rustfmt.toml -- cargo fmt --check -- --config error_on_line_overflow=true
-      - run: cargo install example-runner-cli
+    
+  examples:
+    name: check examples working
+    runs-on: ubuntu-latest
+    strategy:
+      # This ensures that all three toolchains will run even if one of
+      # them fails. This, for example, prevents a `nightly` failure
+      # from blocking `stable` and `beta` from running.
+      fail-fast: false
+      matrix:
+        toolchain:
+          - stable
+          - beta
+          - nightly
+    env:
+      CARGO_TERM_COLOR: always
+    steps:
+        # tag: v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+        # date: 2024-12-16
+      - uses: dtolnay/rust-toolchain@a54c7afa936fefeb4456b2dd8068152669aa8203
+        with:
+          toolchain: ${{ matrix.toolchain }}
+      - uses: taiki-e/install-action@44c6d64aa62cd779e873306675c7a58e86d6d532
+        with:
+          tool: example-runner-cli
       - run: example-runner-cli --error-on-unconfigured --error-on-unknown --parallel
   doctest-clippy:
-    name: clippy doctests
+    name: cargo clippy - for doctests
     runs-on: ubuntu-latest
     steps:
         # tag: v4
@@ -59,7 +184,7 @@ jobs:
           toolchain: nightly
       - run: chmod +x scripts/cargo-rustdoc-clippy && export PATH="$(pwd)/scripts/:$PATH" && cargo rustdoc-clippy -- -- -Dwarnings
   rustdoc:
-    name: rustdoc
+    name: cargo doc
     runs-on: ubuntu-latest
     steps:
         # tag: v4
