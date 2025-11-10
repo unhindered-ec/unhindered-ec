@@ -4,13 +4,6 @@ on:
   push:
   pull_request:
 
-env:
-  CARGO_TERM_COLOR: always
-  RUSTFLAGS: -Dwarnings
-  CARGO_INCREMENTAL: 0
-  SCCACHE_GHA_ENABLED: "true"
-  RUSTC_WRAPPER: "sccache"
-
 jobs:
   build:
     name: cargo build
@@ -31,24 +24,10 @@ jobs:
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           persist-credentials: false
-        # date: 2024-12-16
-      - name: Install Rust
-        uses: dtolnay/rust-toolchain@a54c7afa936fefeb4456b2dd8068152669aa8203
+      - name: Setup requirements
+        uses: ./.github/actions/setup-rust-env
         with:
           toolchain: ${{ matrix.toolchain }}
-      - name: Cache cargo files
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cargo/bin/
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-            target/
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-        # tag v0.0.9
-      - name: Cache rust compiles
-        uses: mozilla-actions/sccache-action@7d986dd989559c6ecdb630a3fd2557667be217ad
       - run: cargo build
   nextest:
     name: cargo nextest
@@ -69,28 +48,11 @@ jobs:
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           persist-credentials: false
-        # date: 2024-12-16
-      - name: Install Rust
-        uses: dtolnay/rust-toolchain@a54c7afa936fefeb4456b2dd8068152669aa8203
+      - name: Setup requirements
+        uses: ./.github/actions/setup-rust-env
         with:
           toolchain: ${{ matrix.toolchain }}
-      - name: Cache cargo files
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cargo/bin/
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-        # tag v0.0.9
-      - name: Cache rust compiles
-        uses: mozilla-actions/sccache-action@7d986dd989559c6ecdb630a3fd2557667be217ad
-        # tag: v2
-      - name: Install nextest
-        uses: taiki-e/install-action@44c6d64aa62cd779e873306675c7a58e86d6d532
-        with:
-          tool: cargo-nextest
+          tools: cargo-nextest
       - run: cargo nextest run --workspace --all-targets --profile ci
   doctests:
     name: cargo test --doc
@@ -111,23 +73,10 @@ jobs:
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           persist-credentials: false
-        # date: 2024-12-16
-      - name: Install Rust
-        uses: dtolnay/rust-toolchain@a54c7afa936fefeb4456b2dd8068152669aa8203
+      - name: Setup requirements
+        uses: ./.github/actions/setup-rust-env
         with:
           toolchain: ${{ matrix.toolchain }}
-      - name: Cache cargo files
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cargo/bin/
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-        # tag v0.0.9
-      - name: Cache rust compiles
-        uses: mozilla-actions/sccache-action@7d986dd989559c6ecdb630a3fd2557667be217ad
       - run: cargo test --doc
   clippy:
     name: cargo clippy
@@ -148,24 +97,11 @@ jobs:
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           persist-credentials: false
-        # date: 2024-12-16
-      - name: Install Rust
-        uses: dtolnay/rust-toolchain@a54c7afa936fefeb4456b2dd8068152669aa8203
+      - name: Setup requirements
+        uses: ./.github/actions/setup-rust-env
         with:
           components: clippy
           toolchain: ${{ matrix.toolchain }}
-      - name: Cache cargo files
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cargo/bin/
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-        # tag v0.0.9
-      - name: Cache rust compiles
-        uses: mozilla-actions/sccache-action@7d986dd989559c6ecdb630a3fd2557667be217ad
       - run: cargo clippy --all-targets
   rustfmt:
     name: cargo fmt
@@ -186,29 +122,12 @@ jobs:
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           persist-credentials: false
-        # date: 2024-12-16
-      - name: Install Rust
-        uses: dtolnay/rust-toolchain@a54c7afa936fefeb4456b2dd8068152669aa8203
+      - name: Setup requirements
+        uses: ./.github/actions/setup-rust-env
         with:
           components: rustfmt
           toolchain: ${{ matrix.toolchain }}
-      - name: Cache cargo files
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cargo/bin/
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-        # tag v0.0.9
-      - name: Cache rust compiles
-        uses: mozilla-actions/sccache-action@7d986dd989559c6ecdb630a3fd2557667be217ad
-        # tag: v2
-      - name: Install rustfmt-unstable
-        uses: taiki-e/install-action@44c6d64aa62cd779e873306675c7a58e86d6d532
-        with:
-          tool: rustfmt-unstable
+          tools: rustfmt-unstable
       - run: rustfmt-unstable --config-file rustfmt.toml -- cargo fmt --check -- --config error_on_line_overflow=true
     
   examples:
@@ -230,28 +149,11 @@ jobs:
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           persist-credentials: false
-        # date: 2024-12-16
-      - name: Install Rust
-        uses: dtolnay/rust-toolchain@a54c7afa936fefeb4456b2dd8068152669aa8203
+      - name: Setup requirements
+        uses: ./.github/actions/setup-rust-env
         with:
           toolchain: ${{ matrix.toolchain }}
-      - name: Cache cargo files
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cargo/bin/
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-        # tag v0.0.9
-      - name: Cache rust compiles
-        uses: mozilla-actions/sccache-action@7d986dd989559c6ecdb630a3fd2557667be217ad
-        # tag: v2
-      - name: Install example-runner-cli
-        uses: taiki-e/install-action@44c6d64aa62cd779e873306675c7a58e86d6d532
-        with:
-          tool: example-runner-cli
+          tools: example-runner-cli
       - run: example-runner-cli --error-on-unconfigured --error-on-unknown --parallel
   doctest-clippy:
     name: cargo clippy - for doctests
@@ -262,50 +164,25 @@ jobs:
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           persist-credentials: false
-        # date: 2024-12-16
-      - name: Install Rust
-        uses: dtolnay/rust-toolchain@a54c7afa936fefeb4456b2dd8068152669aa8203
+      - name: Setup requirements
+        uses: ./.github/actions/setup-rust-env
         with:
           components: clippy
           toolchain: nightly
-      - name: Cache cargo files
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cargo/bin/
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-        # tag v0.0.9
-      - name: Cache rust compiles
-        uses: mozilla-actions/sccache-action@7d986dd989559c6ecdb630a3fd2557667be217ad
       - run: chmod +x scripts/cargo-rustdoc-clippy && export PATH="$(pwd)/scripts/:$PATH" && cargo rustdoc-clippy -- -- -Dwarnings
   rustdoc:
     name: cargo doc
     runs-on: ubuntu-latest
+    env:
+      RUSTDOCFLAGS: -Dwarnings
     steps:
         # tag: v4
       - name: Checkout the code
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           persist-credentials: false
-        # date: 2024-12-16
-      - name: Install Rust
-        uses: dtolnay/rust-toolchain@a54c7afa936fefeb4456b2dd8068152669aa8203
+      - name: Setup requirements
+        uses: ./.github/actions/setup-rust-env
         with:
-          components: rustc
           toolchain: nightly
-      - name: Cache cargo files
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cargo/bin/
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-        # tag v0.0.9
-      - name: Cache rust compiles
-        uses: mozilla-actions/sccache-action@7d986dd989559c6ecdb630a3fd2557667be217ad
-      - run: RUSTDOCFLAGS="-Dwarnings" cargo doc --workspace --no-deps --document-private-items
+      - run: cargo doc --workspace --no-deps --document-private-items
