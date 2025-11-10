@@ -16,7 +16,7 @@ use ec_core::{
         mutator::Mutate,
         recombinator::Recombine,
         selector::{
-            Select, Selector, best::Best, dyn_weighted::DynWeighted, lexicase::Lexicase,
+            Select, Selector, best::Best,
             tournament::Tournament,
         },
     },
