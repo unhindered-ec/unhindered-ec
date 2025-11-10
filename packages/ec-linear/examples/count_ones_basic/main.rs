@@ -5,9 +5,6 @@
               for example code."
 )]
 
-pub mod args;
-
-use clap::Parser;
 use ec_core::{
     distributions::collection::ConvertToCollectionGenerator,
     generation::Generation,
@@ -19,7 +16,7 @@ use ec_core::{
         mutator::Mutate,
         recombinator::Recombine,
         selector::{
-            Select, Selector, best::Best, dyn_weighted::DynWeighted, lexicase::Lexicase,
+            Select, Selector, best::Best,
             tournament::Tournament,
         },
     },
@@ -29,49 +26,51 @@ use ec_linear::{
     genome::bitstring::Bitstring, mutator::with_one_over_length::WithOneOverLength,
     recombinator::two_point_xo::TwoPointXo,
 };
-use miette::ensure;
+// use miette::ensure;
 use rand::{
     distr::{Distribution, StandardUniform},
     rng,
 };
 
-use crate::args::{CliArgs, RunModel};
+fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    // Set some basic parameters for the EC run
+    // The number of individuals in the population
+    let population_size = 100;
+    // The number of bits in the evolved bitstring
+    let bit_length = 100;
+    // The maximum number of generations for this EC run
+    let max_generations = 100;
 
-#[must_use]
-pub fn count_ones(bits: &[bool]) -> TestResults<Score<i64>> {
-    bits.iter().copied().map(i64::from).collect()
-}
-
-fn main() -> miette::Result<()> {
-    let CliArgs {
-        run_model,
-        population_size,
-        bit_length,
-        max_generations,
-    } = CliArgs::parse();
-
+    // Create an instance of a random number generator
     let mut rng = rng();
 
+    // Create a scorer from the scoring function above. For Count Ones, this just
+    // counts the number of `true` values in the bitstring.
     let scorer = FnScorer(|bitstring: &Bitstring| count_ones(&bitstring.bits));
 
-    let num_test_cases = bit_length;
+    // Use binary tournament selection to select parents
+    let selector = Tournament::binary();
 
-    let selector = DynWeighted::new(Best, 1)
-        .with_selector(Lexicase::new(num_test_cases), 5)
-        .with_selector(Tournament::binary(), population_size - 1);
+    // Creating an initial population.
+    //
+    // To create a individual population we generate a Distribution of Populations
+    // from which we can then sample a single initial, random population:
+    // - start with the `StandardUniform` distribution which among other things
+    //   allows sampling of bools
+    // - turn that into a Distribution of bitstring genomes
+    // - score each of these genomes to get a distribution of individuals
+    // - turn that into a distribution of a collection of individuals, aka a
+    //   Population
+    //
+    // and then finally we sample a single initial population from that
+    // distribution.
+    let initial_population = StandardUniform // impl Distribution<bool>
+        .to_collection_generator(bit_length) // impl Distribution<Bitstring>
+        .with_scorer(scorer) // impl Distribution<Individual>
+        .into_collection_generator(population_size) // impl Distribution<Population>
+        .sample(&mut rng); // a specific Population
 
-    let population = StandardUniform
-        .to_collection_generator(bit_length)
-        .with_scorer(scorer)
-        .into_collection_generator(population_size)
-        .sample(&mut rng);
-
-    ensure!(
-        !population.is_empty(),
-        "An initial population is always required"
-    );
-
-    println!("{population:?}");
+    println!("{initial_population:?}");
 
     // Let's assume the process will be generational, i.e., we replace the entire
     // population with newly created/selected individuals every generation.
@@ -90,16 +89,13 @@ fn main() -> miette::Result<()> {
     // generation::new() will take
     //   * a pipeline that gets us from population -> new individual
     //   * an initial population.
-    let mut generation = Generation::new(make_new_individual, population);
+    let mut generation = Generation::new(make_new_individual, initial_population);
 
     // TODO: It might be useful to insert some kind of logging system so we can
     //   make this less imperative in nature.
 
     for generation_number in 0..max_generations {
-        match run_model {
-            RunModel::Serial => generation.serial_next()?,
-            RunModel::Parallel => generation.par_next()?,
-        }
+        generation.par_next()?;
 
         let best = Best.select(generation.population(), &mut rng)?;
         // TODO: Change 2 to be the smallest number of digits needed for
@@ -108,6 +104,13 @@ fn main() -> miette::Result<()> {
     }
 
     Ok(())
+}
+
+// The scoring function which, for Count Ones, just counts the number of
+// `true` values in the given bitstring.
+#[must_use]
+pub fn count_ones(bits: &[bool]) -> TestResults<Score<i64>> {
+    bits.iter().copied().map(i64::from).collect()
 }
 
 #[cfg(test)]
