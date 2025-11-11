@@ -1,0 +1,59 @@
+name: Set up Rust
+description: Sets up the required rust environment and tools
+inputs:
+  tools:
+    description: Tools to install using taiki-e/install-action (binstall)
+    required: false
+  toolchain:
+    description: Rust toolchain to install
+    required: true
+  components:
+    description: Rust components to install
+    required: false
+runs:
+  using: composite
+  steps: 
+      # date: 2024-12-16
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@a54c7afa936fefeb4456b2dd8068152669aa8203
+      with:
+        toolchain: ${{ inputs.toolchain }}
+        components: ${{ inputs.components }}
+      # Caches cargo's download and registry folders
+      # to avoid re-downloading crates each time.
+    - name: Cache cargo files
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cargo/bin/
+          ~/.cargo/registry/index/
+          ~/.cargo/registry/cache/
+          ~/.cargo/git/db/
+        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+      # tag v0.0.9
+      # Caches rustc's compilation artifacts for individual crates.
+    - name: Cache rust compiles
+      uses: mozilla-actions/sccache-action@7d986dd989559c6ecdb630a3fd2557667be217ad
+      # tag: v2
+    - name: Install tools
+      if: ${{ inputs.tools != '' }}
+      uses: taiki-e/install-action@44c6d64aa62cd779e873306675c7a58e86d6d532
+      with:
+        tool: ${{ inputs.tools }}
+    - name: Set env vars
+      # CARGO_TERM_COLOR makes sure we get colored output from cargo commands
+      # RUSTFLAGS -Dwarnings makes sure we error on any warnings
+      # CARGO_INCREMENTAL=0 disables incremental compilation since in ci we don't
+      #     recompile multiple times and our caching layers above handle inter-run
+      #     caching, which doesn't work properly with incremental compilation
+      # SCCACHE_GHA_ENABLED tells sccache to use the github action cache as a backend
+      # RUSTC_WRAPPER tells cargo/rust to run rustc via sccache.
+      run: |
+        cat << EOF >> "$GITHUB_ENV"
+        CARGO_TERM_COLOR=always
+        RUSTFLAGS=-Dwarnings
+        CARGO_INCREMENTAL=0
+        SCCACHE_GHA_ENABLED=true
+        RUSTC_WRAPPER=sccache
+        EOF
+      shell: bash
