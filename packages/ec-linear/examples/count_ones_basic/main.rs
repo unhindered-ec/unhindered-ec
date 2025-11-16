@@ -46,16 +46,18 @@ fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 
     // Creating an initial population.
     //
-    // To create a individual population we generate a Distribution of Populations
+    // To create an starting population we generate a Distribution of Populations
     // from which we can then sample a single initial, random population:
-    // - start with the `StandardUniform` distribution which among other things
-    //   allows sampling of bools
-    // - turn that into a Distribution of bitstring genomes
-    // - score each of these genomes to get a distribution of individuals
-    // - turn that into a distribution of a collection of individuals, aka a
-    //   Population
     //
-    // and then finally we sample a single initial population from that
+    // - start with the `StandardUniform` distribution which, among other things,
+    //   allows sampling of bools
+    // - turn that into a (uniform) Distribution of bitstring genomes
+    // - score each of these genomes to get a distribution of individuals (scored
+    //   genomes)
+    // - turn that into a distribution of collections of individuals, i.e. a
+    //   (uniform) Distribution of Populations
+    //
+    // Finally we sample a single initial population from that
     // distribution.
     let initial_population = StandardUniform // impl Distribution<bool>
         .to_collection_generator(bit_length) // impl Distribution<Bitstring>
@@ -63,15 +65,19 @@ fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         .into_collection_generator(population_size) // impl Distribution<Population>
         .sample(&mut rng); // a specific Population
 
-    println!("{initial_population:?}");
-
-    // Let's assume the process will be generational, i.e., we replace the entire
-    // population with newly created/selected individuals every generation.
-    // `generation` will be a mutable operator (containing the data structures for
-    // the population(s) and recombinators, scorers, etc.) that acts on a population
-    // returning a new population. We'll have different generation operators for
-    // serial vs. parallel generation of new individuals.
-
+    // Create a pipeline that takes a population and generates a new individual.
+    //
+    // This is used below to create new individuals for the next generation from the
+    // previous generation:
+    //
+    // - Start with the selector that will be used to select parent individuals from
+    //   the previous generation
+    // - Apply that twice to generate a pair of parents
+    // - Map the `GenomeExtractor` to get a pair of genomes from those parents
+    // - Recombine those genomes using two-point crossover, generating a new genome
+    // - Mutate the new genome using `WithOneOverLength`, which flips bits with a
+    //   probability of 1/N, where N is the length of the genome
+    // - Score the mutated genome to create an individual
     let make_new_individual = Select::new(selector)
         .apply_twice()
         .then_map(GenomeExtractor)
@@ -79,44 +85,29 @@ fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         .then(Mutate::new(WithOneOverLength))
         .wrap::<GenomeScorer<_, _>>(scorer);
 
-    // generation::new() will take
-    //   * a pipeline that gets us from population -> new individual
-    //   * an initial population.
+    // Create the initial generation from the operator pipeline and the initial
+    // population
     let mut generation = Generation::new(make_new_individual, initial_population);
 
-    // TODO: It might be useful to insert some kind of logging system so we can
-    //   make this less imperative in nature.
-
+    // Run evolution for `max_generations`.
     for generation_number in 0..max_generations {
+        // Update the `generation` in place, parallelized for each individual.
         generation.par_next()?;
 
+        // Select a "best" individual, i.e., an individual with the highest score.
         let best = Best.select(generation.population(), &mut rng)?;
-        // TODO: Change 2 to be the smallest number of digits needed for
-        //  max_generations-1.
-        println!("Generation {generation_number:2} best is {best}");
+        // Print that best individual.
+        println!("Generation {generation_number:3} best is {best}");
     }
 
     Ok(())
 }
 
-// The scoring function which, for Count Ones, just counts the number of
-// `true` values in the given bitstring.
+// The scoring function.
+//
+// For Count Ones, the scoring function just counts the number of `true` values
+// in the given bitstring.
 #[must_use]
 pub fn count_ones(bits: &[bool]) -> TestResults<Score<i64>> {
     bits.iter().copied().map(i64::from).collect()
-}
-
-#[cfg(test)]
-mod test {
-    use ec_core::test_results::{self, TestResults};
-
-    use super::count_ones;
-
-    #[test]
-    fn non_empty() {
-        let input = [false, true, true, true, false, true];
-        let output: TestResults<test_results::Score<i64>> =
-            [0, 1, 1, 1, 0, 1].into_iter().collect();
-        assert_eq!(output, count_ones(&input));
-    }
 }
