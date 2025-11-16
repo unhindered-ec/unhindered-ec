@@ -42,7 +42,7 @@ fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 
     // Creating an initial population.
     //
-    // To create an starting population we generate a Distribution of Populations
+    // To create a starting population we generate a Distribution of Populations
     // from which we can then sample a single initial, random population:
     //
     // - start with the `StandardUniform` distribution which, among other things,

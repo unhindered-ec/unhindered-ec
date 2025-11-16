@@ -35,7 +35,7 @@ This crate provides core evolutionary computation functionality, such as interfa
 ## Operators
 
 This includes support for `Operator`s, which encapsulate logic that maps from one
-type to another. This includes
+type to another. This includes:
 
 - `Scorer`, which maps from an `Individual` to a score, which is then used by `Selector`s in
   the selection process.
@@ -61,3 +61,13 @@ The `TestResults<R>`[^subject-to-change] type encapsulates a collection of score
 them) for use with selectors such as `Lexicase`.
 
 [^subject-to-change]: This type is likely to change in the future.
+
+---
+
+## Examples / How to get started
+
+To see examples of how to use these tools, and guides for how to get started,
+see:
+
+- [The README for `ec-linear` package](../ec-linear/README.md#examples)
+- [The README for the `push` package](../push/README.md#examples)
