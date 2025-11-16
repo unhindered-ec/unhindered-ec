@@ -23,7 +23,44 @@ pub mod selector;
 
 pub use composable::Composable;
 
-/// Operator trait
+/// An operator in a data pipeline
+///
+/// For more information on how data pipelines work in general in this crate,
+/// see the [module-level documentation](super::operator)
+///
+/// For concrete operators that you might wish to use can take a look at
+/// [`Map`](composable::Map) and [`Then`](composable::Then) among
+/// others.
+///
+/// # Example
+/// This example shows how to implement a [`Operator`], not how you use
+/// predefined ones. For that, take a look at the [module-level
+/// documentation](super::operator)
+///
+/// ```
+/// # use ec_core::operator::{Operator, Composable};
+/// # use rand::Rng;
+/// #
+/// struct Apply<F>(F);
+///
+/// impl<F> Composable for Apply<F> {}
+///
+/// impl<In, F, Out> Operator<In> for Apply<F>
+/// where
+///     F: Fn(In) -> Out,
+/// {
+///     type Output = Out;
+///     type Error = std::convert::Infallible;
+///
+///     fn apply<R: Rng + ?Sized>(
+///         &self,
+///         input: In,
+///         rng: &mut R,
+///     ) -> Result<Self::Output, Self::Error> {
+///         Ok((self.0)(input))
+///     }
+/// }
+/// ```
 ///
 /// # [dyn-compatibility](https://doc.rust-lang.org/reference/items/traits.html#dyn-compatibility)
 /// This trait is **not** dyn-compatible. As such please
@@ -35,7 +72,10 @@ pub use composable::Composable;
 ///
 /// Please see its documentation for further details on its usage.
 pub trait Operator<Input>: Composable {
+    /// The output type of this operator
     type Output;
+    /// The error type of this operator. May be
+    /// [`Infallible`](std::convert::Infallible) if the operator does not error.
     type Error;
 
     /// # Errors

@@ -1,14 +1,15 @@
-// TODO: I had to make this `pub use` to get the imports in `TwoPointXoMutate`
-// to work   and I'm really not sure why. I should do homework on this.
-use self::{and::And, map::Map, repeat_with::RepeatWith, then::Then};
-
 mod and;
 mod map;
 mod repeat_with;
 mod then;
 
+pub use and::*;
 // derive macro
 pub use ec_macros::Composable;
+pub use map::*;
+pub use repeat_with::*;
+pub use then::*;
+
 pub trait Composable {
     fn then<Op>(self, op: Op) -> Then<Self, Op>
     where
@@ -59,10 +60,6 @@ pub trait Composable {
     {
         T::construct(self, context)
     }
-
-    // fn and_select<S>(self, selector: S) -> Then<Self, Select<S>> {
-    //     Then::new(self, Select::new(selector))
-    // }
 }
 
 static_assertions::assert_obj_safe!(Composable);
