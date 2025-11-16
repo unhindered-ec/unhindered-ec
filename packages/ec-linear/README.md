@@ -110,4 +110,48 @@ as a dependency, you need to:
   tools, which are necessary to do things like generate random initial
   populations.
 
--
+- Copy [the starter code from this repository](./examples/count_ones_basic/main.rs) into `src/main.rs`, replacing the
+  `main.rs` created by `cargo init`.
+
+At this point you should be able to compile and run the sample project
+with
+
+```bash
+cargo run --release
+```
+
+You can then edit the sample project in `main.rs` to, for example,
+use a different scoring function, or change the selection or
+recombination/mutation operators.
+
+If, for example, you change the scoring function to:
+
+```rust
+pub fn count_zeroes(bits: &[bool]) -> Score<i64> {
+    bits.iter().copied().map(Not::not).map(i64::from).sum()
+}
+```
+
+then you'll negate all the bits before summing them up, which will try to
+maximize the number of zeroes instead of the number of ones.
+
+## Using `miette` for better error messages
+
+`unhindered-ec` aims to provide help messages for each error. You
+might want to consider using `miette` on your end to pretty-print
+errors and get these help messages. See [the `count_ones` (not basic)
+example](./examples/count_ones/main.rs) for how this might be done.
+
+The tl;dr is:
+
+```rust
+  // change the return type of main to miette::Result<()>
+  fn main() -> miette::Result<()> {
+    // in library code which supports miette (unhindered-ec crates
+    // do) just keep using the `?` operator
+    call_some_ec_linear_function()?
+    // in libraries which don't support miette (e.g. std) use
+    // `.into_diagnostic()?`
+    call_some_std_function().into_diagnostic()?
+  }
+```
