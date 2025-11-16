@@ -1,10 +1,3 @@
-#![expect(clippy::use_debug, reason = "Debug printing is useful for examples.")]
-#![expect(
-    clippy::arithmetic_side_effects,
-    reason = "The tradeoff safety <> ease of writing arguably lies on the ease of writing side \
-              for example code."
-)]
-
 use ec_core::{
     distributions::collection::ConvertToCollectionGenerator,
     generation::Generation,
