@@ -16,7 +16,6 @@ use ec_linear::{
     genome::bitstring::Bitstring, mutator::with_one_over_length::WithOneOverLength,
     recombinator::two_point_xo::TwoPointXo,
 };
-// use miette::ensure;
 use rand::{
     distr::{Distribution, StandardUniform},
     rng,
