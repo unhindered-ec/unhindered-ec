@@ -20,4 +20,4 @@ The following steps are usually required:
 3. Now we can finally use `cargo publish --workspace` to publish the workspace packages. Make sure that you include the `--registry` argument if you plan to publish to another registry than your systems default one.
 
 ## Publishing v1.0.0
-Once we publish any of this to crates.io we need to replace some links with actual urls to docs.rs which aren't valid yet since the packages don't exist yet. For that search for  `(#)` in the code.
+Once we publish any of this to crates.io we need to replace some placeholder links with actual URLs to docs.rs. These placeholders are not yet valid because the packages don't exist in the registry. To find them, search for  `(#)` in the code.
