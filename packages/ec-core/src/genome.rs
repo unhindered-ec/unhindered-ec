@@ -4,9 +4,10 @@
 /// are operating on and what is scored to evaluate evolution progress.
 ///
 /// Usually you will be using a pre-defined genome like
-/// [`ec-linear::Bitstring`](#) or [`push::Plushy`](#),
-/// and not define your own. Take a look at the accompanying crates for
-/// different kinds of evolution for more examples of genome types.
+/// [`ec_linear::Bitstring`][ec_linear::Bitstring] or
+/// [`push::Plushy`][push::Plushy], and not define your own. Take a look at the
+/// accompanying crates for different kinds of evolution for more examples of
+/// genome types.
 ///
 /// # Example
 /// This is how you might implement a Bitstring genome type:
@@ -22,6 +23,9 @@
 ///     type Gene = bool;
 /// }
 /// ```
+///
+/// [ec_linear::Bitstring]: #
+/// [push::Plushy]: #
 pub trait Genome {
     /// Type of each individual gene in this genome
     type Gene;
