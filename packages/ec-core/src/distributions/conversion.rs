@@ -3,10 +3,7 @@ use rand::{
     prelude::Distribution,
 };
 
-use super::wrappers::{
-    choose_cloning::{ChooseCloning, EmptySlice},
-    owned::OneOfCloning,
-};
+use super::wrappers::{choose_cloning::ChooseCloning, owned::OneOfCloning};
 
 /// Conversion into a [`Distribution`].
 ///
@@ -21,10 +18,10 @@ use super::wrappers::{
 ///
 /// # Example
 /// ```
-/// # use ec_core::distributions::{conversion::IntoDistribution, wrappers::choose_cloning::EmptySlice};
-/// # use rand::{rng, distr::Distribution};
+/// # use ec_core::distributions::conversion::IntoDistribution;
+/// # use rand::{rng, distr::{Distribution, slice::Empty}};
 /// #
-/// # fn main() -> Result<(),EmptySlice> {
+/// # fn main() -> Result<(),Empty> {
 /// let my_collection = [1i32, 2, 3, 4, 5];
 /// let my_distribution = my_collection.into_distribution()?;
 ///
@@ -44,10 +41,10 @@ pub trait IntoDistribution<Element> {
     ///
     /// # Example
     /// ```
-    /// # use ec_core::distributions::{conversion::IntoDistribution, wrappers::choose_cloning::EmptySlice};
-    /// # use rand::{rng, distr::Distribution};
+    /// # use ec_core::distributions::conversion::IntoDistribution;
+    /// # use rand::{rng, distr::{Distribution, slice::Empty}};
     /// #
-    /// # fn main() -> Result<(),EmptySlice> {
+    /// # fn main() -> Result<(),Empty> {
     /// let my_collection = [1i32, 2, 3, 4, 5];
     /// let my_distribution = my_collection.into_distribution()?;
     ///
@@ -75,10 +72,10 @@ static_assertions::assert_obj_safe!(IntoDistribution<(), Distribution = (), Erro
 ///
 /// # Example
 /// ```
-/// # use ec_core::distributions::{conversion::ToDistribution, wrappers::choose_cloning::EmptySlice};
-/// # use rand::{rng, distr::Distribution};
+/// # use ec_core::distributions::conversion::ToDistribution;
+/// # use rand::{rng, distr::{Distribution, slice::Empty}};
 /// #
-/// # fn main() -> Result<(),EmptySlice> {
+/// # fn main() -> Result<(),Empty> {
 /// let my_collection = [1, 2, 3, 4, 5];
 /// let my_distribution = ToDistribution::<&i32>::to_distribution(&my_collection)?;
 ///
@@ -101,10 +98,10 @@ pub trait ToDistribution<'a, Element> {
     ///
     /// # Example
     /// ```
-    /// # use ec_core::distributions::{conversion::ToDistribution, wrappers::choose_cloning::EmptySlice};
-    /// # use rand::{rng, distr::Distribution};
+    /// # use ec_core::distributions::conversion::ToDistribution;
+    /// # use rand::{rng, distr::{Distribution, slice::Empty}};
     /// #
-    /// # fn main() -> Result<(),EmptySlice> {
+    /// # fn main() -> Result<(),Empty> {
     /// let my_collection = [1, 2, 3, 4, 5];
     /// let my_distribution = ToDistribution::<&i32>::to_distribution(&my_collection)?;
     ///
@@ -143,17 +140,17 @@ where
     U: Clone,
 {
     type Distribution = OneOfCloning<Self, U>;
-    type Error = EmptySlice;
+    type Error = Empty;
 
     /// Creates a [`Distribution`] which uniformly samples a single element from
     /// a [`Vec<T>`](Vec) and clones it.
     ///
     /// # Example
     /// ```
-    /// # use ec_core::distributions::{conversion::IntoDistribution, wrappers::choose_cloning::EmptySlice};
-    /// # use rand::{rng, distr::Distribution};
+    /// # use ec_core::distributions::conversion::IntoDistribution;
+    /// # use rand::{rng, distr::{Distribution, slice::Empty}};
     /// #
-    /// # fn main() -> Result<(),EmptySlice> {
+    /// # fn main() -> Result<(),Empty> {
     /// let my_vec = vec![0i32, 1, 2];
     /// let my_distr = my_vec.into_distribution()?;
     ///
@@ -170,17 +167,17 @@ where
 impl<'a, U> IntoDistribution<&'a U> for &'a Vec<U> {
     type Distribution = Choose<'a, U>;
 
-    type Error = EmptySlice;
+    type Error = Empty;
 
     /// Creates a [`Distribution`] which uniformly samples a single element from
     /// a [`&Vec<T>`](Vec) and returns a reference to it.
     ///
     /// # Example
     /// ```
-    /// # use ec_core::distributions::{conversion::IntoDistribution, wrappers::choose_cloning::EmptySlice};
-    /// # use rand::{rng, distr::Distribution};
+    /// # use ec_core::distributions::conversion::IntoDistribution;
+    /// # use rand::{rng, distr::{Distribution, slice::Empty}};
     /// #
-    /// # fn main() -> Result<(),EmptySlice> {
+    /// # fn main() -> Result<(),Empty> {
     /// let my_vec = vec![0i32, 1, 2];
     /// let my_distr = IntoDistribution::<&i32>::into_distribution(&my_vec)?;
     ///
@@ -190,7 +187,7 @@ impl<'a, U> IntoDistribution<&'a U> for &'a Vec<U> {
     /// # }
     /// ```
     fn into_distribution(self) -> Result<Self::Distribution, Self::Error> {
-        Choose::new(self).map_err(|_: Empty| EmptySlice)
+        Choose::new(self).map_err(|_: Empty| Empty)
     }
 }
 
@@ -200,17 +197,17 @@ where
 {
     type Distribution = ChooseCloning<'a, U>;
 
-    type Error = EmptySlice;
+    type Error = Empty;
 
     /// Creates a [`Distribution`] which uniformly samples a single element from
     /// a [`&Vec<T>`](Vec) and clones it.
     ///
     /// # Example
     /// ```
-    /// # use ec_core::distributions::{conversion::IntoDistribution, wrappers::choose_cloning::EmptySlice};
-    /// # use rand::{rng, distr::Distribution};
+    /// # use ec_core::distributions::conversion::IntoDistribution;
+    /// # use rand::{rng, distr::{Distribution, slice::Empty}};
     /// #
-    /// # fn main() -> Result<(),EmptySlice> {
+    /// # fn main() -> Result<(),Empty> {
     /// let my_vec = vec![0i32, 1, 2];
     /// let my_distr = IntoDistribution::<i32>::into_distribution(&my_vec)?;
     ///
@@ -229,17 +226,17 @@ where
     U: Clone,
 {
     type Distribution = OneOfCloning<Self, U>;
-    type Error = EmptySlice;
+    type Error = Empty;
 
     /// Creates a [`Distribution`] which uniformly samples a single element from
     /// a [`[U; N]`](primitive@array) and clones it.
     ///
     /// # Example
     /// ```
-    /// # use ec_core::distributions::{conversion::IntoDistribution, wrappers::choose_cloning::EmptySlice};
-    /// # use rand::{rng, distr::Distribution};
+    /// # use ec_core::distributions::conversion::IntoDistribution;
+    /// # use rand::{rng, distr::{Distribution, slice::Empty}};
     /// #
-    /// # fn main() -> Result<(),EmptySlice> {
+    /// # fn main() -> Result<(),Empty> {
     /// let my_array: [i32; 3] = [0, 1, 2];
     /// let my_distr = my_array.into_distribution()?;
     ///
@@ -256,17 +253,17 @@ where
 impl<'a, U, const N: usize> IntoDistribution<&'a U> for &'a [U; N] {
     type Distribution = Choose<'a, U>;
 
-    type Error = EmptySlice;
+    type Error = Empty;
 
     /// Creates a [`Distribution`] which uniformly samples a single element from
     /// a [`&[U; N]`](primitive@array) and returns a reference to it.
     ///
     /// # Example
     /// ```
-    /// # use ec_core::distributions::{conversion::IntoDistribution, wrappers::choose_cloning::EmptySlice};
-    /// # use rand::{rng, distr::Distribution};
+    /// # use ec_core::distributions::conversion::IntoDistribution;
+    /// # use rand::{rng, distr::{Distribution, slice::Empty}};
     /// #
-    /// # fn main() -> Result<(),EmptySlice> {
+    /// # fn main() -> Result<(),Empty> {
     /// let my_array: [i32; 3] = [0, 1, 2];
     /// let my_distr = IntoDistribution::<&i32>::into_distribution(&my_array)?;
     ///
@@ -276,7 +273,7 @@ impl<'a, U, const N: usize> IntoDistribution<&'a U> for &'a [U; N] {
     /// # }
     /// ```
     fn into_distribution(self) -> Result<Self::Distribution, Self::Error> {
-        Choose::new(self).map_err(|_: Empty| EmptySlice)
+        Choose::new(self).map_err(|_: Empty| Empty)
     }
 }
 
@@ -286,17 +283,17 @@ where
 {
     type Distribution = ChooseCloning<'a, U>;
 
-    type Error = EmptySlice;
+    type Error = Empty;
 
     /// Creates a [`Distribution`] which uniformly samples a single element from
     /// a [`&[T; N]`](primitive@array) and clones it.
     ///
     /// # Example
     /// ```
-    /// # use ec_core::distributions::{conversion::IntoDistribution, wrappers::choose_cloning::EmptySlice};
-    /// # use rand::{rng, distr::Distribution};
+    /// # use ec_core::distributions::conversion::IntoDistribution;
+    /// # use rand::{rng, distr::{Distribution, slice::Empty}};
     /// #
-    /// # fn main() -> Result<(),EmptySlice> {
+    /// # fn main() -> Result<(),Empty> {
     /// let my_array: [i32; 3] = [0, 1, 2];
     /// let my_distr = IntoDistribution::<i32>::into_distribution(&my_array)?;
     ///
@@ -313,17 +310,17 @@ where
 impl<'a, T> IntoDistribution<&'a T> for &'a [T] {
     type Distribution = Choose<'a, T>;
 
-    type Error = EmptySlice;
+    type Error = Empty;
 
     /// Creates a [`Distribution`] which uniformly samples a single element from
     /// a [`&[U]`](primitive@slice) and returns a reference to it.
     ///
     /// # Example
     /// ```
-    /// # use ec_core::distributions::{conversion::IntoDistribution, wrappers::choose_cloning::EmptySlice};
-    /// # use rand::{rng, distr::Distribution};
+    /// # use ec_core::distributions::conversion::IntoDistribution;
+    /// # use rand::{rng, distr::{Distribution, slice::Empty}};
     /// #
-    /// # fn main() -> Result<(),EmptySlice> {
+    /// # fn main() -> Result<(),Empty> {
     /// let my_slice: &[i32] = &[0, 1, 2];
     /// let my_distr = IntoDistribution::<&i32>::into_distribution(my_slice)?;
     ///
@@ -333,7 +330,7 @@ impl<'a, T> IntoDistribution<&'a T> for &'a [T] {
     /// # }
     /// ```
     fn into_distribution(self) -> Result<Self::Distribution, Self::Error> {
-        Choose::new(self).map_err(|_| EmptySlice)
+        Choose::new(self).map_err(|_| Empty)
     }
 }
 
@@ -343,17 +340,17 @@ where
 {
     type Distribution = ChooseCloning<'a, T>;
 
-    type Error = EmptySlice;
+    type Error = Empty;
 
     /// Creates a [`Distribution`] which uniformly samples a single element from
     /// a [`&[T]`](primitive@slice) and clones it.
     ///
     /// # Example
     /// ```
-    /// # use ec_core::distributions::{conversion::IntoDistribution, wrappers::choose_cloning::EmptySlice};
-    /// # use rand::{rng, distr::Distribution};
+    /// # use ec_core::distributions::conversion::IntoDistribution;
+    /// # use rand::{rng, distr::{Distribution, slice::Empty}};
     /// #
-    /// # fn main() -> Result<(),EmptySlice> {
+    /// # fn main() -> Result<(),Empty> {
     /// let my_slice: &[i32] = &[0, 1, 2];
     /// let my_distr = IntoDistribution::<i32>::into_distribution(my_slice)?;
     ///
