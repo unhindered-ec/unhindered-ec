@@ -10,7 +10,7 @@ use std::iter::once;
 
 use clap::Parser;
 use ec_core::{
-    distributions::collection::ConvertToCollectionGenerator,
+    distributions::collection::ConvertToCollectionDistribution,
     generation::Generation,
     individual::{ec::WithScorer, scorer::FnScorer},
     operator::{
@@ -49,9 +49,8 @@ fn hiff(bits: &[bool]) -> (bool, TestResults<Score<usize>>) {
         (
             all_same,
             left_score
-                .results
                 .into_iter()
-                .chain(right_score.results)
+                .chain(right_score)
                 .chain(once(Score::from(if all_same { len } else { 0 })))
                 .collect(),
         )
@@ -74,10 +73,10 @@ fn main() -> miette::Result<()> {
 
     let selector = Lexicase::new(num_test_cases);
 
-    let population = StandardUniform
-        .to_collection_generator(bit_length)
+    let population: Vec<_> = StandardUniform
+        .to_collection(bit_length)
         .with_scorer(scorer)
-        .into_collection_generator(population_size)
+        .into_collection(population_size)
         .sample(&mut rng);
 
     ensure!(

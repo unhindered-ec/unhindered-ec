@@ -1,5 +1,5 @@
 use ec_core::{
-    distributions::collection::ConvertToCollectionGenerator,
+    distributions::collection::ConvertToCollectionDistribution,
     generation::Generation,
     individual::{ec::WithScorer, scorer::FnScorer},
     operator::{
@@ -55,10 +55,10 @@ fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     //
     // Finally we sample a single initial population from that
     // distribution.
-    let initial_population = StandardUniform // impl Distribution<bool>
-        .to_collection_generator(bit_length) // impl Distribution<Bitstring>
+    let initial_population: Vec<_> = StandardUniform // impl Distribution<bool>
+        .to_collection(bit_length) // impl Distribution<Bitstring>
         .with_scorer(scorer) // impl Distribution<Individual>
-        .into_collection_generator(population_size) // impl Distribution<Population>
+        .into_collection(population_size) // impl Distribution<Population>
         .sample(&mut rng); // a specific Population
 
     // Create a pipeline that takes a population and generates a new individual.

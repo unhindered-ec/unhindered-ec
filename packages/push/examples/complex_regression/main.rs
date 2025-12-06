@@ -8,7 +8,7 @@ pub mod args;
 
 use clap::Parser;
 use ec_core::{
-    distributions::collection::ConvertToCollectionGenerator,
+    distributions::collection::ConvertToCollectionDistribution,
     generation::Generation,
     individual::{ec::WithScorer, scorer::FnScorer},
     operator::{
@@ -150,10 +150,10 @@ fn main() -> miette::Result<()> {
     ]
     .into_gene_generator();
 
-    let population = gene_generator
-        .to_collection_generator(max_initial_instructions)
+    let population: Vec<_> = gene_generator
+        .to_collection(max_initial_instructions)
         .with_scorer(scorer)
-        .into_collection_generator(population_size)
+        .into_collection(population_size)
         .sample(&mut rng);
 
     ensure!(
@@ -187,7 +187,11 @@ fn main() -> miette::Result<()> {
         // max_generations-1.
         println!("Generation {generation_number:2} best is {best}");
 
-        if best.test_results.total_result.0 == OrderedFloat(0.0) {
+        if best
+            .test_results
+            .total()
+            .is_some_and(|error| error == &OrderedFloat(0.0f64))
+        {
             println!("SUCCESS");
             break;
         }

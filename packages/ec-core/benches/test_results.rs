@@ -1,7 +1,7 @@
 use std::hint::black_box;
 
 use criterion::{Criterion, criterion_group, criterion_main};
-use ec_core::{distributions::collection::ConvertToCollectionGenerator, test_results::TestResults};
+use ec_core::{distributions::collection::ConvertToCollectionDistribution, test_results::TestResults};
 use rand::{
     distr::{Distribution, StandardUniform},
     rng,
@@ -15,7 +15,7 @@ pub fn from_iterator(c: &mut Criterion) {
     let values = [VALUE; NUM_VALUES];
     c.bench_function("TestResults construction from values", |b| {
         b.iter(|| {
-            _ = TestResults::<i64>::from(black_box(values));
+            _ = TestResults::<i64>::from_iter(black_box(values));
         });
     });
 }
@@ -29,10 +29,10 @@ pub fn find_smallest(c: &mut Criterion) {
     // in `TestResults` (`i64`) so that the sum of the values in a vector
     // won't overflow the largest possible value in the `TestResults` type.
     let test_results: Vec<TestResults<i64>> = Distribution::<Vec<i32>>::sample_iter(
-        StandardUniform.into_collection_generator(NUM_VALUES),
+        StandardUniform.into_collection(NUM_VALUES),
         &mut rng(),
     )
-    .map(Into::into)
+    .map(TestResults::from_iter)
     .take(NUM_RESULTS)
     .collect::<Vec<_>>();
     c.bench_function("Find smallest TestResults", |b| {
