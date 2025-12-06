@@ -3,7 +3,7 @@ use rand::{
     prelude::Distribution,
 };
 
-use super::wrappers::{choose_cloning::ChooseCloning, owned::OneOfCloning};
+use super::wrappers::{choose_cloning::ChooseCloning, owned::ChooseCloningOwning};
 
 /// Conversion into a [`Distribution`].
 ///
@@ -139,7 +139,7 @@ impl<U> IntoDistribution<U> for Vec<U>
 where
     U: Clone,
 {
-    type Distribution = OneOfCloning<Self, U>;
+    type Distribution = ChooseCloningOwning<Self, U>;
     type Error = Empty;
 
     /// Creates a [`Distribution`] which uniformly samples a single element from
@@ -160,7 +160,7 @@ where
     /// # }
     /// ```
     fn into_distribution(self) -> Result<Self::Distribution, Self::Error> {
-        OneOfCloning::new(self)
+        ChooseCloningOwning::new(self)
     }
 }
 
@@ -225,7 +225,7 @@ impl<U, const N: usize> IntoDistribution<U> for [U; N]
 where
     U: Clone,
 {
-    type Distribution = OneOfCloning<Self, U>;
+    type Distribution = ChooseCloningOwning<Self, U>;
     type Error = Empty;
 
     /// Creates a [`Distribution`] which uniformly samples a single element from
@@ -246,7 +246,7 @@ where
     /// # }
     /// ```
     fn into_distribution(self) -> Result<Self::Distribution, Self::Error> {
-        OneOfCloning::new(self)
+        ChooseCloningOwning::new(self)
     }
 }
 
