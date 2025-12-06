@@ -1,8 +1,11 @@
 use std::{borrow::Borrow, marker::PhantomData, num::NonZeroUsize};
 
-use rand::{distr::Uniform, prelude::Distribution};
+use rand::{
+    distr::{Uniform, slice::Empty},
+    prelude::Distribution,
+};
 
-use crate::distributions::{finite::Finite, wrappers::choose_cloning::EmptySlice};
+use crate::distributions::finite::Finite;
 
 /// Generate a random element from a collection of options, cloning the chosen
 /// element.
@@ -37,13 +40,11 @@ where
     /// selected value.
     ///
     /// ```
-    /// # use rand::distr::Distribution;
+    /// # use rand::distr::{Distribution, slice::Empty};
     /// # use ec_core::distributions::{
     /// #    finite::Finite,
-    /// #    wrappers::{
-    /// #       owned::OneOfCloning,
-    /// #       choose_cloning::EmptySlice,
-    /// #    },
+    /// #    wrappers::owned::OneOfCloning,
+    /// #    
     /// # };
     /// #
     /// let options = [1, 2, 3];
@@ -53,20 +54,20 @@ where
     /// let val = distr.sample(&mut rand::rng());
     /// assert!(options.contains(&val));
     ///
-    /// # Ok::<(), EmptySlice>(())
+    /// # Ok::<(), Empty>(())
     ///  ```
     ///
     /// # Errors
-    /// - [`EmptySlice`] if an empty collection is passed in, since then no
+    /// - [`Empty`] if an empty collection is passed in, since then no
     ///   element can be selected from there
-    pub fn new(collection: T) -> Result<Self, EmptySlice> {
-        let num_choices = NonZeroUsize::new(collection.borrow().len()).ok_or(EmptySlice)?;
+    pub fn new(collection: T) -> Result<Self, Empty> {
+        let num_choices = NonZeroUsize::new(collection.borrow().len()).ok_or(Empty)?;
 
         Ok(Self {
             collection,
             // This error can actually never occur since it's checked above, but erroring is the
             // easiest option here.
-            range: Uniform::new(0, num_choices.get()).map_err(|_| EmptySlice)?,
+            range: Uniform::new(0, num_choices.get()).map_err(|_| Empty)?,
             num_choices,
             _p: PhantomData,
         })
