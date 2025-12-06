@@ -28,6 +28,28 @@ pub struct GenomeScorer<GM, S> {
     scorer: S,
 }
 
+impl<GM, S> From<(GM, S)> for GenomeScorer<GM, S> {
+    /// Convert a tuple of a genome maker and a scorer to a new
+    /// [`GenomeScorer`].
+    ///
+    /// # Example
+    /// ```
+    /// # use ec_core::{operator::{Operator, constant::Constant, genome_scorer::GenomeScorer}, individual::{ec::EcIndividual, scorer::FnScorer}};
+    /// let genome_maker = Constant::new(100);
+    /// let scorer = FnScorer(|x: &i32| 10i32.abs_diff(*x));
+    ///
+    /// let genome_scorer = GenomeScorer::from((genome_maker, scorer));
+    /// #
+    /// # let result = genome_scorer.apply(&[0i32; 0], &mut rand::rng())?;
+    /// #
+    /// # assert_eq!(result, EcIndividual::new(100, 90));
+    /// # Ok::<(), Box<dyn std::error::Error>>(())
+    /// ```
+    fn from((genome_maker, scorer): (GM, S)) -> Self {
+        Self::new(genome_maker, scorer)
+    }
+}
+
 impl<G, S> GenomeScorer<G, S> {
     /// Create a new [`GenomeScorer`] [`Operator`] from a `GenomeMaker` and a
     /// [`Scorer`], scoring the genome and creating a [`EcIndividual`].
