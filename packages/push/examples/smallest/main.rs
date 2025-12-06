@@ -100,8 +100,9 @@ fn main() -> miette::Result<()> {
 
     let instruction_set = instructions().collect::<Vec<_>>();
 
-    let gene_generator =
-        GeneGenerator::with_uniform_close_probability(instruction_set.into_distribution()?);
+    let gene_generator = GeneGenerator::with_uniform_close_probability(
+        instruction_set.into_distribution().into_diagnostic()?,
+    );
 
     let population: Vec<_> = gene_generator
         .to_collection(max_initial_instructions)

@@ -3,10 +3,7 @@ use rand::{
     prelude::Distribution,
 };
 
-use super::wrappers::{
-    choose_cloning::{ChooseCloning, EmptySlice},
-    owned::OneOfCloning,
-};
+use super::wrappers::{choose_cloning::ChooseCloning, owned::OneOfCloning};
 
 pub trait IntoDistribution<Element> {
     type Distribution: Distribution<Element>;
@@ -54,7 +51,7 @@ where
     U: Clone,
 {
     type Distribution = OneOfCloning<Self, U>;
-    type Error = EmptySlice;
+    type Error = Empty;
 
     fn into_distribution(self) -> Result<Self::Distribution, Self::Error> {
         OneOfCloning::new(self)
@@ -64,10 +61,10 @@ where
 impl<'a, U> IntoDistribution<&'a U> for &'a Vec<U> {
     type Distribution = Choose<'a, U>;
 
-    type Error = EmptySlice;
+    type Error = Empty;
 
     fn into_distribution(self) -> Result<Self::Distribution, Self::Error> {
-        Choose::new(self).map_err(|_: Empty| EmptySlice)
+        Choose::new(self).map_err(|_: Empty| Empty)
     }
 }
 
@@ -77,7 +74,7 @@ where
 {
     type Distribution = ChooseCloning<'a, U>;
 
-    type Error = EmptySlice;
+    type Error = Empty;
 
     fn into_distribution(self) -> Result<Self::Distribution, Self::Error> {
         ChooseCloning::new(self)
@@ -89,7 +86,7 @@ where
     U: Clone,
 {
     type Distribution = OneOfCloning<Self, U>;
-    type Error = EmptySlice;
+    type Error = Empty;
 
     fn into_distribution(self) -> Result<Self::Distribution, Self::Error> {
         OneOfCloning::new(self)
@@ -99,10 +96,10 @@ where
 impl<'a, U, const N: usize> IntoDistribution<&'a U> for &'a [U; N] {
     type Distribution = Choose<'a, U>;
 
-    type Error = EmptySlice;
+    type Error = Empty;
 
     fn into_distribution(self) -> Result<Self::Distribution, Self::Error> {
-        Choose::new(self).map_err(|_: Empty| EmptySlice)
+        Choose::new(self).map_err(|_: Empty| Empty)
     }
 }
 
@@ -112,7 +109,7 @@ where
 {
     type Distribution = ChooseCloning<'a, U>;
 
-    type Error = EmptySlice;
+    type Error = Empty;
 
     fn into_distribution(self) -> Result<Self::Distribution, Self::Error> {
         ChooseCloning::new(self)
@@ -122,10 +119,10 @@ where
 impl<'a, T> IntoDistribution<&'a T> for &'a [T] {
     type Distribution = Choose<'a, T>;
 
-    type Error = EmptySlice;
+    type Error = Empty;
 
     fn into_distribution(self) -> Result<Self::Distribution, Self::Error> {
-        Choose::new(self).map_err(|_| EmptySlice)
+        Choose::new(self).map_err(|_| Empty)
     }
 }
 
@@ -135,7 +132,7 @@ where
 {
     type Distribution = ChooseCloning<'a, T>;
 
-    type Error = EmptySlice;
+    type Error = Empty;
 
     fn into_distribution(self) -> Result<Self::Distribution, Self::Error> {
         ChooseCloning::new(self)
