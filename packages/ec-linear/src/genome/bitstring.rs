@@ -1,7 +1,7 @@
 use std::{fmt::Display, ops::Range};
 
 use ec_core::{
-    distributions::collection::{self, ConvertToCollectionGenerator},
+    distributions::collection::{self, ConvertToCollectionDistribution},
     genome::Genome,
 };
 use rand::{Rng, distr::StandardUniform, prelude::Distribution};
@@ -34,7 +34,7 @@ pub struct Bitstring {
     pub bits: Vec<bool>,
 }
 
-impl<BG> Distribution<Bitstring> for collection::Generator<BG>
+impl<BG> Distribution<Bitstring> for collection::Collection<BG>
 where
     BG: Distribution<bool>,
 {
@@ -47,9 +47,7 @@ where
 
 impl Bitstring {
     pub fn random<R: Rng + ?Sized>(num_bits: usize, rng: &mut R) -> Self {
-        StandardUniform
-            .into_collection_generator(num_bits)
-            .sample(rng)
+        StandardUniform.into_collection(num_bits).sample(rng)
     }
 
     pub fn random_with_probability<R: Rng + ?Sized>(
@@ -58,7 +56,7 @@ impl Bitstring {
         rng: &mut R,
     ) -> Self {
         BoolGenerator::new(probability)
-            .into_collection_generator(num_bits)
+            .into_collection(num_bits)
             .sample(rng)
     }
 

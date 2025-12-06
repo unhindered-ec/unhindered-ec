@@ -25,7 +25,7 @@ use crate::{operator::Operator, population::Population};
 /// #         genome_scorer::GenomeScorer,
 /// #         Composable
 /// #     },
-/// #     distributions::collection::ConvertToCollectionGenerator,
+/// #     distributions::collection::ConvertToCollectionDistribution,
 /// #     generation::Generation
 /// # };
 /// # use std::iter::once;
@@ -63,10 +63,10 @@ use crate::{operator::Operator, population::Population};
 /// # let population_size = 10;
 /// # let my_scorer = FnScorer(|bitstring: &Bitstring| hiff(&bitstring.bits).1);
 /// # let my_selector = Lexicase::new(2 * bit_length - 1);
-/// let initial_population = StandardUniform
-///     .into_collection_generator(bit_length)
+/// let initial_population: Vec<_> = StandardUniform
+///     .into_collection(bit_length)
 ///     .with_scorer(my_scorer)
-///     .into_collection_generator(population_size)
+///     .into_collection(population_size)
 ///     .sample(&mut rng);
 ///
 /// let make_new_individual = Select::new(my_selector)
@@ -112,7 +112,7 @@ impl<C, P> From<(C, P)> for Generation<C, P> {
     /// #         genome_scorer::GenomeScorer,
     /// #         Composable
     /// #     },
-    /// #     distributions::collection::ConvertToCollectionGenerator,
+    /// #     distributions::collection::ConvertToCollectionDistribution,
     /// #     generation::Generation
     /// # };
     /// # use std::iter::once;
@@ -150,10 +150,10 @@ impl<C, P> From<(C, P)> for Generation<C, P> {
     /// # let population_size = 10;
     /// # let my_scorer = FnScorer(|bitstring: &Bitstring| hiff(&bitstring.bits).1);
     /// # let my_selector = Lexicase::new(2 * bit_length - 1);
-    /// let initial_population = StandardUniform
-    ///     .into_collection_generator(bit_length)
+    /// let initial_population: Vec<_> = StandardUniform
+    ///     .into_collection(bit_length)
     ///     .with_scorer(my_scorer)
-    ///     .into_collection_generator(population_size)
+    ///     .into_collection(population_size)
     ///     .sample(&mut rng);
     ///
     /// let make_new_individual = Select::new(my_selector)
@@ -200,7 +200,7 @@ impl<P, C> Generation<C, P> {
     /// #         genome_scorer::GenomeScorer,
     /// #         Composable
     /// #     },
-    /// #     distributions::collection::ConvertToCollectionGenerator,
+    /// #     distributions::collection::ConvertToCollectionDistribution,
     /// #     generation::Generation
     /// # };
     /// # use std::iter::once;
@@ -238,10 +238,10 @@ impl<P, C> Generation<C, P> {
     /// # let population_size = 10;
     /// # let my_scorer = FnScorer(|bitstring: &Bitstring| hiff(&bitstring.bits).1);
     /// # let my_selector = Lexicase::new(2 * bit_length - 1);
-    /// let initial_population = StandardUniform
-    ///     .into_collection_generator(bit_length)
+    /// let initial_population: Vec<_> = StandardUniform
+    ///     .into_collection(bit_length)
     ///     .with_scorer(my_scorer)
-    ///     .into_collection_generator(population_size)
+    ///     .into_collection(population_size)
     ///     .sample(&mut rng);
     ///
     /// let make_new_individual = Select::new(my_selector)
@@ -283,7 +283,7 @@ impl<P, C> Generation<C, P> {
     /// #         genome_scorer::GenomeScorer,
     /// #         Composable
     /// #     },
-    /// #     distributions::collection::ConvertToCollectionGenerator,
+    /// #     distributions::collection::ConvertToCollectionDistribution,
     /// #     generation::Generation
     /// # };
     /// # use std::iter::once;
@@ -321,10 +321,10 @@ impl<P, C> Generation<C, P> {
     /// # let population_size = 10;
     /// # let my_scorer = FnScorer(|bitstring: &Bitstring| hiff(&bitstring.bits).1);
     /// # let my_selector = Lexicase::new(2 * bit_length - 1);
-    /// let initial_population = StandardUniform
-    ///     .into_collection_generator(bit_length)
+    /// let initial_population: Vec<_> = StandardUniform
+    ///     .into_collection(bit_length)
     ///     .with_scorer(my_scorer)
-    ///     .into_collection_generator(population_size)
+    ///     .into_collection(population_size)
     ///     .sample(&mut rng);
     ///
     /// let make_new_individual = Select::new(my_selector)
@@ -368,7 +368,7 @@ impl<P, C> Generation<C, P> {
     /// #         genome_scorer::GenomeScorer,
     /// #         Composable
     /// #     },
-    /// #     distributions::collection::ConvertToCollectionGenerator,
+    /// #     distributions::collection::ConvertToCollectionDistribution,
     /// #     generation::Generation
     /// # };
     /// # use std::iter::once;
@@ -406,10 +406,10 @@ impl<P, C> Generation<C, P> {
     /// # let population_size = 10;
     /// # let my_scorer = FnScorer(|bitstring: &Bitstring| hiff(&bitstring.bits).1);
     /// # let my_selector = Lexicase::new(2 * bit_length - 1);
-    /// let initial_population = StandardUniform
-    ///     .into_collection_generator(bit_length)
+    /// let initial_population: Vec<_> = StandardUniform
+    ///     .into_collection(bit_length)
     ///     .with_scorer(my_scorer)
-    ///     .into_collection_generator(population_size)
+    ///     .into_collection(population_size)
     ///     .sample(&mut rng);
     ///
     /// let make_new_individual = Select::new(my_selector)
@@ -464,7 +464,7 @@ where
     /// #         genome_scorer::GenomeScorer,
     /// #         Composable
     /// #     },
-    /// #     distributions::collection::ConvertToCollectionGenerator,
+    /// #     distributions::collection::ConvertToCollectionDistribution,
     /// #     generation::Generation
     /// # };
     /// # use std::iter::once;
@@ -502,10 +502,10 @@ where
     /// # let population_size = 10;
     /// # let my_scorer = FnScorer(|bitstring: &Bitstring| hiff(&bitstring.bits).1);
     /// # let my_selector = Lexicase::new(2 * bit_length - 1);
-    /// let initial_population = StandardUniform
-    ///     .into_collection_generator(bit_length)
+    /// let initial_population: Vec<_> = StandardUniform
+    ///     .into_collection(bit_length)
     ///     .with_scorer(my_scorer)
-    ///     .into_collection_generator(population_size)
+    ///     .into_collection(population_size)
     ///     .sample(&mut rng);
     ///
     /// let make_new_individual = Select::new(my_selector)
@@ -590,7 +590,7 @@ where
     /// #         genome_scorer::GenomeScorer,
     /// #         Composable
     /// #     },
-    /// #     distributions::collection::ConvertToCollectionGenerator,
+    /// #     distributions::collection::ConvertToCollectionDistribution,
     /// #     generation::Generation
     /// # };
     /// # use std::iter::once;
@@ -628,10 +628,10 @@ where
     /// # let population_size = 10;
     /// # let my_scorer = FnScorer(|bitstring: &Bitstring| hiff(&bitstring.bits).1);
     /// # let my_selector = Lexicase::new(2 * bit_length - 1);
-    /// let initial_population = StandardUniform
-    ///     .into_collection_generator(bit_length)
+    /// let initial_population: Vec<_> = StandardUniform
+    ///     .into_collection(bit_length)
     ///     .with_scorer(my_scorer)
-    ///     .into_collection_generator(population_size)
+    ///     .into_collection(population_size)
     ///     .sample(&mut rng);
     ///
     /// let make_new_individual = Select::new(my_selector)

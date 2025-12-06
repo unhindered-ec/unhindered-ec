@@ -1,92 +1,194 @@
-/// This module contains the implementation of the `CollectionGenerator` struct
-/// and related traits and functions.
-///
-/// The `CollectionGenerator` struct is used to generate a collection of random
-/// elements. It takes an element generator and a size as input, and generates a
-/// `Vec` of random elements based on the specified size and the mechanism for
-/// generating random elements.
-///
-/// The module also defines the `ConvertToCollectionGenerator` trait, which
-/// provides methods for converting a type into a `CollectionGenerator`. This
-/// trait is implemented for any type that implements the `Generator` trait.
-///
-/// Finally, the module implements the `Generator` trait for the
-/// `CollectionGenerator` struct, allowing it to generate a `Vec` of random
-/// elements using the `generate` method.
+use std::collections::{LinkedList, VecDeque};
+
 use rand::prelude::Distribution;
 
-/// Information for generating a collection of random elements.
+/// [`Distribution`] adapter that turns a [`Distribution`] of elements `T` into
+/// a [`Distribution`] of collections of elements (i.e. `Vec<T>`) of a given
+/// length.
 ///
-/// `size` indicates how many elements to generate.
-/// `element_generator` is used to generate individual elements.
-pub struct Generator<C> {
-    pub element_generator: C,
-    pub size: usize,
+/// Sampling from this distribution samples from the element collection `length`
+/// times.
+///
+/// # Provided conversion methods
+///
+/// For ease of use, the trait [`ConvertToCollectionDistribution`] provides
+/// chainable constructors on any [`Distribution`] to turn that distribution
+/// into a collection distribution.
+///
+/// Those constructors are:
+/// - [`ConvertToCollectionDistribution::into_collection`], a owning
+///   constructor, moving the child distribution
+/// - [`ConvertToCollectionDistribution::to_collection`], a borrowing
+///   constructor, borrowing the child distribution.
+///
+/// Usage:
+///
+/// ```
+/// # use rand::distr::StandardUniform;
+/// # use ec_core::distributions::collection::{Collection, ConvertToCollectionDistribution};
+/// #
+/// let collection_distribution: Collection<StandardUniform> = StandardUniform.into_collection(10);
+/// # let _ = collection_distribution;
+/// ```
+///
+/// ```
+/// # use rand::distr::StandardUniform;
+/// # use ec_core::distributions::collection::{Collection, ConvertToCollectionDistribution};
+/// #
+/// let collection_distribution: Collection<&StandardUniform> = StandardUniform.to_collection(10);
+/// # let _ = collection_distribution;
+/// ```
+///
+/// Also see [`ConvertToCollectionDistribution`]
+///
+/// # Example
+/// ```
+/// # use rand::{distr::{Distribution, StandardUniform}, rng};
+/// # use ec_core::distributions::collection::Collection;
+/// #
+/// let singular_distribution = StandardUniform;
+/// let collection_distribution = Collection::new(&singular_distribution, 10);
+///
+/// let mut rng = rng();
+///
+/// let single_element: i32 = singular_distribution.sample(&mut rng);
+/// # let _ = single_element;
+/// let collection: Vec<i32> = collection_distribution.sample(&mut rng);
+/// assert_eq!(collection.len(), 10)
+/// ```
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Default)]
+pub struct Collection<C> {
+    pub child_distribution: C,
+    pub length: usize,
 }
 
-impl<C> Generator<C> {
-    /// Create a new `CollectionGenerator` with the given element generator and
-    /// size.
-    pub const fn new(element_generator: C, size: usize) -> Self {
+impl<C> From<(C, usize)> for Collection<C> {
+    /// Turn a tuple of a [`Distribution`] and length into a [`Collection`]
+    /// [`Distribution`]
+    ///
+    /// # Examples
+    /// ```
+    /// # use ec_core::distributions::collection::Collection;
+    /// # use rand::distr::StandardUniform;
+    /// #
+    /// let my_distribution = Collection::from((StandardUniform, 10));
+    /// # let _ = my_distribution;
+    /// ```
+    /// ```
+    /// # use ec_core::distributions::collection::Collection;
+    /// # use rand::distr::StandardUniform;
+    /// #
+    /// let my_distribution: Collection<_> = (StandardUniform, 10).into();
+    /// # let _ = my_distribution;
+    /// ```
+    fn from((child_distribution, length): (C, usize)) -> Self {
+        Self::new(child_distribution, length)
+    }
+}
+
+impl<C> Collection<C> {
+    /// Create a new [`Distribution`] of collections of size `length`,
+    /// sampling individual elements from the given child [`Distribution`].
+    ///
+    /// # Example
+    /// ```
+    /// # use rand::distr::StandardUniform;
+    /// # use ec_core::distributions::collection::Collection;
+    /// #
+    /// let collection_distribution = Collection::new(StandardUniform, 10);
+    /// # let _ = collection_distribution;
+    /// ```
+    pub const fn new(child_distribution: C, length: usize) -> Self {
         Self {
-            element_generator,
-            size,
+            child_distribution,
+            length,
         }
     }
 }
 
-/// Trait to convert a type (typically some sort of gene generator) into a
-/// `CollectionGenerator` that generates collections of the specified size
-/// of random elements (genes).
-pub trait ConvertToCollectionGenerator {
-    /// Convert the type into a `CollectionGenerator` that generates collections
-    /// of the specified size, using `self` to generate the individual elements.
-    /// This takes ownership of the type.
-    fn into_collection_generator(self, size: usize) -> Generator<Self>
+/// Helper methods to apply the [`Collection`] [`Distribution`] adapter to other
+/// [`Distribution`]'s.
+///
+/// This trait isn't meant to be implemented externally, rather
+/// it is an extension trait that is blanket-implemented on all
+/// types, although it is most useful for [`Distribution`]'s.
+pub trait ConvertToCollectionDistribution {
+    /// Apply the [`Collection`] [`Distribution`] adapter to self, moving self.
+    ///
+    /// This is semantically equivalent to calling `Collection::new(self,
+    /// length)`.
+    ///
+    /// The resulting distribution generates collections of length `length`,
+    /// sampling individual elements from `Self`.
+    fn into_collection(self, length: usize) -> Collection<Self>
     where
         Self: Sized;
 
-    /// Convert a reference to the type into a `CollectionGenerator` that
-    /// generates collections of the specified size, using `self` to
-    /// generate the individual elements. This takes a reference to the type
-    /// so the type can be used elsewhere when necessary.
-    fn to_collection_generator(&self, size: usize) -> Generator<&Self>;
+    /// Apply the [`Collection`] [`Distribution`] adapter to self, borrowing
+    /// self.
+    ///
+    /// This is semantically equivalent to calling `Collection::new(&self,
+    /// length)`.
+    ///
+    /// The resulting distribution generates collections of length `length`,
+    /// sampling individual elements from `Self`.
+    fn to_collection(&self, length: usize) -> Collection<&Self>;
 }
 
-impl<C> ConvertToCollectionGenerator for C
+impl<C> ConvertToCollectionDistribution for C
 where
     C: ?Sized,
 {
-    /// Convert the type into a `CollectionGenerator` that generates collections
-    /// of the specified size, using `self` to generate the individual elements.
-    fn into_collection_generator(self, size: usize) -> Generator<Self>
+    fn into_collection(self, length: usize) -> Collection<Self>
     where
         Self: Sized,
     {
-        Generator::new(self, size)
+        Collection::new(self, length)
     }
 
-    /// Convert a reference to the type into a `CollectionGenerator` that
-    /// generates collections of the specified size, using `&self` to
-    /// generate the individual elements.
-    fn to_collection_generator(&self, size: usize) -> Generator<&Self> {
-        Generator::new(self, size)
+    fn to_collection(&self, length: usize) -> Collection<&Self> {
+        Collection::new(self, length)
     }
 }
 
-/// Generate a `Vec` of random elements.
-///
-/// The number of element and the mechanism for generating
-/// random elements are specified in the `CollectionGenerator`
-/// struct.
-impl<T, C> Distribution<Vec<T>> for Generator<C>
+impl<T, C> Distribution<Vec<T>> for Collection<C>
 where
     C: Distribution<T>,
 {
+    /// Sample the [`Vec`] collection from this [`Collection`] distribution, of
+    /// length `length` as specified by the distribution.
     fn sample<R: rand::Rng + ?Sized>(&self, rng: &mut R) -> Vec<T> {
-        (&self.element_generator)
+        (&self.child_distribution)
             .sample_iter(rng)
-            .take(self.size)
+            .take(self.length)
+            .collect()
+    }
+}
+
+impl<T, C> Distribution<LinkedList<T>> for Collection<C>
+where
+    C: Distribution<T>,
+{
+    /// Sample the [`LinkedList`] collection from this [`Collection`]
+    /// distribution, of length `length` as specified by the distribution.
+    fn sample<R: rand::Rng + ?Sized>(&self, rng: &mut R) -> LinkedList<T> {
+        (&self.child_distribution)
+            .sample_iter(rng)
+            .take(self.length)
+            .collect()
+    }
+}
+
+impl<T, C> Distribution<VecDeque<T>> for Collection<C>
+where
+    C: Distribution<T>,
+{
+    /// Sample the [`VecDeque`] collection from this [`Collection`]
+    /// distribution, of length `length` as specified by the distribution.
+    fn sample<R: rand::Rng + ?Sized>(&self, rng: &mut R) -> VecDeque<T> {
+        (&self.child_distribution)
+            .sample_iter(rng)
+            .take(self.length)
             .collect()
     }
 }
