@@ -11,6 +11,7 @@
 /// # Example
 /// ```
 /// # use ec_core::individual::scorer::{Scorer, FnScorer};
+/// #
 /// let scorer_function = |x: &i32| x.abs_diff(10);
 /// let scorer = FnScorer(scorer_function);
 ///
@@ -33,6 +34,7 @@ static_assertions::assert_obj_safe!(Scorer<(), Score = ()>);
 /// # Example
 /// ```
 /// # use ec_core::individual::scorer::{Scorer, FnScorer};
+/// #
 /// let scorer_function = |x: &i32| x.abs_diff(15);
 /// let scorer = FnScorer(scorer_function);
 ///
@@ -51,6 +53,16 @@ where
 
     /// Calculate the score for the passed genome using this [`FnScorer`]'s
     /// function.
+    ///
+    /// # Example
+    /// ```
+    /// # use ec_core::{test_results::Error, individual::scorer::{Scorer, FnScorer}};
+    /// #
+    /// let scorer = FnScorer(|genome: &i32| Error(-*genome));
+    ///
+    /// let score = scorer.score(&10);
+    /// assert_eq!(score, -10);
+    /// ```
     fn score(&self, genome: &G) -> Self::Score {
         self.0(genome)
     }
