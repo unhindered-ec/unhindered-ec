@@ -2,7 +2,7 @@ use std::{borrow::Borrow, marker::PhantomData, num::NonZeroUsize};
 
 use rand::{distr::Uniform, prelude::Distribution};
 
-use crate::distributions::{choices::ChoicesDistribution, wrappers::choose_cloning::EmptySlice};
+use crate::distributions::{finite::Finite, wrappers::choose_cloning::EmptySlice};
 
 /// Generate a random element from a collection of options, cloning the chosen
 /// element.
@@ -39,7 +39,7 @@ where
     /// ```
     /// # use rand::distr::Distribution;
     /// # use ec_core::distributions::{
-    /// #    choices::ChoicesDistribution,
+    /// #    finite::Finite,
     /// #    wrappers::{
     /// #       owned::OneOfCloning,
     /// #       choose_cloning::EmptySlice,
@@ -48,7 +48,7 @@ where
     /// #
     /// let options = [1, 2, 3];
     /// let distr = OneOfCloning::new(options)?;
-    /// assert_eq!(options.len(), distr.num_choices().get());
+    /// assert_eq!(options.len(), distr.sample_space_size().get());
     ///
     /// let val = distr.sample(&mut rand::rng());
     /// assert!(options.contains(&val));
@@ -72,8 +72,8 @@ where
         })
     }
 }
-impl<T, U> ChoicesDistribution for OneOfCloning<T, U> {
-    fn num_choices(&self) -> NonZeroUsize {
+impl<T, U> Finite for OneOfCloning<T, U> {
+    fn sample_space_size(&self) -> NonZeroUsize {
         self.num_choices
     }
 }
