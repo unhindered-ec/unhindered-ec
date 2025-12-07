@@ -13,11 +13,26 @@ use crate::population::Population;
 ///
 /// Also see the [`WeightedPair`](crate::weighted::weighted_pair::WeightedPair)
 /// selector for a compile time (typed) version of this which is not using
-/// dynamic dispatch
+/// dynamic dispatch, which is the recommended way to do this when possible.
 ///
 /// Each selector has an associated weight passed in at construction time and
 /// one selector will be selected based on that on each selection call, and
 /// actual selection will then be forwarded to that selector.
+///
+/// # Example
+/// ```
+/// # use ec_core::operator::selector::{best::Best, worst::Worst, dyn_weighted::{DynWeighted, DynWeightedError}, Selector};
+/// # use rand::rng;
+/// #
+/// type Population = Vec<i32>;
+///
+/// let dyn_selector = DynWeighted::<Population>::new(Best, 1).with_selector(Worst, 1);
+///
+/// let population = vec![1,2,3];
+/// let selected = dyn_selector.select(&population, &mut rng())?;
+/// assert!(selected == &3 || selected == &1);
+/// # Ok::<(), DynWeightedError>(())
+/// ```
 #[derive(Default)]
 pub struct DynWeighted<P: Population> {
     selectors: Vec<(Box<dyn DynSelector<P> + Send + Sync>, usize)>,
@@ -48,11 +63,10 @@ where
     /// Construct a new [`DynWeighted`] selector from an iterator over tuples of
     /// selectors and associated weights
     ///
-    /// You probably want to usually use
-    /// `DynWeighted::new(...).with_selector(...)` instead since this is very
-    /// inflexible since iterators need to be a homogeneous collection of types,
-    /// which is pretty much the opposite of what [`DynWeighted`] is meant to be
-    /// for.
+    /// Usually you probably want to use the chaining construction method
+    /// `DynWeighted::new(...).with_selector(...)..` instead since the purpose
+    /// of [`DynWeighted`] is usually to hold a heterogeneous collection of
+    /// selectors, rather than a homogeneous like iterators support.
     ///
     /// # Example
     /// ```
@@ -145,6 +159,25 @@ where
     type Error = DynWeightedError;
 
     /// Select an individual from the given `Population` using this selector.
+    ///
+    /// This will randomly choose one selector from the options according to the
+    /// weights, and then run that selector on the [`Population`]
+    ///
+    /// # Example
+    /// ```
+    /// # use ec_core::operator::selector::{best::Best, worst::Worst, dyn_weighted::{DynWeighted, DynWeightedError}, Selector};
+    /// # use rand::rng;
+    /// #
+    /// type Population = Vec<i32>;
+    ///
+    /// let dyn_selector = DynWeighted::<Population>::new(Best, 1).with_selector(Worst, 1);
+    ///
+    /// let population = vec![1,2,3];
+    /// let selected = dyn_selector.select(&population, &mut rng())?;
+    /// assert!(selected == &3 || selected == &1);
+    /// # Ok::<(), DynWeightedError>(())
+    /// ```
+    ///
     /// # Errors
     /// - [`DynWeightedError::ZeroWeightSum`] if the weight sum of all selectors
     ///   is less than 1
