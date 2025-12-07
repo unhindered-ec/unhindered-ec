@@ -28,7 +28,19 @@ where
 {
     type Error = EmptyPopulation;
 
-    /// Select an Individual from the given Population using this selector.
+    /// Select the individual with the highest value.
+    ///
+    /// # Example
+    /// ```
+    /// # use ec_core::operator::selector::{Selector, best::Best, error::EmptyPopulation};
+    /// let population = [2, 3, 5];
+    ///
+    /// let best = Best;
+    /// let selected = best.select(&population, &mut rand::rng())?;
+    ///
+    /// assert_eq!(*selected, 5);
+    /// # Ok::<(), EmptyPopulation>(())
+    /// ```
     ///
     /// # Errors
     /// - [`EmptyPopulation`] if the population selected from is empty.
