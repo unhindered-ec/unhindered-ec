@@ -30,6 +30,48 @@ pub struct Then<F, G> {
     g: G,
 }
 
+impl<F, G> From<(F, G)> for Then<F, G> {
+    /// Convert this tuple of [`Operator`]'s into a [`Then`] operator, applying
+    /// one after the other.
+    ///
+    /// # Examples
+    /// ```
+    /// # use ec_core::operator::{
+    /// #     Operator,
+    /// #     composable::{Map, Then, RepeatWith},
+    /// #     constant::Constant,
+    /// #     identity::Identity
+    /// # };
+    /// #
+    /// let operator_1 = RepeatWith::<_, 2>::new(Constant::new(1));
+    /// let operator_2 = Map::new(Identity);
+    ///
+    /// let chained_operator = Then::from((operator_1, operator_2));
+    /// #
+    /// # assert_eq!(chained_operator.apply((), &mut rand::rng())?, [1; 2]);
+    /// # Ok::<(), Box<dyn std::error::Error>>(())
+    /// ```
+    /// ```
+    /// # use ec_core::operator::{
+    /// #     Operator,
+    /// #     composable::{Map, Then, RepeatWith},
+    /// #     constant::Constant,
+    /// #     identity::Identity
+    /// # };
+    /// #
+    /// let operator_1 = RepeatWith::<_, 2>::new(Constant::new(1));
+    /// let operator_2 = Map::new(Identity);
+    ///
+    /// let chained_operator: Then<_, _> = (operator_1, operator_2).into();
+    /// #
+    /// # assert_eq!(chained_operator.apply((), &mut rand::rng())?, [1; 2]);
+    /// # Ok::<(), Box<dyn std::error::Error>>(())
+    /// ```
+    fn from((f, g): (F, G)) -> Self {
+        Self::new(f, g)
+    }
+}
+
 impl<F, G> Then<F, G> {
     /// Create a new [`Then`] operator, applying two chained operators
     ///
