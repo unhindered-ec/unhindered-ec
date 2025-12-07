@@ -6,7 +6,7 @@ use std::{
 use miette::{Diagnostic, Severity};
 
 /// Error that occurs when creating a
-/// [`WeightedPair`](super::weighted_pair::WeightedPair) is constructed from
+/// [`WeightedPair`](super::weighted_pair::WeightedPair) from
 /// weights whose sum overflows.
 #[derive(
     Debug, thiserror::Error, Diagnostic, PartialEq, Eq, Clone, Copy, PartialOrd, Ord, Hash,
@@ -14,8 +14,9 @@ use miette::{Diagnostic, Severity};
 #[error("Overflow while trying to calculate the sum of the weights {0} and {1}.")]
 pub struct WeightSumOverflow(pub u32, pub u32);
 
-/// Error that occurs when for example trying to select from a
-/// [`Weighted`](super::Weighted) which has a 0 weight.
+/// Error that occurs when trying to use a 0-weight
+/// [`Weighted`](super::Weighted) in a context which expects a non-zero weight,
+/// for example selection
 #[derive(
     Debug, thiserror::Error, Diagnostic, PartialEq, Eq, Clone, Copy, PartialOrd, Ord, Hash,
 )]
