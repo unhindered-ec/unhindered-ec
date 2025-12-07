@@ -56,6 +56,25 @@ where
 {
     type Error = Infallible;
 
+    /// Apply the mutator to the genome `genome`.
+    ///
+    /// # Example
+    /// ```
+    /// # use ec_linear::{
+    /// #     mutator::with_rate::WithRate,
+    /// #     genome::bitstring::Bitstring
+    /// # };
+    /// # use ec_core::operator::mutator::Mutator;
+    /// #
+    /// let mut rng = rand::rng();
+    ///
+    /// let genome = Bitstring::random(100, &mut rng);
+    ///
+    /// let mutator = WithRate::new(1.0);
+    /// let Ok(mutated_genome) = mutator.mutate(genome.clone(), &mut rng);
+    ///
+    /// assert_ne!(genome, mutated_genome);
+    /// ```
     fn mutate<R: Rng + ?Sized>(&self, genome: T, rng: &mut R) -> Result<T, Self::Error> {
         Ok(genome
             .into_iter()
