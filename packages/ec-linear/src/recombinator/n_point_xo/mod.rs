@@ -17,9 +17,49 @@ use crate::{
     },
 };
 
+/// Recombinator for fixed-length linear genomes, like
+/// [`Bitstring`](crate::genome::bitstring::Bitstring).
+///
+/// This recombinator works by having two parents and choosing `N` points, where
+/// the genomes will be swapped every other pair `(n, n+1)`. This is in contrast
+/// to for example [`UniformXo`](super::uniform_xo::UniformXo) which randomly
+/// chooses which gene to keep at each position.
+///
+/// # Example
+/// ```
+/// # use ec_core::operator::recombinator::Recombinator;
+/// # use ec_linear::{
+/// #     recombinator::n_point_xo::NPointXo,
+/// #     genome::bitstring::Bitstring,
+/// # };
+/// # use rand::rng;
+/// #
+/// # let mut rng = rng();
+/// #
+/// let parent_1 = Bitstring::random(10, &mut rng);
+/// let parent_2 = Bitstring::random(10, &mut rng);
+///
+/// let child = NPointXo::<4>::new().recombine([parent_1, parent_2], &mut rng)?;
+/// # let _ = child;
+/// #
+/// # Ok::<(),Box<dyn std::error::Error>>(())
+/// ```
+#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
 pub struct NPointXo<const N: usize>(());
 
 impl<const N: usize> NPointXo<N> {
+    /// Create a new [`NPointXo`] recombinator with `N` crossover points
+    ///
+    /// This ensures at compile time that at least one croosover point is
+    /// specified.
+    ///
+    /// # Example
+    /// ```
+    /// # use ec_linear::recombinator::n_point_xo::NPointXo;
+    /// #
+    /// let my_recombinator = NPointXo::<4>::new();
+    /// # let _ = my_recombinator;
+    /// ```
     #[must_use]
     pub const fn new() -> Self {
         const {
@@ -33,6 +73,18 @@ impl<const N: usize> NPointXo<N> {
 }
 
 impl<const N: usize> Default for NPointXo<N> {
+    /// Create a new [`NPointXo`] recombinator with `N` crossover points
+    ///
+    /// This ensures at compile time that at least one croosover point is
+    /// specified.
+    ///
+    /// # Example
+    /// ```
+    /// # use ec_linear::recombinator::n_point_xo::NPointXo;
+    /// #
+    /// let my_recombinator = NPointXo::<4>::default();
+    /// # let _ = my_recombinator;
+    /// ```
     fn default() -> Self {
         Self::new()
     }
@@ -45,6 +97,28 @@ where
     type Output = G;
     type Error = NPointCrossoverError<G::SegmentCrossoverError>;
 
+    /// Apply this crossover operator to the genomes `first_genome` and
+    /// `second_genome`
+    ///
+    /// # Example
+    /// ```
+    /// # use ec_core::operator::recombinator::Recombinator;
+    /// # use ec_linear::{
+    /// #     recombinator::n_point_xo::NPointXo,
+    /// #     genome::bitstring::Bitstring,
+    /// # };
+    /// # use rand::rng;
+    /// #
+    /// # let mut rng = rng();
+    /// #
+    /// let parent_1 = Bitstring::random(10, &mut rng);
+    /// let parent_2 = Bitstring::random(10, &mut rng);
+    ///
+    /// let child = NPointXo::<4>::new().recombine([parent_1, parent_2], &mut rng)?;
+    /// # let _ = child;
+    /// #
+    /// # Ok::<(),Box<dyn std::error::Error>>(())
+    /// ```
     fn recombine<R: Rng + ?Sized>(
         &self,
         [mut first_genome, mut second_genome]: [G; 2],
@@ -101,6 +175,28 @@ where
     type Output = G;
     type Error = <Self as Recombinator<[G; 2]>>::Error;
 
+    /// Apply this crossover operator to the genomes `first_genome` and
+    /// `second_genome`
+    ///
+    /// # Example
+    /// ```
+    /// # use ec_core::operator::recombinator::Recombinator;
+    /// # use ec_linear::{
+    /// #     recombinator::n_point_xo::NPointXo,
+    /// #     genome::bitstring::Bitstring,
+    /// # };
+    /// # use rand::rng;
+    /// #
+    /// # let mut rng = rng();
+    /// #
+    /// let parent_1 = Bitstring::random(10, &mut rng);
+    /// let parent_2 = Bitstring::random(10, &mut rng);
+    ///
+    /// let child = NPointXo::<4>::new().recombine((parent_1, parent_2), &mut rng)?;
+    /// # let _ = child;
+    /// #
+    /// # Ok::<(),Box<dyn std::error::Error>>(())
+    /// ```
     fn recombine<R: Rng + ?Sized>(
         &self,
         genomes: (G, G),
