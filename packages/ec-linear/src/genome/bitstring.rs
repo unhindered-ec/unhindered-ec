@@ -13,23 +13,6 @@ use rand::{
 use super::Linear;
 use crate::recombinator::{crossover::Crossover, errors::MultipleGeneAccess};
 
-pub struct BoolGenerator {
-    pub true_probability: f64,
-}
-
-impl BoolGenerator {
-    #[must_use]
-    pub const fn new(true_probability: f64) -> Self {
-        Self { true_probability }
-    }
-}
-
-impl Distribution<bool> for BoolGenerator {
-    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> bool {
-        rng.random_bool(self.true_probability)
-    }
-}
-
 /// A linear, variable-length genome of true/false values.
 ///
 /// # Example
