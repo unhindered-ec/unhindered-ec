@@ -24,8 +24,8 @@ pub use then::*;
 /// #
 /// let my_operator = Constant::new(false)
 ///     .apply_n_times::<5>()
-///     .then_map(Identity)
-///     .then_map(Constant::new(5));
+///     .map(Identity)
+///     .map(Constant::new(5));
 ///
 /// let Ok(my_result) = my_operator.apply((), &mut rng());
 /// assert_eq!(my_result, [5; 5]);
@@ -78,14 +78,14 @@ pub trait Composable {
     /// #     Composable
     /// # };
     /// #
-    /// let my_composed_operator = Constant::new(5).apply_twice().then_map(Identity);
+    /// let my_composed_operator = Constant::new(5).apply_twice().map(Identity);
     /// let my_constructed_operator = Then::new(Constant::new(5).apply_twice(), Map::new(Identity));
     ///
     /// assert_eq!(my_composed_operator, my_constructed_operator);
     /// ```
     ///
     /// [`Operator`]: super::Operator
-    fn then_map<Op>(self, op: Op) -> Then<Self, Map<Op>>
+    fn map<Op>(self, op: Op) -> Then<Self, Map<Op>>
     where
         Self: Sized,
     {
@@ -188,42 +188,6 @@ pub trait Composable {
         Self: Sized,
     {
         RepeatWith::new(self)
-    }
-
-    /// Create a new `Map` operator that applies `op` by discarding self.
-    ///
-    /// This is equivalent to [`Map::new(op)`](Map)
-    /// # Example
-    /// ```
-    /// # use ec_core::operator::{
-    /// #     constant::Constant,
-    /// #     composable::Map,
-    /// #     Composable,
-    /// #     Operator
-    /// # };
-    /// # use rand::rng;
-    /// #
-    /// # #[allow(deprecated)]
-    /// let my_composed_operator = Constant::new(5).map(Constant::new(6));
-    /// let my_constructed_operator = Map::new(Constant::new(6));
-    ///
-    /// assert_eq!(my_composed_operator, my_constructed_operator);
-    ///
-    /// let Ok(my_value) = my_composed_operator.apply([1, 2, 3, 4, 5], &mut rng());
-    /// assert_eq!(my_value, [6, 6, 6, 6, 6]);
-    /// ```
-    ///
-    /// [`Operator`]: super::Operator
-    #[deprecated(
-        note = "Chaining `.map()` is confusing since it discards self. If that is what you \
-                intended to do, use `Map::new(op)` instead. Instead, you probably meant to use \
-                `.then_map()`."
-    )]
-    fn map<Op>(self, op: Op) -> Map<Op>
-    where
-        Self: Sized,
-    {
-        Map::new(op)
     }
 
     /// Construct a new operator from `Self` and a context, providing `Self` as
