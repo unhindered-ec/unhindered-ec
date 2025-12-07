@@ -1,7 +1,7 @@
 use miette::Diagnostic;
 
-/// Error that occurs in various selectors when trying to select from a empty
-/// population
+/// Error that occurs when trying to select from a empty
+/// [`Population`](ec_core::population::Population)
 #[derive(
     Debug, thiserror::Error, Diagnostic, PartialEq, Eq, Clone, Copy, PartialOrd, Ord, Hash,
 )]
