@@ -40,7 +40,7 @@ pub use erased::*;
 ///
 /// Please see its documentation for further details on its usage.
 ///
-/// # Examples
+/// # Example
 ///
 /// In this example, we define a `Recombinator` that swaps one randomly
 /// chosen element from the first parent with the corresponding element
@@ -95,11 +95,44 @@ pub trait Recombinator<GS> {
 
     /// Recombine the given `genomes` returning a new genome of type `Output`.
     ///
-    /// # Errors
+    /// # Example
+    /// ```
+    /// # use rand::{rng, Rng};
+    /// # use ec_core::operator::recombinator::Recombinator;
+    /// # use std::convert::Infallible;
+    /// #
+    /// # struct SwapOne;
+    /// type Genome<T> = [T; 4];
+    /// type Parents<T> = (Genome<T>, Genome<T>);
+    /// #
+    /// # impl<T: Copy> Recombinator<Parents<T>> for SwapOne {
+    /// #     type Output = Genome<T>;
+    /// #     type Error = Infallible;
+    /// #
+    /// #     fn recombine<R: Rng + ?Sized>(
+    /// #         &self,
+    /// #         (mut first_parent, second_parent): Parents<T>,
+    /// #         rng: &mut R,
+    /// #     ) -> Result<Genome<T>, Self::Error> {
+    /// #         let index = rng.random_range(0..first_parent.len());
+    /// #         first_parent[index] = second_parent[index];
+    /// #         Ok(first_parent)
+    /// #     }
+    /// # }
     ///
-    /// This will return an error if there is an error recombining the given
-    /// parent genomes. This will usually be because the given `genomes` are
-    /// invalid in some way, thus making recombination impossible.
+    /// let first_parent = [0, 0, 0, 0];
+    /// let second_parent = [1, 1, 1, 1];
+    /// let child = SwapOne.recombine((first_parent, second_parent), &mut rng())?;
+    /// # let num_zeros = child.iter().filter(|&&x| x == 0).count();
+    /// # let num_ones = child.iter().filter(|&&x| x == 1).count();
+    /// # assert_eq!(num_zeros, 3);
+    /// # assert_eq!(num_ones, 1);
+    /// # Ok::<(), Box<dyn std::error::Error>>(())
+    /// ```
+    ///
+    /// # Errors
+    /// - [`Self::Error`] if recombining the given parent genomes fails, for
+    ///   example beacuse one of the parent genomes is invalid in some way.
     fn recombine<R: Rng + ?Sized>(
         &self,
         genomes: GS,
@@ -296,7 +329,7 @@ pub trait Recombinator<GS> {
 /// assert_eq!(count, 3);
 /// # Ok::<(), Box<dyn std::error::Error>>(())
 /// ```
-#[derive(Debug, Composable, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Composable, Default)]
 pub struct Recombine<R> {
     /// The wrapped [`Recombinator`] that this [`Recombine`] will apply
     recombinator: R,
