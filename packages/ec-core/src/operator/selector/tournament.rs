@@ -12,8 +12,10 @@ use crate::population::Population;
 /// selected Individuals face off against each other, where the best one wins.
 ///
 /// # Examples
+/// With a tournament of size `3` (a ternary tournament):
 /// ```
 /// # use ec_core::operator::selector::{Selector, tournament::{Tournament, TournamentSizeError}};
+/// #
 /// let population = [1, 2, 5, 8];
 ///
 /// let tournament = Tournament::of_size::<3>();
@@ -22,8 +24,10 @@ use crate::population::Population;
 /// assert!([5, 8].contains(selected));
 /// # Ok::<(), TournamentSizeError>(())
 /// ```
+/// With a binary tournament:
 /// ```
 /// # use ec_core::operator::selector::{Selector, tournament::{Tournament, TournamentSizeError}};
+/// #
 /// let population = [1, 2, 5, 8];
 ///
 /// let tournament = Tournament::binary();
@@ -32,12 +36,23 @@ use crate::population::Population;
 /// assert!([2, 5, 8].contains(selected));
 /// # Ok::<(), TournamentSizeError>(())
 /// ```
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Tournament {
     size: NonZeroUsize,
 }
 
 impl Default for Tournament {
+    /// Construct a default (binary) tournament
+    ///
+    /// # Example
+    /// ```
+    /// # use ec_core::operator::selector::tournament::Tournament;
+    /// #
+    /// let default = Tournament::default();
+    /// let tournament = Tournament::binary();
+    ///
+    /// assert_eq!(default, tournament)
+    /// ```
     fn default() -> Self {
         Self::of_size::<2>()
     }
@@ -95,26 +110,50 @@ impl TournamentSizeError {
 }
 
 impl Tournament {
-    /// Construct a tournament selector with the given tournament size. This
-    /// will select `size` individuals from the population, randomly
+    /// Construct a tournament selector with the given tournament size.
+    ///
+    /// This will select `size` individuals from the population, randomly
     /// without replacement, and return the "best" from that set.
+    ///
+    /// If the size you construct from is a constant, consider using
+    /// [`Tournament::of_size`] instead.
+    ///
+    /// # Example
+    ///
+    /// Create a tournament selector with tournament size 3:
+    /// ```
+    /// # use ec_core::operator::selector::tournament::Tournament;
+    /// # use std::num::NonZero;
+    /// #
+    /// let selector = Tournament::new(const { NonZero::new(3).unwrap() });
+    /// # let _ = selector;
+    /// ```
     #[must_use]
     pub const fn new(size: NonZeroUsize) -> Self {
         Self { size }
     }
 
     /// Construct a tournament selector with the given _constant_
-    /// tournament size, allowing for compile-time checks that the
-    /// tournament size `N` is greater than zero. This selector
-    /// will select `size` individuals from the population, randomly
+    /// tournament size.
+    ///
+    /// This allows for compile-time checks that the
+    /// tournament size `N` is greater than zero, and as such is easier to use
+    /// (no [`NonZero`](std::num::NonZero) required).
+    ///
+    /// This selector will select `N` individuals from the population, randomly
     /// without replacement, and return the "best" from that set.
     ///
-    /// # Examples
+    /// If you instead only have a dynamic tournament size, consider using
+    /// [`Tournament::new`] instead.
     ///
-    /// Create a tournament selector with tournament size 3:
+    /// # Example
+    ///
+    /// Create a tournament selector with constant tournament size 3:
     /// ```
     /// # use ec_core::operator::selector::tournament::Tournament;
-    /// let _selector = Tournament::of_size::<3>();
+    /// #
+    /// let selector = Tournament::of_size::<3>();
+    /// # let _ = selector;
     /// ```
     #[must_use]
     pub const fn of_size<const N: usize>() -> Self {
@@ -128,9 +167,22 @@ impl Tournament {
         )
     }
 
-    /// Construct a binary tournament selector, i.e., a tournament
+    /// Construct a binary tournament selector.
+    ///
+    /// This is a tournament
     /// selector that selects two random individuals from the population
     /// and returns the "better" of the two.
+    ///
+    /// If you instead want a varying tournament size, consider using
+    /// [`Tournament::of_size`] or [`Tournament::new`] instead.
+    ///
+    /// # Example
+    /// ```
+    /// # use ec_core::operator::selector::tournament::Tournament;
+    /// #
+    /// let selector = Tournament::binary();
+    /// # let _ = selector;
+    /// ```
     #[must_use]
     pub const fn binary() -> Self {
         Self::of_size::<2>()
@@ -146,6 +198,19 @@ where
 
     /// Select an Individual from the given Population using tournament
     /// selection.
+    ///
+    /// # Example
+    /// ```
+    /// # use ec_core::operator::selector::{Selector, tournament::{Tournament, TournamentSizeError}};
+    /// #
+    /// let population = [1, 2, 5, 8];
+    ///
+    /// let tournament = Tournament::binary();
+    /// let selected = tournament.select(&population, &mut rand::rng())?;
+    ///
+    /// assert!([2, 5, 8].contains(selected));
+    /// # Ok::<(), TournamentSizeError>(())
+    /// ```
     ///
     /// # Errors
     /// - [`TournamentSizeError`] if the population is of smaller size than the
