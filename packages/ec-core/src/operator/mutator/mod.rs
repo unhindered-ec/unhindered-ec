@@ -11,7 +11,7 @@ pub use erased::*;
 /// genome of the same type (`G`).
 ///
 /// Implementations of this trait are typically representation dependent,
-/// so see crates like [`ec_linear`](../../../ec_linear/mutator/index.html) for
+/// so see crates like [`ec_linear`][ec-linear] for
 /// examples of mutators on linear genomes.
 ///
 /// # See also
@@ -68,16 +68,51 @@ pub use erased::*;
 ///     .count();
 /// assert_eq!(num_diffs, 1);
 /// ```
+///
+/// [ec-linear]: #
 pub trait Mutator<G> {
     type Error;
 
     /// Mutate the given `genome` returning a new genome of the same type (`G`)
     ///
+    /// # Example
+    /// ```
+    /// # use rand::{rng, Rng};
+    /// # use ec_core::operator::mutator::Mutator;
+    /// # use std::convert::Infallible;
+    /// #
+    /// type Genome<T> = [T; 4];
+    /// #
+    /// # struct FlipOne;
+    /// #
+    /// # impl Mutator<Genome<bool>> for FlipOne {
+    /// #     type Error = Infallible;
+    /// #
+    /// #     fn mutate<R: Rng + ?Sized>(
+    /// #         &self,
+    /// #         mut genome: Genome<bool>,
+    /// #         rng: &mut R,
+    /// #     ) -> Result<Genome<bool>, Self::Error> {
+    /// #         let index = rng.random_range(0..genome.len());
+    /// #         genome[index] = !genome[index];
+    /// #         Ok(genome)
+    /// #     }
+    /// # }
+    ///
+    /// let genome = [true, false, false, true];
+    /// let child_genome = FlipOne.mutate(genome, &mut rng()).unwrap();
+    /// # let num_diffs = genome
+    /// #     .iter()
+    /// #     .zip(child_genome.iter()) // Pair up corresponding elements from the two genomes
+    /// #     .filter(|(x, y)| x != y) // Filter out pairs where the elements are the same
+    /// #     .count();
+    /// # assert_eq!(num_diffs, 1);
+    /// ```
+    ///
     /// # Errors
     ///
-    /// This will return an error if there is an error mutating the given
-    /// genome. This will usually be because the given `genome` is invalid in
-    /// some way, thus making the mutation impossible.
+    /// - [`Self::Error`] if mutating the given `genome` errors, for example
+    ///   because the `genome` is invalid in some way.
     fn mutate<R: Rng + ?Sized>(&self, genome: G, rng: &mut R) -> Result<G, Self::Error>;
 }
 
@@ -250,7 +285,7 @@ pub trait Mutator<G> {
 /// assert_eq!(chain.apply(genome, &mut rng())?, 1);
 /// # Ok::<(), Box<dyn std::error::Error>>(())
 /// ```
-#[derive(Debug, Composable, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Composable, Default)]
 pub struct Mutate<M> {
     /// The wrapped [`Mutator`] that this [`Mutate`] will apply
     mutator: M,
