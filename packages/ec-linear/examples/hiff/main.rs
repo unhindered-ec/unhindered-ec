@@ -95,7 +95,7 @@ fn main() -> miette::Result<()> {
 
     let make_new_individual = Select::new(selector)
         .apply_twice()
-        .then_map(GenomeExtractor)
+        .map(GenomeExtractor)
         .then(Recombine::new(TwoPointXo))
         .then(Mutate::new(WithOneOverLength))
         .wrap::<GenomeScorer<_, _>>(scorer);
