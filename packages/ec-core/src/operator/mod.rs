@@ -1,9 +1,9 @@
-//! Documentation on the `operator` module...
-//!
-//! # Wrappers
-//!
-//! Explain the use of wrappers, and why blanket
-//! implementations weren't feasible.
+// TODO: Documentation on the `operator` module...
+//
+// # Wrappers
+//
+// Explain the use of wrappers, and why blanket
+// implementations weren't feasible.
 
 use rand::Rng;
 
@@ -21,6 +21,7 @@ pub mod mutator;
 pub mod recombinator;
 pub mod selector;
 
+#[doc(inline)]
 pub use composable::Composable;
 
 /// An operator in a data pipeline
