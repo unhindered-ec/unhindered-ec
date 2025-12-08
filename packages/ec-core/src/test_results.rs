@@ -2,6 +2,8 @@ use std::{
     cmp::Ordering,
     fmt::{Debug, Display},
     iter::Sum,
+    ops::Index,
+    slice::SliceIndex,
 };
 
 // TODO: We can probably use things in the `num` family of traits
@@ -13,7 +15,7 @@ use std::{
 //   implement? I feel like that might avoid some duplication here.
 
 /// Score implicitly follows a "bigger is better" model.
-#[derive(Eq, PartialEq, Ord, PartialOrd, Debug, Clone, Copy, Hash)]
+#[derive(Eq, PartialEq, Ord, PartialOrd, Debug, Clone, Copy, Hash, Default)]
 #[repr(transparent)]
 pub struct Score<T>(pub T);
 
@@ -29,6 +31,13 @@ impl<T: Display> Display for Score<T> {
 }
 
 // TODO: Write tests for the `From` and `Sum` trait implementations.
+
+impl<T> Score<T> {
+    #[must_use]
+    pub const fn new(score: T) -> Self {
+        Self(score)
+    }
+}
 
 impl<T> From<T> for Score<T> {
     fn from(score: T) -> Self {
@@ -66,7 +75,7 @@ where
 
 // TODO: Rewrite `Error` using the std::cmp::Reverse type
 //   to convert `Score` to `Error`.
-#[derive(Eq, PartialEq, Debug, Clone, Copy, Hash)]
+#[derive(Eq, PartialEq, Debug, Clone, Copy, Hash, Default)]
 #[repr(transparent)]
 pub struct Error<T>(pub T);
 
@@ -95,6 +104,13 @@ impl<T: Display> Display for Error<T> {
     }
 }
 // TODO: Write tests for the `From` and `Sum` trait implementations.
+
+impl<T> Error<T> {
+    #[must_use]
+    pub const fn new(score: T) -> Self {
+        Self(score)
+    }
+}
 
 impl<T> From<T> for Error<T> {
     fn from(error: T) -> Self {
@@ -169,6 +185,24 @@ pub enum TestResult<S, E> {
     Error(Error<E>),
 }
 
+impl<S, E> TestResult<S, E> {
+    #[must_use]
+    pub const fn score(score: S) -> Self {
+        Self::Score(Score(score))
+    }
+
+    #[must_use]
+    pub const fn error(error: E) -> Self {
+        Self::Error(Error(error))
+    }
+}
+
+impl<S: Default, E> Default for TestResult<S, E> {
+    fn default() -> Self {
+        Self::Score(Score::default())
+    }
+}
+
 impl<S: PartialOrd, E: PartialOrd> PartialOrd for TestResult<S, E> {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         match (self, other) {
@@ -220,9 +254,10 @@ mod test_result_tests {
 }
 
 #[derive(Debug, Eq, PartialEq, Clone, Hash)]
+#[non_exhaustive]
 pub struct TestResults<R> {
-    pub results: Vec<R>,
-    pub total_result: R,
+    results: Vec<R>,
+    total_result: R,
 }
 
 // We need `TestResults` to be cloneable in many of our applications,
@@ -232,13 +267,53 @@ static_assertions::assert_impl_all!(TestResults<()>: Clone);
 
 impl<R> TestResults<R> {
     /// Get the number of test results
+    #[must_use]
     pub const fn len(&self) -> usize {
         self.results.len()
     }
 
     /// Check if no test results were stored
+    #[must_use]
     pub const fn is_empty(&self) -> bool {
         self.results.is_empty()
+    }
+
+    #[must_use]
+    pub const fn total(&self) -> &R {
+        &self.total_result
+    }
+
+    #[must_use]
+    pub fn into_total(self) -> R {
+        self.total_result
+    }
+
+    #[must_use]
+    pub fn get<I>(&self, index: I) -> Option<&I::Output>
+    where
+        I: SliceIndex<[R]>,
+    {
+        self.results.get(index)
+    }
+
+    #[must_use]
+    pub fn iter(&self) -> <&'_ Self as IntoIterator>::IntoIter {
+        self.into_iter()
+    }
+
+    // TODO: For now no iter_mut() and get_mut() functions since those would need to
+    // modify the total result after they are called and are thus more difficult to
+    // implement (although certainly possible as well)
+}
+
+impl<R, I> Index<I> for TestResults<R>
+where
+    I: SliceIndex<[R]>,
+{
+    type Output = I::Output;
+
+    fn index(&self, index: I) -> &Self::Output {
+        &self.results[index]
     }
 }
 
@@ -254,9 +329,32 @@ impl<R: PartialOrd> PartialOrd for TestResults<R> {
     }
 }
 
+impl<R: PartialOrd> PartialOrd<R> for TestResults<R> {
+    fn partial_cmp(&self, other: &R) -> Option<Ordering> {
+        self.total_result.partial_cmp(other)
+    }
+}
+
+impl<R: PartialEq> PartialEq<R> for TestResults<R> {
+    fn eq(&self, other: &R) -> bool {
+        self.total_result.eq(other)
+    }
+}
+
 impl<R: Display> Display for TestResults<R> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "Test result: {}", self.total_result)
+    }
+}
+
+impl<R: Default + Clone> Default for TestResults<R> {
+    fn default() -> Self {
+        let val: R = R::default();
+
+        Self {
+            results: vec![val.clone()],
+            total_result: val,
+        }
     }
 }
 
@@ -272,26 +370,15 @@ impl<R: Display> Display for TestResults<R> {
  * end instead of converting into a `Vec` first.
  */
 
-// impl<V, R> From<Vec<V>> for TestResults<R>
-// where
-//     R: From<V> + Copy + Sum,
-// {
-//     fn from(values: Vec<V>) -> Self {
-//         let results: Vec<R> = values.into_iter().map(Into::into).collect();
-//         let total_result: R = results.iter().copied().sum();
-//         Self {
-//             results,
-//             total_result
-//         }
-//     }
-// }
-
-impl<I, V, R> From<I> for TestResults<R>
+impl<V, R> FromIterator<V> for TestResults<R>
 where
+    // TODO: I would really reconsider the from here, since
+    // it messes up type inference a lot, and I would
+    // say that then a .map(Into::into) can just be
+    // done before the .collect() call.
     for<'a> R: From<V> + Sum<&'a R> + 'a,
-    I: IntoIterator<Item = V>,
 {
-    fn from(values: I) -> Self {
+    fn from_iter<T: IntoIterator<Item = V>>(values: T) -> Self {
         let results: Vec<R> = values.into_iter().map(Into::into).collect();
         let total_result = results.iter().sum();
         Self {
@@ -301,12 +388,23 @@ where
     }
 }
 
-impl<V, R> FromIterator<V> for TestResults<R>
-where
-    for<'a> R: From<V> + Sum<&'a R> + 'a,
-{
-    fn from_iter<T: IntoIterator<Item = V>>(values: T) -> Self {
-        values.into()
+impl<R> IntoIterator for TestResults<R> {
+    type Item = R;
+
+    type IntoIter = <Vec<R> as IntoIterator>::IntoIter;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.results.into_iter()
+    }
+}
+
+impl<'a, R> IntoIterator for &'a TestResults<R> {
+    type Item = &'a R;
+
+    type IntoIter = <&'a Vec<R> as IntoIterator>::IntoIter;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.results.iter()
     }
 }
 
@@ -317,7 +415,7 @@ mod test_results_tests {
     #[test]
     fn create_test_results_from_errors() {
         let errors = [5, 8, 0, 9];
-        let test_results: TestResults<Error<i32>> = errors.into();
+        let test_results: TestResults<Error<i32>> = errors.into_iter().collect();
         assert!(test_results.results.iter().map(|r| r.0).eq(errors));
         assert_eq!(test_results.total_result, errors.into_iter().sum());
     }
@@ -325,7 +423,7 @@ mod test_results_tests {
     #[test]
     fn create_test_results_from_scores() {
         let scores = [5, 8, 0, 9];
-        let test_results: TestResults<Score<i32>> = scores.into();
+        let test_results: TestResults<Score<i32>> = scores.into_iter().collect();
         assert!(test_results.results.iter().map(|r| r.0).eq(scores));
         assert_eq!(test_results.total_result, scores.into_iter().sum());
     }
