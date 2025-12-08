@@ -15,7 +15,7 @@ pub fn from_iterator(c: &mut Criterion) {
     let values = [VALUE; NUM_VALUES];
     c.bench_function("TestResults construction from values", |b| {
         b.iter(|| {
-            _ = TestResults::<i64>::from(black_box(values));
+            _ = TestResults::<i64>::from_iter(black_box(values));
         });
     });
 }
@@ -32,7 +32,7 @@ pub fn find_smallest(c: &mut Criterion) {
         StandardUniform.into_collection_generator(NUM_VALUES),
         &mut rng(),
     )
-    .map(Into::into)
+    .map(TestResults::from_iter)
     .take(NUM_RESULTS)
     .collect::<Vec<_>>();
     c.bench_function("Find smallest TestResults", |b| {

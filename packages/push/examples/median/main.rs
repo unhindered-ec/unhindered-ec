@@ -130,7 +130,7 @@ fn main() -> miette::Result<()> {
         let best = Best.select(generation.population(), &mut rng)?;
         println!("Generation {generation_number:4} best is {best}");
 
-        if best.test_results.total_result.0 == 0 {
+        if best.test_results.total().0 == 0 {
             println!("SUCCESS");
             break;
         }
