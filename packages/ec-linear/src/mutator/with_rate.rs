@@ -5,6 +5,7 @@ use rand::Rng;
 
 use crate::genome::Linear;
 
+#[derive(Debug, Clone, Copy, PartialEq, PartialOrd, Default)]
 pub struct WithRate {
     mutation_rate: f32,
 }
