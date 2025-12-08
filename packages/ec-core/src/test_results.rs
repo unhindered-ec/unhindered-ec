@@ -39,6 +39,18 @@ impl<T> Score<T> {
     }
 }
 
+impl<T: PartialOrd> PartialOrd<T> for Score<T> {
+    fn partial_cmp(&self, other: &T) -> Option<Ordering> {
+        self.0.partial_cmp(other)
+    }
+}
+
+impl<T: PartialEq> PartialEq<T> for Score<T> {
+    fn eq(&self, other: &T) -> bool {
+        self.0.eq(other)
+    }
+}
+
 impl<T> From<T> for Score<T> {
     fn from(score: T) -> Self {
         Self(score)
@@ -95,6 +107,18 @@ impl<T: PartialOrd> PartialOrd for Error<T> {
         self.0
             .partial_cmp(&other.0)
             .map(std::cmp::Ordering::reverse)
+    }
+}
+
+impl<T: PartialOrd> PartialOrd<T> for Error<T> {
+    fn partial_cmp(&self, other: &T) -> Option<Ordering> {
+        self.0.partial_cmp(other)
+    }
+}
+
+impl<T: PartialEq> PartialEq<T> for Error<T> {
+    fn eq(&self, other: &T) -> bool {
+        self.0.eq(other)
     }
 }
 
@@ -185,6 +209,18 @@ pub enum TestResult<S, E> {
     Error(Error<E>),
 }
 
+impl<S, E> From<Score<S>> for TestResult<S, E> {
+    fn from(value: Score<S>) -> Self {
+        Self::Score(value)
+    }
+}
+
+impl<S, E> From<Error<E>> for TestResult<S, E> {
+    fn from(value: Error<E>) -> Self {
+        Self::Error(value)
+    }
+}
+
 impl<S, E> TestResult<S, E> {
     #[must_use]
     pub const fn score(score: S) -> Self {
@@ -257,7 +293,7 @@ mod test_result_tests {
 #[non_exhaustive]
 pub struct TestResults<R> {
     results: Vec<R>,
-    total_result: R,
+    total_result: Option<R>,
 }
 
 // We need `TestResults` to be cloneable in many of our applications,
@@ -279,12 +315,12 @@ impl<R> TestResults<R> {
     }
 
     #[must_use]
-    pub const fn total(&self) -> &R {
-        &self.total_result
+    pub const fn total(&self) -> Option<&R> {
+        self.total_result.as_ref()
     }
 
     #[must_use]
-    pub fn into_total(self) -> R {
+    pub fn into_total(self) -> Option<R> {
         self.total_result
     }
 
@@ -331,29 +367,48 @@ impl<R: PartialOrd> PartialOrd for TestResults<R> {
 
 impl<R: PartialOrd> PartialOrd<R> for TestResults<R> {
     fn partial_cmp(&self, other: &R) -> Option<Ordering> {
-        self.total_result.partial_cmp(other)
+        self.total_result
+            .as_ref()
+            .and_then(|result| result.partial_cmp(other))
     }
 }
 
 impl<R: PartialEq> PartialEq<R> for TestResults<R> {
     fn eq(&self, other: &R) -> bool {
-        self.total_result.eq(other)
+        self.total_result
+            .as_ref()
+            .is_some_and(|result| result.eq(other))
     }
 }
 
 impl<R: Display> Display for TestResults<R> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Test result: {}", self.total_result)
+        match self.total_result.as_ref() {
+            Some(result) => {
+                write!(f, "Total result: {result}")
+            }
+            None => f.write_str("Total result: N/A (empty result set)"),
+        }
     }
 }
 
-impl<R: Default + Clone> Default for TestResults<R> {
+impl<R> Default for TestResults<R> {
+    /// Create a new empty [`TestResults`].
+    ///
+    /// # Example
+    /// ```
+    /// # use ec_core::test_results::{TestResults, Score};
+    /// assert!(
+    ///     TestResults::<Score<i32>>::default()
+    ///         .iter()
+    ///         .eq::<[&Score<_>; 0]>([])
+    /// );
+    /// assert_eq!(TestResults::<Score<i32>>::default().total(), None);
+    /// ```
     fn default() -> Self {
-        let val: R = R::default();
-
         Self {
-            results: vec![val.clone()],
-            total_result: val,
+            results: vec![],
+            total_result: None,
         }
     }
 }
@@ -380,7 +435,7 @@ where
 {
     fn from_iter<T: IntoIterator<Item = V>>(values: T) -> Self {
         let results: Vec<R> = values.into_iter().map(Into::into).collect();
-        let total_result = results.iter().sum();
+        let total_result = (!results.is_empty()).then(|| results.iter().sum());
         Self {
             results,
             total_result,
@@ -417,7 +472,7 @@ mod test_results_tests {
         let errors = [5, 8, 0, 9];
         let test_results: TestResults<Error<i32>> = errors.into_iter().collect();
         assert!(test_results.results.iter().map(|r| r.0).eq(errors));
-        assert_eq!(test_results.total_result, errors.into_iter().sum());
+        assert_eq!(test_results.total_result, Some(errors.into_iter().sum()));
     }
 
     #[test]
@@ -425,7 +480,7 @@ mod test_results_tests {
         let scores = [5, 8, 0, 9];
         let test_results: TestResults<Score<i32>> = scores.into_iter().collect();
         assert!(test_results.results.iter().map(|r| r.0).eq(scores));
-        assert_eq!(test_results.total_result, scores.into_iter().sum());
+        assert_eq!(test_results.total_result, Some(scores.into_iter().sum()));
     }
 
     #[test]
@@ -434,7 +489,7 @@ mod test_results_tests {
         let results = errors.iter().copied().map(Error::from);
         let test_results: TestResults<Error<i32>> = results.clone().collect();
         assert!(test_results.results.into_iter().eq(results));
-        assert_eq!(test_results.total_result, errors.into_iter().sum());
+        assert_eq!(test_results.total_result, Some(errors.into_iter().sum()));
     }
 
     #[test]
@@ -443,6 +498,6 @@ mod test_results_tests {
         let results = scores.iter().copied().map(Score::from);
         let test_results: TestResults<Score<i32>> = results.clone().collect();
         assert!(test_results.results.into_iter().eq(results));
-        assert_eq!(test_results.total_result, scores.into_iter().sum());
+        assert_eq!(test_results.total_result, Some(scores.into_iter().sum()));
     }
 }
