@@ -79,6 +79,22 @@ pub trait Operator<Input>: Composable {
     /// [`Infallible`](std::convert::Infallible) if the operator does not error.
     type Error;
 
+    /// Apply this operator to an input
+    ///
+    /// This also takes an rng that is passed along to customize random number
+    /// generation behavior and avoid re-creating RNGs in each operator.
+    ///
+    /// # Example
+    /// ```
+    /// # use ec_core::operator::{constant::Constant, Operator};
+    /// # use rand::rng;
+    /// #
+    /// let my_constant_operator: Constant<_> = Constant::new(5);
+    ///
+    /// let Ok(sample_value) = my_constant_operator.apply((), &mut rng());
+    /// assert_eq!(sample_value, 5);
+    /// ```
+    ///
     /// # Errors
     /// This will return an error if there's some problem applying the operator.
     /// Given how general this concept is, there's no good way of saying here
