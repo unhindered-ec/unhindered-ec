@@ -3,7 +3,7 @@ use std::num::NonZeroUsize;
 use miette::Diagnostic;
 use rand::{distr::slice::Choose, prelude::Distribution};
 
-use crate::distributions::choices::ChoicesDistribution;
+use crate::distributions::finite::Finite;
 
 /// Generate a random element from an array of options, cloning the choosen
 /// element.
@@ -26,8 +26,8 @@ impl<'a, T> ChooseCloning<'a, T> {
     }
 }
 
-impl<T> ChoicesDistribution for ChooseCloning<'_, T> {
-    fn num_choices(&self) -> NonZeroUsize {
+impl<T> Finite for ChooseCloning<'_, T> {
+    fn sample_space_size(&self) -> NonZeroUsize {
         self.0.num_choices()
     }
 }
