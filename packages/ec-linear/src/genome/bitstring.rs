@@ -34,9 +34,9 @@ pub struct Bitstring {
     pub bits: Vec<bool>,
 }
 
-impl<BG> Distribution<Bitstring> for collection::Collection<BG>
+impl<BD> Distribution<Bitstring> for collection::Collection<BD>
 where
-    BG: Distribution<bool>,
+    BD: Distribution<bool>,
 {
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Bitstring {
         Bitstring {
