@@ -18,3 +18,6 @@ The following steps are usually required:
     2. Bump the version of all the workspace packages to the same version you have choosen in step 1. If they don't have a `version = "..."` key already, feel free to add them in **addition** to the `path = "..."` key. That will ensure that we still use path dependencies while developing locally and only use the version when publishing (cargo supports that).
     3. If you are publishing to a registry other than your system's default one (which is usually `crates.io`) you'll also need to add a `registry = "..."` key along the version key from the step above. Make sure to not push this (commit it only locally to satisfy cargo), as the  CI won't find your locally configured registry and as such will fail to build.
 3. Now we can finally use `cargo publish --workspace` to publish the workspace packages. Make sure that you include the `--registry` argument if you plan to publish to another registry than your systems default one.
+
+## Publishing v1.0.0
+Once we publish any of this to crates.io we need to replace some links with actual urls to docs.rs which aren't valid yet since the packages don't exist yet. For that search for  `(#)` in the code.
