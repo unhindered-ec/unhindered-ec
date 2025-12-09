@@ -41,7 +41,9 @@ mod tests {
 
     use rand::{Rng, prelude::Distribution, rng};
 
-    use crate::{distributions::collection::ConvertToCollectionGenerator, population::Population};
+    use crate::{
+        distributions::collection::ConvertToCollectionDistribution, population::Population,
+    };
 
     struct RandValue {
         val: i32,
@@ -60,9 +62,7 @@ mod tests {
         let mut rng = rng();
         let population_size = 10;
         let range = -10..25;
-        let vec_pop = range
-            .to_collection_generator(population_size)
-            .sample(&mut rng);
+        let vec_pop: Vec<_> = range.to_collection(population_size).sample(&mut rng);
 
         assert_eq!(population_size, vec_pop.size());
         for i in vec_pop {

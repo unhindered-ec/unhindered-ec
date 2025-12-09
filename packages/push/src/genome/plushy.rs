@@ -215,7 +215,7 @@ impl Linear for Plushy {
     }
 }
 
-impl<GG> Distribution<Plushy> for collection::Generator<GG>
+impl<GG> Distribution<Plushy> for collection::Collection<GG>
 where
     GG: Distribution<PushGene>,
 {
@@ -247,7 +247,7 @@ impl FromIterator<PushGene> for Plushy {
 #[cfg(test)]
 mod test {
     use ec_core::{
-        distributions::collection::ConvertToCollectionGenerator, operator::mutator::Mutator,
+        distributions::collection::ConvertToCollectionDistribution, operator::mutator::Mutator,
         uniform_distribution_of,
     };
     use ec_linear::mutator::umad::Umad;
@@ -269,7 +269,7 @@ mod test {
             IntInstruction::ProtectedDivide,
         ]
         .into_gene_generator()
-        .into_collection_generator(10)
+        .into_collection(10)
         .sample(&mut rng);
 
         assert_eq!(10, plushy.genes.len());
