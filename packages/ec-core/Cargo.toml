@@ -38,6 +38,7 @@ thiserror = { workspace = true }
 
 [dev-dependencies]
 criterion = { workspace = true }
+ec-linear = { path = "../ec-linear" }
 miette = { workspace = true, features = ["fancy"] }
 proptest = { workspace = true }
 rand = { workspace = true, features = ["alloc", "small_rng"] }
