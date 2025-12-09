@@ -4,7 +4,7 @@ use std::fmt::{Display, Formatter};
 
 use clap::Parser;
 use ec_core::{
-    distributions::{collection::ConvertToCollectionGenerator, conversion::IntoDistribution},
+    distributions::{collection::ConvertToCollectionDistribution, conversion::IntoDistribution},
     generation::Generation,
     individual::{ec::WithScorer, scorer::FnScorer},
     operator::{
@@ -127,10 +127,10 @@ fn main() -> miette::Result<()> {
     let gene_generator =
         GeneGenerator::with_uniform_close_probability(instruction_set.into_distribution()?);
 
-    let population = gene_generator
-        .to_collection_generator(max_initial_instructions)
+    let population: Vec<_> = gene_generator
+        .to_collection(max_initial_instructions)
         .with_scorer(scorer)
-        .into_collection_generator(population_size)
+        .into_collection(population_size)
         .sample(&mut rng);
 
     ensure!(

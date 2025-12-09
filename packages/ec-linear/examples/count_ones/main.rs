@@ -9,7 +9,7 @@ pub mod args;
 
 use clap::Parser;
 use ec_core::{
-    distributions::collection::ConvertToCollectionGenerator,
+    distributions::collection::ConvertToCollectionDistribution,
     generation::Generation,
     individual::{ec::WithScorer, scorer::FnScorer},
     operator::{
@@ -60,10 +60,10 @@ fn main() -> miette::Result<()> {
         .with_selector(Lexicase::new(num_test_cases), 5)
         .with_selector(Tournament::binary(), population_size - 1);
 
-    let population = StandardUniform
-        .to_collection_generator(bit_length)
+    let population: Vec<_> = StandardUniform
+        .to_collection(bit_length)
         .with_scorer(scorer)
-        .into_collection_generator(population_size)
+        .into_collection(population_size)
         .sample(&mut rng);
 
     ensure!(
