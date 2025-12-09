@@ -79,37 +79,41 @@ impl<G: Display, R: Display> Display for EcIndividual<G, R> {
     }
 }
 
-/// A generator for creating individuals, which requires a genome generator and
-/// a scorer.
+/// A [`Distribution`] for creating individuals, which requires a genome
+/// [`Distribution`] and a scorer.
 ///
-/// The genome generator is used to create the genome of the individual, and the
-/// scorer is used to score the genome.
-pub struct IndividualGenerator<GG, S> {
-    pub genome_generator: GG,
+/// The genome [`Distribution`] is used to create the genome of the individual,
+/// and then the scorer is used to score the genome.
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+pub struct IndividualDistribution<GD, S> {
+    pub genome_distribution: GD,
     pub scorer: S,
 }
 
-impl<GG, S> IndividualGenerator<GG, S> {
+impl<GD, S> IndividualDistribution<GD, S> {
     /// Create a new `IndividualGenerator` with the given genome generator and
     /// scorer.
-    pub const fn new(genome_generator: GG, scorer: S) -> Self {
+    pub const fn new(genome_distribution: GD, scorer: S) -> Self {
         Self {
-            genome_generator,
+            genome_distribution,
             scorer,
         }
     }
 }
 
-/// A trait for adding a scorer to a genome generator, creating
-/// an `IndividualGenerator`.
+/// A trait for adding a scorer to a genome [`Distribution`], creating
+/// an [`IndividualDistribution`].
+///
+/// This trait is blanket-implemented for any `T` as such it's not meant to be
+/// implemented externally.
 pub trait WithScorer {
     /// Add a scorer to the genome generator, creating an `IndividualGenerator`.
-    fn with_scorer<S, G>(self, scorer: S) -> IndividualGenerator<Self, S>
+    fn with_scorer<S, G>(self, scorer: S) -> IndividualDistribution<Self, S>
     where
         Self: Sized,
         S: Scorer<G>;
 
-    fn with_scorer_fn<F, G, R>(self, f: F) -> IndividualGenerator<Self, FnScorer<F>>
+    fn with_scorer_fn<F, G, R>(self, f: F) -> IndividualDistribution<Self, FnScorer<F>>
     where
         Self: Sized,
         F: Fn(&G) -> R,
@@ -118,31 +122,29 @@ pub trait WithScorer {
     }
 }
 
-impl<GG> WithScorer for GG {
-    /// Add a scorer to the genome generator, creating an `IndividualGenerator`.
-    fn with_scorer<S, G>(self, scorer: S) -> IndividualGenerator<GG, S>
+impl<GD> WithScorer for GD {
+    fn with_scorer<S, G>(self, scorer: S) -> IndividualDistribution<GD, S>
     where
         S: Scorer<G>,
     {
-        IndividualGenerator::new(self, scorer)
+        IndividualDistribution::new(self, scorer)
     }
 }
 
-// G is Genome
-// S is Scorer
-impl<G, D, S> Distribution<EcIndividual<G, S::Score>> for IndividualGenerator<D, S>
+impl<GenomeT, GenomeDistributionT, ScorerT> Distribution<EcIndividual<GenomeT, ScorerT::Score>>
+    for IndividualDistribution<GenomeDistributionT, ScorerT>
 where
-    D: Distribution<G>,
-    S: Scorer<G>,
+    GenomeDistributionT: Distribution<GenomeT>,
+    ScorerT: Scorer<GenomeT>,
 {
     /// Generate a new, random, individual.
     ///
     /// This creates a new genome of type `G` using the genome generator of
-    /// type `GG`, and then scores the genome using the scorer of type `S`.
+    /// type `GD`, and then scores the genome using the scorer of type `S`.
     /// The genome and the test results (of type `S::Score`) are then
     /// used to create a new `EcIndividual`.
-    fn sample<R: rand::Rng + ?Sized>(&self, rng: &mut R) -> EcIndividual<G, S::Score> {
-        let genome = self.genome_generator.sample(rng);
+    fn sample<R: rand::Rng + ?Sized>(&self, rng: &mut R) -> EcIndividual<GenomeT, ScorerT::Score> {
+        let genome = self.genome_distribution.sample(rng);
         let test_results = self.scorer.score(&genome);
 
         EcIndividual::new(genome, test_results)
