@@ -3,7 +3,7 @@ use rand::{
     prelude::Distribution,
 };
 
-use super::wrappers::{choose_cloning::ChooseCloning, owned::OneOfCloning};
+use super::wrappers::{choose_cloning::ChooseCloning, choose_cloning_owning::ChooseCloningOwning};
 
 pub trait IntoDistribution<Element> {
     type Distribution: Distribution<Element>;
@@ -50,11 +50,11 @@ impl<U> IntoDistribution<U> for Vec<U>
 where
     U: Clone,
 {
-    type Distribution = OneOfCloning<Self, U>;
+    type Distribution = ChooseCloningOwning<Self, U>;
     type Error = Empty;
 
     fn into_distribution(self) -> Result<Self::Distribution, Self::Error> {
-        OneOfCloning::new(self)
+        ChooseCloningOwning::new(self)
     }
 }
 
@@ -85,11 +85,11 @@ impl<U, const N: usize> IntoDistribution<U> for [U; N]
 where
     U: Clone,
 {
-    type Distribution = OneOfCloning<Self, U>;
+    type Distribution = ChooseCloningOwning<Self, U>;
     type Error = Empty;
 
     fn into_distribution(self) -> Result<Self::Distribution, Self::Error> {
-        OneOfCloning::new(self)
+        ChooseCloningOwning::new(self)
     }
 }
 

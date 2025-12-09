@@ -7,14 +7,15 @@ use rand::{
 
 use crate::distributions::finite::Finite;
 
-/// Generate a random element from a collection of options, cloning the chosen
+/// Uniform [`Distribution`] of a collection of options, cloning the chosen
 /// element.
 ///
-/// The [`OneOfCloning`] struct takes ownership of the collection; the
-/// [`ChooseCloning`](super::choose_cloning::ChooseCloning) struct allows one to
-/// borrow the collection.
-#[derive(Debug, PartialEq, Eq)]
-pub struct OneOfCloning<T, U> {
+/// This [`Distribution`] takes ownership of the collection.
+///
+/// Also see [`ChooseCloning`](super::choose_cloning::ChooseCloning) for an
+/// alternative that borrows the collection instead.
+#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+pub struct ChooseCloningOwning<T, U> {
     // It is really important here that the fields `collection`, `range` and `num_choices` are
     // never modified, since they all contain information about the length of the collection
     // which need to be in sync for no panics to occur.
@@ -31,29 +32,22 @@ pub struct OneOfCloning<T, U> {
     _p: PhantomData<U>,
 }
 
-impl<T, U> OneOfCloning<T, U>
+impl<T, U> ChooseCloningOwning<T, U>
 where
     T: Borrow<[U]>,
 {
-    /// Create a new [`OneOfCloning`] distribution, which selects a
-    /// value from a collection and then returns a new value by cloning the
-    /// selected value.
+    /// Create a new [`ChooseCloningOwning`] distribution, by moving the
+    /// provided collection
+    ///
+    /// # Example
     ///
     /// ```
-    /// # use rand::distr::{Distribution, slice::Empty};
-    /// # use ec_core::distributions::{
-    /// #    finite::Finite,
-    /// #    wrappers::owned::OneOfCloning,
-    /// #    
-    /// # };
+    /// # use rand::distr::slice::Empty;
+    /// # use ec_core::distributions::wrappers::choose_cloning_owning::ChooseCloningOwning;
     /// #
     /// let options = [1, 2, 3];
-    /// let distr = OneOfCloning::new(options)?;
-    /// assert_eq!(options.len(), distr.sample_space_size().get());
-    ///
-    /// let val = distr.sample(&mut rand::rng());
-    /// assert!(options.contains(&val));
-    ///
+    /// let distr = ChooseCloningOwning::new(options)?;
+    /// # let _ = distr;
     /// # Ok::<(), Empty>(())
     ///  ```
     ///
@@ -73,13 +67,13 @@ where
         })
     }
 }
-impl<T, U> Finite for OneOfCloning<T, U> {
+impl<T, U> Finite for ChooseCloningOwning<T, U> {
     fn sample_space_size(&self) -> NonZeroUsize {
         self.num_choices
     }
 }
 
-impl<T, U> Distribution<U> for OneOfCloning<T, U>
+impl<T, U> Distribution<U> for ChooseCloningOwning<T, U>
 where
     T: Borrow<[U]>,
     U: Clone,

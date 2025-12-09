@@ -7,14 +7,34 @@ use rand::{
 
 use crate::distributions::finite::Finite;
 
-/// Generate a random element from an array of options, cloning the choosen
-/// element.
+/// Uniform [`Distribution`] of a slice of options, cloning the chosen element,
+/// borrowing from a collection of choices.
+///
+/// This [`Distribution`] borrows the collection.
+///
+/// Also see [`ChooseCloningOwning`](super::choose_cloning_owning::ChooseCloningOwning) for an
+/// alternative that takes ownership of the collection instead.
+///
+///
+/// # Example
+/// ```
+/// # use rand::{rng, distr::{Distribution, slice::Empty}};
+/// # use ec_core::distributions::wrappers::choose_cloning::ChooseCloning;
+/// #
+/// # fn main() -> Result<(), Empty> {
+/// let distribution = ChooseCloning::new(&[1, 2, 3])?;
+///
+/// let choice = distribution.sample(&mut rng());
+/// # let _ = choice;
+/// # Ok(())
+/// # }
+/// ```
 #[derive(Copy, Clone, Debug)]
 pub struct ChooseCloning<'a, T>(Choose<'a, T>);
 
 impl<'a, T> ChooseCloning<'a, T> {
-    /// Create a new `Slice` instance which samples uniformly from the slice.
-    /// Returns `Err` if the slice is empty.
+    /// Create a new [`ChooseCloning`] [`Distribution`], sampling uniformly and
+    /// cloning from the given slice.
     ///
     /// # Errors
     /// - [`Empty`] if the passed in slice is empty
