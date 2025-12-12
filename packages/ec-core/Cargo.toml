@@ -37,6 +37,7 @@ criterion = { workspace = true }
 miette = { workspace = true, features = ["fancy"] }
 proptest = { workspace = true }
 test-strategy = { workspace = true }
+ec-linear = { path = "../ec-linear" }
 
 [features]
 default = ["erased"]
