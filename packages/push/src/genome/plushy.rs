@@ -2,7 +2,7 @@ use std::fmt::Display;
 
 use easy_cast::ConvApprox;
 use ec_core::{
-    distributions::{choices::ChoicesDistribution, collection},
+    distributions::{collection, finite::Finite},
     genome::Genome,
 };
 use ec_linear::genome::Linear;
@@ -67,7 +67,7 @@ where
 }
 impl<T> GeneGenerator<T>
 where
-    T: Distribution<PushInstruction> + ChoicesDistribution,
+    T: Distribution<PushInstruction> + Finite,
 {
     /// Create a generator where the close tag has the same likelihood of
     /// being chosen as any of the passed in instructions.
@@ -75,7 +75,7 @@ where
         Self::new(
             1.0 / f32::conv_approx(
                 instructions_distribution
-                    .num_choices()
+                    .sample_space_size()
                     .get()
                     .saturating_add(1),
             ),
@@ -104,14 +104,14 @@ where
     /// that is uniform with the instructions distribution, eg. (1/(n+1)).
     fn into_gene_generator(self) -> GeneGenerator<Self>
     where
-        Self: Sized + ChoicesDistribution;
+        Self: Sized + Finite;
 
     /// This creates a new gene generator by borrowing from self, defaulting to
     /// a close probability that is uniform with the instructions distribution,
     /// eg. (1/(n+1)).
     fn to_gene_generator(&self) -> GeneGenerator<&Self>
     where
-        Self: ChoicesDistribution;
+        Self: Finite;
 }
 
 impl<T> ConvertToGeneGenerator for T
@@ -137,14 +137,14 @@ where
 
     fn into_gene_generator(self) -> GeneGenerator<Self>
     where
-        Self: Sized + ChoicesDistribution,
+        Self: Sized + Finite,
     {
         GeneGenerator::with_uniform_close_probability(self)
     }
 
     fn to_gene_generator(&self) -> GeneGenerator<&Self>
     where
-        Self: ChoicesDistribution,
+        Self: Finite,
     {
         GeneGenerator::with_uniform_close_probability(self)
     }
@@ -215,7 +215,7 @@ impl Linear for Plushy {
     }
 }
 
-impl<GG> Distribution<Plushy> for collection::Generator<GG>
+impl<GG> Distribution<Plushy> for collection::Collection<GG>
 where
     GG: Distribution<PushGene>,
 {
@@ -247,7 +247,7 @@ impl FromIterator<PushGene> for Plushy {
 #[cfg(test)]
 mod test {
     use ec_core::{
-        distributions::collection::ConvertToCollectionGenerator, operator::mutator::Mutator,
+        distributions::collection::ConvertToCollectionDistribution, operator::mutator::Mutator,
         uniform_distribution_of,
     };
     use ec_linear::mutator::umad::Umad;
@@ -269,7 +269,7 @@ mod test {
             IntInstruction::ProtectedDivide,
         ]
         .into_gene_generator()
-        .into_collection_generator(10)
+        .into_collection(10)
         .sample(&mut rng);
 
         assert_eq!(10, plushy.genes.len());

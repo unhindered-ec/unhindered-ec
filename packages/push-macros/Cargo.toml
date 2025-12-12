@@ -18,7 +18,6 @@ proc-macro=true
 [dependencies]
 ident_case_conversions = "1.0.0"
 manyhow = "0.11.4"
-proc-macro-assertions = "0.1.5"
 proc-macro2 = "1.0.81"
 quote = "1.0.33"
 syn = { version = "2.0.58", features = ["full", "printing"] }
