@@ -5,12 +5,25 @@ use std::{
 
 use miette::{Diagnostic, LabeledSpan, Severity, SourceCode};
 
-#[derive(Debug, thiserror::Error, Diagnostic)]
-#[error("Attempted to perform TwoPointXo on genomes of different lengths {0} and {1}")]
+/// Error that occurs when trying to perform
+/// [`UniformXo`](super::uniform_xo::UniformXo)
+/// or [`TwoPointXo`](super::two_point_xo::TwoPointXo) on genomes of differing
+/// lengths
+#[derive(
+    Debug, thiserror::Error, Diagnostic, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash,
+)]
+#[error("Attempted to perform Crossover on genomes of different lengths {0} and {1}")]
 #[diagnostic(help = "Ensure your genomes are of uniform length")]
 pub struct DifferentGenomeLength(pub usize, pub usize);
 
-#[derive(Debug, thiserror::Error, Diagnostic)]
+/// Error that occurs when trying to perform crossover with more crossover
+/// points than is possible for a given genome length.
+///
+/// See [`NPointXo`](super::n_point_xo::NPointXo) and
+/// [`TwoPointXo`](super::two_point_xo::TwoPointXo).
+#[derive(
+    Debug, thiserror::Error, Diagnostic, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash,
+)]
 #[error(
     "Attempted to perform N-point crossover with more crossover points than possible for the \
      current genome length {genome_length}. Need a minimum of {min_size} > {genome_length}"
@@ -27,7 +40,7 @@ pub struct GenomeLengthTooShort {
 /// have the same length ([`UniformCrossoverError::DifferentGenomeLength`]).
 /// It can also fail due to some other crossover error `E`
 /// ([`UniformCrossoverError::Crossover`]).
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum UniformCrossoverError<E> {
     /// Attempted to crossover genomes with differing lengths
     DifferentGenomeLength(DifferentGenomeLength),
@@ -128,7 +141,7 @@ where
 ///     points ([`NPointCrossoverError::GenomeLengthTooShort`])
 ///   - Some other error of type `E` specific to the crossover operation on a
 ///     specific genome type ([`NPointCrossoverError::Crossover`])
-#[derive(Debug)]
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
 pub enum NPointCrossoverError<E> {
     /// Attempted to crossover genomes with differing lengths
     DifferentGenomeLength(DifferentGenomeLength),
@@ -238,7 +251,11 @@ where
     }
 }
 
-#[derive(Debug, thiserror::Error, Diagnostic)]
+/// Error that occurs when trying to access a gene out of bounds in a linear
+/// genome
+#[derive(
+    Debug, thiserror::Error, Diagnostic, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash,
+)]
 #[error("Genome access failed for genome of type {genome_type} with size {size} at {index:?}")]
 #[diagnostic(
     help = "Ensure that your indices {index:?} are legal, i.e., within the range 0..{size}"
@@ -267,6 +284,8 @@ where
 }
 
 impl<Index: Debug> GeneAccess<Index> {
+    /// Construct a new [`GeneAccess`] error for index `index` and a genome of
+    /// type `Genome` and size `size`.
     pub fn new<Genome: 'static>(index: Index, size: usize) -> Self {
         Self {
             index,
@@ -276,7 +295,12 @@ impl<Index: Debug> GeneAccess<Index> {
     }
 }
 
-#[derive(Debug, thiserror::Error, Diagnostic)]
+/// Error that occurs when trying to access a gene out of bounds in a linear
+/// genome during crossover. Depending on which gene access failed (lhs or rhs
+/// or both) a different variant is returned
+#[derive(
+    Debug, thiserror::Error, Diagnostic, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash,
+)]
 pub enum MultipleGeneAccess<Index: Debug + 'static> {
     #[error("Gene access on the lhs genome (self) failed")]
     Lhs(
@@ -303,14 +327,21 @@ impl<Index> MultipleGeneAccess<Index>
 where
     Index: Debug,
 {
+    /// Construct a new [`MultipleGeneAccess`] error for index `index` and a
+    /// genome of type `Genome` and size `size` that occured on the lhs Genome.
     pub(crate) fn lhs<Genome: 'static>(index: Index, size: usize) -> Self {
         Self::Lhs(GeneAccess::new::<Genome>(index, size))
     }
 
+    /// Construct a new [`MultipleGeneAccess`] error for index `index` and a
+    /// genome of type `Genome` and size `size` that occured on the rhs Genome.
     pub(crate) fn rhs<Genome: 'static>(index: Index, size: usize) -> Self {
         Self::Rhs(GeneAccess::new::<Genome>(index, size))
     }
 
+    /// Construct a new [`MultipleGeneAccess`] error for index `index` and a
+    /// genome of type `Genome` and size `lhs_size` for the lhs genome and
+    /// `rhs_size` for the rhs genome,  that occured on both genomes.
     pub(crate) fn both<Genome: 'static>(index: Index, lhs_size: usize, rhs_size: usize) -> Self
     where
         Index: Clone,

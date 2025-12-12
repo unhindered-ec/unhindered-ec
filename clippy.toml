@@ -1,18 +1,19 @@
 allowed-duplicate-crates = [
-  "rand",
-  "rand_chacha",
-  "rand_core",
+  # embed-doc-image is still on 0.13.1, current is 0.22.1
   "base64",
-  "itertools",
-  "syn",
-  "heck",
-  # https://github.com/eminence/terminal-size/pull/62
+  # https://github.com/sunfishcode/is-terminal/pull/45/files
+  "windows-targets",
   "windows-sys",
-  # Updated dependencies of rand@0.9.x-beta.x, which the current ecosystem is currently behind of
-  "zerocopy",
-  "zerocopy-derive",
-  "wasi",
-  "getrandom"
+  "windows_aarch64_gnullvm",
+  "windows_aarch64_msvc",
+  "windows_i686_gnu",
+  "windows_i686_gnullvm",
+  "windows_i686_msvc",
+  "windows_x86_64_gnu",
+  "windows_x86_64_gnullvm",
+  "windows_x86_64_msvc",
+  # miette dependency, already updated on main but not released yet.
+  "unicode-width"
 ]
 allow-unwrap-in-tests = true
 allow-expect-in-tests = true

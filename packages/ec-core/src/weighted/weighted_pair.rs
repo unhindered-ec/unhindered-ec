@@ -1,3 +1,9 @@
+use std::{
+    cmp::Ordering,
+    hash::{Hash, Hasher},
+    option::Option,
+};
+
 use rand::{
     Rng,
     distr::{Bernoulli, Distribution},
@@ -9,7 +15,27 @@ use super::{
 };
 use crate::{operator::selector::Selector, population::Population};
 
-#[derive(Debug)]
+/// A weighted pair of two types `A` and `B`
+///
+/// This is a very general type that can be used in many different ways. If you
+/// are looking for a specific usage example take a look at the (selector
+/// impl)[`WeightedPair::select`] on this type.
+///
+/// # Example
+/// ```
+/// # use ec_core::{
+/// #     weighted::{Weighted, weighted_pair::WeightedPair},
+/// #     operator::selector::{best::Best, worst::Worst, Selector}
+/// # };
+/// # use rand::rng;
+/// #
+/// let selector = WeightedPair::new(Weighted::new(Best, 10), Weighted::new(Worst, 10))?;
+///
+/// let selected = selector.select(&[10, 2, 1, 8, 0], &mut rng())?;
+/// assert!(*selected == 0 || *selected == 10);
+/// # Ok::<(), Box<dyn std::error::Error>>(())
+/// ```
+#[derive(Debug, Copy, Clone)]
 pub struct WeightedPair<A, B> {
     a: A,
     b: B,
@@ -17,7 +43,85 @@ pub struct WeightedPair<A, B> {
     weight_sum: u32,
 }
 
+impl<A, B> PartialEq for WeightedPair<A, B>
+where
+    A: PartialEq,
+    B: PartialEq,
+{
+    fn eq(&self, other: &Self) -> bool {
+        self.a == other.a && self.b == other.b
+    }
+}
+impl<A, B> Eq for WeightedPair<A, B>
+where
+    A: Eq,
+    B: Eq,
+{
+}
+
+impl<A, B> PartialOrd for WeightedPair<A, B>
+where
+    A: PartialOrd,
+    B: PartialOrd,
+{
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        match self.a.partial_cmp(&other.a) {
+            Some(Ordering::Equal) => {}
+            non_eq => return non_eq,
+        }
+
+        match self.b.partial_cmp(&other.b) {
+            Some(Ordering::Equal) => {}
+            non_eq => return non_eq,
+        }
+
+        Some(Ordering::Equal)
+    }
+}
+
+impl<A, B> Ord for WeightedPair<A, B>
+where
+    A: Ord,
+    B: Ord,
+{
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.a.cmp(&other.a).then(self.b.cmp(&other.b))
+    }
+}
+
+impl<A: Hash, B: Hash> Hash for WeightedPair<A, B> {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.a.hash(state);
+        self.b.hash(state);
+    }
+}
+
 impl<A, B> WeightedPair<A, B> {
+    /// Creates a new [`WeightedPair`] from two types (`A` and `B`) implementing
+    /// [`WithWeight`]
+    ///
+    /// A more ergonomic option to construct this might be
+    /// [`WithWeightedItem`](super::with_weighted_item::WithWeightedItem).
+    ///
+    /// Note that this calls the [`WithWeight::weight`] function at construction
+    /// time and not at usage time, so dynamic weights are not directly
+    /// supported (using interiour mutability)
+    ///
+    /// # Example
+    /// ```
+    /// # use ec_core::{
+    /// #     weighted::{Weighted, weighted_pair::WeightedPair},
+    /// #     operator::selector::{best::Best, worst::Worst, Selector}
+    /// # };
+    /// # use rand::rng;
+    /// #
+    /// let selector = WeightedPair::new(Weighted::new(Best, 10), Weighted::new(Worst, 10))?;
+    /// #
+    /// # let selected = selector.select(&[10, 2, 1, 8, 0], &mut rng())?;
+    /// # assert!(*selected == 0 || *selected == 10);
+    /// # Ok::<(), Box<dyn std::error::Error>>(())
+    /// ```
+    ///
     /// # Errors
     /// - [`WeightSumOverflow`] if the total sum of the weights of a and b would
     ///   overflow `u32::MAX`
@@ -28,10 +132,13 @@ impl<A, B> WeightedPair<A, B> {
     {
         let a_weight = a.weight();
         let b_weight = b.weight();
+
         let weight_sum = a_weight
             .checked_add(b_weight)
             .ok_or(WeightSumOverflow(a_weight, b_weight))?;
+
         let distr = Bernoulli::from_ratio(a_weight, weight_sum).ok();
+
         Ok(Self {
             a,
             b,
@@ -39,9 +146,61 @@ impl<A, B> WeightedPair<A, B> {
             weight_sum,
         })
     }
+
+    /// Create a new [`WeightedPair`] by using the [`Default::default()`]
+    /// implementation of `A` and `B`
+    ///
+    /// This directly forwards to [`WeightedPair::new`]. See there for more
+    /// details.
+    ///
+    /// # Example
+    /// ```
+    /// # use ec_core::{
+    /// #     weighted::{Weighted, weighted_pair::WeightedPair},
+    /// #     operator::selector::{best::Best, worst::Worst, Selector}
+    /// # };
+    /// # use rand::rng;
+    /// #
+    /// let selector: WeightedPair<Weighted<Best>, Weighted<Worst>> = WeightedPair::new_default()?;
+    /// #
+    /// # let selected = selector.select(&[10, 2, 1, 8, 0], &mut rng())?;
+    /// # assert!(*selected == 0 || *selected == 10);
+    /// # Ok::<(), Box<dyn std::error::Error>>(())
+    /// ```
+    ///
+    /// # Errors
+    /// - [`WeightSumOverflow`] if the total sum of the weights of a and b would
+    ///   overflow `u32::MAX`
+    pub fn new_default() -> Result<Self, WeightSumOverflow>
+    where
+        A: WithWeight + Default,
+        B: WithWeight + Default,
+    {
+        Self::new(Default::default(), Default::default())
+    }
 }
 
+// Note: This implementation is important since it allows recursive chaining of
+// this type
 impl<A, B> WithWeight for WeightedPair<A, B> {
+    /// Returns the total weight of both elements of the pair
+    ///
+    /// # Example
+    /// ```
+    /// # use ec_core::{
+    /// #     weighted::{Weighted, weighted_pair::WeightedPair, with_weight::WithWeight},
+    /// #     operator::selector::{best::Best, worst::Worst, Selector}
+    /// # };
+    /// # use rand::rng;
+    /// #
+    /// let selector = WeightedPair::new(Weighted::new(Best, 10), Weighted::new(Worst, 10))?;
+    ///
+    /// assert_eq!(selector.weight(), 20);
+    /// #
+    /// # let selected = selector.select(&[10, 2, 1, 8, 0], &mut rng())?;
+    /// # assert!(*selected == 0 || *selected == 10);
+    /// # Ok::<(), Box<dyn std::error::Error>>(())
+    /// ```
     fn weight(&self) -> u32 {
         self.weight_sum
     }
@@ -55,6 +214,27 @@ where
 {
     type Error = SelectionError<WeightedPairError<A::Error, B::Error>>;
 
+    /// Select one of two [`Selector`]s based on their weights.
+    ///
+    /// This implementation can be used to randomly choose between multiple
+    /// selectors, by chaining this type recursively.
+    ///
+    /// See the underlying Selector types for more information on how they work.
+    ///
+    /// # Example
+    /// ```
+    /// # use ec_core::{
+    /// #     weighted::{Weighted, weighted_pair::WeightedPair},
+    /// #     operator::selector::{best::Best, worst::Worst, Selector}
+    /// # };
+    /// # use rand::rng;
+    /// #
+    /// let selector = WeightedPair::new(Weighted::new(Best, 10), Weighted::new(Worst, 10))?;
+    ///
+    /// let selected = selector.select(&[10, 2, 1, 8, 0], &mut rng())?;
+    /// assert!(*selected == 0 || *selected == 10);
+    /// # Ok::<(), Box<dyn std::error::Error>>(())
+    /// ```
     fn select<'pop, R: Rng + ?Sized>(
         &self,
         population: &'pop P,
