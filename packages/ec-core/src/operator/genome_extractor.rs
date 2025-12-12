@@ -65,7 +65,7 @@ use crate::individual::Individual;
 /// assert_eq!(num_different, 1);
 /// # Ok::<(), Box<dyn std::error::Error>>(())
 /// ```
-#[derive(Composable)]
+#[derive(Debug, Composable, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 pub struct GenomeExtractor;
 
 impl<I> Operator<&I> for GenomeExtractor
@@ -76,6 +76,8 @@ where
     type Output = I::Genome;
     type Error = Infallible;
 
+    /// Apply the [`GenomeExtractor`] as an [`Operator`], extracting the Genome
+    /// from the [`Individual`].
     fn apply<R: Rng + ?Sized>(
         &self,
         individual: &I,

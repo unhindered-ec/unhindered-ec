@@ -34,9 +34,17 @@ pub use error::EmptyPopulation;
 ///
 /// Please see its documentation for further details on its usage.
 ///
+/// # Usage
+/// Also of note is that similarly to the `Read` and `Write` traits in the
+/// standard library, the [`Selector`] trait is implemented for references to
+/// selectors. That means, if you don't wish to consume a selector and want to
+/// re-use it later, you can pass a reference to that selector to any function
+/// expecting a [`Selector`] instead.
+///
 /// # Examples
 ///
-/// In this example we use the `[Best]` selector to choose the
+/// In this example we use the
+/// [`Best`](ec_core::operator::selector::best::Best) selector to choose the
 /// "best" (maximal) value from a list.
 ///
 /// ```
@@ -50,7 +58,7 @@ pub use error::EmptyPopulation;
 /// ```
 ///
 /// Here we implement a `First` selector that always returns the first
-/// element in a vector.
+/// element in an array.
 ///
 /// ```
 /// # use rand::{Rng, rng};
@@ -83,11 +91,23 @@ where
 
     /// Select an individual from the given `population`
     ///
+    /// # Example
+    ///
+    /// ```
+    /// # use ec_core::operator::selector::{best::Best, Selector};
+    /// # use rand::rng;
+    /// #
+    /// let population = [5, 8, 9, 2, 3, 6];
+    /// let winner = Best.select(&population, &mut rng())?;
+    /// assert_eq!(*winner, 9);
+    /// # Ok::<(), Box<dyn std::error::Error>>(())
+    /// ```
+    ///
+    ///
     /// # Errors
     ///
-    /// This will return an error if there's some problem selecting. That will
-    /// usually be because the population is empty or not large enough for
-    /// the desired selector.
+    /// - [`Self::Error`] if a problem occurs during selection, for example
+    ///   because the population is empty or too small for the selector.
     fn select<'pop, R: Rng + ?Sized>(
         &self,
         population: &'pop P,
@@ -245,13 +265,21 @@ where
 /// assert_eq!(choice_length, 5);
 /// # Ok::<(), Box<dyn std::error::Error>>(())
 /// ```
-#[derive(Clone, Composable)]
+#[derive(Debug, Copy, Clone, Composable, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 pub struct Select<S> {
     /// The wrapped [`Selector`] that this [`Select`] will apply
     selector: S,
 }
 
 impl<S> Select<S> {
+    /// Create a new [`Select`] [`Operator`] from the given [`Selector`]
+    ///
+    /// # Example
+    /// ```
+    /// # use ec_core::operator::selector::{Select, best::Best};
+    /// let operator = Select::new(Best);
+    /// # let _ = operator;
+    /// ```
     pub const fn new(selector: S) -> Self {
         Self { selector }
     }
@@ -267,6 +295,18 @@ where
     type Error = S::Error;
 
     /// Apply this `Selector` as an `Operator`
+    ///
+    /// # Example
+    /// ```
+    /// # use ec_core::operator::{Operator, selector::{Select, best::Best, error::EmptyPopulation}};
+    /// let population = [2, 3, 5];
+    ///
+    /// let operator = Select::new(Best);
+    /// let selected = operator.apply(&population, &mut rand::rng())?;
+    ///
+    /// assert_eq!(*selected, 5);
+    /// # Ok::<(), EmptyPopulation>(())
+    /// ```
     fn apply<R: Rng + ?Sized>(
         &self,
         population: &'pop P,
@@ -286,6 +326,25 @@ where
 {
     type Error = S::Error;
 
+    /// Select from the [`Selector`] behind this reference, using the selector
+    /// by reference rather than by value.
+    ///
+    /// # Example
+    /// ```
+    /// # use ec_core::operator::{Operator, selector::{Select, best::Best, error::EmptyPopulation}};
+    /// let population = [2, 3, 5];
+    ///
+    /// let selector = Best;
+    /// let operator = Select::new(&selector); // <- by reference
+    /// let selected = operator.apply(&population, &mut rand::rng())?;
+    ///
+    /// assert_eq!(*selected, 5);
+    ///
+    /// // can re-use the selector
+    /// let operator_2 = Select::new(selector);
+    /// # let _ = operator_2;
+    /// # Ok::<(), EmptyPopulation>(())
+    /// ```
     fn select<'pop, R: Rng + ?Sized>(
         &self,
         population: &'pop P,
