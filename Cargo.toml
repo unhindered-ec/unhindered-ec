@@ -2,7 +2,6 @@
 
 [workspace]
 resolver = "2"
-
 members = ["packages/*"]
 
 [workspace.package]
@@ -82,18 +81,8 @@ panic = "warn"
 module_name_repetitions = "allow"
 as_conversions = "deny"
 
-# these lints rely on the lint reasons rfc
-# https://github.com/rust-lang/rust/issues/54503
-# and will become active once that is in stable.
-# We should get ample warning with the nightly & beta
-# ci builds if we need to change anything
 allow_attributes_without_reason = "warn"
 allow_attributes = "deny"
-
-# This lint is temporarily disabled until an
-# issue in how this is triggered from inside proptest.
-# See https://github.com/rust-lang/rust-clippy/issues/15168 for more.
-explicit_deref_methods = "allow"
 
 [workspace.lints.rust]
 # has current false-positives https://github.com/rust-lang/rust/issues/147648
