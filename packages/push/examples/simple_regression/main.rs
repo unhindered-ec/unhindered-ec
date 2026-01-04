@@ -21,7 +21,7 @@ use ec_core::{
             tournament::Tournament,
         },
     },
-    test_results::{self, TestResults},
+    performance::{self, TestResults},
     uniform_distribution_of,
 };
 use ec_linear::mutator::umad::Umad;
@@ -96,7 +96,7 @@ fn score_program(
 fn score_genome(
     genome: &Plushy,
     training_cases: &Cases<Of64>,
-) -> TestResults<test_results::Error<Of64>> {
+) -> TestResults<performance::error_value::ErrorValue<Of64>> {
     let program: Vec<PushProgram> = genome.clone().into();
 
     training_cases

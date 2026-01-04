@@ -10,7 +10,7 @@ use ec_core::{
         recombinator::Recombine,
         selector::{Select, Selector, best::Best, tournament::Tournament},
     },
-    test_results::Score,
+    performance::score_value::ScoreValue,
 };
 use ec_linear::{
     genome::bitstring::Bitstring, mutator::with_one_over_length::WithOneOverLength,
@@ -104,6 +104,6 @@ fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 // For Count Ones, the scoring function just counts the number of `true` values
 // in the given bitstring.
 #[must_use]
-pub fn count_ones(bits: &[bool]) -> Score<i64> {
+pub fn count_ones(bits: &[bool]) -> ScoreValue<i64> {
     bits.iter().copied().map(i64::from).sum()
 }

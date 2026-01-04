@@ -6,6 +6,11 @@ use std::{
     slice::SliceIndex,
 };
 
+use crate::performance::{error_value::ErrorValue, score_value::ScoreValue};
+
+pub mod error_value;
+pub mod score_value;
+
 // TODO: We can probably use things in the `num` family of traits
 //   (https://github.com/rust-num/num) to genericize `Score` and
 //   `Error` so they're not tied to `i64`s anymore.
@@ -14,170 +19,15 @@ use std::{
 // field)   and then `Error` and `Score` should be traits that these structs can
 //   implement? I feel like that might avoid some duplication here.
 
-/// Score implicitly follows a "bigger is better" model.
-#[derive(Eq, PartialEq, Ord, PartialOrd, Debug, Clone, Copy, Hash, Default)]
-#[repr(transparent)]
-pub struct Score<T>(pub T);
-
-// We need `Score` to be cloneable in many of our applications,
-// even if it's not needed here in `ec_core`. For `Score` to be
-// cloneable, the generic type must also be cloneable.
-static_assertions::assert_impl_all!(Score<()>: Clone);
-
-impl<T: Display> Display for Score<T> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Score (higher is better): {}", self.0)
-    }
-}
-
-// TODO: Write tests for the `From` and `Sum` trait implementations.
-
-impl<T> Score<T> {
-    #[must_use]
-    pub const fn new(score: T) -> Self {
-        Self(score)
-    }
-}
-
-impl<T: PartialOrd> PartialOrd<T> for Score<T> {
-    fn partial_cmp(&self, other: &T) -> Option<Ordering> {
-        self.0.partial_cmp(other)
-    }
-}
-
-impl<T: PartialEq> PartialEq<T> for Score<T> {
-    fn eq(&self, other: &T) -> bool {
-        self.0.eq(other)
-    }
-}
-
-impl<T> From<T> for Score<T> {
-    fn from(score: T) -> Self {
-        Self(score)
-    }
-}
-
-impl<T: Sum> Sum<T> for Score<T> {
-    fn sum<I>(iter: I) -> Self
-    where
-        I: Iterator<Item = T>,
-    {
-        Self(iter.sum())
-    }
-}
-
-impl<T: Sum> Sum for Score<T> {
-    fn sum<I>(iter: I) -> Self
-    where
-        I: Iterator<Item = Self>,
-    {
-        iter.map(|s| s.0).sum()
-    }
-}
-
-impl<'a, T> Sum<&'a Self> for Score<T>
-where
-    T: ToOwned,
-    Self: Sum<<T as ToOwned>::Owned>,
-{
-    fn sum<I: Iterator<Item = &'a Self>>(iter: I) -> Self {
-        iter.map(|s| s.0.to_owned()).sum()
-    }
-}
-
-// TODO: Rewrite `Error` using the std::cmp::Reverse type
-//   to convert `Score` to `Error`.
-#[derive(Eq, PartialEq, Debug, Clone, Copy, Hash, Default)]
-#[repr(transparent)]
-pub struct Error<T>(pub T);
-
-// We need `Error` to be cloneable in many of our applications,
-// even if it's not needed here in `ec_core`. For `Error` to be
-// cloneable, the generic type must also be cloneable.
-static_assertions::assert_impl_all!(Error<()>: Clone);
-
-impl<T: Ord> Ord for Error<T> {
-    fn cmp(&self, other: &Self) -> Ordering {
-        self.0.cmp(&other.0).reverse()
-    }
-}
-
-impl<T: PartialOrd> PartialOrd for Error<T> {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        self.0
-            .partial_cmp(&other.0)
-            .map(std::cmp::Ordering::reverse)
-    }
-}
-
-impl<T: PartialOrd> PartialOrd<T> for Error<T> {
-    fn partial_cmp(&self, other: &T) -> Option<Ordering> {
-        self.0.partial_cmp(other)
-    }
-}
-
-impl<T: PartialEq> PartialEq<T> for Error<T> {
-    fn eq(&self, other: &T) -> bool {
-        self.0.eq(other)
-    }
-}
-
-impl<T: Display> Display for Error<T> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Error (lower is better): {}", self.0)
-    }
-}
-// TODO: Write tests for the `From` and `Sum` trait implementations.
-
-impl<T> Error<T> {
-    #[must_use]
-    pub const fn new(score: T) -> Self {
-        Self(score)
-    }
-}
-
-impl<T> From<T> for Error<T> {
-    fn from(error: T) -> Self {
-        Self(error)
-    }
-}
-
-impl<T: Sum> Sum<T> for Error<T> {
-    fn sum<I>(iter: I) -> Self
-    where
-        I: Iterator<Item = T>,
-    {
-        Self(iter.sum())
-    }
-}
-
-impl<T: Sum> Sum for Error<T> {
-    fn sum<I>(iter: I) -> Self
-    where
-        I: Iterator<Item = Self>,
-    {
-        iter.map(|s| s.0).sum()
-    }
-}
-
-impl<'a, T> Sum<&'a Self> for Error<T>
-where
-    T: ToOwned,
-    Self: Sum<<T as ToOwned>::Owned>,
-{
-    fn sum<I: Iterator<Item = &'a Self>>(iter: I) -> Self {
-        iter.map(|s| s.0.to_owned()).sum()
-    }
-}
-
 #[cfg(test)]
 mod score_error_tests {
     use super::*;
+    use crate::performance::score_value::ScoreValue;
 
     #[test]
     fn score_bigger_is_better() {
-        let first = Score(37);
-        let second = Score(82);
+        let first = ScoreValue(37);
+        let second = ScoreValue(82);
         // These use `Ord`
         assert_eq!(first.cmp(&second), Ordering::Less);
         assert_eq!(second.cmp(&first), Ordering::Greater);
@@ -190,8 +40,8 @@ mod score_error_tests {
 
     #[test]
     fn error_smaller_is_better() {
-        let first = Error(37);
-        let second = Error(82);
+        let first = ErrorValue(37);
+        let second = ErrorValue(82);
         // These use `Ord`
         assert_eq!(first.cmp(&second), Ordering::Greater);
         assert_eq!(second.cmp(&first), Ordering::Less);
@@ -205,18 +55,18 @@ mod score_error_tests {
 
 #[derive(Debug, Eq, PartialEq, Clone, Copy, Hash)]
 pub enum TestResult<S, E> {
-    Score(Score<S>),
-    Error(Error<E>),
+    Score(ScoreValue<S>),
+    Error(ErrorValue<E>),
 }
 
-impl<S, E> From<Score<S>> for TestResult<S, E> {
-    fn from(value: Score<S>) -> Self {
+impl<S, E> From<ScoreValue<S>> for TestResult<S, E> {
+    fn from(value: ScoreValue<S>) -> Self {
         Self::Score(value)
     }
 }
 
-impl<S, E> From<Error<E>> for TestResult<S, E> {
-    fn from(value: Error<E>) -> Self {
+impl<S, E> From<ErrorValue<E>> for TestResult<S, E> {
+    fn from(value: ErrorValue<E>) -> Self {
         Self::Error(value)
     }
 }
@@ -224,18 +74,18 @@ impl<S, E> From<Error<E>> for TestResult<S, E> {
 impl<S, E> TestResult<S, E> {
     #[must_use]
     pub const fn score(score: S) -> Self {
-        Self::Score(Score(score))
+        Self::Score(ScoreValue(score))
     }
 
     #[must_use]
     pub const fn error(error: E) -> Self {
-        Self::Error(Error(error))
+        Self::Error(ErrorValue(error))
     }
 }
 
 impl<S: Default, E> Default for TestResult<S, E> {
     fn default() -> Self {
-        Self::Score(Score::default())
+        Self::Score(ScoreValue::default())
     }
 }
 
@@ -261,8 +111,8 @@ mod test_result_tests {
 
     #[test]
     fn score_compares_to_score() {
-        let first: TestResult<i32, i32> = TestResult::Score(Score(32));
-        let second = TestResult::Score(Score(87));
+        let first: TestResult<i32, i32> = TestResult::Score(ScoreValue(32));
+        let second = TestResult::Score(ScoreValue(87));
         assert!(first < second);
         assert!(first != second);
         assert!((first > second).not());
@@ -270,8 +120,8 @@ mod test_result_tests {
 
     #[test]
     fn error_compares_to_error() {
-        let first: TestResult<i32, i32> = TestResult::Error(Error(32));
-        let second = TestResult::Error(Error(87));
+        let first: TestResult<i32, i32> = TestResult::Error(ErrorValue(32));
+        let second = TestResult::Error(ErrorValue(87));
         assert!(first > second);
         assert!(first != second);
         assert!((first < second).not());
@@ -279,8 +129,8 @@ mod test_result_tests {
 
     #[test]
     fn error_and_score_incomparable() {
-        let first = TestResult::Score(Score(32));
-        let second = TestResult::Error(Error(87));
+        let first = TestResult::Score(ScoreValue(32));
+        let second = TestResult::Error(ErrorValue(87));
         assert!((first > second).not());
         assert!(first != second);
         assert!((first < second).not());
@@ -470,7 +320,7 @@ mod test_results_tests {
     #[test]
     fn create_test_results_from_errors() {
         let errors = [5, 8, 0, 9];
-        let test_results: TestResults<Error<i32>> = errors.into_iter().collect();
+        let test_results: TestResults<ErrorValue<i32>> = errors.into_iter().collect();
         assert!(test_results.results.iter().map(|r| r.0).eq(errors));
         assert_eq!(test_results.total_result, Some(errors.into_iter().sum()));
     }
@@ -478,7 +328,7 @@ mod test_results_tests {
     #[test]
     fn create_test_results_from_scores() {
         let scores = [5, 8, 0, 9];
-        let test_results: TestResults<Score<i32>> = scores.into_iter().collect();
+        let test_results: TestResults<ScoreValue<i32>> = scores.into_iter().collect();
         assert!(test_results.results.iter().map(|r| r.0).eq(scores));
         assert_eq!(test_results.total_result, Some(scores.into_iter().sum()));
     }
@@ -486,8 +336,8 @@ mod test_results_tests {
     #[test]
     fn create_test_results_from_iter_errors() {
         let errors = [5, 8, 0, 9];
-        let results = errors.iter().copied().map(Error::from);
-        let test_results: TestResults<Error<i32>> = results.clone().collect();
+        let results = errors.iter().copied().map(ErrorValue::from);
+        let test_results: TestResults<ErrorValue<i32>> = results.clone().collect();
         assert!(test_results.results.into_iter().eq(results));
         assert_eq!(test_results.total_result, Some(errors.into_iter().sum()));
     }
@@ -495,8 +345,8 @@ mod test_results_tests {
     #[test]
     fn create_test_results_from_iter_scores() {
         let scores = [5, 8, 0, 9];
-        let results = scores.iter().copied().map(Score::from);
-        let test_results: TestResults<Score<i32>> = results.clone().collect();
+        let results = scores.iter().copied().map(ScoreValue::from);
+        let test_results: TestResults<ScoreValue<i32>> = results.clone().collect();
         assert!(test_results.results.into_iter().eq(results));
         assert_eq!(test_results.total_result, Some(scores.into_iter().sum()));
     }

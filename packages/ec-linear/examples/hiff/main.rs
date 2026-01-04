@@ -24,7 +24,7 @@ use ec_core::{
             tournament::Tournament,
         },
     },
-    test_results::{Score, TestResults},
+    performance::{TestResults, score_value::ScoreValue},
 };
 use ec_linear::{
     genome::bitstring::Bitstring, mutator::with_one_over_length::WithOneOverLength,
@@ -36,10 +36,10 @@ use rand::{distr::StandardUniform, prelude::Distribution, rng};
 use crate::args::{CliArgs, RunModel};
 
 #[must_use]
-fn hiff(bits: &[bool]) -> (bool, TestResults<Score<usize>>) {
+fn hiff(bits: &[bool]) -> (bool, TestResults<ScoreValue<usize>>) {
     let len = bits.len();
     if len < 2 {
-        (true, once(Score::from(len)).collect())
+        (true, once(ScoreValue::from(len)).collect())
     } else {
         let half_len = len / 2;
         let (left_all_same, left_score) = hiff(&bits[..half_len]);
@@ -51,7 +51,7 @@ fn hiff(bits: &[bool]) -> (bool, TestResults<Score<usize>>) {
             left_score
                 .into_iter()
                 .chain(right_score)
-                .chain(once(Score::from(if all_same { len } else { 0 })))
+                .chain(once(ScoreValue::from(if all_same { len } else { 0 })))
                 .collect(),
         )
     }
