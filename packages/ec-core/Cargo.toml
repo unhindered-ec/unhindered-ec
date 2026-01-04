@@ -2,41 +2,45 @@
 name = "ec-core"
 version = { workspace = true }
 authors = { workspace = true }
+edition = { workspace = true }
 description = { workspace = true }
 documentation = { workspace = true }
-repository = { workspace = true }
-edition = { workspace = true }
-license = { workspace = true }
-publish = { workspace = true }
-categories = ["science", "algorithms"]
-keywords = [
-    "evolutionary-computation",
-    "genetic",
-    "genetic-algorithm",
-    "framework",
-    "machine-learning",
-]
 readme = "README.md"
+repository = { workspace = true }
+license = { workspace = true }
+keywords = [
+  "evolutionary-computation",
+  "framework",
+  "genetic",
+  "genetic-algorithm",
+  "machine-learning",
+]
+categories = ["algorithms", "science"]
+publish = { workspace = true }
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[[bench]]
+harness = false
+name = "test_results"
+
 [dependencies]
+ec_macros = { workspace = true }
 itertools = { workspace = true }
+macro_railroad_annotation = { workspace = true }
+miette = { workspace = true }
 num-traits = { workspace = true }
+polonius-the-crab = { workspace = true }
 rand = { workspace = true, features = ["alloc"] }
 rayon = "1.11.0"
-macro_railroad_annotation = { workspace = true }
-thiserror = { workspace = true }
-miette = { workspace = true }
-polonius-the-crab = { workspace = true }
 static_assertions = { workspace = true }
-ec_macros = { workspace = true }
+thiserror = { workspace = true }
 
 [dev-dependencies]
-rand = { workspace = true, features = ["alloc", "small_rng"] }
 criterion = { workspace = true }
 miette = { workspace = true, features = ["fancy"] }
 proptest = { workspace = true }
+rand = { workspace = true, features = ["alloc", "small_rng"] }
 test-strategy = { workspace = true }
 
 [features]
@@ -47,7 +51,3 @@ erased = []
 
 [lints]
 workspace = true
-
-[[bench]]
-name = "test_results"
-harness = false
