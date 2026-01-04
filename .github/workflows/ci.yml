@@ -129,7 +129,18 @@ jobs:
           toolchain: ${{ matrix.toolchain }}
           tools: rustfmt-unstable
       - run: rustfmt-unstable --config-file rustfmt.toml -- cargo fmt --check -- --config error_on_line_overflow=true
-    
+  tombi_fmt:
+    name: tombi format (toml)
+    runs-on: ubuntu-latest
+    steps:
+        # tag: v4
+      - name: Checkout the code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Setup requirements
+        run: curl -fsSL https://tombi-toml.github.io/tombi/install.sh | sh
+      - run: tombi format . --check
   examples:
     name: check examples working
     runs-on: ubuntu-latest
