@@ -23,7 +23,7 @@ use ec_core::{
             tournament::Tournament,
         },
     },
-    test_results::{Score, TestResults},
+    performance::{TestResults, score_value::ScoreValue},
 };
 use ec_linear::{
     genome::bitstring::Bitstring, mutator::with_one_over_length::WithOneOverLength,
@@ -38,7 +38,7 @@ use rand::{
 use crate::args::{CliArgs, RunModel};
 
 #[must_use]
-pub fn count_ones(bits: &[bool]) -> TestResults<Score<i64>> {
+pub fn count_ones(bits: &[bool]) -> TestResults<ScoreValue<i64>> {
     bits.iter().copied().map(i64::from).collect()
 }
 
@@ -112,14 +112,14 @@ fn main() -> miette::Result<()> {
 
 #[cfg(test)]
 mod test {
-    use ec_core::test_results::{self, TestResults};
+    use ec_core::performance::{self, TestResults};
 
     use super::count_ones;
 
     #[test]
     fn non_empty() {
         let input = [false, true, true, true, false, true];
-        let output: TestResults<test_results::Score<i64>> =
+        let output: TestResults<performance::ScoreValue<i64>> =
             [0, 1, 1, 1, 0, 1].into_iter().collect();
         assert_eq!(output, count_ones(&input));
     }
