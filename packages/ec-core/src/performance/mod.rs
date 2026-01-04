@@ -213,13 +213,13 @@ impl<R> Default for TestResults<R> {
     ///
     /// # Example
     /// ```
-    /// # use ec_core::test_results::{TestResults, Score};
+    /// # use ec_core::performance::{TestResults, score_value::ScoreValue};
     /// assert!(
-    ///     TestResults::<Score<i32>>::default()
+    ///     TestResults::<ScoreValue<i32>>::default()
     ///         .iter()
-    ///         .eq::<[&Score<_>; 0]>([])
+    ///         .eq::<[&ScoreValue<_>; 0]>([])
     /// );
-    /// assert_eq!(TestResults::<Score<i32>>::default().total(), None);
+    /// assert_eq!(TestResults::<ScoreValue<i32>>::default().total(), None);
     /// ```
     fn default() -> Self {
         Self {
