@@ -84,3 +84,22 @@ where
         iter.map(|s| s.0.to_owned()).sum()
     }
 }
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn error_smaller_is_better() {
+        let first = ErrorValue(37);
+        let second = ErrorValue(82);
+        // These use `Ord`
+        assert_eq!(first.cmp(&second), Ordering::Greater);
+        assert_eq!(second.cmp(&first), Ordering::Less);
+        assert_eq!(first.cmp(&first), Ordering::Equal);
+        // Now use `PartialOrd`
+        assert_eq!(first.partial_cmp(&second), Some(Ordering::Greater));
+        assert_eq!(second.partial_cmp(&first), Some(Ordering::Less));
+        assert_eq!(first.partial_cmp(&first), Some(Ordering::Equal));
+    }
+}
