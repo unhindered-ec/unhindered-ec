@@ -2,23 +2,23 @@
 name = "ec_macros"
 version = { workspace = true }
 authors = { workspace = true }
+edition = { workspace = true }
 description = { workspace = true }
 documentation = { workspace = true }
-repository = { workspace = true }
-edition = { workspace = true }
-license = { workspace = true }
-publish = { workspace = true }
-categories = ["development-tools"]
-keywords = [
-    "evolutionary-computation-macros",
-    "genetic",
-    "genetic-algorithm",
-    "framework",
-]
 readme = "README.md"
+repository = { workspace = true }
+license = { workspace = true }
+keywords = [
+  "evolutionary-computation-macros",
+  "framework",
+  "genetic",
+  "genetic-algorithm",
+]
+categories = ["development-tools"]
+publish = { workspace = true }
 
 [lib]
-proc-macro=true
+proc-macro = true
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]

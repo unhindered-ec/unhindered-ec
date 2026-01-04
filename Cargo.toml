@@ -7,64 +7,65 @@ members = ["packages/*"]
 [workspace.package]
 version = "0.1.0"
 authors = ["Nic McPhee", "Justus Flügel", "Many cool people on Twitch"]
+edition = "2021"
 description = "An evolutionary computation system in Rust"
 documentation = "https://github.com/unhindered-ec/unhindered-ec"
 repository = "https://github.com/unhindered-ec/unhindered-ec.git"
-edition = "2021"
 license = "MIT OR Apache-2.0"
 publish = false
 
-[profile.release]
-debug = true
-
 [workspace.dependencies]
 clap = "4.5.1"
-rand = "0.9.2"
-num-traits = "0.2.18"
-thiserror = "2.0.17"
-itertools = "0.14.0"
-macro_railroad_annotation = "1.1.0"
-test-strategy = "0.4.3"
-proptest = "1.9.0"
 criterion = "0.8.1"
-miette = "7.6.0"
-test-case = "3.3.1"
-polonius-the-crab = "0.5.0"
-static_assertions = "1.1.0"
-
 ec-core = { path = "packages/ec-core" }
 ec-linear = { path = "packages/ec-linear" }
+ec_macros = { path = "packages/ec-macros" }
+itertools = "0.14.0"
+macro_railroad_annotation = "1.1.0"
+miette = "7.6.0"
+num-traits = "0.2.18"
+polonius-the-crab = "0.5.0"
+proptest = "1.9.0"
 push = { path = "packages/push" }
 push_macros = { path = "packages/push-macros" }
-ec_macros = { path = "packages/ec-macros" }
-
+rand = "0.9.2"
+static_assertions = "1.1.0"
+test-case = "3.3.1"
+test-strategy = "0.4.3"
+thiserror = "2.0.17"
 
 [workspace.lints.clippy]
+allow_attributes = "deny"
+allow_attributes_without_reason = "warn"
+arithmetic_side_effects = "warn"
+as_conversions = "deny"
+cargo = { level = "warn", priority = -1 }
+clone_on_ref_ptr = "warn"
+complexity = { level = "warn", priority = -1 }
+correctness = { level = "deny", priority = -1 }
+# Individual lints
+dbg_macro = "warn"
+empty_enum_variants_with_brackets = "warn"
+empty_structs_with_brackets = "warn"
+error_impl_error = "warn"
+expect_used = "warn"
+format_push_string = "warn"
+if_then_some_else_none = "warn"
+infinite_loop = "warn"
+module_name_repetitions = "allow"
+nursery = { level = "warn", priority = -1 }
+panic = "warn"
 # Lint groups
 # These have a priority of -1 to ensure that individual
 # Lints override them, if present.
 pedantic = { level = "warn", priority = -1 }
-nursery = { level = "warn", priority = -1 }
-cargo = { level = "warn", priority = -1 }
 perf = { level = "warn", priority = -1 }
-complexity = { level = "warn", priority = -1 }
-correctness = { level = "deny", priority = -1 }
-style = { level = "warn", priority = -1 }
-
-# Individual lints
-dbg_macro = "warn"
-clone_on_ref_ptr = "warn"
-empty_enum_variants_with_brackets = "warn"
-empty_structs_with_brackets = "warn"
-error_impl_error = "warn"
-format_push_string = "warn"
-if_then_some_else_none = "warn"
-infinite_loop = "warn"
 rc_buffer = "warn"
 rc_mutex = "warn"
 redundant_type_annotations = "warn"
 rest_pat_in_fully_bound_structs = "warn"
 self_named_module_files = "deny"
+style = { level = "warn", priority = -1 }
 suspicious_xor_used_as_pow = "warn"
 tests_outside_test_module = "deny"
 todo = "warn"
@@ -73,17 +74,8 @@ unnecessary_safety_comment = "warn"
 unnecessary_safety_doc = "warn"
 unnecessary_self_imports = "warn"
 unneeded_field_pattern = "warn"
-use_debug = "warn"
-arithmetic_side_effects = "warn"
-
 unwrap_used = "warn"
-expect_used = "warn"
-panic = "warn"
-module_name_repetitions = "allow"
-as_conversions = "deny"
-
-allow_attributes_without_reason = "warn"
-allow_attributes = "deny"
+use_debug = "warn"
 
 [workspace.lints.rust]
 # has current false-positives https://github.com/rust-lang/rust/issues/147648
@@ -110,3 +102,6 @@ many_generations.arguments = [
   "--population-size",
   "10",
 ]
+
+[profile.release]
+debug = true
