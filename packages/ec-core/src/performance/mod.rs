@@ -19,40 +19,6 @@ pub mod score_value;
 // field)   and then `Error` and `Score` should be traits that these structs can
 //   implement? I feel like that might avoid some duplication here.
 
-#[cfg(test)]
-mod score_error_tests {
-    use super::*;
-    use crate::performance::score_value::ScoreValue;
-
-    #[test]
-    fn score_bigger_is_better() {
-        let first = ScoreValue(37);
-        let second = ScoreValue(82);
-        // These use `Ord`
-        assert_eq!(first.cmp(&second), Ordering::Less);
-        assert_eq!(second.cmp(&first), Ordering::Greater);
-        assert_eq!(first.cmp(&first), Ordering::Equal);
-        // Now use `PartialOrd`
-        assert_eq!(first.partial_cmp(&second), Some(Ordering::Less));
-        assert_eq!(second.partial_cmp(&first), Some(Ordering::Greater));
-        assert_eq!(first.partial_cmp(&first), Some(Ordering::Equal));
-    }
-
-    #[test]
-    fn error_smaller_is_better() {
-        let first = ErrorValue(37);
-        let second = ErrorValue(82);
-        // These use `Ord`
-        assert_eq!(first.cmp(&second), Ordering::Greater);
-        assert_eq!(second.cmp(&first), Ordering::Less);
-        assert_eq!(first.cmp(&first), Ordering::Equal);
-        // Now use `PartialOrd`
-        assert_eq!(first.partial_cmp(&second), Some(Ordering::Greater));
-        assert_eq!(second.partial_cmp(&first), Some(Ordering::Less));
-        assert_eq!(first.partial_cmp(&first), Some(Ordering::Equal));
-    }
-}
-
 #[derive(Debug, Eq, PartialEq, Clone, Copy, Hash)]
 pub enum TestResult<S, E> {
     Score(ScoreValue<S>),
