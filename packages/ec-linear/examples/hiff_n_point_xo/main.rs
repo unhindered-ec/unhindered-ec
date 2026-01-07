@@ -21,7 +21,7 @@ use ec_core::{
         recombinator::Recombine,
         selector::{Select, Selector, best::Best, lexicase::Lexicase},
     },
-    performance::{TestResults, score_value::ScoreValue},
+    performance::{score_value::ScoreValue, test_results::TestResults},
 };
 use ec_linear::{
     genome::bitstring::Bitstring, mutator::with_one_over_length::WithOneOverLength,

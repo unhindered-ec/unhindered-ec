@@ -2,7 +2,8 @@ use std::hint::black_box;
 
 use criterion::{Criterion, criterion_group, criterion_main};
 use ec_core::{
-    distributions::collection::ConvertToCollectionDistribution, performance::TestResults,
+    distributions::collection::ConvertToCollectionDistribution,
+    performance::test_results::TestResults,
 };
 use rand::{
     distr::{Distribution, StandardUniform},

@@ -8,7 +8,9 @@ use rand::{
 };
 
 use super::{Selector, error::EmptyPopulation};
-use crate::{individual::Individual, performance::TestResults, population::Population};
+use crate::{
+    individual::Individual, performance::test_results::TestResults, population::Population,
+};
 
 #[derive(Debug)]
 pub struct Lexicase {
