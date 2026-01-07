@@ -83,7 +83,7 @@ fn main() -> miette::Result<()> {
 
     ensure!(
         !population.is_empty(),
-        "An initial populaiton is always required"
+        "An initial population is always required"
     );
 
     // Let's assume the process will be generational, i.e., we replace the entire
