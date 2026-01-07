@@ -107,7 +107,7 @@ fn main() -> miette::Result<()> {
 
     ensure!(
         !population.is_empty(),
-        "An initial populaiton is always required"
+        "An initial population is always required"
     );
 
     let best = Best.select(&population, &mut rng)?;
