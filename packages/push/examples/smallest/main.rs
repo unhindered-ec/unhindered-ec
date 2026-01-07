@@ -12,7 +12,7 @@ use ec_core::{
         mutator::Mutate,
         selector::{Select, Selector, best::Best, lexicase::Lexicase},
     },
-    performance::{self, TestResults},
+    performance::{self, test_results::TestResults},
 };
 use ec_linear::mutator::umad::Umad;
 use miette::{IntoDiagnostic, ensure};

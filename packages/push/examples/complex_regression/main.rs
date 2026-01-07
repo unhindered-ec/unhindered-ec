@@ -18,7 +18,7 @@ use ec_core::{
         mutator::Mutate,
         selector::{Select, Selector, best::Best, lexicase::Lexicase},
     },
-    performance::TestResults,
+    performance::test_results::TestResults,
     uniform_distribution_of,
 };
 use ec_linear::mutator::umad::Umad;

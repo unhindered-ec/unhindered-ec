@@ -21,7 +21,7 @@ use ec_core::{
             tournament::Tournament,
         },
     },
-    performance::{self, TestResults},
+    performance::{self, test_results::TestResults},
     uniform_distribution_of,
 };
 use ec_linear::mutator::umad::Umad;
