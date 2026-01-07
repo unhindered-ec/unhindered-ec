@@ -14,7 +14,7 @@ use ec_core::{
         mutator::Mutate,
         selector::{Select, Selector, best::Best, lexicase::Lexicase},
     },
-    performance::{self, test_results::TestResults},
+    performance::{error_value::ErrorValue, test_results::TestResults},
 };
 use ec_linear::mutator::umad::Umad;
 use miette::{IntoDiagnostic, ensure};
@@ -192,7 +192,7 @@ fn score_genome(
     genome: &Plushy,
     training_cases: &Cases<Input, Output>,
     penalty_value: usize,
-) -> TestResults<performance::error_value::ErrorValue<usize>> {
+) -> TestResults<ErrorValue<usize>> {
     let program = Vec::<PushProgram>::from(genome.clone());
     training_cases
         .iter()
