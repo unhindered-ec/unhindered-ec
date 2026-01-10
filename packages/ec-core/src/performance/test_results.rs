@@ -163,7 +163,7 @@ impl<'a, R> IntoIterator for &'a TestResults<R> {
 }
 
 #[cfg(test)]
-mod test_results_tests {
+mod test {
     use super::*;
     use crate::performance::{error_value::ErrorValue, score_value::ScoreValue};
 
