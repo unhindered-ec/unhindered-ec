@@ -11,6 +11,6 @@ pub mod generation;
 pub mod genome;
 pub mod individual;
 pub mod operator;
+pub mod performance;
 pub mod population;
-pub mod test_results;
 pub mod weighted;

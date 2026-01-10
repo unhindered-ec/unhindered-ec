@@ -12,7 +12,7 @@ use ec_core::{
         mutator::Mutate,
         selector::{Select, Selector, best::Best, lexicase::Lexicase},
     },
-    test_results::{self, TestResults},
+    performance::{error_value::ErrorValue, test_results::TestResults},
 };
 use ec_linear::mutator::umad::Umad;
 use miette::{IntoDiagnostic, ensure};
@@ -107,7 +107,7 @@ fn main() -> miette::Result<()> {
 
     ensure!(
         !population.is_empty(),
-        "An initial populaiton is always required"
+        "An initial population is always required"
     );
 
     let best = Best.select(&population, &mut rng)?;
@@ -143,7 +143,7 @@ fn score_genome(
     genome: &Plushy,
     training_cases: &Cases<Input, Output>,
     penalty_value: i128,
-) -> TestResults<test_results::Error<i128>> {
+) -> TestResults<ErrorValue<i128>> {
     let program = Vec::<PushProgram>::from(genome.clone());
     training_cases
         .iter()
