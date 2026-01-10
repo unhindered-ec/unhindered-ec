@@ -5,8 +5,8 @@ use std::{cmp::Ordering, fmt::Display, iter::Sum};
 #[repr(transparent)]
 pub struct ScoreValue<T>(pub T);
 
-// We need `Score` to be cloneable in many of our applications,
-// even if it's not needed here in `ec_core`. For `Score` to be
+// We need `ScoreValue` to be cloneable in many of our applications,
+// even if it's not needed here in `ec_core`. For `ScoreValue` to be
 // cloneable, the generic type must also be cloneable.
 static_assertions::assert_impl_all!(ScoreValue<()>: Clone);
 
