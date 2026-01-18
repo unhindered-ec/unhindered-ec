@@ -3,7 +3,24 @@ use rand::Rng;
 use super::{Selector, error::EmptyPopulation};
 use crate::population::Population;
 
-#[derive(Debug)]
+/// Selector that selects the individual with the lowest value as specified by
+/// the [`Ord`] relation on the individuals.
+///
+/// Also see [`Best`](ec_core::operator::selector::best::Best) for a selector
+/// that selects the individual with the highest value instead.
+///
+/// # Example
+/// ```
+/// # use ec_core::operator::selector::{Selector, worst::Worst, error::EmptyPopulation};
+/// let population = [2, 3, 5];
+///
+/// let worst = Worst;
+/// let selected = worst.select(&population, &mut rand::rng())?;
+///
+/// assert_eq!(*selected, 2);
+/// # Ok::<(), EmptyPopulation>(())
+/// ```
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 pub struct Worst;
 
 impl<P> Selector<P> for Worst
@@ -14,6 +31,23 @@ where
 {
     type Error = EmptyPopulation;
 
+    /// Selects the worst (as defined by the [`Ord`] relation) individual of the
+    /// passed Population.
+    ///
+    /// # Example
+    /// ```
+    /// # use ec_core::operator::selector::{Selector, worst::Worst, error::EmptyPopulation};
+    /// let population = [2, 3, 5];
+    ///
+    /// let worst = Worst;
+    /// let selected = worst.select(&population, &mut rand::rng())?;
+    ///
+    /// assert_eq!(*selected, 2);
+    /// # Ok::<(), EmptyPopulation>(())
+    /// ```
+    ///
+    /// # Errors
+    /// - [`EmptyPopulation`] if the population selected from is empty.
     fn select<'pop, R: Rng + ?Sized>(
         &self,
         population: &'pop P,
