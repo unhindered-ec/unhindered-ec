@@ -6,24 +6,89 @@ use rand::{Rng, prelude::IndexedRandom};
 use super::Selector;
 use crate::population::Population;
 
-#[derive(Debug)]
+/// Tournament selector.
+///
+/// This selector works by creating a tournament and letting `size` randomly
+/// selected Individuals face off against each other, where the best one wins.
+///
+/// # Examples
+/// ```
+/// # use ec_core::operator::selector::{Selector, tournament::{Tournament, TournamentSizeError}};
+/// let population = [1, 2, 5, 8];
+///
+/// let tournament = Tournament::of_size::<3>();
+/// let selected = tournament.select(&population, &mut rand::rng())?;
+///
+/// assert!([5, 8].contains(selected));
+/// # Ok::<(), TournamentSizeError>(())
+/// ```
+/// ```
+/// # use ec_core::operator::selector::{Selector, tournament::{Tournament, TournamentSizeError}};
+/// let population = [1, 2, 5, 8];
+///
+/// let tournament = Tournament::binary();
+/// let selected = tournament.select(&population, &mut rand::rng())?;
+///
+/// assert!([2, 5, 8].contains(selected));
+/// # Ok::<(), TournamentSizeError>(())
+/// ```
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Tournament {
     size: NonZeroUsize,
 }
 
-#[derive(Debug, thiserror::Error, Diagnostic, PartialEq, Eq)]
+impl Default for Tournament {
+    fn default() -> Self {
+        Self::of_size::<2>()
+    }
+}
+
+/// Error that occurs when trying to perform [`Tournament`] selection on a
+/// population with a size smaller than the tournament size
+#[derive(Debug, thiserror::Error, Diagnostic, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[error("Tournament size {tournament_size} was larger than population size {population_size}")]
 #[diagnostic(help = "Ensure that the population has at least {tournament_size} individuals")]
+// invariant: tournament_size > population_size, please use the constructor
+// functions
 pub struct TournamentSizeError {
     tournament_size: NonZeroUsize,
     population_size: usize,
 }
 
-impl TournamentSizeError {
-    #[must_use]
-    pub const fn new(tournament_size: NonZeroUsize, population_size: usize) -> Self {
+impl Default for TournamentSizeError {
+    fn default() -> Self {
         Self {
+            tournament_size: NonZeroUsize::MIN,
+            population_size: 0,
+        }
+    }
+}
+
+impl TournamentSizeError {
+    /// Construct a new tournament size error from size of the population and
+    /// tournament
+    ///
+    /// # Errors
+    /// Returns `None` when the invarant that `tournament_size >
+    /// population_size` is not upheld.
+    #[must_use]
+    pub const fn new(tournament_size: NonZeroUsize, population_size: usize) -> Option<Self> {
+        if tournament_size.get() <= population_size {
+            return None;
+        }
+
+        Some(Self {
             tournament_size,
+            population_size,
+        })
+    }
+
+    /// Construct a new tournament size error from the size of the population as
+    /// well as the difference from the expected tournament size minimum.
+    #[must_use]
+    pub const fn new_diff(population_size: usize, num_fewer: NonZeroUsize) -> Self {
+        Self {
+            tournament_size: num_fewer.saturating_add(population_size),
             population_size,
         }
     }
@@ -79,13 +144,19 @@ where
 {
     type Error = TournamentSizeError;
 
+    /// Select an Individual from the given Population using tournament
+    /// selection.
+    ///
+    /// # Errors
+    /// - [`TournamentSizeError`] if the population is of smaller size than the
+    ///   tournament
     fn select<'pop, R: Rng + ?Sized>(
         &self,
         population: &'pop P,
         rng: &mut R,
     ) -> Result<&'pop P::Individual, Self::Error> {
-        if population.size() < self.size.into() {
-            return Err(TournamentSizeError::new(self.size, population.size()));
+        if let Some(err) = TournamentSizeError::new(self.size, population.size()) {
+            return Err(err);
         }
         population
             .as_ref()
@@ -116,7 +187,7 @@ mod tests {
         let pop: Vec<i32> = Vec::new();
         let mut rng = rand::rng();
         let selector = Tournament::new(NonZeroUsize::MIN);
-        let expected_error = TournamentSizeError::new(NonZeroUsize::MIN, 0);
+        let expected_error = TournamentSizeError::default();
         assert_eq!(selector.select(&pop, &mut rng), Err(expected_error));
         assert!(matches!(
             selector.select(&pop, &mut rng),
