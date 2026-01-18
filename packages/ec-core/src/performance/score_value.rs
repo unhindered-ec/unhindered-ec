@@ -1,6 +1,26 @@
 use std::{cmp::Ordering, fmt::Display, iter::Sum};
 
-/// Score implicitly follows a "bigger is better" model.
+/// A result of a single test, bigger is better.
+///
+/// See also [`ErrorValue`](super::error_value::ErrorValue), for which smaller
+/// is better.
+///
+/// # Examples
+/// ```
+/// # use ec_core::performance::score_value::ScoreValue;
+/// #
+/// assert!(ScoreValue(5) > ScoreValue(-4));
+/// ```
+/// ```
+/// # use ec_core::performance::score_value::ScoreValue;
+/// #
+/// assert!(ScoreValue(5) == ScoreValue(5));
+/// ```
+/// ```
+/// # use ec_core::performance::score_value::ScoreValue;
+/// #
+/// assert!(ScoreValue(-100) < ScoreValue(-4));
+/// ```
 #[derive(Eq, PartialEq, Ord, PartialOrd, Debug, Clone, Copy, Hash, Default)]
 #[repr(transparent)]
 pub struct ScoreValue<T>(pub T);
@@ -19,6 +39,16 @@ impl<T: Display> Display for ScoreValue<T> {
 // TODO: Write tests for the `From` and `Sum` trait implementations.
 
 impl<T> ScoreValue<T> {
+    /// Create a new [`ScoreValue`] from the given value
+    ///
+    /// Also see [`ScoreValue::from`].
+    ///
+    /// # Example
+    /// ```
+    /// # use ec_core::performance::score_value::ScoreValue;
+    /// #
+    /// assert_eq!(ScoreValue::new(5), ScoreValue(5));
+    /// ```
     #[must_use]
     pub const fn new(score: T) -> Self {
         Self(score)
@@ -26,24 +56,63 @@ impl<T> ScoreValue<T> {
 }
 
 impl<T: PartialOrd> PartialOrd<T> for ScoreValue<T> {
+    /// Compares the value of a score
+    ///
+    /// # Example
+    /// ```
+    /// # use ec_core::performance::score_value::ScoreValue;
+    /// #
+    /// assert!(ScoreValue(100) < 1000);
+    /// assert!(ScoreValue(10) > 1);
+    /// ```
     fn partial_cmp(&self, other: &T) -> Option<Ordering> {
         self.0.partial_cmp(other)
     }
 }
 
 impl<T: PartialEq> PartialEq<T> for ScoreValue<T> {
+    /// Checks the value of a score for equality
+    ///
+    /// # Example
+    /// ```
+    /// # use ec_core::performance::score_value::ScoreValue;
+    /// #
+    /// assert_eq!(ScoreValue(100), 100);
+    /// assert_ne!(ScoreValue(10), 1);
+    /// ```
     fn eq(&self, other: &T) -> bool {
         self.0.eq(other)
     }
 }
 
 impl<T> From<T> for ScoreValue<T> {
+    /// Create a new [`ScoreValue`] from the given value
+    ///
+    /// Also see [`ScoreValue::new`].
+    ///
+    /// # Example
+    /// ```
+    /// # use ec_core::performance::score_value::ScoreValue;
+    /// #
+    /// assert_eq!(ScoreValue::from(5), ScoreValue(5));
+    /// ```
     fn from(score: T) -> Self {
         Self(score)
     }
 }
 
 impl<T: Sum> Sum<T> for ScoreValue<T> {
+    /// Create a new [`ScoreValue`] from summing up a iterator of values.
+    ///
+    /// # Example
+    /// ```
+    /// # use ec_core::performance::score_value::ScoreValue;
+    /// #
+    /// assert_eq!(
+    ///     [5, 8, -3, 10].into_iter().sum::<ScoreValue<_>>(),
+    ///     ScoreValue(20)
+    /// );
+    /// ```
     fn sum<I>(iter: I) -> Self
     where
         I: Iterator<Item = T>,
@@ -53,6 +122,19 @@ impl<T: Sum> Sum<T> for ScoreValue<T> {
 }
 
 impl<T: Sum> Sum for ScoreValue<T> {
+    /// Sum up a Iterator of [`ScoreValue`]'s.
+    ///
+    /// # Example
+    /// ```
+    /// # use ec_core::performance::score_value::ScoreValue;
+    /// #
+    /// assert_eq!(
+    ///     [ScoreValue(5), ScoreValue(8), ScoreValue(-3), ScoreValue(10)]
+    ///         .into_iter()
+    ///         .sum::<ScoreValue<i32>>(),
+    ///     ScoreValue(20)
+    /// );
+    /// ```
     fn sum<I>(iter: I) -> Self
     where
         I: Iterator<Item = Self>,
@@ -66,6 +148,24 @@ where
     T: ToOwned,
     Self: Sum<<T as ToOwned>::Owned>,
 {
+    /// Sum up a Iterator of references to [`ScoreValue`]'s.
+    ///
+    /// # Example
+    /// ```
+    /// # use ec_core::performance::score_value::ScoreValue;
+    /// #
+    /// assert_eq!(
+    ///     [
+    ///         &ScoreValue(5),
+    ///         &ScoreValue(8),
+    ///         &ScoreValue(-3),
+    ///         &ScoreValue(10)
+    ///     ]
+    ///     .into_iter()
+    ///     .sum::<ScoreValue<_>>(),
+    ///     ScoreValue(20)
+    /// );
+    /// ```
     fn sum<I: Iterator<Item = &'a Self>>(iter: I) -> Self {
         iter.map(|s| s.0.to_owned()).sum()
     }
