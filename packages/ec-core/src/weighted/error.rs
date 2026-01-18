@@ -5,16 +5,31 @@ use std::{
 
 use miette::{Diagnostic, Severity};
 
-#[derive(Debug, thiserror::Error, Diagnostic, PartialEq, Eq)]
+/// Error that occurs when creating a
+/// [`WeightedPair`](super::weighted_pair::WeightedPair) is constructed from
+/// weights whose sum overflows.
+#[derive(
+    Debug, thiserror::Error, Diagnostic, PartialEq, Eq, Clone, Copy, PartialOrd, Ord, Hash,
+)]
 #[error("Overflow while trying to calculate the sum of the weights {0} and {1}.")]
 pub struct WeightSumOverflow(pub u32, pub u32);
 
-#[derive(Debug, thiserror::Error, Diagnostic, PartialEq, Eq)]
+/// Error that occurs when for example trying to select from a
+/// [`Weighted`](super::Weighted) which has a 0 weight.
+#[derive(
+    Debug, thiserror::Error, Diagnostic, PartialEq, Eq, Clone, Copy, PartialOrd, Ord, Hash,
+)]
 #[error("Tried to choose from a structure with (total) weight zero.")]
 #[diagnostic(help = "Choosing requires at least one non-zero weight")]
 pub struct ZeroWeight;
 
-#[derive(Debug, PartialEq, Eq)]
+/// Error that occurs when doing a fallible operation on a
+/// [`WeightedPair`](super::weighted_pair::WeightedPair) (for example
+/// selection).
+///
+/// This type simply wraps two error types and has either of them stored, it's
+/// basically a specialized `Either<A,B>` type.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum WeightedPairError<A, B> {
     A(A),
     B(B),
@@ -108,7 +123,9 @@ where
     }
 }
 
-#[derive(Debug, PartialEq, Eq)]
+/// Error that occurs when selecting from a [`Weighted`](super::Weighted) that
+/// either has a zero weight or the underlying Selector errored.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum SelectionError<E> {
     Selector(E),
     ZeroWeight(ZeroWeight),
