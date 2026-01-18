@@ -5,12 +5,25 @@ use std::{
 
 use miette::{Diagnostic, LabeledSpan, Severity, SourceCode};
 
-#[derive(Debug, thiserror::Error, Diagnostic)]
-#[error("Attempted to perform TwoPointXo on genomes of different lengths {0} and {1}")]
+/// Error that occurs when trying to perform
+/// [`UniformXo`](super::uniform_xo::UniformXo)
+/// or [`TwoPointXo`](super::two_point_xo::TwoPointXo) on genomes of differing
+/// lengths
+#[derive(
+    Debug, thiserror::Error, Diagnostic, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash,
+)]
+#[error("Attempted to perform Crossover on genomes of different lengths {0} and {1}")]
 #[diagnostic(help = "Ensure your genomes are of uniform length")]
 pub struct DifferentGenomeLength(pub usize, pub usize);
 
-#[derive(Debug, thiserror::Error, Diagnostic)]
+/// Error that occurs when trying to perform crossover with more crossover
+/// points than is possible for a given genome length.
+///
+/// See [`NPointXo`](super::n_point_xo::NPointXo) and
+/// [`TwoPointXo`](super::two_point_xo::TwoPointXo).
+#[derive(
+    Debug, thiserror::Error, Diagnostic, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash,
+)]
 #[error(
     "Attempted to perform N-point crossover with more crossover points than possible for the \
      current genome length {genome_length}. Need a minimum of {min_size} > {genome_length}"
@@ -27,7 +40,7 @@ pub struct GenomeLengthTooShort {
 /// have the same length ([`UniformCrossoverError::DifferentGenomeLength`]).
 /// It can also fail due to some other crossover error `E`
 /// ([`UniformCrossoverError::Crossover`]).
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum UniformCrossoverError<E> {
     /// Attempted to crossover genomes with differing lengths
     DifferentGenomeLength(DifferentGenomeLength),
