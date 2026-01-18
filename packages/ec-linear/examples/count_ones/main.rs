@@ -112,15 +112,14 @@ fn main() -> miette::Result<()> {
 
 #[cfg(test)]
 mod test {
-    use ec_core::performance::{self, TestResults};
+    use ec_core::performance::{score_value::ScoreValue, test_results::TestResults};
 
     use super::count_ones;
 
     #[test]
     fn non_empty() {
         let input = [false, true, true, true, false, true];
-        let output: TestResults<performance::ScoreValue<i64>> =
-            [0, 1, 1, 1, 0, 1].into_iter().collect();
+        let output: TestResults<ScoreValue<i64>> = [0, 1, 1, 1, 0, 1].into_iter().collect();
         assert_eq!(output, count_ones(&input));
     }
 }
