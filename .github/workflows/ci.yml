@@ -7,7 +7,7 @@ on:
 jobs:
   build:
     name: cargo build
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-4vcpu-ubuntu-2404
     strategy:
       # This ensures that all three toolchains will run even if one of
       # them fails. This, for example, prevents a `nightly` failure
@@ -31,7 +31,7 @@ jobs:
       - run: cargo build
   nextest:
     name: cargo nextest
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-4vcpu-ubuntu-2404
     strategy:
       # This ensures that all three toolchains will run even if one of
       # them fails. This, for example, prevents a `nightly` failure
@@ -56,7 +56,7 @@ jobs:
       - run: cargo nextest run --workspace --all-targets --profile ci
   doctests:
     name: cargo test --doc
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-4vcpu-ubuntu-2404
     strategy:
       # This ensures that all three toolchains will run even if one of
       # them fails. This, for example, prevents a `nightly` failure
@@ -80,7 +80,7 @@ jobs:
       - run: cargo test --doc
   clippy:
     name: cargo clippy
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-4vcpu-ubuntu-2404
     strategy:
       # This ensures that all three toolchains will run even if one of
       # them fails. This, for example, prevents a `nightly` failure
@@ -105,7 +105,7 @@ jobs:
       - run: cargo clippy --all-targets
   rustfmt:
     name: cargo fmt
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-4vcpu-ubuntu-2404
     strategy:
       # This ensures that all three toolchains will run even if one of
       # them fails. This, for example, prevents a `nightly` failure
@@ -131,7 +131,7 @@ jobs:
       - run: rustfmt-unstable --config-file rustfmt.toml -- cargo fmt --check -- --config error_on_line_overflow=true
   tombi_fmt:
     name: tombi format (toml)
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-4vcpu-ubuntu-2404
     steps:
         # tag: v4
       - name: Checkout the code
@@ -143,7 +143,7 @@ jobs:
       - run: tombi format . --check
   examples:
     name: check examples working
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-4vcpu-ubuntu-2404
     strategy:
       # This ensures that all three toolchains will run even if one of
       # them fails. This, for example, prevents a `nightly` failure
@@ -168,7 +168,7 @@ jobs:
       - run: example-runner-cli --error-on-unconfigured --error-on-unknown --parallel
   doctest-clippy:
     name: cargo clippy - for doctests
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-4vcpu-ubuntu-2404
     steps:
         # tag: v4
       - name: Checkout the code
@@ -183,7 +183,7 @@ jobs:
       - run: chmod +x scripts/cargo-rustdoc-clippy && export PATH="$(pwd)/scripts/:$PATH" && cargo rustdoc-clippy -- -- -Dwarnings
   rustdoc:
     name: cargo doc
-    runs-on: ubuntu-latest
+    runs-on: blacksmith-4vcpu-ubuntu-2404
     env:
       RUSTDOCFLAGS: -Dwarnings
     steps:
