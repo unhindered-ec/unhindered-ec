@@ -81,10 +81,7 @@ pub fn parse_fields(
         })?;
         let mut i = 0;
         // Consume elements that are for our macro from the input to not return them
-        loop {
-            let Some(to_compare) = attrs.get(i) else {
-                break;
-            };
+        while let Some(to_compare) = attrs.get(i) {
             if to_compare.meta.path() == &syn::parse_quote!(stack) {
                 matching_attrs.push(attrs.remove(i));
                 continue;
