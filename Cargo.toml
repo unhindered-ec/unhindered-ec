@@ -25,7 +25,7 @@ macro_railroad_annotation = "1.1.0"
 miette = "7.6.0"
 num-traits = "0.2.18"
 polonius-the-crab = "0.5.0"
-proptest = "1.9.0"
+proptest = "1.10.0"
 push = { path = "packages/push" }
 push_macros = { path = "packages/push-macros" }
 rand = "0.9.2"
