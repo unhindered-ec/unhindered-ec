@@ -29,12 +29,21 @@ pub struct RepeatWith<F, const N: usize> {
 }
 
 impl<F, const N: usize> From<F> for RepeatWith<F, N> {
-    /// Create a [`RepeatWith`] from another [`Operator`].
+    /// Convert `Self` into a repeated [`Operator`].
     ///
     /// The count of repetitions is provided by the `N` generic on
     /// [`RepeatWith`]. This is identical to [`RepeatWith::new`]
     ///
-    /// # Example
+    /// # Examples
+    /// ```
+    /// # use ec_core::operator::{Operator, constant::Constant, composable::RepeatWith};
+    /// # use std::convert::Infallible;
+    /// let repeated_operator = RepeatWith::<_, 5>::from(Constant::new(1));
+    /// #
+    /// # let value = repeated_operator.apply((), &mut rand::rng())?;
+    /// # assert_eq!(value, [1; 5]);
+    /// # Ok::<(), Infallible>(())
+    /// ```
     /// ```
     /// # use ec_core::operator::{Operator, constant::Constant, composable::RepeatWith};
     /// # use std::convert::Infallible;
