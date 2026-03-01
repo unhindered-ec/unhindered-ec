@@ -4,13 +4,14 @@ use ec_core::{
     distributions::collection::{self, ConvertToCollectionDistribution},
     genome::Genome,
 };
-use rand::{Rng, distr::StandardUniform, prelude::Distribution};
+use rand::{
+    Rng,
+    distr::{Bernoulli, BernoulliError, StandardUniform},
+    prelude::Distribution,
+};
 
 use super::Linear;
 use crate::recombinator::{crossover::Crossover, errors::MultipleGeneAccess};
-
-// TODO: Ought to have `LinearGenome<T>` so that `Bitstring` is just
-//   `LinearGenome<bool>`.
 
 pub struct BoolGenerator {
     pub true_probability: f64,
@@ -29,7 +30,17 @@ impl Distribution<bool> for BoolGenerator {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
+/// A linear, variable-length genome of true/false values.
+///
+/// # Example
+/// ```
+/// # use ec_linear::genome::bitstring::Bitstring;
+/// # use rand::rng;
+/// #
+/// let my_bitstring = Bitstring::random(10, &mut rng());
+/// assert_eq!(my_bitstring.iter().count(), 10)
+/// ```
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 pub struct Bitstring {
     pub bits: Vec<bool>,
 }
@@ -38,6 +49,22 @@ impl<BD> Distribution<Bitstring> for collection::Collection<BD>
 where
     BD: Distribution<bool>,
 {
+    /// Sample a [`Bitstring`] from a collection generator
+    ///
+    /// This creates a random [`Bitstring`] of the size as specified in the
+    /// generator.
+    ///
+    /// # Example
+    /// ```
+    /// # use ec_linear::genome::bitstring::Bitstring;
+    /// # use ec_core::distributions::collection::ConvertToCollectionDistribution;
+    /// # use rand::{rng, distr::{Bernoulli, Distribution}};
+    /// #
+    /// let my_bitstring: Bitstring = Bernoulli::new(0.3)?.into_collection(10).sample(&mut rng());
+    /// assert_eq!(my_bitstring.iter().count(), 10);
+    /// #
+    /// # Ok::<(), Box<dyn std::error::Error>>(())
+    /// ```
     fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Bitstring {
         Bitstring {
             bits: self.sample(rng),
@@ -46,29 +73,89 @@ where
 }
 
 impl Bitstring {
+    /// Create a new random bitstring genome of size `num_bits`.
+    ///
+    /// # Example
+    /// ```
+    /// # use ec_linear::genome::bitstring::Bitstring;
+    /// # use rand::rng;
+    /// #
+    /// let my_bitstring = Bitstring::random(10, &mut rng());
+    /// assert_eq!(my_bitstring.iter().count(), 10)
+    /// ```
     pub fn random<R: Rng + ?Sized>(num_bits: usize, rng: &mut R) -> Self {
         StandardUniform.into_collection(num_bits).sample(rng)
     }
 
+    /// Create a new random bitstring genome of size `num_bits` with a given
+    /// `probability` of each gene beeing true.
+    ///
+    /// # Example
+    /// ```
+    /// # use ec_linear::genome::bitstring::Bitstring;
+    /// # use rand::rng;
+    /// #
+    /// let my_bitstring = Bitstring::random(10, &mut rng());
+    /// assert_eq!(my_bitstring.iter().count(), 10)
+    /// ```
+    ///
+    /// # Errors
+    /// - [`BernoulliError`] if the passed probability is invalid. (i.e not in
+    ///   range 0.0..=1.0)
     pub fn random_with_probability<R: Rng + ?Sized>(
         num_bits: usize,
         probability: f64,
         rng: &mut R,
-    ) -> Self {
-        BoolGenerator::new(probability)
+    ) -> Result<Self, BernoulliError> {
+        Ok(Bernoulli::new(probability)?
             .into_collection(num_bits)
-            .sample(rng)
+            .sample(rng))
     }
 
+    /// Iterate over references to the individual genes of this genome
+    ///
+    /// # Example
+    /// ```
+    /// # use ec_linear::genome::bitstring::Bitstring;
+    /// # use rand::rng;
+    /// #
+    /// let my_bitstring = Bitstring::random(10, &mut rng());
+    /// assert_eq!(my_bitstring.iter().count(), 10)
+    /// ```
     pub fn iter(&self) -> std::slice::Iter<'_, bool> {
         self.bits.iter()
     }
 
+    /// Iterate over mutable references to the individual genes of this genome
+    ///
+    /// # Example
+    /// ```
+    /// # use ec_linear::genome::bitstring::Bitstring;
+    /// # use rand::rng;
+    /// #
+    /// let mut my_bitstring = Bitstring::random(10, &mut rng());
+    ///
+    /// for gene in my_bitstring.iter_mut() {
+    ///     *gene = true;
+    /// }
+    ///
+    /// assert!(my_bitstring.iter().all(|&v| v))
+    /// ```
     pub fn iter_mut(&mut self) -> std::slice::IterMut<'_, bool> {
         self.bits.iter_mut()
     }
 }
 
+/// Display a bitstring as individual 0/1 bits.
+///
+/// # Example
+/// ```
+/// # use ec_linear::genome::bitstring::Bitstring;
+/// #
+/// let ones_bitstring = Bitstring::from_iter([true; 10]);
+///
+/// assert_eq!(format!("{ones_bitstring}"), "1111111111".to_string())
+/// ```
 impl Display for Bitstring {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         for bit in &self.bits {
@@ -80,6 +167,16 @@ impl Display for Bitstring {
 
 // TODO: Should we use copy-on-write when we clone genomes after selection?
 
+/// Construct a bitstring genome from a iterator of [`bool`]'s
+///
+/// # Example
+/// ```
+/// # use ec_linear::genome::bitstring::Bitstring;
+/// #
+/// let ones_bitstring = Bitstring::from_iter([true; 10]);
+///
+/// assert_eq!(format!("{ones_bitstring}"), "1111111111".to_string())
+/// ```
 impl<B> FromIterator<B> for Bitstring
 where
     bool: From<B>,
@@ -119,14 +216,42 @@ impl<'a> IntoIterator for &'a mut Bitstring {
 }
 
 impl Genome for Bitstring {
+    /// The bitstring genome has [`bool`] genes
     type Gene = bool;
 }
 
 impl Linear for Bitstring {
+    /// Get the size of this bitstring genome
+    ///
+    /// # Example
+    /// ```
+    /// # use ec_linear::genome::{bitstring::Bitstring, Linear};
+    /// # use rand::rng;
+    /// #
+    /// let my_bitstring = Bitstring::random(10, &mut rng());
+    /// assert_eq!(my_bitstring.size(), 10);
+    /// ```
     fn size(&self) -> usize {
         self.bits.len()
     }
 
+    /// Get a mutable reference to the gene at index `index`.
+    ///
+    /// # Example
+    /// ```
+    /// # use ec_linear::genome::{bitstring::Bitstring, Linear};
+    /// # use rand::rng;
+    /// #
+    /// # fn foo() -> Option<()> {
+    /// #
+    /// let mut my_bitstring = Bitstring::random(10, &mut rng());
+    /// *my_bitstring.gene_mut(2)? = true;
+    /// assert_eq!(my_bitstring.iter().nth(2), Some(&true));
+    /// #
+    /// # Some(())
+    /// # }
+    /// # foo().unwrap();
+    /// ```
     fn gene_mut(&mut self, index: usize) -> Option<&mut Self::Gene> {
         self.bits.get_mut(index)
     }
@@ -135,6 +260,20 @@ impl Linear for Bitstring {
 impl Crossover for Bitstring {
     type GeneCrossoverError = MultipleGeneAccess<usize>;
 
+    /// Crossover a single gene at index `index` with a second [`Bitstring`]
+    /// `other`.
+    ///
+    ///  # Example
+    /// ```
+    /// # use ec_linear::{genome::bitstring::Bitstring, recombinator::crossover::Crossover};
+    /// # use rand::rng;
+    /// let mut my_bitstring_1 = Bitstring::random(10, &mut rng());
+    /// let mut my_bitstring_2 = Bitstring::random(10, &mut rng());
+    ///
+    /// my_bitstring_1.crossover_gene(&mut my_bitstring_2, 5)?;
+    /// #
+    /// # Ok::<(), Box<dyn std::error::Error>>(())
+    /// ```
     fn crossover_gene(
         &mut self,
         other: &mut Self,
@@ -147,6 +286,20 @@ impl Crossover for Bitstring {
 
     type SegmentCrossoverError = MultipleGeneAccess<Range<usize>>;
 
+    /// Crossover a segment of genes at the indecies in `range` with a second
+    /// [`Bitstring`] `other`.
+    ///
+    ///  # Example
+    /// ```
+    /// # use ec_linear::{genome::bitstring::Bitstring, recombinator::crossover::Crossover};
+    /// # use rand::rng;
+    /// let mut my_bitstring_1 = Bitstring::random(10, &mut rng());
+    /// let mut my_bitstring_2 = Bitstring::random(10, &mut rng());
+    ///
+    /// my_bitstring_1.crossover_segment(&mut my_bitstring_2, 5..8)?;
+    /// #
+    /// # Ok::<(), Box<dyn std::error::Error>>(())
+    /// ```
     fn crossover_segment(
         &mut self,
         other: &mut Self,
@@ -195,7 +348,7 @@ mod tests {
     fn random_with_probability_all_true() {
         let mut rng = rand::rng();
         let size = 100;
-        let bs = Bitstring::random_with_probability(size, 1.0, &mut rng);
+        let bs = Bitstring::random_with_probability(size, 1.0, &mut rng).unwrap();
         assert_eq!(bs.size(), size);
         assert!(bs.iter().all(|&b| b));
     }
@@ -204,7 +357,7 @@ mod tests {
     fn random_with_probability_all_false() {
         let mut rng = rand::rng();
         let size = 100;
-        let bs = Bitstring::random_with_probability(size, 0.0, &mut rng);
+        let bs = Bitstring::random_with_probability(size, 0.0, &mut rng).unwrap();
         assert_eq!(bs.size(), size);
         assert!(bs.iter().all(|&b| !b));
     }
