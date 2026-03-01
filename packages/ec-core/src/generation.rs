@@ -84,10 +84,12 @@ use crate::{operator::Operator, population::Population};
 /// # }
 /// ```
 ///
-/// [^ec-linear-usage]: Note that this example uses [`ec-linear`](#) which is not a
+/// [^ec-linear-usage]: Note that this example uses [`ec-linear`][ec-linear] which is not a
 ///     dependency of this package to demonstrate some concepts which need
 ///     concrete implementations. If you want to replicate this example, make
-///     sure [`ec-linear`](#) is installed.
+///     sure [`ec-linear`][ec-linear] is installed.
+///
+/// [ec-linear]: #
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Default)]
 pub struct Generation<C, P> {
     child_maker: C,
@@ -168,10 +170,12 @@ impl<C, P> From<(C, P)> for Generation<C, P> {
     /// # Ok(())
     /// # }
     /// ```
-    /// [^ec-linear-usage]: Note that this example uses [`ec-linear`](#) which is not a
+    /// [^ec-linear-usage]: Note that this example uses [`ec-linear`][ec-linear] which is not a
     ///     dependency of this package to demonstrate some concepts which need
     ///     concrete implementations. If you want to replicate this example,
-    ///     make sure [`ec-linear`](#) is installed.
+    ///     make sure [`ec-linear`][ec-linear] is installed.
+    ///
+    /// [ec-linear]: #
     fn from((child_maker, population): (C, P)) -> Self {
         Self {
             child_maker,
@@ -254,10 +258,12 @@ impl<P, C> Generation<C, P> {
     /// # Ok(())
     /// # }
     /// ```
-    /// [^ec-linear-usage]: Note that this example uses [`ec-linear`](#) which is not a
+    /// [^ec-linear-usage]: Note that this example uses [`ec-linear`][ec-linear] which is not a
     ///     dependency of this package to demonstrate some concepts which need
     ///     concrete implementations. If you want to replicate this example,
-    ///     make sure [`ec-linear`](#) is installed.
+    ///     make sure [`ec-linear`][ec-linear] is installed.
+    ///
+    /// [ec-linear]: #
     pub const fn population(&self) -> &P {
         &self.population
     }
@@ -335,10 +341,12 @@ impl<P, C> Generation<C, P> {
     /// # Ok(())
     /// # }
     /// ```
-    /// [^ec-linear-usage]: Note that this example uses [`ec-linear`](#) which is not a
+    /// [^ec-linear-usage]: Note that this example uses [`ec-linear`][ec-linear] which is not a
     ///     dependency of this package to demonstrate some concepts which need
     ///     concrete implementations. If you want to replicate this example,
-    ///     make sure [`ec-linear`](#) is installed.
+    ///     make sure [`ec-linear`][ec-linear] is installed.
+    ///
+    /// [ec-linear]: #
     pub fn into_population(self) -> P {
         self.population
     }
@@ -416,10 +424,12 @@ impl<P, C> Generation<C, P> {
     /// # Ok(())
     /// # }
     /// ```
-    /// [^ec-linear-usage]: Note that this example uses [`ec-linear`](#) which is not a
+    /// [^ec-linear-usage]: Note that this example uses [`ec-linear`][ec-linear] which is not a
     ///     dependency of this package to demonstrate some concepts which need
     ///     concrete implementations. If you want to replicate this example,
-    ///     make sure [`ec-linear`](#) is installed.
+    ///     make sure [`ec-linear`][ec-linear] is installed.
+    ///
+    /// [ec-linear]: #
     pub const fn new(child_maker: C, population: P) -> Self {
         Self {
             child_maker,
@@ -513,14 +523,16 @@ where
     /// # }
     /// ```
     ///
-    /// [^ec-linear-usage]: Note that this example uses [`ec-linear`](#) which is not a
+    /// [^ec-linear-usage]: Note that this example uses [`ec-linear`][ec-linear] which is not a
     ///     dependency of this package to demonstrate some concepts which need
     ///     concrete implementations. If you want to replicate this example,
-    ///     make sure [`ec-linear`](#) is installed.
+    ///     make sure [`ec-linear`][ec-linear] is installed.
     ///
     /// # Errors
     ///
     /// - `C::Error` if applying the `ChildMaker`-[`Operator`] fails.
+    ///
+    /// [ec-linear]: #
     pub fn par_next(&mut self) -> Result<(), <C as Operator<&P>>::Error> {
         // Should be able to be removed along with workaround
         let mut alias = self;
@@ -637,14 +649,16 @@ where
     /// # }
     /// ```
     ///
-    /// [^ec-linear-usage]: Note that this example uses [`ec-linear`](#) which is not a
+    /// [^ec-linear-usage]: Note that this example uses [`ec-linear`][ec-linear] which is not a
     ///     dependency of this package to demonstrate some concepts which need
     ///     concrete implementations. If you want to replicate this example,
-    ///     make sure [`ec-linear`](#) is installed.
+    ///     make sure [`ec-linear`][ec-linear] is installed.
     ///
     /// # Errors
     ///
     /// - `C::Error` if applying the `ChildMaker`-[`Operator`] fails.
+    ///
+    /// [ec-linear]: #
     pub fn serial_next(&mut self) -> Result<(), <C as Operator<&P>>::Error> {
         let mut alias = self;
         let mut rng = rand::rng();

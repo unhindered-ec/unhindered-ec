@@ -21,7 +21,7 @@ use super::{super::Operator, Composable};
 /// assert_eq!(operator.apply((), &mut rand::rng())?, (1, 2));
 /// # Ok::<(), Box<dyn std::error::Error>>(())
 /// ```
-#[derive(Debug, Composable, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Default, Composable)]
 pub struct And<F, G> {
     f: F,
     g: G,
@@ -56,10 +56,18 @@ impl<F, G> And<F, G> {
 ///
 /// It's either an error from the first or the second operator, depending on
 /// which failed.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
 pub enum AndError<T, U> {
+    /// The first operator failed with Error `T`
     First(T),
+    /// The second operator failed with Error `T`
     Second(U),
+}
+
+impl<T: Default, U> Default for AndError<T, U> {
+    fn default() -> Self {
+        Self::First(T::default())
+    }
 }
 
 impl<T, U> Display for AndError<T, U> {
