@@ -20,6 +20,30 @@ macro_rules! default_behavior {
             instead,\nwhere MyTotalType is used for the total test result."
 )]
 /// Specifies the default type to use when summing a set of values.
+///
+/// # Examples
+///
+/// ```
+/// use ec_core::performance::accumulation::{AccumulateInto, DefaultAccumulator};
+///
+/// fn sum_smart<T>(values: &[T]) -> T::Accumulator
+/// where
+///     T: DefaultAccumulator + ToOwned,
+///     <T as ToOwned>::Owned: AccumulateInto<T::Accumulator>,
+///     T::Accumulator: std::iter::Sum,
+/// {
+///     values
+///         .iter()
+///         .map(|v| v.to_owned())
+///         .map(|v| v.accumulate_into())
+///         .sum()
+/// }
+///
+/// let data = [100i8, 100i8];
+/// // i8 accumulates into i16 by default
+/// let sum: i16 = sum_smart(&data);
+/// assert_eq!(sum, 200);
+/// ```
 pub trait DefaultAccumulator {
     type Accumulator;
 }
