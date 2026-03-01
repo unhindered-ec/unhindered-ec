@@ -4,6 +4,9 @@
 
 pub mod error_value;
 pub mod score_value;
+
+pub mod summation_behavior;
+
 // I don't think we ever _use_ `TestResult` (singular), so maybe it goes away.
 pub mod test_result;
 
