@@ -1,8 +1,10 @@
+//! Traits and types for defining how values should be accumulated.
+//!
+//! This module provides the [`DefaultAccumulator`] trait, which defines the
+//! default target type for accumulation (e.g., summing `i32`s into `i64`), and
+//! the [`AccumulateInto`] trait, which performs the actual
+//! conversion/accumulation logic.
 use std::num::Saturating;
-
-// Justus suggested a macro like this to reduce the boilerplate below. Esitsu
-// even thought it was a reasonable idea. Gemini's code review also suggested
-// that it would be useful! So I think we're in.
 
 macro_rules! default_accumulator {
     ($t: ty => $accumulator: ty) => {
@@ -53,47 +55,69 @@ pub trait DefaultAccumulator {
 /// This is similar to `Into<T>`, but allows for specific behaviors like
 /// saturation or promotion that might not be covered by standard `From`/`Into`
 /// implementations (e.g., `Saturating<T>` does not implement `From<T>`).
+///
+/// # Examples
+///
+/// ```
+/// use std::num::Saturating;
+///
+/// use ec_core::performance::accumulation::AccumulateInto;
+///
+/// let val: u8 = 255;
+/// let acc: Saturating<u8> = val.accumulate_into();
+/// assert_eq!(acc.0, 255);
+/// ```
 pub trait AccumulateInto<T> {
     fn accumulate_into(self) -> T;
 }
 
+/// Identity accumulation: returns the value itself.
 impl<T> AccumulateInto<T> for T {
     fn accumulate_into(self) -> T {
         self
     }
 }
 
+/// Accumulates `i8` into `i16` to prevent overflow.
 impl AccumulateInto<i16> for i8 {
     fn accumulate_into(self) -> i16 {
         self.into()
     }
 }
 
+/// Accumulates `i16` into `i32` to prevent overflow.
 impl AccumulateInto<i32> for i16 {
     fn accumulate_into(self) -> i32 {
         self.into()
     }
 }
 
+/// Accumulates `i32` into `i64` to prevent overflow.
 impl AccumulateInto<i64> for i32 {
     fn accumulate_into(self) -> i64 {
         self.into()
     }
 }
 
+/// Accumulates `i64` into `i128` to prevent overflow.
 impl AccumulateInto<i128> for i64 {
     fn accumulate_into(self) -> i128 {
         self.into()
     }
 }
 
+/// Accumulates values into a `Saturating` wrapper.
 impl<T> AccumulateInto<Saturating<T>> for T {
     fn accumulate_into(self) -> Saturating<T> {
         Saturating(self)
     }
 }
 
-default_behavior! {
+// Define the default accumulator types for primitive numeric types.
+//
+// We generally promote signed integers to the next larger type to avoid
+// overflow during summation. Unsigned integers default to `Saturating`
+// wrappers.
 default_accumulator! {
     i8 => i16,
     i16 => i32,
