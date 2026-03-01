@@ -14,6 +14,26 @@ use crate::{genome::Linear, recombinator::errors::GenomeLengthTooShort};
 /// in the genes to swap. This is in contrast to
 /// [`UniformXo`](super::uniform_xo::UniformXo) which randomly chooses which
 /// gene to keep at each position.
+///
+/// # Example
+/// ```
+/// # use ec_core::operator::recombinator::Recombinator;
+/// # use ec_linear::{
+/// #     recombinator::two_point_xo::TwoPointXo,
+/// #     genome::bitstring::Bitstring,
+/// # };
+/// # use rand::rng;
+/// #
+/// # let mut rng = rng();
+/// #
+/// let parent_1 = Bitstring::random(10, &mut rng);
+/// let parent_2 = Bitstring::random(10, &mut rng);
+///
+/// let child = TwoPointXo.recombine([parent_1, parent_2], &mut rng)?;
+/// # let _ = child;
+/// #
+/// # Ok::<(),Box<dyn std::error::Error>>(())
+/// ```
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Default)]
 pub struct TwoPointXo;
 
@@ -36,6 +56,28 @@ where
     type Output = G;
     type Error = NPointCrossoverError<G::SegmentCrossoverError>;
 
+    /// Apply this crossover operator to the genomes `first_genome` and
+    /// `second_genome`
+    ///
+    /// # Example
+    /// ```
+    /// # use ec_core::operator::recombinator::Recombinator;
+    /// # use ec_linear::{
+    /// #     recombinator::two_point_xo::TwoPointXo,
+    /// #     genome::bitstring::Bitstring,
+    /// # };
+    /// # use rand::rng;
+    /// #
+    /// # let mut rng = rng();
+    /// #
+    /// let parent_1 = Bitstring::random(10, &mut rng);
+    /// let parent_2 = Bitstring::random(10, &mut rng);
+    ///
+    /// let child = TwoPointXo.recombine([parent_1, parent_2], &mut rng)?;
+    /// # let _ = child;
+    /// #
+    /// # Ok::<(),Box<dyn std::error::Error>>(())
+    /// ```
     fn recombine<R: Rng + ?Sized>(
         &self,
         [mut first_genome, mut second_genome]: [G; 2],
@@ -86,6 +128,28 @@ where
     type Output = G;
     type Error = <Self as Recombinator<[G; 2]>>::Error;
 
+    /// Apply this crossover operator to the genomes `first_genome` and
+    /// `second_genome`
+    ///
+    /// # Example
+    /// ```
+    /// # use ec_core::operator::recombinator::Recombinator;
+    /// # use ec_linear::{
+    /// #     recombinator::two_point_xo::TwoPointXo,
+    /// #     genome::bitstring::Bitstring,
+    /// # };
+    /// # use rand::rng;
+    /// #
+    /// # let mut rng = rng();
+    /// #
+    /// let parent_1 = Bitstring::random(10, &mut rng);
+    /// let parent_2 = Bitstring::random(10, &mut rng);
+    ///
+    /// let child = TwoPointXo.recombine((parent_1, parent_2), &mut rng)?;
+    /// # let _ = child;
+    /// #
+    /// # Ok::<(),Box<dyn std::error::Error>>(())
+    /// ```
     fn recombine<R: Rng + ?Sized>(
         &self,
         genomes: (G, G),

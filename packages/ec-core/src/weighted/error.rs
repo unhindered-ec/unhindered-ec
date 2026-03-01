@@ -6,7 +6,7 @@ use std::{
 use miette::{Diagnostic, Severity};
 
 /// Error that occurs when creating a
-/// [`WeightedPair`](super::weighted_pair::WeightedPair) is constructed from
+/// [`WeightedPair`](super::weighted_pair::WeightedPair) from
 /// weights whose sum overflows.
 #[derive(
     Debug, thiserror::Error, Diagnostic, PartialEq, Eq, Clone, Copy, PartialOrd, Ord, Hash,
