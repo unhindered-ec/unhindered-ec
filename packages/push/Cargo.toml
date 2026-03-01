@@ -31,7 +31,6 @@ criterion = { workspace = true, features = ["html_reports"] }
 easy-cast = "0.5.4"
 ec-core = { workspace = true }
 ec-linear = { workspace = true }
-embed-doc-image = "0.1.4"
 macro_railroad_annotation = { workspace = true }
 miette = { workspace = true }
 num-traits = { workspace = true }
@@ -45,6 +44,7 @@ thiserror = { workspace = true }
 
 [dev-dependencies]
 clap = { version = "4.5.1", features = ["derive"] }
+criterion = { workspace = true, features = ["html_reports"] }
 miette = { workspace = true, features = ["fancy"] }
 proptest = { workspace = true }
 strsim = "0.11.1"
