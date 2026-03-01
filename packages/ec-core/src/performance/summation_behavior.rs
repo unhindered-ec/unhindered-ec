@@ -1,14 +1,15 @@
 use std::num::Saturating;
 
 // Justus suggested a macro like this to reduce the boilerplate below. Esitsu
-// even thought it was a reasonable idea.
+// even thought it was a reasonable idea. Gemini's code review also suggested
+// that it would be useful! So I think we're in.
 
 macro_rules! default_behavior {
-    ($t: ty: $wrapper: ty) => {
-        impl DefaultSummationBehavior for $t { type SummationWrapper = $wrapper; }
+    ($t: ty => $accumulator: ty) => {
+        impl DefaultAccumulator for $t { type Accumulator = $accumulator; }
     };
-    ($($t: ty: $wrapper: ty),*) => {
-        $(default_behavior!($t: $wrapper);)*
+    ($($t: ty => $accumulator: ty),* $(,)?) => {
+        $(default_behavior!($t => $accumulator);)*
     }
 }
 
@@ -18,95 +19,67 @@ macro_rules! default_behavior {
     note = "If you are trying to use TestResults<{Self}>, use TestResults<{Self}, MyTotalType> \
             instead,\nwhere MyTotalType is used for the total test result."
 )]
-/// Species the default type to use when summing a set of values.
-pub trait DefaultSummationBehavior {
-    type SummationWrapper;
+/// Specifies the default type to use when summing a set of values.
+pub trait DefaultAccumulator {
+    type Accumulator;
 }
 
-pub trait SummationWrapper<T> {
-    fn wrap(self) -> T;
+/// A trait for types that can be accumulated into a target type `T`.
+///
+/// This is similar to `Into<T>`, but allows for specific behaviors like
+/// saturation or promotion that might not be covered by standard `From`/`Into`
+/// implementations (e.g., `Saturating<T>` does not implement `From<T>`).
+pub trait AccumulateInto<T> {
+    fn accumulate_into(self) -> T;
 }
 
-impl<T> SummationWrapper<T> for T {
-    fn wrap(self) -> T {
+impl<T> AccumulateInto<T> for T {
+    fn accumulate_into(self) -> T {
         self
     }
 }
 
-impl DefaultSummationBehavior for i8 {
-    type SummationWrapper = i16;
-}
-
-impl SummationWrapper<i16> for i8 {
-    fn wrap(self) -> i16 {
+impl AccumulateInto<i16> for i8 {
+    fn accumulate_into(self) -> i16 {
         self.into()
     }
 }
 
-impl DefaultSummationBehavior for i16 {
-    type SummationWrapper = i32;
-}
-
-impl SummationWrapper<i32> for i16 {
-    fn wrap(self) -> i32 {
+impl AccumulateInto<i32> for i16 {
+    fn accumulate_into(self) -> i32 {
         self.into()
     }
 }
 
-impl DefaultSummationBehavior for i32 {
-    type SummationWrapper = i64;
-}
-
-impl SummationWrapper<i64> for i32 {
-    fn wrap(self) -> i64 {
+impl AccumulateInto<i64> for i32 {
+    fn accumulate_into(self) -> i64 {
         self.into()
     }
 }
 
-impl DefaultSummationBehavior for i64 {
-    type SummationWrapper = i128;
-}
-
-impl SummationWrapper<i128> for i64 {
-    fn wrap(self) -> i128 {
+impl AccumulateInto<i128> for i64 {
+    fn accumulate_into(self) -> i128 {
         self.into()
     }
 }
 
-impl DefaultSummationBehavior for i128 {
-    type SummationWrapper = i128;
-}
-
-impl<T> SummationWrapper<Saturating<T>> for T {
-    fn wrap(self) -> Saturating<T> {
+impl<T> AccumulateInto<Saturating<T>> for T {
+    fn accumulate_into(self) -> Saturating<T> {
         Saturating(self)
     }
 }
 
-impl DefaultSummationBehavior for u8 {
-    type SummationWrapper = Saturating<u8>;
-}
-
-impl DefaultSummationBehavior for u16 {
-    type SummationWrapper = Saturating<u16>;
-}
-
-impl DefaultSummationBehavior for u32 {
-    type SummationWrapper = Saturating<u32>;
-}
-
-impl DefaultSummationBehavior for u64 {
-    type SummationWrapper = Saturating<u64>;
-}
-
-impl DefaultSummationBehavior for u128 {
-    type SummationWrapper = Saturating<u128>;
-}
-
-impl DefaultSummationBehavior for f32 {
-    type SummationWrapper = f32;
-}
-
-impl DefaultSummationBehavior for f64 {
-    type SummationWrapper = f64;
+default_behavior! {
+    i8 => i16,
+    i16 => i32,
+    i32 => i64,
+    i64 => i128,
+    i128 => i128,
+    u8 => Saturating<u8>,
+    u16 => Saturating<u16>,
+    u32 => Saturating<u32>,
+    u64 => Saturating<u64>,
+    u128 => Saturating<u128>,
+    f32 => f32,
+    f64 => f64,
 }
