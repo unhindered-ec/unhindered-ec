@@ -4,12 +4,12 @@ use std::num::Saturating;
 // even thought it was a reasonable idea. Gemini's code review also suggested
 // that it would be useful! So I think we're in.
 
-macro_rules! default_behavior {
+macro_rules! default_accumulator {
     ($t: ty => $accumulator: ty) => {
         impl DefaultAccumulator for $t { type Accumulator = $accumulator; }
     };
     ($($t: ty => $accumulator: ty),* $(,)?) => {
-        $(default_behavior!($t => $accumulator);)*
+        $(default_accumulator!($t => $accumulator);)*
     }
 }
 
@@ -94,6 +94,7 @@ impl<T> AccumulateInto<Saturating<T>> for T {
 }
 
 default_behavior! {
+default_accumulator! {
     i8 => i16,
     i16 => i32,
     i32 => i64,
