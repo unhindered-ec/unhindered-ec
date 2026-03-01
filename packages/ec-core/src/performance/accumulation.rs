@@ -128,7 +128,61 @@ default_accumulator! {
     u16 => Saturating<u16>,
     u32 => Saturating<u32>,
     u64 => Saturating<u64>,
+    // TODO: Is this what we want to do with `i128`?
     u128 => Saturating<u128>,
     f32 => f32,
     f64 => f64,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_signed_promotion() {
+        let val: i8 = 127;
+        let acc: i16 = val.accumulate_into();
+        assert_eq!(acc, 127);
+
+        let val = i32::MAX;
+        let acc: i64 = val.accumulate_into();
+        assert_eq!(acc, i64::from(i32::MAX));
+    }
+
+    #[test]
+    fn test_unsigned_saturation_wrapper() {
+        let val: u8 = 255;
+        let acc: Saturating<u8> = val.accumulate_into();
+        assert_eq!(acc.0, 255);
+    }
+
+    #[test]
+    fn test_identity_accumulation() {
+        let val: f64 = 1.23;
+        let acc: f64 = val.accumulate_into();
+        assert!((acc - 1.23).abs() < 1e-6);
+    }
+
+    #[test]
+    fn test_default_accumulator_types() {
+        fn assert_type<T: DefaultAccumulator<Accumulator = U>, U>() {}
+
+        // Signed integers
+        assert_type::<i8, i16>();
+        assert_type::<i16, i32>();
+        assert_type::<i32, i64>();
+        assert_type::<i64, i128>();
+        assert_type::<i128, i128>();
+
+        // Unsigned integers
+        assert_type::<u8, Saturating<u8>>();
+        assert_type::<u16, Saturating<u16>>();
+        assert_type::<u32, Saturating<u32>>();
+        assert_type::<u64, Saturating<u64>>();
+        assert_type::<u128, Saturating<u128>>();
+
+        // Floats
+        assert_type::<f32, f32>();
+        assert_type::<f64, f64>();
+    }
 }
