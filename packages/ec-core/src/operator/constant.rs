@@ -29,6 +29,24 @@ pub struct Constant<T> {
     value: T,
 }
 
+impl<T> From<T> for Constant<T> {
+    /// Convert a `T` into a [`Operator`] returning a constant `T`.
+    ///
+    /// # Example
+    /// ```
+    /// # use ec_core::operator::{constant::Constant, Operator};
+    /// # use rand::rng;
+    /// #
+    /// let my_constant_operator: Constant<_> = 5.into();
+    ///
+    /// let Ok(sample_value) = my_constant_operator.apply((), &mut rng());
+    /// assert_eq!(sample_value, 5);
+    /// ```
+    fn from(value: T) -> Self {
+        Self::new(value)
+    }
+}
+
 impl<T> Constant<T> {
     /// Create a new [`Constant`] [`Operator`], always returning it's value.
     ///
