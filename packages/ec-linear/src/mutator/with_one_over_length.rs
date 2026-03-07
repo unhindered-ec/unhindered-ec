@@ -8,8 +8,31 @@ use rand::Rng;
 use super::with_rate::WithRate;
 use crate::genome::Linear;
 
+/// Linear, boolish mutator which inverts each gene in the genome with a rate
+/// (probability) of `1 / genome.size()`.
+///
+/// # Example
+///
+/// ```
+/// # use ec_linear::{
+/// #     mutator::with_one_over_length::WithOneOverLength,
+/// #     genome::bitstring::Bitstring
+/// # };
+/// # use ec_core::operator::mutator::Mutator;
+/// #
+/// let mut rng = rand::rng();
+///
+/// let genome = Bitstring::random(100, &mut rng);
+///
+/// let mutated_genome = WithOneOverLength.mutate(genome.clone(), &mut rng)?;
+/// # let _ = mutated_genome;
+/// # Ok::<(), Box<dyn std::error::Error>>(())
+/// ```
+#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Default)]
 pub struct WithOneOverLength;
 
+/// Error that occurs when trying to use the [`WithOneOverLength`] mutator on a
+/// genome whose size is not representable by a [`f32`].
 #[derive(Debug, thiserror::Error, Diagnostic)]
 #[error("Failed to convert genome size {0} to an f32 value to be used as the mutation rate")]
 #[diagnostic(help = "Make sure the genome size is representable by an f32 when using this mutator")]
@@ -22,6 +45,25 @@ where
 {
     type Error = GenomeSizeConversionError;
 
+    /// Apply the mutator to the genome `genome`.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use ec_linear::{
+    /// #     mutator::with_one_over_length::WithOneOverLength,
+    /// #     genome::bitstring::Bitstring
+    /// # };
+    /// # use ec_core::operator::mutator::Mutator;
+    /// #
+    /// let mut rng = rand::rng();
+    ///
+    /// let genome = Bitstring::random(100, &mut rng);
+    ///
+    /// let mutated_genome = WithOneOverLength.mutate(genome.clone(), &mut rng)?;
+    /// # let _ = mutated_genome;
+    /// # Ok::<(), Box<dyn std::error::Error>>(())
+    /// ```
     fn mutate<R: Rng + ?Sized>(&self, genome: T, rng: &mut R) -> Result<T, Self::Error> {
         let genome_length = genome
             .size()
