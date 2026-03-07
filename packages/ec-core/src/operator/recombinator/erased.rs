@@ -52,13 +52,61 @@ use super::Recombinator;
 pub trait DynRecombinator<GS, E = Box<dyn std::error::Error + Send + Sync>> {
     type Output;
 
-    /// Recombine the given `genomes` returning a new genome of type `Output`.
+    /// Recombine the given `genomes` using this type-erased recombinator,
+    /// returning a new genome of type `Output`.
+    ///
+    /// It is recommended to not use this method directly and instead call the
+    /// normal [`Recombinator::recombine`] implemented on various container
+    /// types containing `dyn DynRecombinator<_>`'s.
+    ///
+    /// If you want to call this method directly, make sure to only call it on a
+    /// `&dyn DynRecombinator<_>` (i.e. dereference a box first) else you will
+    /// introduce another layer of indirection because of the implementations on
+    /// the various container types, and additionally type inference would
+    /// require additional type annotations (this is usually a sign you are
+    /// doing something wrong).
+    ///
+    /// # Example
+    /// ```
+    /// # use rand::{rng, Rng};
+    /// # use ec_core::operator::recombinator::{Recombinator, DynRecombinator};
+    /// # use std::convert::Infallible;
+    /// #
+    /// # struct SwapOne;
+    /// type Genome<T> = [T; 4];
+    /// type Parents<T> = (Genome<T>, Genome<T>);
+    /// #
+    /// # impl<T: Copy> Recombinator<Parents<T>> for SwapOne {
+    /// #     type Output = Genome<T>;
+    /// #     type Error = Infallible;
+    /// #
+    /// #     fn recombine<R: Rng + ?Sized>(
+    /// #         &self,
+    /// #         (mut first_parent, second_parent): Parents<T>,
+    /// #         rng: &mut R,
+    /// #     ) -> Result<Genome<T>, Self::Error> {
+    /// #         let index = rng.random_range(0..first_parent.len());
+    /// #         first_parent[index] = second_parent[index];
+    /// #         Ok(first_parent)
+    /// #     }
+    /// # }
+    /// let my_erased_recombinator: Box<dyn DynRecombinator<Parents<i32>, Output = Genome<i32>>> =
+    ///     Box::new(SwapOne);
+    ///
+    /// let first_parent = [0, 0, 0, 0];
+    /// let second_parent = [1, 1, 1, 1];
+    /// let child =
+    ///     (*my_erased_recombinator).dyn_recombine((first_parent, second_parent), &mut rng())?;
+    /// # let num_zeros = child.iter().filter(|&&x| x == 0).count();
+    /// # let num_ones = child.iter().filter(|&&x| x == 1).count();
+    /// # assert_eq!(num_zeros, 3);
+    /// # assert_eq!(num_ones, 1);
+    /// # Ok::<(), Box<dyn std::error::Error + Send + Sync>>(())
+    /// ```
     ///
     /// # Errors
-    ///
-    /// This will return an error if there is an error recombining the given
-    /// parent genomes. This will usually be because the given `genomes` are
-    /// invalid in some way, thus making recombination impossible.
+    /// - `Error` if recombining the given parent genomes fails, for example
+    ///   beacuse one of the parent genomes is invalid in some way.
     fn dyn_recombine(&self, genomes: GS, rng: &mut dyn RngCore) -> Result<Self::Output, E>;
 }
 
