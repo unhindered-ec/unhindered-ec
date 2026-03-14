@@ -1,4 +1,9 @@
-use std::{cmp::Ordering, fmt::Display, iter::Sum};
+use std::{
+    cmp::Ordering,
+    fmt::Display,
+    iter::Sum,
+    ops::{Add, AddAssign},
+};
 
 /// A result of a single test, bigger is better.
 ///
@@ -126,6 +131,34 @@ impl<T> From<T> for ScoreValue<T> {
     }
 }
 
+macro_rules! widen_scores {
+    ($t: ty => $u: ty) => {
+        impl From<ScoreValue<$t>> for ScoreValue<$u> {
+            fn from(score: ScoreValue<$t>) -> Self {
+                Self(score.0.into())
+            }
+        }
+    };
+    ($($t: ty => $u: ty),+$(,)?) => {
+        $(widen_scores!($t => $u);)+
+    };
+
+}
+
+widen_scores! {
+    u8 => u16,
+    u16 => u32,
+    u32 => u64,
+    u64 => u128,
+
+    i8 => i16,
+    i16 => i32,
+    i32 => i64,
+    i64 => i128,
+
+    f32 => f64
+}
+
 impl<T: Sum> Sum<T> for ScoreValue<T> {
     /// Create a new [`ScoreValue`] from summing up an iterator of values.
     ///
@@ -197,6 +230,26 @@ where
     /// ```
     fn sum<I: Iterator<Item = &'a Self>>(iter: I) -> Self {
         iter.map(|s| s.0.to_owned()).sum()
+    }
+}
+
+impl<T, U> Add<ScoreValue<U>> for ScoreValue<T>
+where
+    T: Add<U>,
+{
+    type Output = ScoreValue<<T as Add<U>>::Output>;
+
+    fn add(self, rhs: ScoreValue<U>) -> Self::Output {
+        ScoreValue(self.0.add(rhs.0))
+    }
+}
+
+impl<T, U> AddAssign<ScoreValue<U>> for ScoreValue<T>
+where
+    T: AddAssign<U>,
+{
+    fn add_assign(&mut self, rhs: ScoreValue<U>) {
+        self.0.add_assign(rhs.0);
     }
 }
 

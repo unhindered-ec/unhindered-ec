@@ -1,4 +1,9 @@
-use std::{cmp::Ordering, fmt::Display, iter::Sum};
+use std::{
+    cmp::Ordering,
+    fmt::Display,
+    iter::Sum,
+    ops::{Add, AddAssign},
+};
 
 /// A result of a single test, smaller is better.
 ///
@@ -198,6 +203,34 @@ impl<T> From<T> for ErrorValue<T> {
     }
 }
 
+macro_rules! widen_errors {
+    ($t: ty => $u: ty) => {
+        impl From<ErrorValue<$t>> for ErrorValue<$u> {
+            fn from(error: ErrorValue<$t>) -> Self {
+                Self(error.0.into())
+            }
+        }
+    };
+    ($($t: ty => $u: ty),+$(,)?) => {
+        $(widen_errors!($t => $u);)+
+    };
+
+}
+
+widen_errors! {
+    u8 => u16,
+    u16 => u32,
+    u32 => u64,
+    u64 => u128,
+
+    i8 => i16,
+    i16 => i32,
+    i32 => i64,
+    i64 => i128,
+
+    f32 => f64
+}
+
 impl<T: Sum> Sum<T> for ErrorValue<T> {
     /// Create a new [`ErrorValue`] from summing up an iterator of values.
     ///
@@ -269,6 +302,26 @@ where
     /// ```
     fn sum<I: Iterator<Item = &'a Self>>(iter: I) -> Self {
         iter.map(|s| s.0.to_owned()).sum()
+    }
+}
+
+impl<T, U> Add<ErrorValue<U>> for ErrorValue<T>
+where
+    T: Add<U>,
+{
+    type Output = ErrorValue<<T as Add<U>>::Output>;
+
+    fn add(self, rhs: ErrorValue<U>) -> Self::Output {
+        ErrorValue(self.0.add(rhs.0))
+    }
+}
+
+impl<T, U> AddAssign<ErrorValue<U>> for ErrorValue<T>
+where
+    T: AddAssign<U>,
+{
+    fn add_assign(&mut self, rhs: ErrorValue<U>) {
+        self.0.add_assign(rhs.0);
     }
 }
 

@@ -413,6 +413,7 @@ dependencies = [
  "macro_railroad_annotation",
  "miette",
  "num-traits",
+ "ordered-float",
  "polonius-the-crab",
  "proptest",
  "rand",

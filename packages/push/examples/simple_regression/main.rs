@@ -21,7 +21,7 @@ use ec_core::{
             tournament::Tournament,
         },
     },
-    performance::{error_value::ErrorValue, test_results::TestResults},
+    performance::{accumulate::accumulated::Accumulated, error_value::ErrorValue},
     uniform_distribution_of,
 };
 use ec_linear::mutator::umad::Umad;
@@ -93,7 +93,7 @@ fn score_program(
     (answer - output).abs()
 }
 
-fn score_genome(genome: &Plushy, training_cases: &Cases<Of64>) -> TestResults<ErrorValue<Of64>> {
+fn score_genome(genome: &Plushy, training_cases: &Cases<Of64>) -> Accumulated<ErrorValue<Of64>> {
     let program: Vec<PushProgram> = genome.clone().into();
 
     training_cases
@@ -182,11 +182,7 @@ fn main() -> miette::Result<()> {
         // max_generations-1.
         println!("Generation {generation_number:2} best is {best}\n");
 
-        if best
-            .test_results
-            .total()
-            .is_some_and(|error| error == &OrderedFloat(0.0))
-        {
+        if best.test_results.total() == &OrderedFloat(0.0) {
             println!("SUCCESS");
             break;
         }

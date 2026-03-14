@@ -14,7 +14,7 @@ use ec_core::{
         mutator::Mutate,
         selector::{Select, Selector, best::Best, lexicase::Lexicase},
     },
-    performance::{error_value::ErrorValue, test_results::TestResults},
+    performance::{accumulate::accumulated::Accumulated, error_value::ErrorValue},
 };
 use ec_linear::mutator::umad::Umad;
 use miette::{IntoDiagnostic, ensure};
@@ -179,7 +179,7 @@ fn main() -> miette::Result<()> {
         let output = state.stdout_string().unwrap();
         println!("Stdout for input {first_input}: {output}");
 
-        if best.test_results.total().is_some_and(|error| error == &0) {
+        if best.test_results.total() == 0 {
             println!("SUCCESS");
             break;
         }
@@ -192,7 +192,7 @@ fn score_genome(
     genome: &Plushy,
     training_cases: &Cases<Input, Output>,
     penalty_value: usize,
-) -> TestResults<ErrorValue<usize>> {
+) -> Accumulated<ErrorValue<usize>> {
     let program = Vec::<PushProgram>::from(genome.clone());
     training_cases
         .iter()

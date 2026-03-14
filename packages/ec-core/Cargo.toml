@@ -30,6 +30,7 @@ itertools = { workspace = true }
 macro_railroad_annotation = { workspace = true }
 miette = { workspace = true }
 num-traits = { workspace = true }
+ordered-float = { workspace = true, optional = true }
 polonius-the-crab = { workspace = true }
 rand = { workspace = true, features = ["alloc"] }
 rayon = "1.11.0"
@@ -45,10 +46,11 @@ rand = { workspace = true, features = ["alloc", "small_rng"] }
 test-strategy = { workspace = true }
 
 [features]
-default = ["erased"]
+default = ["erased", "ordered_float"]
 # This enables dyn-compatible versions of dyn-incompatible
 # traits in this library.
 erased = []
+ordered_float = ["dep:ordered-float"]
 
 [lints]
 workspace = true

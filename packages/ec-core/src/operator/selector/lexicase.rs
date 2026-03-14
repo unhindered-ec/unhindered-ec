@@ -9,7 +9,9 @@ use rand::{
 
 use super::{Selector, error::EmptyPopulation};
 use crate::{
-    individual::Individual, performance::test_results::TestResults, population::Population,
+    individual::Individual,
+    performance::accumulate::{accumulated::Accumulated, results::IndexResults},
+    population::Population,
 };
 
 /// Lexicase selector.
@@ -27,13 +29,13 @@ use crate::{
 /// # use ec_core::{
 /// #     individual::ec::EcIndividual,
 /// #     operator::selector::{Selector, lexicase::Lexicase},
-/// #     performance::test_results::TestResults
+/// #     performance::{accumulate::accumulated::Accumulated}
 /// # };
 /// let population = [
-///     EcIndividual::new(100, TestResults::<i32>::from_iter([4, 10])),
-///     EcIndividual::new(100, TestResults::<i32>::from_iter([2, 10])),
-///     EcIndividual::new(100, TestResults::<i32>::from_iter([4, 5])),
-///     EcIndividual::new(100, TestResults::<i32>::from_iter([2, 5])),
+///     EcIndividual::new(100, Accumulated::<i32>::from_iter([4, 10])),
+///     EcIndividual::new(100, Accumulated::<i32>::from_iter([2, 10])),
+///     EcIndividual::new(100, Accumulated::<i32>::from_iter([4, 5])),
+///     EcIndividual::new(100, Accumulated::<i32>::from_iter([2, 5])),
 /// ];
 ///
 /// let lexicase = Lexicase::new(2);
@@ -42,7 +44,7 @@ use crate::{
 ///
 /// assert_eq!(
 ///     selected,
-///     &EcIndividual::new(100, TestResults::from_iter([4, 10]))
+///     &EcIndividual::new(100, Accumulated::from_iter([4, 10]))
 /// );
 /// # Ok::<(), Box<dyn std::error::Error>>(())
 /// ```
@@ -86,7 +88,7 @@ pub enum LexicaseError {
     },
 }
 
-impl<P, Res> Selector<P> for Lexicase
+impl<P, Res, Strategy> Selector<P> for Lexicase
 where
     P: Population,
     // TODO: We don't really use the iterator here as we immediately
@@ -100,8 +102,9 @@ where
     //   bare `Vec`s and will be forced to wrap them like we currently
     //   do with `VecPop`.
     for<'pop> &'pop P: IntoIterator<Item = &'pop P::Individual>,
-    P::Individual: Individual<TestResults = TestResults<Res>>,
-    Res: Ord,
+    P::Individual: Individual<TestResults = Accumulated<Res, Strategy>>,
+    Strategy: IndexResults<Res, usize>,
+    Strategy::Output: Ord,
 {
     type Error = LexicaseError;
 
@@ -224,7 +227,7 @@ mod tests {
     // arrays of scores.
     fn population_from_single_scores(
         scores: impl IntoIterator<Item = i32>,
-    ) -> Vec<EcIndividual<usize, TestResults<i32>>> {
+    ) -> Vec<EcIndividual<usize, Accumulated<i32>>> {
         // Mapping `once` here converts each single `i32` value into
         // an iterator over `i32`s.
         population_from_scores(scores.into_iter().map(once))
@@ -234,10 +237,10 @@ mod tests {
     // one per individual.
     fn population_from_scores(
         scores: impl IntoIterator<Item: IntoIterator<Item = i32>>,
-    ) -> Vec<EcIndividual<usize, TestResults<i32>>> {
+    ) -> Vec<EcIndividual<usize, Accumulated<i32>>> {
         scores
             .into_iter()
-            .map(TestResults::<i32>::from_iter)
+            .map(Accumulated::<i32>::from_iter)
             // We'll use the index as the "genome".
             .enumerate()
             .map(EcIndividual::from)
@@ -307,7 +310,7 @@ mod tests {
 
     // A name for this type to simplify things in the `proptest` test
     // below.
-    type TestIndividual = EcIndividual<String, TestResults<u16>>;
+    type TestIndividual = EcIndividual<String, Accumulated<u16>>;
 
     // This test uses `proptest` to generate a random set of between 1 and 20
     // vectors of two scores, and then converts those into a vector of
@@ -351,7 +354,7 @@ mod tests {
             pop_scores
                 .into_iter()
                 .map(|scores| {
-                    EcIndividual::new(format!("{scores:?}"), TestResults::from_iter(scores))
+                    EcIndividual::new(format!("{scores:?}"), Accumulated::<u16>::from_iter(scores))
                 })
                 .collect::<Vec<_>>()
         })
@@ -379,7 +382,7 @@ mod tests {
         let winning_label = format!("{winning_scores:?}");
         let winning_individual: TestIndividual = EcIndividual::new(
             winning_label.clone(),
-            TestResults::from_iter(winning_scores),
+            Accumulated::from_iter(winning_scores),
         );
         (winning_label, winning_individual)
     }

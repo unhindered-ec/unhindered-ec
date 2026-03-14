@@ -23,7 +23,7 @@ use ec_core::{
             tournament::Tournament,
         },
     },
-    performance::{score_value::ScoreValue, test_results::TestResults},
+    performance::{accumulate::accumulated::Accumulated, score_value::ScoreValue},
 };
 use ec_linear::{
     genome::bitstring::Bitstring, mutator::with_one_over_length::WithOneOverLength,
@@ -38,7 +38,7 @@ use rand::{
 use crate::args::{CliArgs, RunModel};
 
 #[must_use]
-pub fn count_ones(bits: &[bool]) -> TestResults<ScoreValue<i64>> {
+pub fn count_ones(bits: &[bool]) -> Accumulated<ScoreValue<i64>> {
     bits.iter().copied().map(i64::from).collect()
 }
 
@@ -112,14 +112,16 @@ fn main() -> miette::Result<()> {
 
 #[cfg(test)]
 mod test {
-    use ec_core::performance::{score_value::ScoreValue, test_results::TestResults};
+    use ec_core::performance::{accumulate::accumulated::Accumulated, score_value::ScoreValue};
 
     use super::count_ones;
 
     #[test]
     fn non_empty() {
         let input = [false, true, true, true, false, true];
-        let output: TestResults<ScoreValue<i64>> = [0, 1, 1, 1, 0, 1].into_iter().collect();
-        assert_eq!(output, count_ones(&input));
+        let output: Accumulated<ScoreValue<i64>> = [0, 1, 1, 1, 0, 1].into_iter().collect();
+        let result = count_ones(&input);
+        assert!(output.results().eq(result.results()));
+        assert_eq!(output, result)
     }
 }
