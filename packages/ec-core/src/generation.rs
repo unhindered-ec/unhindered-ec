@@ -15,7 +15,7 @@ use crate::{operator::Operator, population::Population};
 /// # Example[^ec-linear-usage]
 /// ```
 /// # use ec_core::{
-/// #     performance::{score_value::ScoreValue, test_results::TestResults},
+/// #     performance::{score_value::ScoreValue, accumulate::accumulated::Accumulated},
 /// #     individual::{scorer::FnScorer, ec::WithScorer},
 /// #     operator::{
 /// #         selector::{lexicase::Lexicase, Select},
@@ -38,7 +38,7 @@ use crate::{operator::Operator, population::Population};
 /// #
 /// # fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 /// # #[must_use]
-/// # fn hiff(bits: &[bool]) -> (bool, TestResults<ScoreValue<usize>>) {
+/// # fn hiff(bits: &[bool]) -> (bool, Accumulated<ScoreValue<usize>>) {
 /// #     let len = bits.len();
 /// #     if len < 2 {
 /// #         (true, once(ScoreValue::from(len)).collect())
@@ -51,8 +51,8 @@ use crate::{operator::Operator, population::Population};
 /// #         (
 /// #             all_same,
 /// #             left_score
-/// #                 .into_iter()
-/// #                 .chain(right_score)
+/// #                 .into_results()
+/// #                 .chain(right_score.into_results())
 /// #                 .chain(once(ScoreValue::from(if all_same { len } else { 0 })))
 /// #                 .collect(),
 /// #         )
@@ -100,7 +100,7 @@ impl<C, P> From<(C, P)> for Generation<C, P> {
     /// # Example[^ec-linear-usage]
     /// ```
     /// # use ec_core::{
-    /// #     performance::{score_value::ScoreValue, test_results::TestResults},
+    /// #     performance::{score_value::ScoreValue, accumulate::accumulated::Accumulated},
     /// #     individual::{scorer::FnScorer, ec::WithScorer},
     /// #     operator::{
     /// #         selector::{lexicase::Lexicase, Select},
@@ -123,7 +123,7 @@ impl<C, P> From<(C, P)> for Generation<C, P> {
     /// #
     /// # fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     /// # #[must_use]
-    /// # fn hiff(bits: &[bool]) -> (bool, TestResults<ScoreValue<usize>>) {
+    /// # fn hiff(bits: &[bool]) -> (bool, Accumulated<ScoreValue<usize>>) {
     /// #     let len = bits.len();
     /// #     if len < 2 {
     /// #         (true, once(ScoreValue::from(len)).collect())
@@ -136,8 +136,8 @@ impl<C, P> From<(C, P)> for Generation<C, P> {
     /// #         (
     /// #             all_same,
     /// #             left_score
-    /// #                 .into_iter()
-    /// #                 .chain(right_score)
+    /// #                 .into_results()
+    /// #                 .chain(right_score.into_results())
     /// #                 .chain(once(ScoreValue::from(if all_same { len } else { 0 })))
     /// #                 .collect(),
     /// #         )
@@ -186,7 +186,7 @@ impl<P, C> Generation<C, P> {
     /// # Example[^ec-linear-usage]
     /// ```
     /// # use ec_core::{
-    /// #     performance::{score_value::ScoreValue, test_results::TestResults},
+    /// #     performance::{score_value::ScoreValue, accumulate::accumulated::Accumulated},
     /// #     individual::{scorer::FnScorer, ec::WithScorer},
     /// #     operator::{
     /// #         selector::{lexicase::Lexicase, Select},
@@ -209,7 +209,7 @@ impl<P, C> Generation<C, P> {
     /// #
     /// # fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     /// # #[must_use]
-    /// # fn hiff(bits: &[bool]) -> (bool, TestResults<ScoreValue<usize>>) {
+    /// # fn hiff(bits: &[bool]) -> (bool, Accumulated<ScoreValue<usize>>) {
     /// #     let len = bits.len();
     /// #     if len < 2 {
     /// #         (true, once(ScoreValue::from(len)).collect())
@@ -222,8 +222,8 @@ impl<P, C> Generation<C, P> {
     /// #         (
     /// #             all_same,
     /// #             left_score
-    /// #                 .into_iter()
-    /// #                 .chain(right_score)
+    /// #                 .into_results()
+    /// #                 .chain(right_score.into_results())
     /// #                 .chain(once(ScoreValue::from(if all_same { len } else { 0 })))
     /// #                 .collect(),
     /// #         )
@@ -267,7 +267,7 @@ impl<P, C> Generation<C, P> {
     /// # Example[^ec-linear-usage]
     /// ```
     /// # use ec_core::{
-    /// #     performance::{score_value::ScoreValue, test_results::TestResults},
+    /// #     performance::{score_value::ScoreValue, accumulate::accumulated::Accumulated},
     /// #     individual::{scorer::FnScorer, ec::WithScorer},
     /// #     operator::{
     /// #         selector::{lexicase::Lexicase, Select},
@@ -290,7 +290,7 @@ impl<P, C> Generation<C, P> {
     /// #
     /// # fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     /// # #[must_use]
-    /// # fn hiff(bits: &[bool]) -> (bool, TestResults<ScoreValue<usize>>) {
+    /// # fn hiff(bits: &[bool]) -> (bool, Accumulated<ScoreValue<usize>>) {
     /// #     let len = bits.len();
     /// #     if len < 2 {
     /// #         (true, once(ScoreValue::from(len)).collect())
@@ -303,8 +303,8 @@ impl<P, C> Generation<C, P> {
     /// #         (
     /// #             all_same,
     /// #             left_score
-    /// #                 .into_iter()
-    /// #                 .chain(right_score)
+    /// #                 .into_results()
+    /// #                 .chain(right_score.into_results())
     /// #                 .chain(once(ScoreValue::from(if all_same { len } else { 0 })))
     /// #                 .collect(),
     /// #         )
@@ -350,7 +350,7 @@ impl<P, C> Generation<C, P> {
     /// # Example[^ec-linear-usage]
     /// ```
     /// # use ec_core::{
-    /// #     performance::{score_value::ScoreValue, test_results::TestResults},
+    /// #     performance::{score_value::ScoreValue, accumulate::accumulated::Accumulated},
     /// #     individual::{scorer::FnScorer, ec::WithScorer},
     /// #     operator::{
     /// #         selector::{lexicase::Lexicase, Select},
@@ -373,7 +373,7 @@ impl<P, C> Generation<C, P> {
     /// #
     /// # fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     /// # #[must_use]
-    /// # fn hiff(bits: &[bool]) -> (bool, TestResults<ScoreValue<usize>>) {
+    /// # fn hiff(bits: &[bool]) -> (bool, Accumulated<ScoreValue<usize>>) {
     /// #     let len = bits.len();
     /// #     if len < 2 {
     /// #         (true, once(ScoreValue::from(len)).collect())
@@ -386,8 +386,8 @@ impl<P, C> Generation<C, P> {
     /// #         (
     /// #             all_same,
     /// #             left_score
-    /// #                 .into_iter()
-    /// #                 .chain(right_score)
+    /// #                 .into_results()
+    /// #                 .chain(right_score.into_results())
     /// #                 .chain(once(ScoreValue::from(if all_same { len } else { 0 })))
     /// #                 .collect(),
     /// #         )
@@ -444,7 +444,7 @@ where
     /// # Example[^ec-linear-usage]
     /// ```
     /// # use ec_core::{
-    /// #     performance::{score_value::ScoreValue, test_results::TestResults},
+    /// #     performance::{score_value::ScoreValue, accumulate::accumulated::Accumulated},
     /// #     individual::{scorer::FnScorer, ec::WithScorer},
     /// #     operator::{
     /// #         selector::{lexicase::Lexicase, Select},
@@ -467,7 +467,7 @@ where
     /// #
     /// # fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     /// # #[must_use]
-    /// # fn hiff(bits: &[bool]) -> (bool, TestResults<ScoreValue<usize>>) {
+    /// # fn hiff(bits: &[bool]) -> (bool, Accumulated<ScoreValue<usize>>) {
     /// #     let len = bits.len();
     /// #     if len < 2 {
     /// #         (true, once(ScoreValue::from(len)).collect())
@@ -480,8 +480,8 @@ where
     /// #         (
     /// #             all_same,
     /// #             left_score
-    /// #                 .into_iter()
-    /// #                 .chain(right_score)
+    /// #                 .into_results()
+    /// #                 .chain(right_score.into_results())
     /// #                 .chain(once(ScoreValue::from(if all_same { len } else { 0 })))
     /// #                 .collect(),
     /// #         )
@@ -568,7 +568,7 @@ where
     /// # Example[^ec-linear-usage]
     /// ```
     /// # use ec_core::{
-    /// #     performance::{score_value::ScoreValue, test_results::TestResults},
+    /// #     performance::{score_value::ScoreValue, accumulate::accumulated::Accumulated},
     /// #     individual::{scorer::FnScorer, ec::WithScorer},
     /// #     operator::{
     /// #         selector::{lexicase::Lexicase, Select},
@@ -591,7 +591,7 @@ where
     /// #
     /// # fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     /// # #[must_use]
-    /// # fn hiff(bits: &[bool]) -> (bool, TestResults<ScoreValue<usize>>) {
+    /// # fn hiff(bits: &[bool]) -> (bool, Accumulated<ScoreValue<usize>>) {
     /// #     let len = bits.len();
     /// #     if len < 2 {
     /// #         (true, once(ScoreValue::from(len)).collect())
@@ -604,8 +604,8 @@ where
     /// #         (
     /// #             all_same,
     /// #             left_score
-    /// #                 .into_iter()
-    /// #                 .chain(right_score)
+    /// #                 .into_results()
+    /// #                 .chain(right_score.into_results())
     /// #                 .chain(once(ScoreValue::from(if all_same { len } else { 0 })))
     /// #                 .collect(),
     /// #         )

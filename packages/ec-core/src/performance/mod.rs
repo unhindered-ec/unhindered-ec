@@ -11,4 +11,5 @@ pub mod test_result;
 // field)   and then `Error` and `Score` should be traits that these structs can
 //   implement? I feel like that might avoid some duplication here.
 
+pub mod accumulate;
 pub mod test_results;

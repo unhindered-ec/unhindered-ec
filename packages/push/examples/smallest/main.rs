@@ -12,7 +12,7 @@ use ec_core::{
         mutator::Mutate,
         selector::{Select, Selector, best::Best, lexicase::Lexicase},
     },
-    performance::{error_value::ErrorValue, test_results::TestResults},
+    performance::{accumulate::accumulated::Accumulated, error_value::ErrorValue},
 };
 use ec_linear::mutator::umad::Umad;
 use miette::{IntoDiagnostic, ensure};
@@ -136,7 +136,7 @@ fn main() -> miette::Result<()> {
         let best = Best.select(generation.population(), &mut rng)?;
         println!("Generation {generation_number:4} best is {best}");
 
-        if best.test_results.total().is_some_and(|error| error == &0) {
+        if best.test_results.total() == &0 {
             println!("SUCCESS");
             break;
         }
@@ -148,8 +148,8 @@ fn main() -> miette::Result<()> {
 fn score_genome(
     genome: &Plushy,
     training_cases: &Cases<Input, Output>,
-    penalty_value: i128,
-) -> TestResults<ErrorValue<i128>> {
+    penalty_value: i64,
+) -> Accumulated<ErrorValue<i64>> {
     let program = Vec::<PushProgram>::from(genome.clone());
     training_cases
         .iter()
@@ -163,8 +163,8 @@ fn run_case(
         output: Output(expected),
     }: Case<Input, Output>,
     program: &[PushProgram],
-    penalty_value: i128,
-) -> i128 {
+    penalty_value: i64,
+) -> i64 {
     build_state(program, input).map_or(penalty_value, |start_state| {
         // I don't think we're properly handling things like exceeding maximum
         // stack size. I think the "Push way" here would be to take whatever
@@ -193,14 +193,12 @@ fn build_state(
         .build())
 }
 
-fn compute_error(final_state: &PushState, penalty_value: i128, expected: i64) -> i128 {
+fn compute_error(final_state: &PushState, penalty_value: i64, expected: i64) -> i64 {
     final_state
         .stack::<i64>()
         .top()
         .map_or(penalty_value, |answer| {
-            i128::from(*answer)
-                .saturating_sub(i128::from(expected))
-                .abs()
+            answer.saturating_sub(expected).abs()
         })
 }
 
