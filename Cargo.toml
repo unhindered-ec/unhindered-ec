@@ -15,6 +15,7 @@ license = "MIT OR Apache-2.0"
 publish = false
 
 [workspace.dependencies]
+unhindered-accumulate = { git = "https://github.com/unhindered-ec/accumulate.git", rev = "e72cbb4e41eb2de657c6661cba2eef41a6baf0b9" }
 clap = "4.5.1"
 criterion = "0.8.2"
 ec-core = { path = "packages/ec-core" }
