@@ -1,5 +1,21 @@
 use std::{cmp::Ordering, fmt::Display, iter::Sum};
 
+#[cfg(feature = "ordered-float")]
+use ordered_float::OrderedFloat;
+use rayon::array::IntoIter;
+use ref_cast::RefCast;
+#[cfg(feature = "ordered-float")]
+use unhindered_accumulate::{
+    keep_results::KeepResults, saturating_sum::SaturatingSum, sum::Sum as SumStrategy, widen::Widen,
+};
+use unhindered_accumulate::{
+    results::{IndexResults, IndividualResults},
+    strategy::AccumulateStrategy,
+    total::TotalResult,
+};
+
+use crate::performance::{test_result::TestResult, test_results::TestResults};
+
 /// A result of a single test, bigger is better.
 ///
 /// See also [`ErrorValue`], for which smaller
@@ -22,9 +38,9 @@ use std::{cmp::Ordering, fmt::Display, iter::Sum};
 /// assert!(ScoreValue(-100) < ScoreValue(-4));
 /// ```
 /// [`ErrorValue`]: super::error_value::ErrorValue
-#[derive(Eq, PartialEq, Ord, PartialOrd, Debug, Clone, Copy, Hash, Default)]
+#[derive(Eq, PartialEq, Ord, PartialOrd, Debug, Clone, Copy, Hash, Default, RefCast)]
 #[repr(transparent)]
-pub struct ScoreValue<T>(pub T);
+pub struct ScoreValue<T: ?Sized>(pub T);
 
 // We need `ScoreValue` to be cloneable in many of our applications,
 // even if it's not needed here in `ec_core`. For `ScoreValue` to be
@@ -200,6 +216,95 @@ where
     }
 }
 
+impl<T> AccumulateStrategy<ScoreValue<T>> for SaturatingSum
+where
+    Self: AccumulateStrategy<T>,
+{
+    type Error = <Self as AccumulateStrategy<T>>::Error;
+
+    type State = <Self as AccumulateStrategy<T>>::State;
+
+    fn initialize() -> Self::State {
+        <Self as AccumulateStrategy<T>>::initialize()
+    }
+
+    fn accumulate_into<I>(state: &mut Self::State, iter: I) -> Result<(), Self::Error>
+    where
+        I: Iterator<Item = ScoreValue<T>>,
+    {
+        <Self as AccumulateStrategy<T>>::accumulate_into(state, iter.map(|sv| sv.0))
+    }
+
+    fn accumulate<I>(iter: I) -> Result<Self::State, Self::Error>
+    where
+        I: Iterator<Item = ScoreValue<T>>,
+    {
+        <Self as AccumulateStrategy<T>>::accumulate(iter.map(|sv| sv.0))
+    }
+}
+
+impl<T> TotalResult<ScoreValue<T>> for SaturatingSum
+where
+    Self: TotalResult<T>,
+{
+    type TotalRef<'a> = ScoreValue<<Self as TotalResult<T>>::TotalRef<'a>>;
+
+    type Total = ScoreValue<<Self as TotalResult<T>>::Total>;
+
+    fn total(state: &Self::State) -> Self::TotalRef<'_> {
+        ScoreValue::new(<Self as TotalResult<T>>::total(state))
+    }
+
+    fn into_total(state: Self::State) -> Self::Total {
+        ScoreValue::new(<Self as TotalResult<T>>::into_total(state))
+    }
+}
+
+impl<T> IndividualResults<ScoreValue<T>> for SaturatingSum
+where
+    Self: IndividualResults<T>,
+    for<'a> <Self as IndividualResults<T>>::Item: 'a,
+{
+    type Item = ScoreValue<<Self as IndividualResults<T>>::Item>;
+
+    fn len(state: &Self::State) -> usize {
+        <Self as IndividualResults<T>>::len(state)
+    }
+
+    fn results<'a>(state: &'a Self::State) -> impl Iterator<Item = &'a Self::Item>
+    where
+        Self::Item: 'a,
+    {
+        <Self as IndividualResults<T>>::results(state).map(ScoreValue::ref_cast)
+    }
+
+    fn into_results(state: Self::State) -> impl Iterator<Item = Self::Item> {
+        <Self as IndividualResults<T>>::into_results(state).map(ScoreValue::new)
+    }
+
+    fn is_empty(state: &Self::State) -> bool {
+        <Self as IndividualResults<T>>::is_empty(state)
+    }
+}
+
+impl<T, Index> IndexResults<ScoreValue<T>, Index> for SaturatingSum
+where
+    Self: IndexResults<T, Index>
+        + IndividualResults<ScoreValue<T>, State = <Self as AccumulateStrategy<T>>::State>,
+    for<'a> <Self as IndividualResults<T>>::Item: 'a,
+{
+    type Output = ScoreValue<<Self as IndexResults<T, Index>>::Output>;
+
+    fn get<'a>(state: &'a Self::State, index: Index) -> Option<&'a Self::Output>
+    where
+        Self::Item: 'a,
+    {
+        <Self as IndexResults<T, Index>>::get(state, index).map(ScoreValue::ref_cast)
+    }
+}
+
+// Copy it to ErrorValue
+
 #[cfg(test)]
 mod test {
     use super::*;
@@ -217,4 +322,28 @@ mod test {
         assert_eq!(second.partial_cmp(&first), Some(Ordering::Greater));
         assert_eq!(first.partial_cmp(&first), Some(Ordering::Equal));
     }
+}
+
+unhindered_accumulate::default_to! {
+    ScoreValue<u8> => KeepResults<SaturatingSum>,
+    ScoreValue<u16> => KeepResults<SaturatingSum>,
+    ScoreValue<u32> => KeepResults<SaturatingSum>,
+    ScoreValue<u64> => KeepResults<SaturatingSum>,
+    ScoreValue<u128> => KeepResults<SaturatingSum>,
+    ScoreValue<usize> => KeepResults<SaturatingSum>,
+
+    ScoreValue<i8> => KeepResults<Widen<ScoreValue<i16>, SumStrategy>>,
+    ScoreValue<i16> => KeepResults<Widen<ScoreValue<i32>, SumStrategy>>,
+    ScoreValue<i32> => KeepResults<Widen<ScoreValue<i64>, SumStrategy>>,
+    ScoreValue<i64> => KeepResults<Widen<ScoreValue<i128>, SumStrategy>>,
+    ScoreValue<isize> => KeepResults<SumStrategy>,
+
+    ScoreValue<f32> => KeepResults<SumStrategy>,
+    ScoreValue<f64> => KeepResults<SumStrategy>,
+}
+
+#[cfg(feature = "ordered-float")]
+unhindered_accumulate::default_to! {
+    ScoreValue<OrderedFloat<f32>> => KeepResults<SumStrategy>,
+    ScoreValue<OrderedFloat<f64>> => KeepResults<SumStrategy>,
 }
