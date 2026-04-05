@@ -1,5 +1,11 @@
 use std::{cmp::Ordering, fmt::Display, iter::Sum};
 
+#[cfg(feature = "ordered-float")]
+use ordered_float::OrderedFloat;
+use unhindered_accumulate::{
+    keep_results::KeepResults, saturating_sum::SaturatingSum, sum::Sum as SumStrategy, widen::Widen,
+};
+
 /// A result of a single test, smaller is better.
 ///
 /// See also [`ScoreValue`](super::score_value::ScoreValue), for which bigger is
@@ -289,4 +295,28 @@ mod test {
         assert_eq!(second.partial_cmp(&first), Some(Ordering::Less));
         assert_eq!(first.partial_cmp(&first), Some(Ordering::Equal));
     }
+}
+
+unhindered_accumulate::default_to! {
+    ErrorValue<u8> => KeepResults<SaturatingSum>,
+    ErrorValue<u16> => KeepResults<SaturatingSum>,
+    ErrorValue<u32> => KeepResults<SaturatingSum>,
+    ErrorValue<u64> => KeepResults<SaturatingSum>,
+    ErrorValue<u128> => KeepResults<SaturatingSum>,
+    ErrorValue<usize> => KeepResults<SaturatingSum>,
+
+    ErrorValue<i8> => KeepResults<Widen<ErrorValue<i16>, SumStrategy>>,
+    ErrorValue<i16> => KeepResults<Widen<ErrorValue<i32>, SumStrategy>>,
+    ErrorValue<i32> => KeepResults<Widen<ErrorValue<i64>, SumStrategy>>,
+    ErrorValue<i64> => KeepResults<Widen<ErrorValue<i128>, SumStrategy>>,
+    ErrorValue<isize> => KeepResults<SumStrategy>,
+
+    ErrorValue<f32> => KeepResults<SumStrategy>,
+    ErrorValue<f64> => KeepResults<SumStrategy>,
+}
+
+#[cfg(feature = "ordered-float")]
+unhindered_accumulate::default_to! {
+    ErrorValue<OrderedFloat<f32>> => KeepResults<SumStrategy>,
+    ErrorValue<OrderedFloat<f64>> => KeepResults<SumStrategy>,
 }

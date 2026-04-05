@@ -15,7 +15,6 @@ license = "MIT OR Apache-2.0"
 publish = false
 
 [workspace.dependencies]
-unhindered-accumulate = { git = "https://github.com/unhindered-ec/accumulate.git", rev = "e72cbb4e41eb2de657c6661cba2eef41a6baf0b9" }
 clap = "4.5.1"
 criterion = "0.8.2"
 ec-core = { path = "packages/ec-core" }
@@ -25,6 +24,7 @@ itertools = "0.14.0"
 macro_railroad_annotation = "1.1.0"
 miette = "7.6.0"
 num-traits = "0.2.18"
+ordered-float = "5.1.0"
 polonius-the-crab = "0.5.0"
 proptest = "1.10.0"
 push = { path = "packages/push" }
@@ -34,6 +34,7 @@ static_assertions = "1.1.0"
 test-case = "3.3.1"
 test-strategy = "0.4.5"
 thiserror = "2.0.18"
+unhindered-accumulate = { git = "https://github.com/unhindered-ec/accumulate.git", rev = "2148fc0cde1e36a2f2a3c53e36ac980be0c130b7", default-features = false }
 
 [workspace.lints.clippy]
 allow_attributes = "deny"

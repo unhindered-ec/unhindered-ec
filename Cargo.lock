@@ -413,13 +413,16 @@ dependencies = [
  "macro_railroad_annotation",
  "miette",
  "num-traits",
+ "ordered-float",
  "polonius-the-crab",
  "proptest",
  "rand",
  "rayon",
+ "ref-cast",
  "static_assertions",
  "test-strategy",
  "thiserror",
+ "unhindered-accumulate",
 ]
 
 [[package]]
@@ -1041,6 +1044,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "ref-cast"
+version = "1.0.25"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f354300ae66f76f1c85c5f84693f0ce81d747e2c3f21a45fef496d89c960bf7d"
+dependencies = [
+ "ref-cast-impl",
+]
+
+[[package]]
+name = "ref-cast-impl"
+version = "1.0.25"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b7186006dcb21920990093f30e3dea63b7d6e977bf1256be20c3563a5db070da"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.104",
+]
+
+[[package]]
 name = "regex"
 version = "1.11.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1387,6 +1410,14 @@ name = "unarray"
 version = "0.1.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "eaea85b334db583fe3274d12b4cd1880032beab409c0d774be044d4480ab9a94"
+
+[[package]]
+name = "unhindered-accumulate"
+version = "0.1.0"
+source = "git+https://github.com/unhindered-ec/accumulate.git?rev=2148fc0cde1e36a2f2a3c53e36ac980be0c130b7#2148fc0cde1e36a2f2a3c53e36ac980be0c130b7"
+dependencies = [
+ "ordered-float",
+]
 
 [[package]]
 name = "unicode-ident"
