@@ -71,7 +71,7 @@ use crate::{operator::Operator, population::Population};
 ///
 /// let make_new_individual = Select::new(my_selector)
 ///     .apply_twice()
-///     .then_map(GenomeExtractor)
+///     .map(GenomeExtractor)
 ///     .then(Recombine::new(TwoPointXo))
 ///     .then(Mutate::new(WithOneOverLength))
 ///     .wrap::<GenomeScorer<_, _>>(my_scorer);
@@ -158,7 +158,7 @@ impl<C, P> From<(C, P)> for Generation<C, P> {
     ///
     /// let make_new_individual = Select::new(my_selector)
     ///     .apply_twice()
-    ///     .then_map(GenomeExtractor)
+    ///     .map(GenomeExtractor)
     ///     .then(Recombine::new(TwoPointXo))
     ///     .then(Mutate::new(WithOneOverLength))
     ///     .wrap::<GenomeScorer<_, _>>(my_scorer);
@@ -246,7 +246,7 @@ impl<P, C> Generation<C, P> {
     ///
     /// let make_new_individual = Select::new(my_selector)
     ///     .apply_twice()
-    ///     .then_map(GenomeExtractor)
+    ///     .map(GenomeExtractor)
     ///     .then(Recombine::new(TwoPointXo))
     ///     .then(Mutate::new(WithOneOverLength))
     ///     .wrap::<GenomeScorer<_, _>>(my_scorer);
@@ -329,7 +329,7 @@ impl<P, C> Generation<C, P> {
     ///
     /// let make_new_individual = Select::new(my_selector)
     ///     .apply_twice()
-    ///     .then_map(GenomeExtractor)
+    ///     .map(GenomeExtractor)
     ///     .then(Recombine::new(TwoPointXo))
     ///     .then(Mutate::new(WithOneOverLength))
     ///     .wrap::<GenomeScorer<_, _>>(my_scorer);
@@ -414,7 +414,7 @@ impl<P, C> Generation<C, P> {
     ///
     /// let make_new_individual = Select::new(my_selector)
     ///     .apply_twice()
-    ///     .then_map(GenomeExtractor)
+    ///     .map(GenomeExtractor)
     ///     .then(Recombine::new(TwoPointXo))
     ///     .then(Mutate::new(WithOneOverLength))
     ///     .wrap::<GenomeScorer<_, _>>(my_scorer);
@@ -510,7 +510,7 @@ where
     ///
     /// let make_new_individual = Select::new(my_selector)
     ///     .apply_twice()
-    ///     .then_map(GenomeExtractor)
+    ///     .map(GenomeExtractor)
     ///     .then(Recombine::new(TwoPointXo))
     ///     .then(Mutate::new(WithOneOverLength))
     ///     .wrap::<GenomeScorer<_, _>>(my_scorer);
@@ -636,7 +636,7 @@ where
     ///
     /// let make_new_individual = Select::new(my_selector)
     ///     .apply_twice()
-    ///     .then_map(GenomeExtractor)
+    ///     .map(GenomeExtractor)
     ///     .then(Recombine::new(TwoPointXo))
     ///     .then(Mutate::new(WithOneOverLength))
     ///     .wrap::<GenomeScorer<_, _>>(my_scorer);

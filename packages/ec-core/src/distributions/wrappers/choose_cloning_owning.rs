@@ -14,6 +14,32 @@ use crate::distributions::finite::Finite;
 ///
 /// Also see [`ChooseCloning`](super::choose_cloning::ChooseCloning) for an
 /// alternative that borrows the collection instead.
+///
+/// # Generics
+///
+/// This distribution needs to validate that it is not empty in the new (or else
+/// it would not be a valid [`Distribution`]), as such the element `U` of the
+/// collection `T` needs to be determined at construction time and is part of
+/// this structs interface.
+///
+/// # Example
+/// ```
+/// # use rand::{rng, distr::{Distribution, slice::Empty}};
+/// # use ec_core::distributions::wrappers::choose_cloning_owning::ChooseCloningOwning;
+/// #
+/// # fn main() -> Result<(), Empty> {
+/// let collection = [vec![0], vec![1], vec![2], vec![3]];
+/// //               collection gets moved here    \/
+/// let distribution = ChooseCloningOwning::new(collection)?;
+/// // as such this is not valid
+/// // let _ = collection
+///
+/// let sample = distribution.sample(&mut rng());
+/// assert!(sample.eq(&[0]) || sample.eq(&[1]) || sample.eq(&[2]) || sample.eq(&[3]));
+/// # let _ = sample;
+/// # Ok(())
+/// # }
+/// ```
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 pub struct ChooseCloningOwning<T, U> {
     // It is really important here that the fields `collection`, `range` and `num_choices` are
@@ -45,9 +71,9 @@ where
     /// # use rand::distr::slice::Empty;
     /// # use ec_core::distributions::wrappers::choose_cloning_owning::ChooseCloningOwning;
     /// #
-    /// let options = [1, 2, 3];
-    /// let distr = ChooseCloningOwning::new(options)?;
-    /// # let _ = distr;
+    /// let collection = [vec![0], vec![1], vec![2], vec![3]];
+    /// let distribution = ChooseCloningOwning::new(collection)?;
+    /// # let _ = distribution;
     /// # Ok::<(), Empty>(())
     ///  ```
     ///
@@ -68,6 +94,22 @@ where
     }
 }
 impl<T, U> Finite for ChooseCloningOwning<T, U> {
+    /// Sample space size / number of choices of this [`ChooseCloningOwning`]
+    /// [`Distribution`].
+    ///
+    /// # Example
+    /// ```
+    /// # use rand::distr::slice::Empty;
+    /// # use ec_core::distributions::{wrappers::choose_cloning_owning::ChooseCloningOwning, finite::Finite};
+    /// #
+    /// # fn main() -> Result<(), Empty> {
+    /// let collection = [vec![0], vec![1], vec![2], vec![3]];
+    /// let distribution = ChooseCloningOwning::new(collection)?;
+    /// assert_eq!(distribution.sample_space_size().get(), 4);
+    /// # let _ = distribution;
+    /// # Ok(())
+    /// # }
+    /// ```
     fn sample_space_size(&self) -> NonZeroUsize {
         self.num_choices
     }
@@ -78,6 +120,28 @@ where
     T: Borrow<[U]>,
     U: Clone,
 {
+    /// Sample a single value of this [`ChooseCloningOwning`] [`Distribution`].
+    ///
+    /// This does the following
+    /// 1. select a random element of the collection this [`Distribution`] was
+    ///    constructed from
+    /// 3. return a clone of that selected element
+    ///
+    /// # Example
+    /// ```
+    /// # use rand::{rng, distr::{Distribution, slice::Empty}};
+    /// # use ec_core::distributions::wrappers::choose_cloning_owning::ChooseCloningOwning;
+    /// #
+    /// # fn main() -> Result<(), Empty> {
+    /// let collection = [vec![0], vec![1], vec![2], vec![3]];
+    /// let distribution = ChooseCloningOwning::new(collection)?;
+    ///
+    /// let sample = distribution.sample(&mut rng());
+    /// assert!(sample.eq(&[0]) || sample.eq(&[1]) || sample.eq(&[2]) || sample.eq(&[3]));
+    /// # let _ = sample;
+    /// # Ok(())
+    /// # }
+    /// ```
     fn sample<R: rand::Rng + ?Sized>(&self, rng: &mut R) -> U {
         let idx = self.range.sample(rng);
 
