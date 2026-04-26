@@ -6,11 +6,12 @@ use rand::{
     distr::uniform::{UniformSampler, UniformUsize},
     seq::IndexedRandom,
 };
+use unhindered_accumulate::{
+    accumulated::Accumulated, results::IndexResults, strategy::AccumulateStrategy,
+};
 
 use super::{Selector, error::EmptyPopulation};
-use crate::{
-    individual::Individual, performance::test_results::TestResults, population::Population,
-};
+use crate::{individual::Individual, population::Population};
 
 /// Lexicase selector.
 ///
@@ -86,7 +87,7 @@ pub enum LexicaseError {
     },
 }
 
-impl<P, Res> Selector<P> for Lexicase
+impl<P, Res, Strategy> Selector<P> for Lexicase
 where
     P: Population,
     // TODO: We don't really use the iterator here as we immediately
@@ -100,8 +101,8 @@ where
     //   bare `Vec`s and will be forced to wrap them like we currently
     //   do with `VecPop`.
     for<'pop> &'pop P: IntoIterator<Item = &'pop P::Individual>,
-    P::Individual: Individual<TestResults = TestResults<Res>>,
-    Res: Ord,
+    P::Individual: Individual<TestResults = Accumulated<Res, Strategy>>,
+    Strategy: AccumulateStrategy<Res> + IndexResults<Res, Output: Ord>,
 {
     type Error = LexicaseError;
 
@@ -205,8 +206,12 @@ mod tests {
     };
     use test_strategy::proptest;
 
-    use super::*;
-    use crate::individual::ec::EcIndividual;
+    use super::{Lexicase, LexicaseError};
+    use crate::{
+        individual::{Individual, ec::EcIndividual},
+        operator::selector::{EmptyPopulation, Selector},
+        performance::test_results::TestResults,
+    };
 
     #[test]
     fn empty_population() {

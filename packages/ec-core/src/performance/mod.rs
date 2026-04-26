@@ -11,4 +11,10 @@ pub mod test_result;
 // field)   and then `Error` and `Score` should be traits that these structs can
 //   implement? I feel like that might avoid some duplication here.
 
-pub mod test_results;
+pub mod test_results {
+    use unhindered_accumulate::{
+        accumulated::Accumulated, keep_results::KeepResults, sum::Sum, widen::Widen,
+    };
+
+    pub type TestResults<R> = Accumulated<R, Widen<R, KeepResults<Sum>>>;
+}
