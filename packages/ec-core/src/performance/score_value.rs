@@ -219,7 +219,7 @@ unhindered_accumulate::default_to! {
     ScoreValue<u128> => KeepResults<SaturatingSum>,
     ScoreValue<usize> => KeepResults<SaturatingSum>,
 
-    ScoreValue<i8> => KeepResults<Widen<ScoreValue<i16>, SumStrategy>>,
+    ScoreValue<i8> => KeepResults<Widen<ScoreValue<i32>, SumStrategy>>,
     ScoreValue<i16> => KeepResults<Widen<ScoreValue<i32>, SumStrategy>>,
     ScoreValue<i32> => KeepResults<Widen<ScoreValue<i64>, SumStrategy>>,
     ScoreValue<i64> => KeepResults<Widen<ScoreValue<i128>, SumStrategy>>,
