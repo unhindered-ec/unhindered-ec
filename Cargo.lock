@@ -1414,7 +1414,7 @@ checksum = "eaea85b334db583fe3274d12b4cd1880032beab409c0d774be044d4480ab9a94"
 [[package]]
 name = "unhindered-accumulate"
 version = "0.1.0"
-source = "git+https://github.com/unhindered-ec/accumulate.git?rev=2148fc0cde1e36a2f2a3c53e36ac980be0c130b7#2148fc0cde1e36a2f2a3c53e36ac980be0c130b7"
+source = "git+https://github.com/unhindered-ec/accumulate.git?rev=5d702640293beef2362c25f136db70404839af95#5d702640293beef2362c25f136db70404839af95"
 dependencies = [
  "ordered-float",
 ]

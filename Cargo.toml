@@ -34,7 +34,8 @@ static_assertions = "1.1.0"
 test-case = "3.3.1"
 test-strategy = "0.4.5"
 thiserror = "2.0.18"
-unhindered-accumulate = { git = "https://github.com/unhindered-ec/accumulate.git", rev = "2148fc0cde1e36a2f2a3c53e36ac980be0c130b7", default-features = false }
+unhindered-accumulate = { git = "https://github.com/unhindered-ec/accumulate.git", rev = "5d702640293beef2362c25f136db70404839af95", default-features = false }
+# unhindered-accumulate = { path = "../accumulate", default-features = false }
 
 [workspace.lints.clippy]
 allow_attributes = "deny"
