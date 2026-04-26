@@ -56,8 +56,64 @@ you also want to implement all the traits to support a base item type as discuss
 
 ## Defaults
 
-You may also wish to specify default behaviors for accumulation, especially if you have concerns
-about something like the sum overflowing the base type.
+The `default_to!` macro allows you to
+specify default accumulation behaviors for specific types. The syntax for `default_to!` is:
+
+```rust
+unhindered_accumulae::default_to! {
+  type_to_accumulate => accumulation_strategy,
+}
+```
+
+Here `type_to_accumulate` (e.g., `u8`) is the type of the values to be accumulated,
+and `accumulation_strategy` is the strategy used to perform the accumulation (e.g., `KeepResults<SaturatingSum>`).
+
+### Example of defaults
+
+In the example:
+
+```rust
+unhindered_accumulate::default_to! {
+  u8 => KeepResults<SaturatingSum>
+}
+```
+
+the items being accumulated have type `u8`. The strategy being used is
+`SaturatingSum` wrapped in `KeepResults`.
+
+The `SaturatingSum` strategy will sum the
+score values, saturating as necessary. It also provides a `.total()` method on the accumulation result
+which we can use to
+access to final sum.
+
+The `KeepResults` wrapper keeps all the individual scores, and
+provides (among other things):
+
+- a `result()` method on the accumulation result which gives us an iterator over the individual scores, and
+- a `.get()` method on the accumulation result which we can use to access individual scores.
+
+```rust
+let scores: [u8; 7] = [5, 8, 9, 6, 3, 2, 0];
+// If we don't specify a second generic in `Accumulate<T>`,
+// the second generic defaults to the default accumulation strategy.
+// Since `T = u8` here, we use the default strategy for `u8`,
+// which is `KeepResults<SaturatingSum>`, so the expanded type
+// becomes `Accumulate<u8, KeepResults<SaturatingSum>>`. Because
+// `KeepResults` is a type alias, which is actually
+// `Accumulate<u8, Combine<StoreResults, SaturatingSum>>`.
+//                       \/ - note how we didn't specify an
+//                            accumulation strategy here
+let result: Accumulated<u8> = scores.into_iter().accumulate().unwrap();
+// `SaturatingSum` ensures we have the `.total()` method.
+assert_eq!(result.total(), 33);
+// `StoreResults` ensures that we have the `.get()` method.
+assert_eq!(result.get(2), Some(&9));
+```
+
+---
+
+In the example below, we specify
+that all the unsigned integer types default to `KeepResults<SaturatingSum>`:
 
 ```rust
 unhindered_accumulate::default_to! {
@@ -67,4 +123,7 @@ unhindered_accumulate::default_to! {
     ScoreValue<u64> => KeepResults<SaturatingSum>,
     ScoreValue<u128> => KeepResults<SaturatingSum>,
     ScoreValue<usize> => KeepResults<SaturatingSum>,
+}
 ```
+
+### Choosing good defaults
