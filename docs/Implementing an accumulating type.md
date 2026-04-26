@@ -4,7 +4,7 @@ _I'm not sure where this ultimately goes, but I'll start it here._
 
 if you want to implement an _accumulating type_, i.e., a type where you can accumulate a collection
 of values into a single value, you can use the `accumulate` package. This provides generic implementations
-of basic accumulation strategies. THere are two types of accumulator strategies defined in the `accumulate` package:
+of basic accumulation strategies. There are two types of accumulator strategies defined in the `accumulate` package:
 
 - "base" accumulators, which specify the specific accumulation strategy
 - "adapters", which modify the behavior of wrapped accumulators
@@ -37,7 +37,7 @@ If you want to implement a _saturating accumulating type_, i.e., a type where yo
 into a single value using saturation, you will need to implement a number of traits by hand. See the implementations of
 `ScoreValue` and `ErrorValue` for examples.
 
-To implement this strategy for a new type `T`, you need implement most or all of these traits for  `T`:
+To implement this strategy for a new type `T`, you need to implement most or all of these traits for  `T`:
 
 - `AccumulateStrategy<T> for SaturatingSum`
 - `TotalResult<T> for SaturatingSum`
