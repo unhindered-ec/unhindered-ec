@@ -35,6 +35,8 @@ use unhindered_accumulate::{
 #[repr(transparent)]
 pub struct ScoreValue<T: ?Sized>(pub T);
 
+forward_wrapper_impl!(ScoreValue: SaturatingSum);
+
 // We need `ScoreValue` to be cloneable in many of our applications,
 // even if it's not needed here in `ec_core`. For `ScoreValue` to be
 // cloneable, the generic type must also be cloneable.
@@ -209,7 +211,29 @@ where
     }
 }
 
-forward_wrapper_impl!(ScoreValue: SaturatingSum);
+unhindered_accumulate::default_to! {
+    ScoreValue<u8> => KeepResults<SaturatingSum>,
+    ScoreValue<u16> => KeepResults<SaturatingSum>,
+    ScoreValue<u32> => KeepResults<SaturatingSum>,
+    ScoreValue<u64> => KeepResults<SaturatingSum>,
+    ScoreValue<u128> => KeepResults<SaturatingSum>,
+    ScoreValue<usize> => KeepResults<SaturatingSum>,
+
+    ScoreValue<i8> => KeepResults<Widen<ScoreValue<i16>, SumStrategy>>,
+    ScoreValue<i16> => KeepResults<Widen<ScoreValue<i32>, SumStrategy>>,
+    ScoreValue<i32> => KeepResults<Widen<ScoreValue<i64>, SumStrategy>>,
+    ScoreValue<i64> => KeepResults<Widen<ScoreValue<i128>, SumStrategy>>,
+    ScoreValue<isize> => KeepResults<SumStrategy>,
+
+    ScoreValue<f32> => KeepResults<SumStrategy>,
+    ScoreValue<f64> => KeepResults<SumStrategy>,
+}
+
+#[cfg(feature = "ordered-float")]
+unhindered_accumulate::default_to! {
+    ScoreValue<OrderedFloat<f32>> => KeepResults<SumStrategy>,
+    ScoreValue<OrderedFloat<f64>> => KeepResults<SumStrategy>,
+}
 
 #[cfg(test)]
 mod tests {
@@ -251,28 +275,4 @@ mod tests {
         // `StoreResults` ensures that we have the `.get()` method.
         assert_eq!(result.get(2), Some(&ScoreValue(9)));
     }
-}
-
-unhindered_accumulate::default_to! {
-    ScoreValue<u8> => KeepResults<SaturatingSum>,
-    ScoreValue<u16> => KeepResults<SaturatingSum>,
-    ScoreValue<u32> => KeepResults<SaturatingSum>,
-    ScoreValue<u64> => KeepResults<SaturatingSum>,
-    ScoreValue<u128> => KeepResults<SaturatingSum>,
-    ScoreValue<usize> => KeepResults<SaturatingSum>,
-
-    ScoreValue<i8> => KeepResults<Widen<ScoreValue<i16>, SumStrategy>>,
-    ScoreValue<i16> => KeepResults<Widen<ScoreValue<i32>, SumStrategy>>,
-    ScoreValue<i32> => KeepResults<Widen<ScoreValue<i64>, SumStrategy>>,
-    ScoreValue<i64> => KeepResults<Widen<ScoreValue<i128>, SumStrategy>>,
-    ScoreValue<isize> => KeepResults<SumStrategy>,
-
-    ScoreValue<f32> => KeepResults<SumStrategy>,
-    ScoreValue<f64> => KeepResults<SumStrategy>,
-}
-
-#[cfg(feature = "ordered-float")]
-unhindered_accumulate::default_to! {
-    ScoreValue<OrderedFloat<f32>> => KeepResults<SumStrategy>,
-    ScoreValue<OrderedFloat<f64>> => KeepResults<SumStrategy>,
 }
