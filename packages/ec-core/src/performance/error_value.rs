@@ -33,6 +33,8 @@ use unhindered_accumulate::{
 #[repr(transparent)]
 pub struct ErrorValue<T: ?Sized>(pub T);
 
+forward_wrapper_impl!(ErrorValue: SaturatingSum);
+
 // We need `Error` to be cloneable in many of our applications,
 // even if it's not needed here in `ec_core`. For `Error` to be
 // cloneable, the generic type must also be cloneable.
@@ -280,10 +282,31 @@ where
     }
 }
 
-forward_wrapper_impl!(ErrorValue: SaturatingSum);
+unhindered_accumulate::default_to! {
+    ErrorValue<u8> => KeepResults<SaturatingSum>,
+    ErrorValue<u16> => KeepResults<SaturatingSum>,
+    ErrorValue<u32> => KeepResults<SaturatingSum>,
+    ErrorValue<u64> => KeepResults<SaturatingSum>,
+    ErrorValue<u128> => KeepResults<SaturatingSum>,
+    ErrorValue<usize> => KeepResults<SaturatingSum>,
 
+    ErrorValue<i8> => KeepResults<Widen<ErrorValue<i16>, SumStrategy>>,
+    ErrorValue<i16> => KeepResults<Widen<ErrorValue<i32>, SumStrategy>>,
+    ErrorValue<i32> => KeepResults<Widen<ErrorValue<i64>, SumStrategy>>,
+    ErrorValue<i64> => KeepResults<Widen<ErrorValue<i128>, SumStrategy>>,
+    ErrorValue<isize> => KeepResults<SumStrategy>,
+
+    ErrorValue<f32> => KeepResults<SumStrategy>,
+    ErrorValue<f64> => KeepResults<SumStrategy>,
+}
+
+#[cfg(feature = "ordered-float")]
+unhindered_accumulate::default_to! {
+    ErrorValue<OrderedFloat<f32>> => KeepResults<SumStrategy>,
+    ErrorValue<OrderedFloat<f64>> => KeepResults<SumStrategy>,
+}
 #[cfg(test)]
-mod test {
+mod tests {
     use unhindered_accumulate::{accumulate::Accumulate, accumulated::Accumulated};
 
     use super::*;
@@ -322,28 +345,4 @@ mod test {
         // `StoreResults` ensures that we have the `.get()` method.
         assert_eq!(result.get(2), Some(&ErrorValue(9)));
     }
-}
-
-unhindered_accumulate::default_to! {
-    ErrorValue<u8> => KeepResults<SaturatingSum>,
-    ErrorValue<u16> => KeepResults<SaturatingSum>,
-    ErrorValue<u32> => KeepResults<SaturatingSum>,
-    ErrorValue<u64> => KeepResults<SaturatingSum>,
-    ErrorValue<u128> => KeepResults<SaturatingSum>,
-    ErrorValue<usize> => KeepResults<SaturatingSum>,
-
-    ErrorValue<i8> => KeepResults<Widen<ErrorValue<i16>, SumStrategy>>,
-    ErrorValue<i16> => KeepResults<Widen<ErrorValue<i32>, SumStrategy>>,
-    ErrorValue<i32> => KeepResults<Widen<ErrorValue<i64>, SumStrategy>>,
-    ErrorValue<i64> => KeepResults<Widen<ErrorValue<i128>, SumStrategy>>,
-    ErrorValue<isize> => KeepResults<SumStrategy>,
-
-    ErrorValue<f32> => KeepResults<SumStrategy>,
-    ErrorValue<f64> => KeepResults<SumStrategy>,
-}
-
-#[cfg(feature = "ordered-float")]
-unhindered_accumulate::default_to! {
-    ErrorValue<OrderedFloat<f32>> => KeepResults<SumStrategy>,
-    ErrorValue<OrderedFloat<f64>> => KeepResults<SumStrategy>,
 }
