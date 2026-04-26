@@ -1,4 +1,4 @@
-use std::{cmp::Ordering, fmt::Display, iter::Sum};
+use std::{cmp::Ordering, fmt::Display, iter::Sum, ops::AddAssign};
 
 #[cfg(feature = "ordered-float")]
 use ordered_float::OrderedFloat;
@@ -205,6 +205,28 @@ impl<T> From<T> for ErrorValue<T> {
     /// ```
     fn from(error: T) -> Self {
         Self(error)
+    }
+}
+
+#[expect(
+    clippy::arithmetic_side_effects,
+    reason = "This lint will also trigger when this impl is used (via +=); the decision should be \
+              made there where there is more context"
+)]
+impl<T: AddAssign> AddAssign<T> for ErrorValue<T> {
+    fn add_assign(&mut self, rhs: T) {
+        self.0 += rhs;
+    }
+}
+
+#[expect(
+    clippy::arithmetic_side_effects,
+    reason = "This lint will also trigger when this impl is used (via +=); the decision should be \
+              made there where there is more context"
+)]
+impl<T: AddAssign> AddAssign for ErrorValue<T> {
+    fn add_assign(&mut self, rhs: Self) {
+        self.0 += rhs.0;
     }
 }
 
