@@ -184,11 +184,7 @@ fn main() -> miette::Result<()> {
         // max_generations-1.
         println!("Generation {generation_number:2} best is {best}");
 
-        if best
-            .test_results
-            .total()
-            .is_some_and(|error| error == &OrderedFloat(0.0f64))
-        {
+        if best.test_results.total() == &OrderedFloat(0.0f64) {
             println!("SUCCESS");
             break;
         }

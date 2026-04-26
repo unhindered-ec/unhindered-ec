@@ -179,7 +179,7 @@ fn main() -> miette::Result<()> {
         let output = state.stdout_string().unwrap();
         println!("Stdout for input {first_input}: {output}");
 
-        if best.test_results.total().is_some_and(|error| error == &0) {
+        if best.test_results.total() == &0 {
             println!("SUCCESS");
             break;
         }
