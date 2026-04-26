@@ -2,8 +2,10 @@ use std::{cmp::Ordering, fmt::Display, iter::Sum};
 
 #[cfg(feature = "ordered-float")]
 use ordered_float::OrderedFloat;
+use ref_cast::RefCast;
 use unhindered_accumulate::{
-    keep_results::KeepResults, saturating_sum::SaturatingSum, sum::Sum as SumStrategy, widen::Widen,
+    forward_wrapper_impl, keep_results::KeepResults, saturating_sum::SaturatingSum,
+    sum::Sum as SumStrategy, widen::Widen,
 };
 
 /// A result of a single test, smaller is better.
@@ -27,9 +29,9 @@ use unhindered_accumulate::{
 /// #
 /// assert!(ErrorValue(-100) > ErrorValue(-4));
 /// ```
-#[derive(Eq, PartialEq, Debug, Clone, Copy, Hash, Default)]
+#[derive(Eq, PartialEq, Debug, Clone, Copy, Hash, Default, RefCast)]
 #[repr(transparent)]
-pub struct ErrorValue<T>(pub T);
+pub struct ErrorValue<T: ?Sized>(pub T);
 
 // We need `Error` to be cloneable in many of our applications,
 // even if it's not needed here in `ec_core`. For `Error` to be
@@ -278,8 +280,12 @@ where
     }
 }
 
+forward_wrapper_impl!(ErrorValue: SaturatingSum);
+
 #[cfg(test)]
 mod test {
+    use unhindered_accumulate::{accumulate::Accumulate, accumulated::Accumulated};
+
     use super::*;
 
     #[test]
@@ -294,6 +300,27 @@ mod test {
         assert_eq!(first.partial_cmp(&second), Some(Ordering::Greater));
         assert_eq!(second.partial_cmp(&first), Some(Ordering::Less));
         assert_eq!(first.partial_cmp(&first), Some(Ordering::Equal));
+    }
+
+    #[test]
+    fn saturating_u8() {
+        // TODO: Fix to actually use `ErrorValue`
+        let errors: [u8; 7] = [5, 8, 9, 6, 3, 2, 0];
+        // If we don't specify a second generic in `Accumulate<T>`,
+        // the second generic defaults to the default accumulation strategy.
+        // Since `T = u8` here, we use the default strategy for `u8`,
+        // which is `KeepResults<SaturatingSum>`, so the expanded type
+        // becomes `Accumulate<u8, KeepResults<SaturatingSum>>`. Because
+        // `KeepResults` is a type alias, which is actually
+        // `Accumulate<u8, Combine<StoreResults, SaturatingSum>>`.
+        //                       \/ - note how we didn't specify an
+        //                            accumulation strategy here
+        let result: Accumulated<ErrorValue<u8>> =
+            errors.into_iter().map(ErrorValue).accumulate().unwrap();
+        // `SaturatingSum` ensures we have the `.total()` method.
+        assert_eq!(result.total(), 33);
+        // `StoreResults` ensures that we have the `.get()` method.
+        assert_eq!(result.get(2), Some(&ErrorValue(9)));
     }
 }
 
