@@ -49,8 +49,8 @@ fn hiff(bits: &[bool]) -> (bool, TestResults<ScoreValue<usize>>) {
         (
             all_same,
             left_score
-                .into_iter()
-                .chain(right_score)
+                .into_results()
+                .chain(right_score.into_results())
                 .chain(once(ScoreValue::from(if all_same { len } else { 0 })))
                 .collect(),
         )
