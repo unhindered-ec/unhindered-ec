@@ -2,19 +2,12 @@ use std::{cmp::Ordering, fmt::Display, iter::Sum};
 
 #[cfg(feature = "ordered-float")]
 use ordered_float::OrderedFloat;
-use rayon::array::IntoIter;
 use ref_cast::RefCast;
+use unhindered_accumulate::forward_wrapper_impl;
 #[cfg(feature = "ordered-float")]
 use unhindered_accumulate::{
     keep_results::KeepResults, saturating_sum::SaturatingSum, sum::Sum as SumStrategy, widen::Widen,
 };
-use unhindered_accumulate::{
-    results::{IndexResults, IndividualResults},
-    strategy::AccumulateStrategy,
-    total::TotalResult,
-};
-
-use crate::performance::{test_result::TestResult, test_results::TestResults};
 
 /// A result of a single test, bigger is better.
 ///
@@ -216,97 +209,12 @@ where
     }
 }
 
-impl<T> AccumulateStrategy<ScoreValue<T>> for SaturatingSum
-where
-    Self: AccumulateStrategy<T>,
-{
-    type Error = <Self as AccumulateStrategy<T>>::Error;
-
-    type State = <Self as AccumulateStrategy<T>>::State;
-
-    fn initialize() -> Self::State {
-        <Self as AccumulateStrategy<T>>::initialize()
-    }
-
-    fn accumulate_into<I>(state: &mut Self::State, iter: I) -> Result<(), Self::Error>
-    where
-        I: Iterator<Item = ScoreValue<T>>,
-    {
-        <Self as AccumulateStrategy<T>>::accumulate_into(state, iter.map(|sv| sv.0))
-    }
-
-    fn accumulate<I>(iter: I) -> Result<Self::State, Self::Error>
-    where
-        I: Iterator<Item = ScoreValue<T>>,
-    {
-        <Self as AccumulateStrategy<T>>::accumulate(iter.map(|sv| sv.0))
-    }
-}
-
-impl<T> TotalResult<ScoreValue<T>> for SaturatingSum
-where
-    Self: TotalResult<T>,
-{
-    type TotalRef<'a> = ScoreValue<<Self as TotalResult<T>>::TotalRef<'a>>;
-
-    type Total = ScoreValue<<Self as TotalResult<T>>::Total>;
-
-    fn total(state: &Self::State) -> Self::TotalRef<'_> {
-        ScoreValue::new(<Self as TotalResult<T>>::total(state))
-    }
-
-    fn into_total(state: Self::State) -> Self::Total {
-        ScoreValue::new(<Self as TotalResult<T>>::into_total(state))
-    }
-}
-
-impl<T> IndividualResults<ScoreValue<T>> for SaturatingSum
-where
-    Self: IndividualResults<T>,
-    for<'a> <Self as IndividualResults<T>>::Item: 'a,
-{
-    type Item = ScoreValue<<Self as IndividualResults<T>>::Item>;
-
-    fn len(state: &Self::State) -> usize {
-        <Self as IndividualResults<T>>::len(state)
-    }
-
-    fn results<'a>(state: &'a Self::State) -> impl Iterator<Item = &'a Self::Item>
-    where
-        Self::Item: 'a,
-    {
-        <Self as IndividualResults<T>>::results(state).map(ScoreValue::ref_cast)
-    }
-
-    fn into_results(state: Self::State) -> impl Iterator<Item = Self::Item> {
-        <Self as IndividualResults<T>>::into_results(state).map(ScoreValue::new)
-    }
-
-    fn is_empty(state: &Self::State) -> bool {
-        <Self as IndividualResults<T>>::is_empty(state)
-    }
-}
-
-impl<T, Index> IndexResults<ScoreValue<T>, Index> for SaturatingSum
-where
-    Self: IndexResults<T, Index>
-        + IndividualResults<ScoreValue<T>, State = <Self as AccumulateStrategy<T>>::State>,
-    for<'a> <Self as IndividualResults<T>>::Item: 'a,
-{
-    type Output = ScoreValue<<Self as IndexResults<T, Index>>::Output>;
-
-    fn get<'a>(state: &'a Self::State, index: Index) -> Option<&'a Self::Output>
-    where
-        Self::Item: 'a,
-    {
-        <Self as IndexResults<T, Index>>::get(state, index).map(ScoreValue::ref_cast)
-    }
-}
-
-// Copy it to ErrorValue
+forward_wrapper_impl!(ScoreValue: SaturatingSum);
 
 #[cfg(test)]
-mod test {
+mod tests {
+    use unhindered_accumulate::{accumulate::Accumulate, accumulated::Accumulated};
+
     use super::*;
 
     #[test]
@@ -321,6 +229,27 @@ mod test {
         assert_eq!(first.partial_cmp(&second), Some(Ordering::Less));
         assert_eq!(second.partial_cmp(&first), Some(Ordering::Greater));
         assert_eq!(first.partial_cmp(&first), Some(Ordering::Equal));
+    }
+
+    #[test]
+    fn saturating_u8() {
+        // TODO: Fix to actually use `ScoreValue`
+        let scores: [u8; 7] = [5, 8, 9, 6, 3, 2, 0];
+        // If we don't specify a second generic in `Accumulate<T>`,
+        // the second generic defaults to the default accumulation strategy.
+        // Since `T = u8` here, we use the default strategy for `u8`,
+        // which is `KeepResults<SaturatingSum>`, so the expanded type
+        // becomes `Accumulate<u8, KeepResults<SaturatingSum>>`. Because
+        // `KeepResults` is a type alias, which is actually
+        // `Accumulate<u8, Combine<StoreResults, SaturatingSum>>`.
+        //                       \/ - note how we didn't specify an
+        //                            accumulation strategy here
+        let result: Accumulated<ScoreValue<u8>> =
+            scores.into_iter().map(ScoreValue).accumulate().unwrap();
+        // `SaturatingSum` ensures we have the `.total()` method.
+        assert_eq!(result.total(), 33);
+        // `StoreResults` ensures that we have the `.get()` method.
+        assert_eq!(result.get(2), Some(&ScoreValue(9)));
     }
 }
 
