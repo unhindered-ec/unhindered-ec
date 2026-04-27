@@ -42,7 +42,7 @@ strum_macros = "0.28.0"
 thiserror = { workspace = true }
 
 [dev-dependencies]
-clap = { version = "4.6.0", features = ["derive"] }
+clap = { version = "4.6.1", features = ["derive"] }
 criterion = { workspace = true, features = ["html_reports"] }
 miette = { workspace = true, features = ["fancy"] }
 proptest = { workspace = true }
