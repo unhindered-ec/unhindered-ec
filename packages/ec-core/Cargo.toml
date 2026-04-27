@@ -32,7 +32,7 @@ miette = { workspace = true }
 num-traits = { workspace = true }
 polonius-the-crab = { workspace = true }
 rand = { workspace = true, features = ["alloc"] }
-rayon = "1.11.0"
+rayon = "1.12.0"
 static_assertions = { workspace = true }
 thiserror = { workspace = true }
 
