@@ -137,6 +137,27 @@ impl<T> From<T> for ScoreValue<T> {
     }
 }
 
+macro_rules! impl_from_score_value {
+    ($from:ty => $to:ty) => {
+        impl From<ScoreValue<$from>> for ScoreValue<$to> {
+            fn from(value: ScoreValue<$from>) -> Self {
+                Self(value.0.into())
+            }
+        }
+    };
+}
+
+impl_from_score_value!(i8 => i16);
+impl_from_score_value!(i8 => i32);
+impl_from_score_value!(i8 => i64);
+impl_from_score_value!(i8 => i128);
+impl_from_score_value!(i16 => i32);
+impl_from_score_value!(i16 => i64);
+impl_from_score_value!(i16 => i128);
+impl_from_score_value!(i32 => i64);
+impl_from_score_value!(i32 => i128);
+impl_from_score_value!(i64 => i128);
+
 #[expect(
     clippy::arithmetic_side_effects,
     reason = "This lint will also trigger when this impl is used (via +=); the decision should be \
