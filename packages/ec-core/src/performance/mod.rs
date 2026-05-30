@@ -12,9 +12,7 @@ pub mod test_result;
 //   implement? I feel like that might avoid some duplication here.
 
 pub mod test_results {
-    use unhindered_accumulate::{
-        accumulated::Accumulated, keep_results::KeepResults, sum::Sum, widen::Widen,
-    };
+    use unhindered_accumulate::accumulated::Accumulated;
 
-    pub type TestResults<R> = Accumulated<R, Widen<R, KeepResults<Sum>>>;
+    pub type TestResults<R> = Accumulated<R>;
 }
