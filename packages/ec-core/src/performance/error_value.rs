@@ -337,6 +337,7 @@ unhindered_accumulate::default_to! {
     ErrorValue<i16> => KeepResults<Widen<ErrorValue<i32>, SumStrategy>>,
     ErrorValue<i32> => KeepResults<Widen<ErrorValue<i64>, SumStrategy>>,
     ErrorValue<i64> => KeepResults<Widen<ErrorValue<i128>, SumStrategy>>,
+    ErrorValue<i128> => KeepResults<SumStrategy>,
     ErrorValue<isize> => KeepResults<SumStrategy>,
 
     ErrorValue<f32> => KeepResults<SumStrategy>,

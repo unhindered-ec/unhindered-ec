@@ -266,6 +266,7 @@ unhindered_accumulate::default_to! {
     ScoreValue<i16> => KeepResults<Widen<ScoreValue<i32>, SumStrategy>>,
     ScoreValue<i32> => KeepResults<Widen<ScoreValue<i64>, SumStrategy>>,
     ScoreValue<i64> => KeepResults<Widen<ScoreValue<i128>, SumStrategy>>,
+    ScoreValue<i128> => KeepResults<SumStrategy>,
     ScoreValue<isize> => KeepResults<SumStrategy>,
 
     ScoreValue<f32> => KeepResults<SumStrategy>,
