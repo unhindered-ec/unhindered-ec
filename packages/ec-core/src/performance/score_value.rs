@@ -145,18 +145,38 @@ macro_rules! impl_from_score_value {
             }
         }
     };
+
+    ($($from:ty => $to:ty),* $(,)?) => {
+        $(impl_from_score_value!($from => $to);)*
+    }
 }
 
-impl_from_score_value!(i8 => i16);
-impl_from_score_value!(i8 => i32);
-impl_from_score_value!(i8 => i64);
-impl_from_score_value!(i8 => i128);
-impl_from_score_value!(i16 => i32);
-impl_from_score_value!(i16 => i64);
-impl_from_score_value!(i16 => i128);
-impl_from_score_value!(i32 => i64);
-impl_from_score_value!(i32 => i128);
-impl_from_score_value!(i64 => i128);
+impl_from_score_value!(
+    // Signed integral types
+    i8 => i16,
+    i8 => i32,
+    i8 => i64,
+    i8 => i128,
+    i16 => i32,
+    i16 => i64,
+    i16 => i128,
+    i32 => i64,
+    i32 => i128,
+    i64 => i128,
+    // Unsigned integral types
+    u8 => u16,
+    u8 => u32,
+    u8 => u64,
+    u8 => u128,
+    u16 => u32,
+    u16 => u64,
+    u16 => u128,
+    u32 => u64,
+    u32 => u128,
+    u64 => u128,
+    // Floating point types
+    f32 => f64,
+);
 
 #[expect(
     clippy::arithmetic_side_effects,
