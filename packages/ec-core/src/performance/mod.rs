@@ -12,7 +12,13 @@ pub mod test_result;
 //   implement? I feel like that might avoid some duplication here.
 
 pub mod test_results {
-    use unhindered_accumulate::accumulated::Accumulated;
+    use unhindered_accumulate::{
+        accumulated::Accumulated, keep_results::KeepResults, sum::Sum, widen::Widen,
+    };
 
-    pub type TestResults<R> = Accumulated<R>;
+    // The goal is to ultimately remove the `TestResults` type entirely, but until
+    // then this type definitely explicitly indicates the desired use of
+    // `Accumulated`.
+    #[deprecated(note = "Please use `Accumulated` instead")]
+    pub type TestResults<R> = Accumulated<R, Widen<R, KeepResults<Sum>>>;
 }
