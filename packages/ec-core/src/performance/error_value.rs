@@ -1,4 +1,12 @@
-use std::{cmp::Ordering, fmt::Display, iter::Sum};
+use std::{cmp::Ordering, fmt::Display, iter::Sum, ops::AddAssign};
+
+#[cfg(feature = "ordered-float")]
+use ordered_float::OrderedFloat;
+use ref_cast::RefCast;
+use unhindered_accumulate::{
+    forward_wrapper_impl, keep_results::KeepResults, saturating_sum::SaturatingSum,
+    sum::Sum as SumStrategy, widen::Widen,
+};
 
 /// A result of a single test, smaller is better.
 ///
@@ -21,9 +29,11 @@ use std::{cmp::Ordering, fmt::Display, iter::Sum};
 /// #
 /// assert!(ErrorValue(-100) > ErrorValue(-4));
 /// ```
-#[derive(Eq, PartialEq, Debug, Clone, Copy, Hash, Default)]
+#[derive(Eq, PartialEq, Debug, Clone, Copy, Hash, Default, RefCast)]
 #[repr(transparent)]
-pub struct ErrorValue<T>(pub T);
+pub struct ErrorValue<T: ?Sized>(pub T);
+
+forward_wrapper_impl!(ErrorValue: SaturatingSum);
 
 // We need `Error` to be cloneable in many of our applications,
 // even if it's not needed here in `ec_core`. For `Error` to be
@@ -198,6 +208,76 @@ impl<T> From<T> for ErrorValue<T> {
     }
 }
 
+#[cfg(feature = "ordered-float")]
+impl From<ErrorValue<OrderedFloat<f32>>> for ErrorValue<OrderedFloat<f64>> {
+    fn from(value: ErrorValue<OrderedFloat<f32>>) -> Self {
+        Self(OrderedFloat(value.0.0.into()))
+    }
+}
+
+macro_rules! impl_from_error_value {
+    ($from:ty => $to:ty) => {
+        impl From<ErrorValue<$from>> for ErrorValue<$to> {
+            fn from(value: ErrorValue<$from>) -> Self {
+                Self(value.0.into())
+            }
+        }
+    };
+
+    ($($from:ty => $to:ty),* $(,)?) => {
+        $(impl_from_error_value!($from => $to);)*
+    }
+}
+
+impl_from_error_value!(
+    // Signed integral types
+    i8 => i16,
+    i8 => i32,
+    i8 => i64,
+    i8 => i128,
+    i16 => i32,
+    i16 => i64,
+    i16 => i128,
+    i32 => i64,
+    i32 => i128,
+    i64 => i128,
+    // Unsigned integral types
+    u8 => u16,
+    u8 => u32,
+    u8 => u64,
+    u8 => u128,
+    u16 => u32,
+    u16 => u64,
+    u16 => u128,
+    u32 => u64,
+    u32 => u128,
+    u64 => u128,
+    // Floating point types
+    f32 => f64,
+);
+
+#[expect(
+    clippy::arithmetic_side_effects,
+    reason = "This lint will also trigger when this impl is used (via +=); the decision should be \
+              made there where there is more context"
+)]
+impl<T: AddAssign> AddAssign<T> for ErrorValue<T> {
+    fn add_assign(&mut self, rhs: T) {
+        self.0 += rhs;
+    }
+}
+
+#[expect(
+    clippy::arithmetic_side_effects,
+    reason = "This lint will also trigger when this impl is used (via +=); the decision should be \
+              made there where there is more context"
+)]
+impl<T: AddAssign> AddAssign for ErrorValue<T> {
+    fn add_assign(&mut self, rhs: Self) {
+        self.0 += rhs.0;
+    }
+}
+
 impl<T: Sum> Sum<T> for ErrorValue<T> {
     /// Create a new [`ErrorValue`] from summing up an iterator of values.
     ///
@@ -272,8 +352,34 @@ where
     }
 }
 
+unhindered_accumulate::default_to! {
+    ErrorValue<u8> => KeepResults<SaturatingSum>,
+    ErrorValue<u16> => KeepResults<SaturatingSum>,
+    ErrorValue<u32> => KeepResults<SaturatingSum>,
+    ErrorValue<u64> => KeepResults<SaturatingSum>,
+    ErrorValue<u128> => KeepResults<SaturatingSum>,
+    ErrorValue<usize> => KeepResults<SaturatingSum>,
+
+    ErrorValue<i8> => KeepResults<Widen<ErrorValue<i32>, SumStrategy>>,
+    ErrorValue<i16> => KeepResults<Widen<ErrorValue<i32>, SumStrategy>>,
+    ErrorValue<i32> => KeepResults<Widen<ErrorValue<i64>, SumStrategy>>,
+    ErrorValue<i64> => KeepResults<Widen<ErrorValue<i128>, SumStrategy>>,
+    ErrorValue<i128> => KeepResults<SumStrategy>,
+    ErrorValue<isize> => KeepResults<SumStrategy>,
+
+    ErrorValue<f32> => KeepResults<SumStrategy>,
+    ErrorValue<f64> => KeepResults<SumStrategy>,
+}
+
+#[cfg(feature = "ordered-float")]
+unhindered_accumulate::default_to! {
+    ErrorValue<OrderedFloat<f32>> => KeepResults<SumStrategy>,
+    ErrorValue<OrderedFloat<f64>> => KeepResults<SumStrategy>,
+}
 #[cfg(test)]
-mod test {
+mod tests {
+    use unhindered_accumulate::{accumulate::Accumulate, accumulated::Accumulated};
+
     use super::*;
 
     #[test]
@@ -288,5 +394,25 @@ mod test {
         assert_eq!(first.partial_cmp(&second), Some(Ordering::Greater));
         assert_eq!(second.partial_cmp(&first), Some(Ordering::Less));
         assert_eq!(first.partial_cmp(&first), Some(Ordering::Equal));
+    }
+
+    #[test]
+    fn saturating_u8() {
+        let errors: [u8; 7] = [5, 8, 9, 6, 3, 2, 0];
+        // If we don't specify a second generic in `Accumulate<T>`,
+        // the second generic defaults to the default accumulation strategy.
+        // Since `T = u8` here, we use the default strategy for `u8`,
+        // which is `KeepResults<SaturatingSum>`, so the expanded type
+        // becomes `Accumulate<u8, KeepResults<SaturatingSum>>`. Because
+        // `KeepResults` is a type alias, which is actually
+        // `Accumulate<u8, Combine<StoreResults, SaturatingSum>>`.
+        //                       \/ - note how we didn't specify an
+        //                            accumulation strategy here
+        let result: Accumulated<ErrorValue<u8>> =
+            errors.into_iter().map(ErrorValue).accumulate().unwrap();
+        // `SaturatingSum` ensures we have the `.total()` method.
+        assert_eq!(result.total(), 33);
+        // `StoreResults` ensures that we have the `.get()` method.
+        assert_eq!(result.get(2), Some(&ErrorValue(9)));
     }
 }

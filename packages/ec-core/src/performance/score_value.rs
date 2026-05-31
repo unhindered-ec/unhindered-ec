@@ -1,4 +1,13 @@
-use std::{cmp::Ordering, fmt::Display, iter::Sum};
+use std::{cmp::Ordering, fmt::Display, iter::Sum, ops::AddAssign};
+
+#[cfg(feature = "ordered-float")]
+use ordered_float::OrderedFloat;
+use ref_cast::RefCast;
+use unhindered_accumulate::forward_wrapper_impl;
+#[cfg(feature = "ordered-float")]
+use unhindered_accumulate::{
+    keep_results::KeepResults, saturating_sum::SaturatingSum, sum::Sum as SumStrategy, widen::Widen,
+};
 
 /// A result of a single test, bigger is better.
 ///
@@ -22,9 +31,11 @@ use std::{cmp::Ordering, fmt::Display, iter::Sum};
 /// assert!(ScoreValue(-100) < ScoreValue(-4));
 /// ```
 /// [`ErrorValue`]: super::error_value::ErrorValue
-#[derive(Eq, PartialEq, Ord, PartialOrd, Debug, Clone, Copy, Hash, Default)]
+#[derive(Eq, PartialEq, Ord, PartialOrd, Debug, Clone, Copy, Hash, Default, RefCast)]
 #[repr(transparent)]
-pub struct ScoreValue<T>(pub T);
+pub struct ScoreValue<T: ?Sized>(pub T);
+
+forward_wrapper_impl!(ScoreValue: SaturatingSum);
 
 // We need `ScoreValue` to be cloneable in many of our applications,
 // even if it's not needed here in `ec_core`. For `ScoreValue` to be
@@ -126,6 +137,76 @@ impl<T> From<T> for ScoreValue<T> {
     }
 }
 
+#[cfg(feature = "ordered-float")]
+impl From<ScoreValue<OrderedFloat<f32>>> for ScoreValue<OrderedFloat<f64>> {
+    fn from(value: ScoreValue<OrderedFloat<f32>>) -> Self {
+        Self(OrderedFloat(value.0.0.into()))
+    }
+}
+
+macro_rules! impl_from_score_value {
+    ($from:ty => $to:ty) => {
+        impl From<ScoreValue<$from>> for ScoreValue<$to> {
+            fn from(value: ScoreValue<$from>) -> Self {
+                Self(value.0.into())
+            }
+        }
+    };
+
+    ($($from:ty => $to:ty),* $(,)?) => {
+        $(impl_from_score_value!($from => $to);)*
+    }
+}
+
+impl_from_score_value!(
+    // Signed integral types
+    i8 => i16,
+    i8 => i32,
+    i8 => i64,
+    i8 => i128,
+    i16 => i32,
+    i16 => i64,
+    i16 => i128,
+    i32 => i64,
+    i32 => i128,
+    i64 => i128,
+    // Unsigned integral types
+    u8 => u16,
+    u8 => u32,
+    u8 => u64,
+    u8 => u128,
+    u16 => u32,
+    u16 => u64,
+    u16 => u128,
+    u32 => u64,
+    u32 => u128,
+    u64 => u128,
+    // Floating point types
+    f32 => f64,
+);
+
+#[expect(
+    clippy::arithmetic_side_effects,
+    reason = "This lint will also trigger when this impl is used (via +=); the decision should be \
+              made there where there is more context"
+)]
+impl<T: AddAssign> AddAssign<T> for ScoreValue<T> {
+    fn add_assign(&mut self, rhs: T) {
+        self.0 += rhs;
+    }
+}
+
+#[expect(
+    clippy::arithmetic_side_effects,
+    reason = "This lint will also trigger when this impl is used (via +=); the decision should be \
+              made there where there is more context"
+)]
+impl<T: AddAssign> AddAssign for ScoreValue<T> {
+    fn add_assign(&mut self, rhs: Self) {
+        self.0 += rhs.0;
+    }
+}
+
 impl<T: Sum> Sum<T> for ScoreValue<T> {
     /// Create a new [`ScoreValue`] from summing up an iterator of values.
     ///
@@ -200,8 +281,35 @@ where
     }
 }
 
+unhindered_accumulate::default_to! {
+    ScoreValue<u8> => KeepResults<SaturatingSum>,
+    ScoreValue<u16> => KeepResults<SaturatingSum>,
+    ScoreValue<u32> => KeepResults<SaturatingSum>,
+    ScoreValue<u64> => KeepResults<SaturatingSum>,
+    ScoreValue<u128> => KeepResults<SaturatingSum>,
+    ScoreValue<usize> => KeepResults<SaturatingSum>,
+
+    ScoreValue<i8> => KeepResults<Widen<ScoreValue<i32>, SumStrategy>>,
+    ScoreValue<i16> => KeepResults<Widen<ScoreValue<i32>, SumStrategy>>,
+    ScoreValue<i32> => KeepResults<Widen<ScoreValue<i64>, SumStrategy>>,
+    ScoreValue<i64> => KeepResults<Widen<ScoreValue<i128>, SumStrategy>>,
+    ScoreValue<i128> => KeepResults<SumStrategy>,
+    ScoreValue<isize> => KeepResults<SumStrategy>,
+
+    ScoreValue<f32> => KeepResults<SumStrategy>,
+    ScoreValue<f64> => KeepResults<SumStrategy>,
+}
+
+#[cfg(feature = "ordered-float")]
+unhindered_accumulate::default_to! {
+    ScoreValue<OrderedFloat<f32>> => KeepResults<SumStrategy>,
+    ScoreValue<OrderedFloat<f64>> => KeepResults<SumStrategy>,
+}
+
 #[cfg(test)]
-mod test {
+mod tests {
+    use unhindered_accumulate::{accumulate::Accumulate, accumulated::Accumulated};
+
     use super::*;
 
     #[test]
@@ -216,5 +324,25 @@ mod test {
         assert_eq!(first.partial_cmp(&second), Some(Ordering::Less));
         assert_eq!(second.partial_cmp(&first), Some(Ordering::Greater));
         assert_eq!(first.partial_cmp(&first), Some(Ordering::Equal));
+    }
+
+    #[test]
+    fn saturating_u8() {
+        let scores: [u8; 7] = [5, 8, 9, 6, 3, 2, 0];
+        // If we don't specify a second generic in `Accumulate<T>`,
+        // the second generic defaults to the default accumulation strategy.
+        // Since `T = u8` here, we use the default strategy for `u8`,
+        // which is `KeepResults<SaturatingSum>`, so the expanded type
+        // becomes `Accumulate<u8, KeepResults<SaturatingSum>>`. Because
+        // `KeepResults` is a type alias, which is actually
+        // `Accumulate<u8, Combine<StoreResults, SaturatingSum>>`.
+        //                       \/ - note how we didn't specify an
+        //                            accumulation strategy here
+        let result: Accumulated<ScoreValue<u8>> =
+            scores.into_iter().map(ScoreValue).accumulate().unwrap();
+        // `SaturatingSum` ensures we have the `.total()` method.
+        assert_eq!(result.total(), 33);
+        // `StoreResults` ensures that we have the `.get()` method.
+        assert_eq!(result.get(2), Some(&ScoreValue(9)));
     }
 }

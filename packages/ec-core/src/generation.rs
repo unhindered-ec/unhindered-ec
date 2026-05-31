@@ -51,8 +51,8 @@ use crate::{operator::Operator, population::Population};
 /// #         (
 /// #             all_same,
 /// #             left_score
-/// #                 .into_iter()
-/// #                 .chain(right_score)
+/// #                 .into_results()
+/// #                 .chain(right_score.into_results())
 /// #                 .chain(once(ScoreValue::from(if all_same { len } else { 0 })))
 /// #                 .collect(),
 /// #         )
@@ -138,8 +138,8 @@ impl<C, P> From<(C, P)> for Generation<C, P> {
     /// #         (
     /// #             all_same,
     /// #             left_score
-    /// #                 .into_iter()
-    /// #                 .chain(right_score)
+    /// #                 .into_results()
+    /// #                 .chain(right_score.into_results())
     /// #                 .chain(once(ScoreValue::from(if all_same { len } else { 0 })))
     /// #                 .collect(),
     /// #         )
@@ -226,8 +226,8 @@ impl<P, C> Generation<C, P> {
     /// #         (
     /// #             all_same,
     /// #             left_score
-    /// #                 .into_iter()
-    /// #                 .chain(right_score)
+    /// #                 .into_results()
+    /// #                 .chain(right_score.into_results())
     /// #                 .chain(once(ScoreValue::from(if all_same { len } else { 0 })))
     /// #                 .collect(),
     /// #         )
@@ -309,8 +309,8 @@ impl<P, C> Generation<C, P> {
     /// #         (
     /// #             all_same,
     /// #             left_score
-    /// #                 .into_iter()
-    /// #                 .chain(right_score)
+    /// #                 .into_results()
+    /// #                 .chain(right_score.into_results())
     /// #                 .chain(once(ScoreValue::from(if all_same { len } else { 0 })))
     /// #                 .collect(),
     /// #         )
@@ -394,8 +394,8 @@ impl<P, C> Generation<C, P> {
     /// #         (
     /// #             all_same,
     /// #             left_score
-    /// #                 .into_iter()
-    /// #                 .chain(right_score)
+    /// #                 .into_results()
+    /// #                 .chain(right_score.into_results())
     /// #                 .chain(once(ScoreValue::from(if all_same { len } else { 0 })))
     /// #                 .collect(),
     /// #         )
@@ -490,8 +490,8 @@ where
     /// #         (
     /// #             all_same,
     /// #             left_score
-    /// #                 .into_iter()
-    /// #                 .chain(right_score)
+    /// #                 .into_results()
+    /// #                 .chain(right_score.into_results())
     /// #                 .chain(once(ScoreValue::from(if all_same { len } else { 0 })))
     /// #                 .collect(),
     /// #         )
@@ -616,8 +616,8 @@ where
     /// #         (
     /// #             all_same,
     /// #             left_score
-    /// #                 .into_iter()
-    /// #                 .chain(right_score)
+    /// #                 .into_results()
+    /// #                 .chain(right_score.into_results())
     /// #                 .chain(once(ScoreValue::from(if all_same { len } else { 0 })))
     /// #                 .collect(),
     /// #         )

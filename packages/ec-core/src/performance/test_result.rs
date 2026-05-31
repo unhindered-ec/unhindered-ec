@@ -171,7 +171,7 @@ pub(crate) mod test_result_tests {
         let first: TestResult<i32, i32> = TestResult::Score(ScoreValue(32));
         let second = TestResult::Score(ScoreValue(87));
         assert!(first < second);
-        assert!(first != second);
+        assert_ne!(first, second);
         assert!((first > second).not());
     }
 
@@ -180,7 +180,7 @@ pub(crate) mod test_result_tests {
         let first: TestResult<i32, i32> = TestResult::Error(ErrorValue(32));
         let second = TestResult::Error(ErrorValue(87));
         assert!(first > second);
-        assert!(first != second);
+        assert_ne!(first, second);
         assert!((first < second).not());
     }
 
@@ -189,7 +189,7 @@ pub(crate) mod test_result_tests {
         let first = TestResult::Score(ScoreValue(32));
         let second = TestResult::Error(ErrorValue(87));
         assert!((first > second).not());
-        assert!(first != second);
+        assert_ne!(first, second);
         assert!((first < second).not());
         assert!(first.partial_cmp(&second).is_none());
         assert!(second.partial_cmp(&first).is_none());
