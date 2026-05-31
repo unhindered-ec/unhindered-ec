@@ -34,7 +34,7 @@ ordered-float = { workspace = true, optional = true }
 polonius-the-crab = { workspace = true }
 rand = { workspace = true, features = ["alloc"] }
 rayon = "1.12.0"
-ref-cast = "1.0.25"
+ref-cast = { workspace = true }
 static_assertions = { workspace = true }
 thiserror = { workspace = true }
 unhindered-accumulate = { workspace = true, default-features = false }

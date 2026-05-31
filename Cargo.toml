@@ -30,12 +30,12 @@ proptest = "1.11.0"
 push = { path = "packages/push" }
 push_macros = { path = "packages/push-macros" }
 rand = "0.9.3"
+ref-cast = "1.0.25"
 static_assertions = "1.1.0"
 test-case = "3.3.1"
 test-strategy = "0.4.5"
 thiserror = "2.0.18"
 unhindered-accumulate = { git = "https://github.com/unhindered-ec/accumulate.git", rev = "5d702640293beef2362c25f136db70404839af95", default-features = false }
-# unhindered-accumulate = { path = "../accumulate", default-features = false }
 
 [workspace.lints.clippy]
 allow_attributes = "deny"
