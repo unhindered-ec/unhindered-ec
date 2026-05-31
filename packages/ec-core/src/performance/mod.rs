@@ -19,6 +19,5 @@ pub mod test_results {
     // The goal is to ultimately remove the `TestResults` type entirely, but until
     // then this type definitely explicitly indicates the desired use of
     // `Accumulated`.
-    #[deprecated(note = "Please use `Accumulated` instead")]
     pub type TestResults<R> = Accumulated<R, Widen<R, KeepResults<Sum>>>;
 }

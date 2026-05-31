@@ -94,7 +94,7 @@ fn create_doc_attrs_from_string(input: String, tokens: &mut TokenStream, do_form
         let mut without_lines: Vec<String> = formatted
             .lines()
             .skip(1)
-            .map(|l| format!(" {line}", line = &l.get(4..).unwrap_or_default()))
+            .map(|l| format!(" {line}", line = l.get(4..).unwrap_or_default()))
             .collect();
         if !without_lines.is_empty() {
             without_lines.swap_remove(without_lines.len() - 1);

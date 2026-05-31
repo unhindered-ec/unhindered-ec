@@ -60,7 +60,7 @@ The `default_to!` macro allows you to
 specify default accumulation behaviors for specific types. The syntax for `default_to!` is:
 
 ```rust
-unhindered_accumulae::default_to! {
+unhindered_accumulate::default_to! {
   type_to_accumulate => accumulation_strategy,
 }
 ```
