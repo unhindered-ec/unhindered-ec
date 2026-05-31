@@ -208,6 +208,13 @@ impl<T> From<T> for ErrorValue<T> {
     }
 }
 
+#[cfg(feature = "ordered-float")]
+impl From<ErrorValue<OrderedFloat<f32>>> for ErrorValue<OrderedFloat<f64>> {
+    fn from(value: ErrorValue<OrderedFloat<f32>>) -> Self {
+        Self(OrderedFloat(value.0.0.into()))
+    }
+}
+
 macro_rules! impl_from_error_value {
     ($from:ty => $to:ty) => {
         impl From<ErrorValue<$from>> for ErrorValue<$to> {

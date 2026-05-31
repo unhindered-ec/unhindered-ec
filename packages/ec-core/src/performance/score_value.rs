@@ -137,6 +137,13 @@ impl<T> From<T> for ScoreValue<T> {
     }
 }
 
+#[cfg(feature = "ordered-float")]
+impl From<ScoreValue<OrderedFloat<f32>>> for ScoreValue<OrderedFloat<f64>> {
+    fn from(value: ScoreValue<OrderedFloat<f32>>) -> Self {
+        Self(OrderedFloat(value.0.0.into()))
+    }
+}
+
 macro_rules! impl_from_score_value {
     ($from:ty => $to:ty) => {
         impl From<ScoreValue<$from>> for ScoreValue<$to> {
