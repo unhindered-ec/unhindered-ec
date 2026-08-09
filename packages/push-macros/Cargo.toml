@@ -24,4 +24,4 @@ manyhow = "0.13.0"
 prettyplease = "0.3.0"
 proc-macro2 = "1.0.81"
 quote = "1.0.33"
-syn = { version = "3.0.3", features = ["full", "printing", "extra-traits"] }
+syn = { version = "3.0.3", features = ["extra-traits", "full", "printing"] }
