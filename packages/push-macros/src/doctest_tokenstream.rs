@@ -87,6 +87,7 @@ fn create_doc_attrs_from_string(input: String, tokens: &mut TokenStream, do_form
         let input_block = format!("fn main() {{ {input}  }}");
         let file_contents = vec![syn::Item::Fn(syn::parse_str(&input_block).unwrap())];
         let formatted = prettyplease::unparse(&syn::File {
+            frontmatter: None,
             shebang: None,
             attrs: vec![],
             items: file_contents,
