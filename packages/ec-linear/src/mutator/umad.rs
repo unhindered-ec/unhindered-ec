@@ -481,7 +481,7 @@ mod test {
         // Since we don't add genes to empty genomes, this should still be an empty
         // genome
         let Ok(child) = umad.mutate(parent, &mut rng);
-        assert!(child.is_empty());
+        assert_eq!(child, []);
     }
 
     #[test]
