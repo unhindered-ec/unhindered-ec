@@ -39,10 +39,11 @@ static SHARED_ALTERNATIVES: fn() -> Vec<Box<dyn Modification>> = || {
 pub fn dyn_ref_impls(a: proc_macro2::TokenStream, tokens: syn::ItemImpl) -> manyhow::Result {
     manyhow::ensure!(a.is_empty(), a, "Expected no inputs");
 
-    match tokens.trait_ {
-        Some((None, _, _)) => {}
-        _ => manyhow::bail!(tokens, "Only non-negative trait impls are supported"),
-    }
+    manyhow::ensure!(
+        tokens.modifiers.polarity.is_none(),
+        tokens,
+        "Only non-negative trait impls are supported"
+    );
 
     let ty = tokens.self_ty.clone();
 

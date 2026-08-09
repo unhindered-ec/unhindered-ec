@@ -13,7 +13,11 @@ allowed-duplicate-crates = [
   "windows_x86_64_gnullvm",
   "windows_x86_64_msvc",
   # miette dependency, already updated on main but not released yet.
-  "unicode-width"
+  "unicode-width",
+  # Various macros related crate duplications
+  "manyhow",
+  "manyhow-macros",
+  "syn",
 ]
 allow-unwrap-in-tests = true
 allow-expect-in-tests = true
