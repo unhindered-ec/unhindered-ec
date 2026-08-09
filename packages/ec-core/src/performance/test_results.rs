@@ -149,7 +149,6 @@ impl<R> TestResults<R> {
     ///
     /// assert!(results.iter().eq([&ScoreValue(10), &ScoreValue(20)]));
     /// ```
-    #[must_use]
     pub fn iter(&self) -> <&'_ Self as IntoIterator>::IntoIter {
         self.into_iter()
     }
