@@ -27,7 +27,7 @@ name = "regression-evaluation"
 
 [dependencies]
 collectable = "0.0.2"
-easy-cast = "0.5.4"
+easy-cast = "0.7.0"
 ec-core = { workspace = true }
 ec-linear = { workspace = true }
 macro_railroad_annotation = { workspace = true }
