@@ -8,13 +8,7 @@ documentation = { workspace = true }
 readme = "README.md"
 repository = { workspace = true }
 license = { workspace = true }
-keywords = [
-  "evolutionary-computation",
-  "framework",
-  "genetic",
-  "genetic-algorithm",
-  "linear-evolution"
-]
+keywords = ["evolutionary-computation", "framework", "genetic", "genetic-algorithm", "linear-evolution"]
 categories = ["algorithms", "science"]
 publish = { workspace = true }
 

@@ -8,13 +8,7 @@ documentation = { workspace = true }
 readme = "README.md"
 repository = { workspace = true }
 license = { workspace = true }
-keywords = [
-  "genetic-programming",
-  "interpreter",
-  "programming-language",
-  "push-language",
-  "pushgp"
-]
+keywords = ["genetic-programming", "interpreter", "programming-language", "push-language", "pushgp"]
 # Per definition crates.io compilers includes interpreters
 categories = ["algorithms", "compilers", "science"]
 publish = { workspace = true }
