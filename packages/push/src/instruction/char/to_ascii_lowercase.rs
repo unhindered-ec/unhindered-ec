@@ -75,6 +75,7 @@ mod tests {
     fn to_ascii_lowercase_empty_stack() {
         let state = PushState::builder()
             .with_max_stack_size(3)
+            .with_instruction_step_limit(1_000)
             .with_int_values([1, 2, 3])
             .unwrap()
             .with_bool_values([true, false])
@@ -93,6 +94,7 @@ mod tests {
         let input = 'M';
         let state = PushState::builder()
             .with_max_stack_size(1)
+            .with_instruction_step_limit(1_000)
             .with_char_values(std::iter::once(input))
             .unwrap()
             .with_no_program()
@@ -109,6 +111,7 @@ mod tests {
         let input = 'm';
         let state = PushState::builder()
             .with_max_stack_size(1)
+            .with_instruction_step_limit(1_000)
             .with_char_values(std::iter::once(input))
             .unwrap()
             .with_no_program()
@@ -125,6 +128,7 @@ mod tests {
         let input = '7';
         let state = PushState::builder()
             .with_max_stack_size(1)
+            .with_instruction_step_limit(1_000)
             .with_char_values(std::iter::once(input))
             .unwrap()
             .with_no_program()
@@ -141,6 +145,7 @@ mod tests {
         let input = 'π';
         let state = PushState::builder()
             .with_max_stack_size(1)
+            .with_instruction_step_limit(1_000)
             .with_char_values(std::iter::once(input))
             .unwrap()
             .with_no_program()
@@ -154,6 +159,7 @@ mod tests {
     fn ascii_from_wrapping_integer_proptest(c: char) {
         let state = PushState::builder()
             .with_max_stack_size(1)
+            .with_instruction_step_limit(1_000)
             .with_char_values(std::iter::once(c))
             .unwrap()
             .with_no_program()

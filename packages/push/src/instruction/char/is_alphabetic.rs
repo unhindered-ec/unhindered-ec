@@ -155,6 +155,7 @@ mod tests {
     fn is_alphabetic_empty_stack() {
         let state = PushState::builder()
             .with_max_stack_size(3)
+            .with_instruction_step_limit(1_000)
             .with_int_values([5, 8, 9])
             .unwrap()
             .with_bool_values([true, false])
@@ -174,6 +175,7 @@ mod tests {
     fn is_alphabetic_non_consuming_empty_stack() {
         let state = PushState::builder()
             .with_max_stack_size(3)
+            .with_instruction_step_limit(1_000)
             .with_int_values([5, 8, 9])
             .unwrap()
             .with_bool_values([true, false])
@@ -194,6 +196,7 @@ mod tests {
     fn is_alphabetic(c: char) {
         let state = PushState::builder()
             .with_max_stack_size(1)
+            .with_instruction_step_limit(1_000)
             .with_char_values(std::iter::once(c))
             .unwrap()
             .with_no_program()
@@ -211,6 +214,7 @@ mod tests {
     fn is_alphabetic_non_consuming(c: char) {
         let state = PushState::builder()
             .with_max_stack_size(1)
+            .with_instruction_step_limit(1_000)
             .with_char_values(std::iter::once(c))
             .unwrap()
             .with_no_program()

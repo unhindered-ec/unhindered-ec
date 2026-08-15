@@ -103,12 +103,20 @@ mod tests {
     use super::*;
     use crate::push_vm::push_state::PushState;
 
+    // .with_max_stack_size(1000)
+    //     .with_program(program.to_vec())?
+    //     .with_int_input("a", a)
+    //     .with_int_input("b", b)
+    //     .with_int_input("c", c)
+    //     .with_instruction_step_limit(1_000)
+
     /// Performing `AsciiFromWrappingFloat` when the `f64` stack is empty
     /// should return a recoverable error with the state unchanged.
     #[test]
     fn ascii_from_wrapping_integer_empty_stack() {
         let state = PushState::builder()
             .with_max_stack_size(3)
+            .with_instruction_step_limit(1_000)
             .with_char_values(['a', 'b', 'c'])
             .unwrap()
             .with_bool_values([true, false])
@@ -126,6 +134,7 @@ mod tests {
     fn ascii_from_wrapping_float() {
         let input = OrderedFloat(65.0);
         let state = PushState::builder()
+            .with_instruction_step_limit(1_000)
             .with_max_stack_size(1)
             .with_float_values(std::iter::once(input))
             .unwrap()
@@ -141,6 +150,7 @@ mod tests {
         let input = OrderedFloat(128.0);
         let state = PushState::builder()
             .with_max_stack_size(1)
+            .with_instruction_step_limit(1_000)
             .with_float_values(std::iter::once(input))
             .unwrap()
             .with_no_program()
@@ -154,6 +164,7 @@ mod tests {
     fn ascii_from_wrapping_float_underflow() {
         let input = OrderedFloat(-1.0);
         let state = PushState::builder()
+            .with_instruction_step_limit(1_000)
             .with_max_stack_size(1)
             .with_float_values(std::iter::once(input))
             .unwrap()
@@ -177,6 +188,7 @@ mod tests {
     fn ascii_from_wrapping_float_proptest(x: f64) {
         let state = PushState::builder()
             .with_max_stack_size(1)
+            .with_instruction_step_limit(1_000)
             .with_float_values(std::iter::once(OrderedFloat(x)))
             .unwrap()
             .with_no_program()
