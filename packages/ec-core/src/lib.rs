@@ -5,7 +5,6 @@
 // this provides that (just an alias to self).
 extern crate self as ec_core;
 
-pub mod child_maker;
 pub mod distributions;
 pub mod generation;
 pub mod genome;
