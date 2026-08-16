@@ -91,11 +91,23 @@ where
 
     /// Select an individual from the given `population`
     ///
+    /// # Example
+    ///
+    /// ```
+    /// # use ec_core::operator::selector::{best::Best, Selector};
+    /// # use rand::rng;
+    /// #
+    /// let population = [5, 8, 9, 2, 3, 6];
+    /// let winner = Best.select(&population, &mut rng())?;
+    /// assert_eq!(*winner, 9);
+    /// # Ok::<(), Box<dyn std::error::Error>>(())
+    /// ```
+    ///
+    ///
     /// # Errors
     ///
-    /// This will return an error if there's some problem selecting. That will
-    /// usually be because the population is empty or not large enough for
-    /// the desired selector.
+    /// - [`Self::Error`] if a problem occurs during selection, for example
+    ///   because the population is empty or too small for the selector.
     fn select<'pop, R: Rng + ?Sized>(
         &self,
         population: &'pop P,
@@ -253,7 +265,7 @@ where
 /// assert_eq!(choice_length, 5);
 /// # Ok::<(), Box<dyn std::error::Error>>(())
 /// ```
-#[derive(Debug, Clone, Composable, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[derive(Debug, Copy, Clone, Composable, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 pub struct Select<S> {
     /// The wrapped [`Selector`] that this [`Select`] will apply
     selector: S,

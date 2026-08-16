@@ -53,18 +53,37 @@ pub trait DynSelector<P, Error = Box<dyn std::error::Error + Send + Sync>>
 where
     P: Population,
 {
-    /// Select an individual from the given `population`, in a dyn compatible
-    /// fashion
+    /// Select an individual from the given `population`, using this type-erased
+    /// selector.
     ///
-    /// You should probably not use this directly and instead rely on the
-    /// `Selector` implementations on all common pointer types in rust
-    /// pointing to a object of this trait.
+    /// It is recommended to not use this method directly and instead call the
+    /// normal [`Selector::select`] implemented on various container types
+    /// containing `dyn DynSelector<_>`'s.
+    ///
+    /// If you want to call this method directly, make sure to only call it on a
+    /// `&dyn DynSelector<_>` (i.e. dereference a box first) else you will
+    /// introduce another layer of indirection because of the implementations on
+    /// the various container types, and additionally type inference would
+    /// require additional type annotations (this is usually a sign you are
+    /// doing something wrong).
+    ///
+    /// # Example
+    /// ```
+    /// # use ec_core::operator::selector::{best::Best, DynSelector};
+    /// # use rand::rng;
+    /// #
+    /// let population = [5, 8, 9, 2, 3, 6];
+    /// let my_erased_selector: Box<dyn DynSelector<[i32; 6]>> = Box::new(Best);
+    ///
+    /// let winner = (*my_erased_selector).dyn_select(&population, &mut rng())?;
+    /// assert_eq!(*winner, 9);
+    /// # Ok::<(), Box<dyn std::error::Error + Send + Sync>>(())
+    /// ```
+    ///
     ///
     /// # Errors
-    ///
-    /// This will return an error if there's some problem selecting. That will
-    /// usually be because the population is empty or not large enough for
-    /// the desired selector.
+    /// - `Error` if a problem selecting occurs, for example because the
+    ///   population is empty or not big enough for the selector.
     fn dyn_select<'pop>(
         &self,
         population: &'pop P,

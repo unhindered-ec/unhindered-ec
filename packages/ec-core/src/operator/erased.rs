@@ -56,6 +56,35 @@ use super::{Composable, Operator};
 pub trait DynOperator<Input, Error = Box<dyn StdError + Send + Sync>>: Composable {
     type Output;
 
+    /// Apply this type erased operator to an input
+    ///
+    /// This also takes an rng that is passed along to customize random number
+    /// generation behavior and avoid re-creating RNGs in each operator.
+    ///
+    /// It is recommended to not use this method directly and instead call the
+    /// normal [`Operator::apply`] implemented on various container types
+    /// containing `dyn DynOperator<_>`'s.
+    ///
+    /// If you want to call this method directly, make sure to only call it on a
+    /// `&dyn DynOperator<_>` (i.e. dereference a box first) else you will
+    /// introduce another layer of indirection because of the implementations on
+    /// the various container types, and additionally type inference would
+    /// require additional type annotations (this is usually a sign you are
+    /// doing something wrong).
+    ///
+    /// # Example
+    /// ```
+    /// # use ec_core::operator::{constant::Constant, DynOperator};
+    /// # use rand::rng;
+    /// #
+    /// let my_constant_operator: Constant<i32> = 5.into();
+    /// let my_erased_operator: Box<dyn DynOperator<(), Output = i32>> = Box::new(my_constant_operator);
+    ///
+    /// let sample_value = (*my_erased_operator).dyn_apply((), &mut rng())?;
+    /// assert_eq!(sample_value, 5);
+    /// # Ok::<(), Box<dyn std::error::Error + Send + Sync>>(())
+    /// ```
+    ///
     /// # Errors
     /// This will return an error if there's some problem applying the operator.
     /// Given how general this concept is, there's no good way of saying here
