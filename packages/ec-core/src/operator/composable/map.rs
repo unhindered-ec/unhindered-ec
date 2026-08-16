@@ -19,7 +19,7 @@ use crate::operator::Operator;
 /// assert!(result.into_iter().eq([1, 1, 1]));
 /// # Ok::<(),MapError<Infallible>>(())
 /// ```
-#[derive(Debug, Composable, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
+#[derive(Copy, Clone, Debug, Composable, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
 pub struct Map<F> {
     f: F,
 }
@@ -78,18 +78,17 @@ where
     }
 }
 
-// I think I can parameterize over the 2 here to make this more general?
-impl<F, Input> Operator<[Input; 2]> for Map<F>
+impl<F, Input, const N: usize> Operator<[Input; N]> for Map<F>
 where
     F: Operator<Input>,
 {
-    type Output = [F::Output; 2];
+    type Output = [F::Output; N];
     type Error = MapError<F::Error>;
 
     /// Apply the [`Operator`] this [`Map`] [`Operator`] is based on to each
-    /// item of an (2-element) array.
+    /// item of an array.
     ///
-    /// # Example
+    /// # Examples
     /// ```
     /// # use ec_core::operator::{Operator, constant::Constant, composable::{Map, MapError}};
     /// # use std::convert::Infallible;
@@ -99,14 +98,30 @@ where
     /// assert_eq!(result, [1, 1]);
     /// # Ok::<(),MapError<Infallible>>(())
     /// ```
+    /// ```
+    /// # use ec_core::operator::{Operator, constant::Constant, composable::{Map, MapError}};
+    /// # use std::convert::Infallible;
+    /// let operator = Map::new(Constant::new(1i32));
+    ///
+    /// let result = operator.apply([true, false, true, false], &mut rand::rng())?;
+    /// assert_eq!(result, [1, 1, 1, 1]);
+    /// # Ok::<(),MapError<Infallible>>(())
+    /// ```
     fn apply<R: Rng + ?Sized>(
         &self,
-        [x, y]: [Input; 2],
+        input: [Input; N],
         rng: &mut R,
     ) -> Result<Self::Output, Self::Error> {
-        let first_result = self.f.apply(x, rng).map_err(|e| MapError(e, 0))?;
-        let second_result = self.f.apply(y, rng).map_err(|e| MapError(e, 1))?;
-        Ok([first_result, second_result])
+        // FIXME: This could be made more efficent by using MaybeUninit<T> over
+        // Option<T> instead, since then no additional tag information needs to be
+        // stored.
+        let mut output: [Option<F::Output>; N] = [const { None }; N];
+
+        for (index, (input, output)) in input.into_iter().zip(output.as_mut_slice()).enumerate() {
+            output.replace(self.f.apply(input, rng).map_err(|e| MapError(e, index))?);
+        }
+
+        Ok(output.map(Option::unwrap))
     }
 }
 

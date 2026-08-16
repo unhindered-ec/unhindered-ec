@@ -6,6 +6,9 @@ use crate::population::Population;
 /// Selector that selects the individual with the lowest value as specified by
 /// the [`Ord`] relation on the individuals.
 ///
+/// Also see [`Best`](ec_core::operator::selector::best::Best) for a selector
+/// that selects the individual with the highest value instead.
+///
 /// # Example
 /// ```
 /// # use ec_core::operator::selector::{Selector, worst::Worst, error::EmptyPopulation};
@@ -28,7 +31,20 @@ where
 {
     type Error = EmptyPopulation;
 
-    /// Select an Individual from the given Population using this selector.
+    /// Selects the worst (as defined by the [`Ord`] relation) individual of the
+    /// passed Population.
+    ///
+    /// # Example
+    /// ```
+    /// # use ec_core::operator::selector::{Selector, worst::Worst, error::EmptyPopulation};
+    /// let population = [2, 3, 5];
+    ///
+    /// let worst = Worst;
+    /// let selected = worst.select(&population, &mut rand::rng())?;
+    ///
+    /// assert_eq!(*selected, 2);
+    /// # Ok::<(), EmptyPopulation>(())
+    /// ```
     ///
     /// # Errors
     /// - [`EmptyPopulation`] if the population selected from is empty.
