@@ -27,6 +27,18 @@ where
 
     /// Select an Individual from the given Population using this selector.
     ///
+    /// # Example
+    /// ```
+    /// # use ec_core::operator::selector::{Selector, random::Random, error::EmptyPopulation};
+    /// let population = [2, 3, 5];
+    ///
+    /// let random = Random;
+    /// let selected = random.select(&population, &mut rand::rng())?;
+    ///
+    /// assert!(population.contains(selected));
+    /// # Ok::<(), EmptyPopulation>(())
+    /// ```
+    ///
     /// # Errors
     /// - [`EmptyPopulation`] if the population selected from is empty.
     fn select<'pop, R: Rng + ?Sized>(

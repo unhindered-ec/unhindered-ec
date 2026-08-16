@@ -49,11 +49,60 @@ use super::Mutator;
 /// This also means, any `Box<dyn DynMutator<>>` can be passed to generic
 /// functions expecting an [`Mutator`], like `fn foo(t: impl Mutator<>);`.
 pub trait DynMutator<G, E = Box<dyn std::error::Error + Send + Sync>> {
+    /// Mutate the given `genome` returning a new genome of the same type (`G`)
+    /// using this typed erased [`Mutator`].
+    ///
+    /// It is recommended to not use this method directly and instead call the
+    /// normal [`Mutator::mutate`] implemented on various container types
+    /// containing `dyn DynMutator<_>`'s.
+    ///
+    /// If you want to call this method directly, make sure to only call it on a
+    /// `&dyn DynMutator<_>` (i.e. dereference a box first) else you will
+    /// introduce another layer of indirection because of the implementations on
+    /// the various container types, and additionally type inference would
+    /// require additional type annotations (this is usually a sign you are
+    /// doing something wrong).
+    ///
+    /// # Example
+    /// ```
+    /// # use rand::{rng, Rng};
+    /// # use ec_core::operator::mutator::{Mutator, DynMutator};
+    /// # use std::convert::Infallible;
+    /// #
+    /// type Genome<T> = [T; 4];
+    /// #
+    /// # struct FlipOne;
+    /// #
+    /// # impl Mutator<Genome<bool>> for FlipOne {
+    /// #     type Error = Infallible;
+    /// #
+    /// #     fn mutate<R: Rng + ?Sized>(
+    /// #         &self,
+    /// #         mut genome: Genome<bool>,
+    /// #         rng: &mut R,
+    /// #     ) -> Result<Genome<bool>, Self::Error> {
+    /// #         let index = rng.random_range(0..genome.len());
+    /// #         genome[index] = !genome[index];
+    /// #         Ok(genome)
+    /// #     }
+    /// # }
+    ///
+    /// let my_erased_mutator: Box<dyn DynMutator<Genome<bool>>> = Box::new(FlipOne);
+    ///
+    /// let genome = [true, false, false, true];
+    /// let child_genome = (*my_erased_mutator).dyn_mutate(genome, &mut rng()).unwrap();
+    /// # let num_diffs = genome
+    /// #     .iter()
+    /// #     .zip(child_genome.iter()) // Pair up corresponding elements from the two genomes
+    /// #     .filter(|(x, y)| x != y) // Filter out pairs where the elements are the same
+    /// #     .count();
+    /// # assert_eq!(num_diffs, 1);
+    /// ```
+    ///
     /// # Errors
     ///
-    /// This will return an error if there is an error mutating the given
-    /// genome. This will usually be because the given `genome` is invalid in
-    /// some way, thus making the mutation impossible.
+    /// - `Error` if mutating the given `genome` errors, for example because the
+    ///   `genome` is invalid in some way.
     fn dyn_mutate(&self, genome: G, rng: &mut dyn RngCore) -> Result<G, E>;
 }
 
