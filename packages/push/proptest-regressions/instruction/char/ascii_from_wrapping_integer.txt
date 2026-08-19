@@ -1,0 +1,7 @@
+# Seeds for failure cases proptest has generated in the past. It is
+# automatically read and these particular cases re-run before any
+# novel cases are generated.
+#
+# It is recommended to check this file in to source control so that
+# everyone who runs the test benefits from these saved cases.
+cc 11e86b0b0c09c0479f9ff39c31d9d5889ad6ef2b7b3b72a4b7c77bca0241d3ec # shrinks to input = _AsciiFromWrappingIntegerProptestArgs { x: 0 }
