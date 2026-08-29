@@ -47,5 +47,9 @@ mod derive_composable;
 /// ```
 /// up to the generics of the type the derive is on, i.e. it will add the
 /// required generics and trait bounds as needed.
+#[expect(
+    unreachable_code,
+    reason = "It appears that manyhow or clippy has a bug that leads to this warning"
+)]
 #[manyhow::manyhow(proc_macro_derive(Composable))]
 pub use derive_composable::derive_composable;
