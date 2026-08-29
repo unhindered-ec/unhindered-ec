@@ -413,7 +413,7 @@ mod tests {
             *input = input.to_uppercase();
         }
 
-        assert!(cases.inputs().eq(&["THIS", "AND", "THOSE"]));
+        assert!(cases.inputs().eq(["THIS", "AND", "THOSE"]));
         assert!(cases.outputs().eq(&[4, 3, 5]));
     }
 
