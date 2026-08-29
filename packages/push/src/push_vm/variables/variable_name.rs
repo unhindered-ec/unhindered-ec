@@ -1,7 +1,5 @@
 use std::{fmt::Display, sync::Arc};
 
-use super::PushInstruction;
-
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct VariableName(Arc<str>);
 
@@ -14,12 +12,6 @@ impl VariableName {
 impl From<&str> for VariableName {
     fn from(s: &str) -> Self {
         Self(Arc::from(s))
-    }
-}
-
-impl From<VariableName> for PushInstruction {
-    fn from(var_name: VariableName) -> Self {
-        Self::InputVar(var_name)
     }
 }
 
