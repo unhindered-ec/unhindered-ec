@@ -217,7 +217,7 @@ impl<Input, Output> Cases<Input, Output> {
     ///     *input = input.to_uppercase();
     /// }
     ///
-    /// assert!(cases.inputs().eq(&["THIS", "AND", "THOSE"]));
+    /// assert!(cases.inputs().eq(["THIS", "AND", "THOSE"]));
     /// assert!(cases.outputs().eq(&[4, 3, 5]));
     /// ```
     pub fn inputs_mut(&mut self) -> impl Iterator<Item = &mut Input> {
