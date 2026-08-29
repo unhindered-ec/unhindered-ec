@@ -168,7 +168,7 @@ pub fn generate_builder(
                     /// of instructions. The name for the input must have been included
                     /// in the `Inputs` provided when the `Builder` was initially constructed.
                     /// Here you provide the name and the value for that
-                    /// input variable. That will create a new `PushValue::<[type]>()`
+                    /// input variable. That will create a new `PushValue`
                     /// instruction that will push the specified value onto the stack
                     /// when performed.
                     ///

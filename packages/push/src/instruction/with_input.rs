@@ -41,8 +41,8 @@ where
 
     /// # Errors
     ///
-    /// This returns an error if the `PushInstruction` returns an error,
-    /// which really shouldn't happen.
+    /// This returns an error if performing the input instruction associated
+    /// with this variable returns an error.
     ///
     /// # Panics
     ///

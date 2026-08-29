@@ -68,7 +68,6 @@ impl<S, E> Instruction<S> for Box<dyn Instruction<S, Error = E>> {
 #[derive(Clone, Eq, PartialEq, Debug)]
 #[non_exhaustive]
 pub enum PushInstruction {
-    // InputVar(VariableName),
     WithInput(WithInputInstruction),
     Exec(ExecInstruction),
     BoolInstruction(BoolInstruction),
