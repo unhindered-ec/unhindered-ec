@@ -1,22 +1,23 @@
 use ordered_float::OrderedFloat;
 use printing::{PrintNewline, PrintPeriod, PrintSpace, PrintString};
 
+use self::instruction_error::PushInstructionError;
 pub use self::{
     bool::BoolInstruction,
     exec::ExecInstruction,
     float::FloatInstruction,
     int::{IntInstruction, IntInstructionError},
 };
-use self::{instruction_error::PushInstructionError, variable_name::VariableName};
 use crate::{
     error::{InstructionResult, MapInstructionError},
-    push_vm::push_state::PushState,
+    instruction::{printing::PrintChar, with_input::WithInputInstruction},
 };
 
 pub mod common;
+pub mod constant_expression;
 pub mod instruction_error;
 pub mod printing;
-pub mod variable_name;
+pub mod with_input;
 
 mod bool;
 mod exec;
@@ -67,7 +68,8 @@ impl<S, E> Instruction<S> for Box<dyn Instruction<S, Error = E>> {
 #[derive(Clone, Eq, PartialEq, Debug)]
 #[non_exhaustive]
 pub enum PushInstruction {
-    InputVar(VariableName),
+    // InputVar(VariableName),
+    WithInput(WithInputInstruction),
     Exec(ExecInstruction),
     BoolInstruction(BoolInstruction),
     IntInstruction(IntInstruction),
@@ -100,20 +102,33 @@ impl PushInstruction {
     }
 }
 
-impl Instruction<PushState> for PushInstruction {
+impl<S> Instruction<S> for PushInstruction
+where
+    S: Clone,
+    WithInputInstruction: Instruction<S, Error: Into<PushInstructionError>>,
+    ExecInstruction: Instruction<S, Error: Into<PushInstructionError>>,
+    BoolInstruction: Instruction<S, Error: Into<PushInstructionError>>,
+    IntInstruction: Instruction<S, Error: Into<PushInstructionError>>,
+    FloatInstruction: Instruction<S, Error: Into<PushInstructionError>>,
+    PrintString: Instruction<S, Error: Into<PushInstructionError>>,
+    PrintChar<' '>: Instruction<S, Error: Into<PushInstructionError>>,
+    PrintChar<'\n'>: Instruction<S, Error: Into<PushInstructionError>>,
+    PrintChar<'.'>: Instruction<S, Error: Into<PushInstructionError>>,
+{
     type Error = PushInstructionError;
 
-    fn perform(&self, state: PushState) -> InstructionResult<PushState, Self::Error> {
+    fn perform(&self, state: S) -> InstructionResult<S, Self::Error> {
         match self {
-            Self::InputVar(var_name) => {
-                // TODO: Should `push_input` return the new state?
-                // Or add a `with_input` that returns the new state and keep `push_input`?
-                state.with_input(var_name)
-            }
-            Self::Exec(i) => i.perform(state),
-            Self::BoolInstruction(i) => i.perform(state),
-            Self::IntInstruction(i) => i.perform(state),
-            Self::FloatInstruction(i) => i.perform(state),
+            // Self::InputVar(var_name) => {
+            //     // TODO: Should `push_input` return the new state?
+            //     // Or add a `with_input` that returns the new state and keep `push_input`?
+            //     state.with_input(var_name)
+            // }
+            Self::WithInput(i) => i.perform(state).map_err_into(),
+            Self::Exec(i) => i.perform(state).map_err_into(),
+            Self::BoolInstruction(i) => i.perform(state).map_err_into(),
+            Self::IntInstruction(i) => i.perform(state).map_err_into(),
+            Self::FloatInstruction(i) => i.perform(state).map_err_into(),
             Self::PrintString(i) => i.perform(state).map_err_into(),
             Self::PrintSpace(i) => i.perform(state).map_err_into(),
             Self::PrintNewline(i) => i.perform(state).map_err_into(),
@@ -121,6 +136,36 @@ impl Instruction<PushState> for PushInstruction {
         }
     }
 }
+
+// impl<S> Instruction<S> for PushInstruction
+// where
+//     S: Clone
+//         + HasStack<bool>
+//         + HasStack<i64>
+//         + HasStack<OrderedFloat<f64>>
+//         + HasStack<PushProgram>
+//         + HasStdout,
+// {
+//     type Error = PushInstructionError;
+
+//     fn perform(&self, state: S) -> InstructionResult<S, Self::Error> {
+//         match self {
+//             Self::InputVar(var_name) => {
+//                 // TODO: Should `push_input` return the new state?
+//                 // Or add a `with_input` that returns the new state and keep
+// `push_input`?                 state.with_input(var_name)
+//             }
+//             Self::Exec(i) => i.perform(state),
+//             Self::BoolInstruction(i) => i.perform(state),
+//             Self::IntInstruction(i) => i.perform(state),
+//             Self::FloatInstruction(i) => i.perform(state),
+//             Self::PrintString(i) => i.perform(state).map_err_into(),
+//             Self::PrintSpace(i) => i.perform(state).map_err_into(),
+//             Self::PrintNewline(i) => i.perform(state).map_err_into(),
+//             Self::PrintPeriod(i) => i.perform(state).map_err_into(),
+//         }
+//     }
+// }
 
 pub trait NumOpens {
     fn num_opens(&self) -> usize {
@@ -142,7 +187,7 @@ impl NumOpens for PushInstruction {
 impl std::fmt::Display for PushInstruction {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::InputVar(instruction) => write!(f, "{instruction}"),
+            Self::WithInput(instruction) => write!(f, "{instruction}"),
             Self::Exec(instruction) => write!(f, "Exec-{instruction}"),
             Self::BoolInstruction(instruction) => write!(f, "Bool-{instruction}"),
             Self::IntInstruction(instruction) => write!(f, "Int-{instruction}"),

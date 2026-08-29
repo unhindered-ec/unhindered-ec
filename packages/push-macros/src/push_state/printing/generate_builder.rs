@@ -158,9 +158,7 @@ pub fn generate_builder(
                     .unraw()
                     .to_snake_case();
                 let instruction_path = instruction_name.as_ref().cloned().unwrap_or_else(|| {
-                    let instruction_fn_name =
-                        derived_ident!("push_", field.unraw().to_snake_case());
-                    syn::parse_quote!(::push::instruction::PushInstruction::#instruction_fn_name)
+                    syn::parse_quote!(::push::instruction::common::PushValue::<<#ty as ::push::push_vm::stack::StackType>::Type>)
                 });
 
                 let fn_ident = derived_ident!("with_", stack_ident, "_input");
@@ -169,8 +167,8 @@ pub fn generate_builder(
                     /// Adds a input instruction to the current current state's set
                     /// of instructions. The name for the input must have been included
                     /// in the `Inputs` provided when the `Builder` was initially constructed.
-                    /// Here you provide the name and the boolean value for that
-                    /// input variable. That will create a new `PushInstruction::push_[type]()`
+                    /// Here you provide the name and the value for that
+                    /// input variable. That will create a new `PushValue::<[type]>()`
                     /// instruction that will push the specified value onto the stack
                     /// when performed.
                     ///
@@ -184,8 +182,8 @@ pub fn generate_builder(
                             input_value: <#ty as ::push::push_vm::stack::StackType>::Type
                     ) -> Self {
                         self.partial_state.#input_instructions_field.insert(
-                            ::push::instruction::variable_name::VariableName::from(input_name),
-                            #instruction_path(input_value),
+                            ::push::push_vm::variables::VariableName::from(input_name),
+                            #instruction_path(input_value).into(),
                         );
                         self
                     }

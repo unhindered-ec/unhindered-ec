@@ -255,7 +255,7 @@ mod test {
 
     use super::*;
     use crate::{
-        instruction::{BoolInstruction, IntInstruction, variable_name::VariableName},
+        instruction::{BoolInstruction, IntInstruction, with_input::WithInputInstruction},
         list_into::vec_into,
     };
 
@@ -281,7 +281,8 @@ mod test {
     fn umad() {
         let mut rng = rng();
 
-        let instruction_options = uniform_distribution_of![<PushGene> VariableName::from("x")];
+        let instruction_options =
+            uniform_distribution_of![<PushGene> WithInputInstruction::from("x")];
 
         let umad = Umad::new(0.3, 0.3, instruction_options);
 
@@ -316,7 +317,7 @@ mod test {
             .unwrap()
             .genes
             .iter()
-            .filter(|c| matches!(c, PushGene::Instruction(PushInstruction::InputVar(v)) if v == &VariableName::from("x")))
+            .filter(|c| matches!(c, PushGene::Instruction(PushInstruction::WithInput(v)) if v == &WithInputInstruction::from("x")))
             .count();
         assert!(
             num_inputs > 0,

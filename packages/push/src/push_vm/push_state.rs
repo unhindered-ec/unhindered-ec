@@ -4,12 +4,16 @@ pub use ordered_float::OrderedFloat;
 
 use super::push_io::HasStdout;
 use crate::{
-    error::{InstructionResult, stateful::FatalError, try_recover::TryRecover},
+    error::{stateful::FatalError, try_recover::TryRecover},
     instruction::{
-        Instruction, PushInstruction, instruction_error::PushInstructionError,
-        variable_name::VariableName,
+        constant_expression::ConstantExpression, instruction_error::PushInstructionError,
     },
-    push_vm::{State, program::PushProgram, stack::Stack},
+    push_vm::{
+        State,
+        program::PushProgram,
+        stack::Stack,
+        variables::{HasInputs, VariableName},
+    },
 };
 
 // TODO: It might make sense to separate out the specification of
@@ -38,7 +42,7 @@ pub struct PushState {
     // because the execution of long programs swamps the cost of
     // initialization of `PushState`.
     #[input_instructions]
-    pub(super) input_instructions: HashMap<VariableName, PushInstruction>,
+    pub(super) input_instructions: HashMap<VariableName, ConstantExpression>,
 
     /// Used to represent the standard output used by an evolved
     /// program when "printing".
@@ -49,55 +53,6 @@ pub struct PushState {
 }
 
 impl PushState {
-    // /// # Panics
-    // ///
-    // /// This panics if we try to access a variable whose `var_index` isn't in the
-    // /// variable map.
-    // pub fn push_input(&mut self, var_name: &VariableName) {
-    //     let instruction = self
-    //         .input_instructions
-    //         .iter()
-    //         .find_map(|(n, v)| if n == var_name { Some(v) } else { None })
-    //         .unwrap_or_else(|| panic!(
-    //              "Failed to get an instruction for the input \
-    //               variable '{var_name}' that hadn't been defined"
-    //         ))
-    //         .clone();
-    //     instruction.perform(self);
-    // }
-
-    /// # Errors
-    ///
-    /// This returns an error if the `PushInstruction` returns an error,
-    /// which really shouldn't happen.
-    ///
-    /// # Panics
-    ///
-    /// This panics if there is no instruction associated with `var_name`, i.e.,
-    /// we have not yet added that variable name to the map of names to
-    /// instructions.
-    pub fn with_input(
-        self,
-        var_name: &VariableName,
-    ) -> InstructionResult<Self, <PushInstruction as Instruction<Self>>::Error> {
-        #[expect(
-            clippy::panic,
-            reason = "This is legacy and arguably should be changed. Tracked in #172"
-        )]
-        let instruction = self
-            .input_instructions
-            .iter()
-            .find_map(|(n, v)| (n == var_name).then_some(v))
-            .unwrap_or_else(|| {
-                panic!(
-                    "Failed to get an instruction for the input variable '{var_name}' that hadn't \
-                     been defined"
-                )
-            })
-            .clone();
-        instruction.perform(self)
-    }
-
     #[must_use]
     pub const fn max_instruction_steps(&self) -> usize {
         self.max_instruction_steps
@@ -146,6 +101,14 @@ impl State for PushState {
     }
 }
 
+impl HasInputs for PushState {
+    type InputInstruction = ConstantExpression;
+
+    fn get_input_instruction(&self, var_name: &VariableName) -> Option<Self::InputInstruction> {
+        self.input_instructions.get(var_name).cloned()
+    }
+}
+
 impl HasStdout for PushState {
     type Stdout = Cursor<Vec<u8>>;
 
@@ -163,7 +126,7 @@ mod tests {
         genome::plushy::{Plushy, PushGene},
         instruction::{
             BoolInstruction, FloatInstruction, IntInstruction, PushInstruction,
-            variable_name::VariableName,
+            with_input::WithInputInstruction,
         },
         list_into::vec_into,
         push_vm::{program::PushProgram, push_state::PushState},
@@ -184,22 +147,22 @@ mod tests {
         }
 
         let genes: Vec<PushGene> = vec_into![
-            VariableName::from("x"),    // [5]
-            VariableName::from("y"),    // [8, 5]
-            push_bool(true),            // [true]
-            VariableName::from("a"),    // [true, true]
-            push_int(9),                // [9, 8, 5]
-            BoolInstruction::Or,        // [true]
-            IntInstruction::Add,        // [17, 5]
-            push_int(6),                // [6, 17, 5]
-            IntInstruction::IsEven,     // [17, 5], [true, true]
-            BoolInstruction::And,       // [true]
-            VariableName::from("b"),    // [false, true]
-            push_float(3.5),            // [3.5]
-            FloatInstruction::dup(),    // [3.5, 3.5]
-            FloatInstruction::Multiply, // [12.25]
-            VariableName::from("f"),    // [12.25, 0.75]
-            FloatInstruction::Add,      // [13.0]
+            WithInputInstruction::from("x"), // [5]
+            WithInputInstruction::from("y"), // [8, 5]
+            push_bool(true),                 // [true]
+            WithInputInstruction::from("a"), // [true, true]
+            push_int(9),                     // [9, 8, 5]
+            BoolInstruction::Or,             // [true]
+            IntInstruction::Add,             // [17, 5]
+            push_int(6),                     // [6, 17, 5]
+            IntInstruction::IsEven,          // [17, 5], [true, true]
+            BoolInstruction::And,            // [true]
+            WithInputInstruction::from("b"), // [false, true]
+            push_float(3.5),                 // [3.5]
+            FloatInstruction::dup(),         // [3.5, 3.5]
+            FloatInstruction::Multiply,      // [12.25]
+            WithInputInstruction::from("f"), // [12.25, 0.75]
+            FloatInstruction::Add,           // [13.0]
         ];
 
         let plushy = Plushy::new(genes);
@@ -240,22 +203,22 @@ mod tests {
         }
 
         let genes: Vec<PushGene> = vec_into![
-            VariableName::from("x"),    // [5]
-            VariableName::from("y"),    // [8, 5]
-            push_bool(true),            // [true]
-            VariableName::from("a"),    // [true, true]
-            push_int(9),                // [9, 8, 5]
-            BoolInstruction::Or,        // [true]
-            IntInstruction::Add,        // [17, 5]
-            push_int(6),                // [6, 17, 5]
-            IntInstruction::IsEven,     // [17, 5], [true, true]
-            BoolInstruction::And,       // [true]
-            VariableName::from("b"),    // [false, true]
-            push_float(3.5),            // [3.5]
-            FloatInstruction::dup(),    // [3.5, 3.5]
-            FloatInstruction::Multiply, // [12.25]
-            VariableName::from("f"),    // [12.25, 0.75]
-            FloatInstruction::Add,      // [13.0]
+            WithInputInstruction::from("x"), // [5]
+            WithInputInstruction::from("y"), // [8, 5]
+            push_bool(true),                 // [true]
+            WithInputInstruction::from("a"), // [true, true]
+            push_int(9),                     // [9, 8, 5]
+            BoolInstruction::Or,             // [true]
+            IntInstruction::Add,             // [17, 5]
+            push_int(6),                     // [6, 17, 5]
+            IntInstruction::IsEven,          // [17, 5], [true, true]
+            BoolInstruction::And,            // [true]
+            WithInputInstruction::from("b"), // [false, true]
+            push_float(3.5),                 // [3.5]
+            FloatInstruction::dup(),         // [3.5, 3.5]
+            FloatInstruction::Multiply,      // [12.25]
+            WithInputInstruction::from("f"), // [12.25, 0.75]
+            FloatInstruction::Add,           // [13.0]
         ];
 
         let plushy = Plushy::new(genes);

@@ -7,6 +7,7 @@ pub mod program;
 pub mod push_io;
 pub mod push_state;
 pub mod stack;
+pub mod variables;
 
 pub use self::stack::HasStack;
 
