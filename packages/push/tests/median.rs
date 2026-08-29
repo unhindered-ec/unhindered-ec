@@ -18,8 +18,7 @@ use push::{
     arr_into,
     genome::plushy::Plushy,
     instruction::{
-        BoolInstruction, ExecInstruction, IntInstruction, PushInstruction::InputVar,
-        variable_name::VariableName,
+        BoolInstruction, ExecInstruction, IntInstruction, with_input::WithInputInstruction,
     },
     push_vm::{HasStack, State, program::PushProgram, push_state::PushState},
 };
@@ -61,9 +60,9 @@ fn repaired_median(a: i64, b: i64, c: i64) {
 // `Int-Dup` as a new fourth instructions.
 fn build_working_median() -> Vec<PushProgram> {
     // Create an instance of our target program
-    let a = InputVar(VariableName::new("a"));
-    let b = InputVar(VariableName::new("b"));
-    let c = InputVar(VariableName::new("c"));
+    let b = WithInputInstruction::from("b");
+    let c = WithInputInstruction::from("c");
+    let a = WithInputInstruction::from("a");
     let genes = arr_into![
         IntInstruction::multiply(),
         c.clone(),
@@ -117,9 +116,9 @@ fn median(a: i64, b: i64, c: i64) {
 // fixing the comparison instructions.
 fn re_evolved_median() -> Vec<PushProgram> {
     // Create an instance of our target program
-    let a = InputVar(VariableName::new("a"));
-    let b = InputVar(VariableName::new("b"));
-    let c = InputVar(VariableName::new("c"));
+    let a = WithInputInstruction::from("a");
+    let b = WithInputInstruction::from("b");
+    let c = WithInputInstruction::from("c");
     let genes = arr_into![
         b.clone(),
         a.clone(),

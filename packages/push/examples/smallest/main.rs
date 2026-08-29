@@ -21,7 +21,7 @@ use push::{
     genome::plushy::{GeneGenerator, Plushy},
     instruction::{
         BoolInstruction, ExecInstruction, IntInstruction, PushInstruction,
-        variable_name::VariableName,
+        with_input::WithInputInstruction,
     },
     push_vm::{HasStack, State, program::PushProgram, push_state::PushState, stack::StackError},
 };
@@ -219,7 +219,7 @@ fn instructions() -> impl Iterator<Item = PushInstruction> {
 
     let variables = ["a", "b", "c", "d"]
         .into_iter()
-        .map(VariableName::from)
+        .map(WithInputInstruction::from)
         .map(Into::into);
 
     int_instructions

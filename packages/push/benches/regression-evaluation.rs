@@ -11,7 +11,7 @@ use criterion::{Criterion, criterion_group, criterion_main};
 use ordered_float::OrderedFloat;
 use push::{
     genome::plushy::{Plushy, PushGene},
-    instruction::{FloatInstruction, PushInstruction},
+    instruction::{FloatInstruction, with_input::WithInputInstruction},
     push_vm::{HasStack, State, program::PushProgram, push_state::PushState},
     vec_into,
 };
@@ -21,7 +21,7 @@ use push::{
 #[must_use]
 pub fn sample_genome() -> Plushy {
     let genome = vec_into![
-        PushInstruction::InputVar("x".into()),
+        WithInputInstruction::from("x"),
         FloatInstruction::dup(),
         FloatInstruction::ProtectedDivide,
         FloatInstruction::dup(),
@@ -29,10 +29,10 @@ pub fn sample_genome() -> Plushy {
         PushGene::Close,
         FloatInstruction::Add,
         FloatInstruction::Add,
-        PushInstruction::InputVar("x".into()),
+        WithInputInstruction::from("x"),
         FloatInstruction::dup(),
         FloatInstruction::Multiply,
-        PushInstruction::InputVar("x".into()),
+        WithInputInstruction::from("x"),
         PushGene::Close,
         FloatInstruction::Multiply,
         FloatInstruction::push(1.0),

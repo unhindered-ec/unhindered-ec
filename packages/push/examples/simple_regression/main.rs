@@ -31,7 +31,7 @@ use ordered_float::OrderedFloat;
 use push::{
     evaluation::{Case, Cases, WithTargetFn},
     genome::plushy::{ConvertToGeneGenerator, Plushy},
-    instruction::{FloatInstruction, PushInstruction, variable_name::VariableName},
+    instruction::{FloatInstruction, PushInstruction, with_input::WithInputInstruction},
     push_vm::{HasStack, State, program::PushProgram, push_state::PushState},
 };
 use rand::{distr::Distribution, rng};
@@ -141,7 +141,7 @@ fn main() -> miette::Result<()> {
         FloatInstruction::Subtract,
         FloatInstruction::Multiply,
         FloatInstruction::ProtectedDivide,
-        VariableName::from("x")
+        WithInputInstruction::from("x")
     ]
     .into_gene_generator();
 

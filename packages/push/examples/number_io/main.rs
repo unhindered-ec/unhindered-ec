@@ -22,7 +22,9 @@ use ordered_float::OrderedFloat;
 use push::{
     evaluation::{Case, Cases, WithTargetFn},
     genome::plushy::{GeneGenerator, Plushy},
-    instruction::{FloatInstruction, IntInstruction, PushInstruction, variable_name::VariableName},
+    instruction::{
+        FloatInstruction, IntInstruction, PushInstruction, with_input::WithInputInstruction,
+    },
     push_vm::{State, program::PushProgram, push_state::PushState, stack::StackError},
 };
 use rand::{
@@ -244,7 +246,7 @@ fn instructions() -> impl Iterator<Item = PushInstruction> {
 
     let variables = ["i", "f"]
         .into_iter()
-        .map(VariableName::from)
+        .map(WithInputInstruction::from)
         .map(Into::into);
 
     int_instructions.chain(float_instruction).chain(variables)
