@@ -1,8 +1,10 @@
 use std::fmt::Display;
 
+use miette::Diagnostic;
+
 use crate::{
-    error::InstructionResult,
-    instruction::{Instruction, PushInstruction},
+    error::{Error, InstructionResult, MapInstructionError},
+    instruction::{Instruction, PushInstruction, instruction_error::PushInstructionError},
     push_vm::variables::{HasInputs, VariableName},
 };
 
@@ -33,11 +35,97 @@ impl From<WithInputInstruction> for PushInstruction {
     }
 }
 
+#[derive(thiserror::Error, Debug, Clone, Eq, PartialEq, Ord, PartialOrd, Diagnostic)]
+#[error("Attempt to lookup unknown variable \"{0}\"")]
+#[diagnostic(help = "Make sure you assign a value to \"{0}\" when you set up your state")]
+pub struct UnknownVariableError(pub VariableName);
+
+#[derive(thiserror::Error, Debug, Clone, Eq, PartialEq, PartialOrd, Ord)]
+pub enum WithInputInstructionError<T> {
+    #[error(transparent)]
+    Instruction(T),
+    #[error(transparent)]
+    UnknownVariable(#[from] UnknownVariableError),
+}
+
+impl<T> Diagnostic for WithInputInstructionError<T>
+where
+    T: Diagnostic,
+{
+    fn code<'a>(&'a self) -> Option<Box<dyn Display + 'a>> {
+        match self {
+            Self::Instruction(e) => e.code(),
+            Self::UnknownVariable(e) => e.code(),
+        }
+    }
+
+    fn severity(&self) -> Option<miette::Severity> {
+        match self {
+            Self::Instruction(e) => e.severity(),
+            Self::UnknownVariable(e) => e.severity(),
+        }
+    }
+
+    fn help<'a>(&'a self) -> Option<Box<dyn Display + 'a>> {
+        match self {
+            Self::Instruction(e) => e.help(),
+            Self::UnknownVariable(e) => e.help(),
+        }
+    }
+
+    fn url<'a>(&'a self) -> Option<Box<dyn Display + 'a>> {
+        match self {
+            Self::Instruction(e) => e.url(),
+            Self::UnknownVariable(e) => e.url(),
+        }
+    }
+
+    fn source_code(&self) -> Option<&dyn miette::SourceCode> {
+        match self {
+            Self::Instruction(e) => e.source_code(),
+            Self::UnknownVariable(e) => e.source_code(),
+        }
+    }
+
+    fn labels(&self) -> Option<Box<dyn Iterator<Item = miette::LabeledSpan> + '_>> {
+        match self {
+            Self::Instruction(e) => e.labels(),
+            Self::UnknownVariable(e) => e.labels(),
+        }
+    }
+
+    fn related<'a>(&'a self) -> Option<Box<dyn Iterator<Item = &'a dyn Diagnostic> + 'a>> {
+        match self {
+            Self::Instruction(e) => e.related(),
+            Self::UnknownVariable(e) => e.related(),
+        }
+    }
+
+    fn diagnostic_source(&self) -> Option<&dyn Diagnostic> {
+        match self {
+            Self::Instruction(e) => e.diagnostic_source(),
+            Self::UnknownVariable(e) => e.diagnostic_source(),
+        }
+    }
+}
+
+impl<T> From<WithInputInstructionError<T>> for PushInstructionError
+where
+    T: Into<Self>,
+{
+    fn from(err: WithInputInstructionError<T>) -> Self {
+        match err {
+            WithInputInstructionError::Instruction(i) => i.into(),
+            WithInputInstructionError::UnknownVariable(v) => v.into(),
+        }
+    }
+}
+
 impl<S> Instruction<S> for WithInputInstruction
 where
     S: HasInputs,
 {
-    type Error = <S::InputInstruction as Instruction<S>>::Error;
+    type Error = WithInputInstructionError<<S::InputInstruction as Instruction<S>>::Error>;
 
     /// # Errors
     ///
@@ -50,17 +138,12 @@ where
     /// we have not yet added that variable name to the map of names to
     /// instructions.
     fn perform(&self, state: S) -> InstructionResult<S, Self::Error> {
-        #[expect(
-            clippy::panic,
-            reason = "This is legacy and arguably should be changed. Tracked in #172"
-        )]
-        let instruction = state.get_input_instruction(&self.0).unwrap_or_else(|| {
-            panic!(
-                "Failed to get an instruction for the input variable '{var_name}' that hadn't \
-                 been defined",
-                var_name = self.0
-            )
-        });
-        instruction.perform(state)
+        let Some(instruction) = state.get_input_instruction(&self.0) else {
+            return Err(Error::fatal(state, UnknownVariableError(self.0.clone())));
+        };
+
+        instruction
+            .perform(state)
+            .map_inner_err(WithInputInstructionError::Instruction)
     }
 }
