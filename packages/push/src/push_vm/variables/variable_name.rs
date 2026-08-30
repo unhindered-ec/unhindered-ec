@@ -1,6 +1,6 @@
 use std::{fmt::Display, sync::Arc};
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct VariableName(Arc<str>);
 
 impl VariableName {
@@ -22,7 +22,7 @@ impl Display for VariableName {
 }
 
 #[cfg(test)]
-pub(crate) mod variable_name_test {
+mod tests {
     use std::collections::HashMap;
 
     use super::*;
