@@ -4,7 +4,7 @@ use super::{
     IntInstructionError,
     printing::{AppendStdoutError, PrintingError},
 };
-use crate::{instruction::with_input::UnknownVariableError, push_vm::stack::StackError};
+use crate::push_vm::{stack::StackError, variables::UnknownVariableError};
 
 /// An error that can occur when performing a `PushInstruction`.
 #[derive(thiserror::Error, Debug, Eq, PartialEq, Diagnostic)]
