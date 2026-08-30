@@ -27,7 +27,18 @@ pub trait MapInstructionError<S, E> {
     /// # Errors
     ///
     /// This always returns an error type.
-    fn map_err_into(self) -> InstructionResult<S, E>;
+    fn map_err_into<E2>(self) -> InstructionResult<S, E2>
+    where
+        Self: Sized,
+        E: Into<E2>;
+
+    ///
+    /// # Errors
+    ///
+    /// This always returns an error type.
+    fn map_inner_err<E2>(self, f: impl FnOnce(E) -> E2) -> InstructionResult<S, E2>
+    where
+        Self: Sized;
 }
 
 static_assertions::assert_obj_safe!(MapInstructionError<(),()>);
@@ -37,12 +48,20 @@ static_assertions::assert_obj_safe!(MapInstructionError<(),()>);
 // some additional flexibility, although it wasn't clear that we would use it.
 // The current approach (suggested by esitsu@Twitch) simplified the
 // `MapInstructionError` trait in a nice way, so I went with that.
-impl<S, E1, E2> MapInstructionError<S, E2> for InstructionResult<S, E1>
-where
-    E1: Into<E2>,
-{
-    fn map_err_into(self) -> InstructionResult<S, E2> {
-        self.map_err(|e| e.map_inner_err(Into::into))
+impl<S, E1> MapInstructionError<S, E1> for InstructionResult<S, E1> {
+    fn map_err_into<E2>(self) -> InstructionResult<S, E2>
+    where
+        Self: Sized,
+        E1: Into<E2>,
+    {
+        self.map_inner_err(Into::into)
+    }
+
+    fn map_inner_err<E2>(self, f: impl FnOnce(E1) -> E2) -> InstructionResult<S, E2>
+    where
+        Self: Sized,
+    {
+        self.map_err(|e| e.map_inner_err(f))
     }
 }
 
