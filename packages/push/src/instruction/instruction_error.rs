@@ -4,7 +4,7 @@ use super::{
     IntInstructionError,
     printing::{AppendStdoutError, PrintingError},
 };
-use crate::push_vm::stack::StackError;
+use crate::{instruction::with_input::UnknownVariableError, push_vm::stack::StackError};
 
 /// An error that can occur when performing a `PushInstruction`.
 #[derive(thiserror::Error, Debug, Eq, PartialEq, Diagnostic)]
@@ -25,6 +25,7 @@ pub enum PushInstructionError {
                 an infinite (or very large) loop may have occurred."
     )]
     StepLimitExceeded { step_limit: usize },
+
     /// Int errors can be things like integer overflows.
     #[error(transparent)]
     Int(
@@ -38,6 +39,13 @@ pub enum PushInstructionError {
         #[from]
         #[diagnostic_source]
         PrintingError,
+    ),
+
+    #[error(transparent)]
+    UnknownVariable(
+        #[from]
+        #[diagnostic_source]
+        UnknownVariableError,
     ),
 }
 
