@@ -387,9 +387,9 @@ dependencies = [
 
 [[package]]
 name = "easy-cast"
-version = "0.7.0"
+version = "0.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "85f4fc4468140ad011d3048dd1dcdf2bce2d1e0f0ef2d39236893ab14b5888ce"
+checksum = "eae1c5aaf1bfdc24a9b5bf6daf3afee62c478afe08706a6bd9fd996f73630494"
 
 [[package]]
 name = "ec-core"
