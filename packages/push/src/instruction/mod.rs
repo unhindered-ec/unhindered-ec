@@ -118,11 +118,6 @@ where
 
     fn perform(&self, state: S) -> InstructionResult<S, Self::Error> {
         match self {
-            // Self::InputVar(var_name) => {
-            //     // TODO: Should `push_input` return the new state?
-            //     // Or add a `with_input` that returns the new state and keep `push_input`?
-            //     state.with_input(var_name)
-            // }
             Self::WithInput(i) => i.perform(state).map_err_into(),
             Self::Exec(i) => i.perform(state).map_err_into(),
             Self::BoolInstruction(i) => i.perform(state).map_err_into(),
@@ -135,36 +130,6 @@ where
         }
     }
 }
-
-// impl<S> Instruction<S> for PushInstruction
-// where
-//     S: Clone
-//         + HasStack<bool>
-//         + HasStack<i64>
-//         + HasStack<OrderedFloat<f64>>
-//         + HasStack<PushProgram>
-//         + HasStdout,
-// {
-//     type Error = PushInstructionError;
-
-//     fn perform(&self, state: S) -> InstructionResult<S, Self::Error> {
-//         match self {
-//             Self::InputVar(var_name) => {
-//                 // TODO: Should `push_input` return the new state?
-//                 // Or add a `with_input` that returns the new state and keep
-// `push_input`?                 state.with_input(var_name)
-//             }
-//             Self::Exec(i) => i.perform(state),
-//             Self::BoolInstruction(i) => i.perform(state),
-//             Self::IntInstruction(i) => i.perform(state),
-//             Self::FloatInstruction(i) => i.perform(state),
-//             Self::PrintString(i) => i.perform(state).map_err_into(),
-//             Self::PrintSpace(i) => i.perform(state).map_err_into(),
-//             Self::PrintNewline(i) => i.perform(state).map_err_into(),
-//             Self::PrintPeriod(i) => i.perform(state).map_err_into(),
-//         }
-//     }
-// }
 
 pub trait NumOpens {
     fn num_opens(&self) -> usize {
@@ -186,7 +151,7 @@ impl NumOpens for PushInstruction {
 impl std::fmt::Display for PushInstruction {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::WithInput(instruction) => write!(f, "{instruction}"),
+            Self::WithInput(instruction) => instruction.fmt(f),
             Self::Exec(instruction) => write!(f, "Exec-{instruction}"),
             Self::BoolInstruction(instruction) => write!(f, "Bool-{instruction}"),
             Self::IntInstruction(instruction) => write!(f, "Int-{instruction}"),
