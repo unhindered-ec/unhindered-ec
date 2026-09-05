@@ -59,3 +59,58 @@ where
             .map_inner_err(WithInputInstructionError::Instruction)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use std::assert_matches;
+
+    use crate::{
+        error::Error,
+        instruction::{
+            Instruction,
+            with_input::{WithInputInstruction, WithInputInstructionError},
+        },
+        push_vm::{
+            push_state::PushState,
+            variables::{UnknownVariableError, VariableName},
+        },
+    };
+
+    #[test]
+    fn variable_exists() {
+        let s: PushState = PushState::builder()
+            .with_max_stack_size(1)
+            .with_no_program()
+            .with_instruction_step_limit(1)
+            .with_int_input("x", 7)
+            .build();
+
+        let i = WithInputInstruction::from("x");
+        // This will fail if the instruct fails (which it shouldn't).
+        let new_state = i.perform(s).unwrap();
+        assert_matches!(new_state.int.top(), Ok(&7));
+        assert_eq!(1, new_state.int.size());
+    }
+
+    #[test]
+    fn unknown_variable() {
+        let s: PushState = PushState::builder()
+            .with_max_stack_size(1)
+            .with_no_program()
+            .with_instruction_step_limit(1)
+            .build();
+
+        let i = WithInputInstruction::from("x");
+        // This should fail, returning a fatal `UnknownVariableError`.
+        let error = i.perform(s.clone()).unwrap_err();
+        assert_eq!(
+            error,
+            Error::fatal(
+                s,
+                WithInputInstructionError::UnknownVariable(UnknownVariableError(
+                    VariableName::from("x")
+                ))
+            )
+        );
+    }
+}
