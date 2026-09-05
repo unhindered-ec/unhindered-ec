@@ -8,7 +8,7 @@ pub mod into_state;
 pub mod stateful;
 pub mod try_recover;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum Error<S, E> {
     Recoverable(RecoverableError<S, E>),
     Fatal(FatalError<S, E>),

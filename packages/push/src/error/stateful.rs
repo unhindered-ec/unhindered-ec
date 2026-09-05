@@ -14,15 +14,15 @@ pub trait ErrorSeverity: private::SealedMarker {}
 
 static_assertions::assert_obj_safe!(ErrorSeverity);
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub struct Fatal;
 impl ErrorSeverity for Fatal {}
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub struct Recoverable;
 impl ErrorSeverity for Recoverable {}
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub struct StatefulError<S, E, Severity: ErrorSeverity> {
     // Without the `Box` the size of this Error ended up being 156 bytes
     // with a `PushState` and a `PushInstructionError`. That led to a Clippy
