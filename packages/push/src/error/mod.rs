@@ -23,20 +23,32 @@ pub type InstructionResult<S, E> = core::result::Result<S, Error<S, E>>;
 /// the inner error types of an `InstructionResult`, preserving
 /// the other fields in `Error`.
 pub trait MapInstructionError<S, E> {
+    /// Maps an `InstructionResult<T, E>` to `InstructionResult<T, F>` by
+    /// applying `into` to a contained `Err` value, leaving an `Ok` value
+    /// untouched.
+    ///
+    /// This function can be used to pass through a successful result while
+    /// handling an error.
     ///
     /// # Errors
     ///
     /// This always returns an error type.
-    fn map_err_into<E2>(self) -> InstructionResult<S, E2>
+    fn map_err_into<F>(self) -> InstructionResult<S, F>
     where
         Self: Sized,
-        E: Into<E2>;
+        E: Into<F>;
 
+    /// Maps an `InstructionResult<T, E>` to `InstructionResult<T, F>` by
+    /// applying a function to a contained `Err` value, leaving an `Ok` value
+    /// untouched.
+    ///
+    /// This function can be used to pass through a successful result while
+    /// handling an error.
     ///
     /// # Errors
     ///
     /// This always returns an error type.
-    fn map_inner_err<E2>(self, f: impl FnOnce(E) -> E2) -> InstructionResult<S, E2>
+    fn map_inner_err<F>(self, f: impl FnOnce(E) -> F) -> InstructionResult<S, F>
     where
         Self: Sized;
 }

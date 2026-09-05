@@ -104,6 +104,10 @@ impl State for PushState {
 impl HasInputs for PushState {
     type InputInstruction = ConstantExpression;
 
+    /// Get the `InputInstruction` for a given variable name.
+    ///
+    /// This returns `None` if that variable name hasn't been registered in the
+    /// state.
     fn get_input_instruction(&self, var_name: &VariableName) -> Option<Self::InputInstruction> {
         self.input_instructions.get(var_name).cloned()
     }
