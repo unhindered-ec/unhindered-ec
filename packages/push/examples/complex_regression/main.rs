@@ -77,13 +77,16 @@ fn score_program(
 ) -> Of64 {
     let state = build_push_state(program, input);
 
-    let Ok(state) = state.run_to_completion() else {
-        // Do some logging, perhaps?
-        return Of64::from(PENALTY_VALUE);
+    let state = match state.run_to_completion() {
+        Ok(state) => state,
+        Err(error) => {
+            eprintln!("FATAL: {error}\n");
+            return Of64::from(PENALTY_VALUE);
+        }
     };
 
     let Ok(&answer) = state.stack::<Of64>().top() else {
-        // Do some logging, perhaps?
+        eprintln!("INFO: Float stack was empty at end of program evaluation");
         return Of64::from(PENALTY_VALUE);
     };
 
@@ -183,6 +186,7 @@ fn main() -> miette::Result<()> {
         // TODO: Change 2 to be the smallest number of digits needed for
         // max_generations-1.
         println!("Generation {generation_number:2} best is {best}");
+        eprintln!("INFO: Completed generation {generation_number:2}");
 
         if best
             .test_results
