@@ -22,7 +22,7 @@ use ec_core::{
     uniform_distribution_of,
 };
 use ec_linear::mutator::umad::Umad;
-use miette::ensure;
+use miette::{Report, ensure};
 use num_traits::Float;
 use ordered_float::OrderedFloat;
 use push::{
@@ -43,7 +43,7 @@ use crate::args::{CliArgs, RunModel};
 
 // The penalty value to use when an evolved program doesn't have an expected
 // "return" value on the appropriate stack at the end of its execution.
-const PENALTY_VALUE: f64 = 1_000.0;
+const PENALTY_VALUE: f64 = 1_000_000.0;
 
 type Of64 = OrderedFloat<f64>;
 
@@ -63,7 +63,7 @@ fn build_push_state(
                   arguably should check that and return an error here."
     )]
     PushState::builder()
-        .with_max_stack_size(1000)
+        .with_max_stack_size(1_000)
         .with_program(program)
         .unwrap()
         .with_float_input("x", input)
@@ -71,6 +71,10 @@ fn build_push_state(
         .build()
 }
 
+#[expect(
+    clippy::use_debug,
+    reason = "We want to use the pretty miette-based debug formatting here"
+)]
 fn score_program(
     program: impl DoubleEndedIterator<Item = PushProgram> + ExactSizeIterator,
     Case { input, output }: Case<Of64>,
@@ -80,7 +84,7 @@ fn score_program(
     let state = match state.run_to_completion() {
         Ok(state) => state,
         Err(error) => {
-            eprintln!("FATAL: {error}\n");
+            eprintln!("FATAL: {:?}", Report::new(error));
             return Of64::from(PENALTY_VALUE);
         }
     };
