@@ -167,7 +167,10 @@ mod tests {
         assert!(result.is_fatal());
         assert_eq!(
             result.error(),
-            &PushInstructionError::StackError(StackError::Overflow { stack_type: "bool" })
+            &PushInstructionError::StackError(StackError::Overflow {
+                stack_type: "bool",
+                max_size: 1
+            })
         );
     }
 }

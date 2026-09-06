@@ -136,7 +136,10 @@ mod tests {
         assert!(result.is_fatal());
         assert_eq!(
             result.error(),
-            &PushInstructionError::StackError(StackError::Overflow { stack_type: "i64" })
+            &PushInstructionError::StackError(StackError::Overflow {
+                stack_type: "i64",
+                max_size: 0
+            })
         );
     }
 }
