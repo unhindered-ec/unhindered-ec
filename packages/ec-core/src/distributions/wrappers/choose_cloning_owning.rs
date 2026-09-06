@@ -14,6 +14,42 @@ use crate::distributions::finite::Finite;
 ///
 /// Also see [`ChooseCloning`](super::choose_cloning::ChooseCloning) for an
 /// alternative that borrows the collection instead.
+///
+/// # Generics
+///
+/// This distribution needs to validate that it is not empty in the constructor
+/// `new` (or else it would not be a valid [`Distribution`]), as such the
+/// element `U` of the collection `T` needs to be specified at construction
+/// time and is part of this struct's interface.
+///
+/// # Example
+/// ```
+/// # use rand::{rng, distr::{Distribution, slice::Empty}};
+/// # use ec_core::distributions::wrappers::choose_cloning_owning::ChooseCloningOwning;
+/// #
+/// # fn main() -> Result<(), Empty> {
+/// let collection = [
+///     String::from("a"),
+///     String::from("b"),
+///     String::from("c"),
+///     String::from("d"),
+/// ];
+/// //               collection gets moved here    \/
+/// let distribution = ChooseCloningOwning::<[String; 4], String>::new(collection)?;
+/// // as such this is not valid
+/// // let _ = collection
+///
+/// let sample: String = distribution.sample(&mut rng());
+/// assert!(
+///     sample.eq(&String::from("a"))
+///         || sample.eq(&String::from("b"))
+///         || sample.eq(&String::from("c"))
+///         || sample.eq(&String::from("d"))
+/// );
+/// # let _ = sample;
+/// # Ok(())
+/// # }
+/// ```
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 pub struct ChooseCloningOwning<T, U> {
     // It is really important here that the fields `collection`, `range` and `num_choices` are
@@ -26,7 +62,7 @@ pub struct ChooseCloningOwning<T, U> {
     // Currently these fields are *never* modified at all.
     collection: T,
     range: Uniform<usize>,
-    // we store the NonZeroUsize in the struct here, since we need to check this invariant in the
+    // We store the NonZeroUsize in the struct here, since we need to check this invariant in the
     // new anyways. As such it would make little sense to recompute that every time.
     num_choices: NonZeroUsize,
     _p: PhantomData<U>,
@@ -45,9 +81,14 @@ where
     /// # use rand::distr::slice::Empty;
     /// # use ec_core::distributions::wrappers::choose_cloning_owning::ChooseCloningOwning;
     /// #
-    /// let options = [1, 2, 3];
-    /// let distr = ChooseCloningOwning::new(options)?;
-    /// # let _ = distr;
+    /// let collection = [
+    ///     String::from("a"),
+    ///     String::from("b"),
+    ///     String::from("c"),
+    ///     String::from("d"),
+    /// ];
+    /// let distribution = ChooseCloningOwning::<[String; 4], String>::new(collection)?;
+    /// # let _ = distribution;
     /// # Ok::<(), Empty>(())
     ///  ```
     ///
@@ -68,6 +109,27 @@ where
     }
 }
 impl<T, U> Finite for ChooseCloningOwning<T, U> {
+    /// Sample space size / number of choices of this [`ChooseCloningOwning`]
+    /// [`Distribution`].
+    ///
+    /// # Example
+    /// ```
+    /// # use rand::distr::slice::Empty;
+    /// # use ec_core::distributions::{wrappers::choose_cloning_owning::ChooseCloningOwning, finite::Finite};
+    /// #
+    /// # fn main() -> Result<(), Empty> {
+    /// let collection = [
+    ///     String::from("a"),
+    ///     String::from("b"),
+    ///     String::from("c"),
+    ///     String::from("d"),
+    /// ];
+    /// let distribution = ChooseCloningOwning::<[String; 4], String>::new(collection)?;
+    /// assert_eq!(distribution.sample_space_size().get(), 4);
+    /// # let _ = distribution;
+    /// # Ok(())
+    /// # }
+    /// ```
     fn sample_space_size(&self) -> NonZeroUsize {
         self.num_choices
     }
@@ -78,17 +140,49 @@ where
     T: Borrow<[U]>,
     U: Clone,
 {
+    /// Sample a single value of this [`ChooseCloningOwning`] [`Distribution`].
+    ///
+    /// This does the following
+    /// 1. select a random element of the collection this [`Distribution`] was
+    ///    constructed from
+    /// 3. return a clone of that selected element
+    ///
+    /// # Example
+    /// ```
+    /// # use rand::{rng, distr::{Distribution, slice::Empty}};
+    /// # use ec_core::distributions::wrappers::choose_cloning_owning::ChooseCloningOwning;
+    /// #
+    /// # fn main() -> Result<(), Empty> {
+    /// let collection = [
+    ///     String::from("a"),
+    ///     String::from("b"),
+    ///     String::from("c"),
+    ///     String::from("d"),
+    /// ];
+    /// let distribution = ChooseCloningOwning::<[String; 4], String>::new(collection)?;
+    ///
+    /// let sample: String = distribution.sample(&mut rng());
+    /// assert!(
+    ///     sample.eq(&String::from("a"))
+    ///         || sample.eq(&String::from("b"))
+    ///         || sample.eq(&String::from("c"))
+    ///         || sample.eq(&String::from("d"))
+    /// );
+    /// # let _ = sample;
+    /// # Ok(())
+    /// # }
+    /// ```
     fn sample<R: rand::Rng + ?Sized>(&self, rng: &mut R) -> U {
         let idx = self.range.sample(rng);
 
         let slice = self.collection.borrow();
 
         debug_assert!(
-            slice.len() >= idx,
-            "This should never happen since the new method provides these guarantees"
+            slice.len() > idx,
+            "This should never happen since the `new` method provides these guarantees"
         );
 
-        // FIXME: Check the performance of this, and if neccessary replace with
+        // FIXME: Check the performance of this, and if necessary replace with
         // let val = unsafe { slice.get_unchecked(idx) }
 
         #[expect(

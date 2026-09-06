@@ -18,6 +18,22 @@ use crate::population::Population;
 /// Each selector has an associated weight passed in at construction time and
 /// one selector will be selected based on those weights on each selection call,
 /// and actual selection will then be forwarded to that selector.
+///
+/// # Example
+/// ```
+/// # use ec_core::operator::selector::{best::Best, worst::Worst, dyn_weighted::{DynWeighted, DynWeightedError}, Selector};
+/// # use rand::rng;
+/// #
+/// type Population = Vec<i32>;
+///
+/// // Select the best or the worst individual with equal likelihood (because the two selectors both have the same weights, namely 1).
+/// let dyn_selector = DynWeighted::<Population>::new(Best, 1).with_selector(Worst, 1);
+///
+/// let population = vec![1,2,3];
+/// let selected = dyn_selector.select(&population, &mut rng())?;
+/// assert!(selected == &3 || selected == &1);
+/// # Ok::<(), DynWeightedError>(())
+/// ```
 #[derive(Default)]
 pub struct DynWeighted<P: Population> {
     selectors: Vec<(Box<dyn DynSelector<P> + Send + Sync>, usize)>,
@@ -124,6 +140,7 @@ impl<P: Population> DynWeighted<P> {
     /// ```
     /// # use ec_core::operator::selector::{best::Best, worst::Worst, dyn_weighted::DynWeighted};
     /// # type Population = Vec<i32>;
+    /// // Select the best or the worst individual with equal likelihood (because the two selectors both have the same weights, namely 1).
     /// let dyn_selector = DynWeighted::<Population>::new(Best, 1).with_selector(Worst, 1);
     /// # let _ = dyn_selector;
     /// ```
@@ -144,6 +161,26 @@ where
     type Error = DynWeightedError;
 
     /// Select an individual from the given `Population` using this selector.
+    ///
+    /// This will randomly choose one selector from the options according to the
+    /// weights, and then run that selector on the [`Population`]
+    ///
+    /// # Example
+    /// ```
+    /// # use ec_core::operator::selector::{best::Best, worst::Worst, dyn_weighted::{DynWeighted, DynWeightedError}, Selector};
+    /// # use rand::rng;
+    /// #
+    /// type Population = Vec<i32>;
+    ///
+    /// // Select the best or the worst individual with equal likelihood (because the two selectors both have the same weights, namely 1).
+    /// let dyn_selector = DynWeighted::<Population>::new(Best, 1).with_selector(Worst, 1);
+    ///
+    /// let population = vec![1,2,3];
+    /// let selected = dyn_selector.select(&population, &mut rng())?;
+    /// assert!(selected == &3 || selected == &1);
+    /// # Ok::<(), DynWeightedError>(())
+    /// ```
+    ///
     /// # Errors
     /// - [`DynWeightedError::ZeroWeightSum`] if the weight sum of all selectors
     ///   is less than 1

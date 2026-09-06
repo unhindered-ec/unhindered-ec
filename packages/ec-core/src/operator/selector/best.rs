@@ -28,7 +28,26 @@ where
 {
     type Error = EmptyPopulation;
 
-    /// Select an Individual from the given Population using this selector.
+    /// Select an individual with the "best" value.
+    ///
+    /// The "best" value is determined by the [`Ord`] implementation on the
+    /// `Individual`, i.e. if you are using `ErrorValue` and `ScoreValue` high
+    /// for scores and low for errors.
+    ///
+    /// If there is no single best value it is unspecified which of them is
+    /// returned.
+    ///
+    /// # Example
+    /// ```
+    /// # use ec_core::operator::selector::{Selector, best::Best, error::EmptyPopulation};
+    /// let population = [2, 3, 5];
+    ///
+    /// let best = Best;
+    /// let selected = best.select(&population, &mut rand::rng())?;
+    ///
+    /// assert_eq!(*selected, 5);
+    /// # Ok::<(), EmptyPopulation>(())
+    /// ```
     ///
     /// # Errors
     /// - [`EmptyPopulation`] if the provided population is empty.
