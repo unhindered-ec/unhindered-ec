@@ -245,9 +245,13 @@ impl FloatInstruction {
         S: Clone + HasStack<OrderedFloat<f64>> + HasStack<bool>,
     {
         if state.stack::<bool>().is_full() {
+            let max_size = state.stack::<bool>().max_stack_size();
             return Err(Error::fatal(
                 state,
-                StackError::Overflow { stack_type: "bool" },
+                StackError::Overflow {
+                    stack_type: "bool",
+                    max_size,
+                },
             ));
         }
         let float_stack: &mut Stack<OrderedFloat<f64>> = state.stack_mut::<OrderedFloat<f64>>();

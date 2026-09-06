@@ -15,7 +15,7 @@ use ec_core::{
     performance::{error_value::ErrorValue, test_results::TestResults},
 };
 use ec_linear::mutator::umad::Umad;
-use miette::{IntoDiagnostic, ensure};
+use miette::{IntoDiagnostic, Report, ensure};
 use push::{
     evaluation::{Case, Cases, WithTargetFn},
     genome::plushy::{GeneGenerator, Plushy},
@@ -151,6 +151,10 @@ fn score_genome(
         .collect()
 }
 
+#[expect(
+    clippy::use_debug,
+    reason = "We want to use the pretty miette-based debug formatting here"
+)]
 fn run_case(
     Case {
         input,
@@ -159,17 +163,20 @@ fn run_case(
     program: &[PushProgram],
     penalty_value: i128,
 ) -> i128 {
-    build_state(program, input).map_or(penalty_value, |start_state| {
-        // I don't think we're properly handling things like exceeding maximum
-        // stack size. I think the "Push way" here would be to take whatever
-        // value is on top of the relevant stack and go with it, but we instead
-        // return the penalty value.
-        start_state
-            .run_to_completion()
-            .map_or(penalty_value, |final_state| {
-                compute_error(&final_state, penalty_value, expected)
-            })
-    })
+    let Ok(start_state) = build_state(program, input) else {
+        return penalty_value;
+    };
+    // I don't think we're properly handling things like exceeding maximum
+    // stack size. I think the "Push way" here would be to take whatever
+    // value is on top of the relevant stack and go with it, but we instead
+    // return the penalty value.
+    start_state.run_to_completion().map_or_else(
+        |error| {
+            eprintln!("FATAL: {:?}", Report::new(error));
+            penalty_value
+        },
+        |final_state| compute_error(&final_state, penalty_value, expected),
+    )
 }
 
 fn build_state(program: &[PushProgram], Input([a, b, c]): Input) -> Result<PushState, StackError> {
@@ -184,14 +191,19 @@ fn build_state(program: &[PushProgram], Input([a, b, c]): Input) -> Result<PushS
 }
 
 fn compute_error(final_state: &PushState, penalty_value: i128, expected: i64) -> i128 {
-    final_state
-        .stack::<i64>()
-        .top()
-        .map_or(penalty_value, |answer| {
+    final_state.stack::<i64>().top().map_or_else(
+        |_| {
+            // TODO: When we introduce proper logging, we probably want to bring this
+            // message back at some (generally ignored) log level.
+            // eprintln!("INFO: Int stack was empty at end of program evaluation");
+            penalty_value
+        },
+        |answer| {
             i128::from(*answer)
                 .saturating_sub(i128::from(expected))
                 .abs()
-        })
+        },
+    )
 }
 
 fn instructions() -> impl Iterator<Item = PushInstruction> {
