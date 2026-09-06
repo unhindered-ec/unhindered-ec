@@ -23,11 +23,13 @@ pub trait HasStack<T> {
         Self: Sized,
     {
         if self.stack::<U>().is_full() {
+            let max_size = self.stack::<U>().size();
             Err(Error::fatal(
                 self,
                 StackError::Overflow {
                     // TODO: Should make sure to overflow a stack so we know what this looks like.
                     stack_type: std::any::type_name::<T>(),
+                    max_size,
                 },
             ))
         } else {
@@ -95,15 +97,19 @@ pub enum StackError {
         num_requested: usize,
         num_present: usize,
     },
-    #[error("Pushed onto full stack of type {stack_type}.")]
+    #[error("Pushed onto full stack of type {stack_type} with max size {max_size}.")]
     // The `Overflow` variant is usually not seen by the user as it is
     // typically processed by the interpreter, and a value from the appropriate
     // stack is returned.
     #[diagnostic(
-        help = "You might want to increase your stack size if it seems to low",
+        help = "You might want to increase your stack size if the current size ({max_size}) seems \
+                too low",
         severity(Warning)
     )]
-    Overflow { stack_type: &'static str },
+    Overflow {
+        stack_type: &'static str,
+        max_size: usize,
+    },
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]
@@ -224,6 +230,7 @@ impl<A> TryExtend<A> for Stack<A> {
             self.values.shrink_to(current_capacity);
             return Err(StackError::Overflow {
                 stack_type: std::any::type_name::<A>(),
+                max_size: self.max_stack_size(),
             });
         }
 
@@ -459,6 +466,7 @@ impl<T> Stack<T> {
         if self.size() == self.max_stack_size {
             Err(StackError::Overflow {
                 stack_type: std::any::type_name::<T>(),
+                max_size: self.max_stack_size,
             })
         } else {
             self.values.push(value);
@@ -527,6 +535,7 @@ impl<T> Stack<T> {
         {
             return Err(StackError::Overflow {
                 stack_type: std::any::type_name::<T>(),
+                max_size: self.max_stack_size,
             });
         }
         self.values.extend(iter.rev());
