@@ -180,11 +180,16 @@ where
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]
-pub struct Plushy {
-    genes: Vec<PushGene>,
+pub struct GenericPlushy<I> {
+    genes: Vec<GenericPushGene<I>>,
 }
 
-impl Display for Plushy {
+pub type Plushy = GenericPlushy<PushInstruction>;
+
+impl<I> Display for GenericPlushy<I>
+where
+    I: Display + NumOpens,
+{
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let mut iter = self.genes.iter();
         if let Some(gene) = iter.next() {
@@ -203,24 +208,26 @@ impl Display for Plushy {
 // TODO: We might want to implement some sort of `Into`
 // trait instead of just having a getter. Having something
 // like `to_instructions()` since we're cloning?
-impl Plushy {
-    pub fn new(iterable: impl IntoIterator<Item = PushGene>) -> Self {
+impl<I> GenericPlushy<I> {
+    pub fn new(iterable: impl IntoIterator<Item = GenericPushGene<I>>) -> Self {
         Self {
             genes: iterable.into_iter().collect(),
         }
     }
+}
 
+impl<I: Clone> GenericPlushy<I> {
     #[must_use]
-    pub fn get_genes(&self) -> Vec<PushGene> {
+    pub fn get_genes(&self) -> Vec<GenericPushGene<I>> {
         self.genes.clone()
     }
 }
 
-impl Genome for Plushy {
-    type Gene = PushGene;
+impl<I> Genome for GenericPlushy<I> {
+    type Gene = GenericPushGene<I>;
 }
 
-impl Linear for Plushy {
+impl<I> Linear for GenericPlushy<I> {
     fn size(&self) -> usize {
         self.genes.len()
     }
@@ -230,29 +237,29 @@ impl Linear for Plushy {
     }
 }
 
-impl<GG> Distribution<Plushy> for collection::Collection<GG>
+impl<I, GG> Distribution<GenericPlushy<I>> for collection::Collection<GG>
 where
-    GG: Distribution<PushGene>,
+    GG: Distribution<GenericPushGene<I>>,
 {
-    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Plushy {
-        Plushy {
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> GenericPlushy<I> {
+        GenericPlushy {
             genes: rng.sample(self),
         }
     }
 }
 
-impl IntoIterator for Plushy {
-    type Item = PushGene;
+impl<I> IntoIterator for GenericPlushy<I> {
+    type Item = GenericPushGene<I>;
 
-    type IntoIter = std::vec::IntoIter<PushGene>;
+    type IntoIter = std::vec::IntoIter<GenericPushGene<I>>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.genes.into_iter()
     }
 }
 
-impl FromIterator<PushGene> for Plushy {
-    fn from_iter<T: IntoIterator<Item = PushGene>>(iterable: T) -> Self {
+impl<I> FromIterator<GenericPushGene<I>> for GenericPlushy<I> {
+    fn from_iter<T: IntoIterator<Item = GenericPushGene<I>>>(iterable: T) -> Self {
         Self {
             genes: iterable.into_iter().collect(),
         }
