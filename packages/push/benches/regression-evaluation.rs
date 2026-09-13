@@ -11,38 +11,41 @@ use criterion::{Criterion, criterion_group, criterion_main};
 use ordered_float::OrderedFloat;
 use push::{
     genome::plushy::{Plushy, PushGene},
-    instruction::{FloatInstruction, with_input::WithInputInstruction},
+    instruction::{FloatInstruction, PushInstruction, with_input::WithInputInstruction},
     push_vm::{HasStack, State, program::PushProgram, push_state::PushState},
-    vec_into,
 };
+
+fn i2g(i: impl Into<PushInstruction>) -> PushGene {
+    PushGene::Instruction(i.into())
+}
 
 /// An evolved Plushy genome whose associated Push program evaluates the
 /// polynomial (x^3+1)^3 + 1.
 #[must_use]
 pub fn sample_genome() -> Plushy {
-    let genome = vec_into![
-        WithInputInstruction::from("x"),
-        FloatInstruction::dup(),
-        FloatInstruction::ProtectedDivide,
-        FloatInstruction::dup(),
-        FloatInstruction::Multiply,
+    let genome = [
+        i2g(WithInputInstruction::from("x")),
+        i2g(FloatInstruction::dup()),
+        i2g(FloatInstruction::ProtectedDivide),
+        i2g(FloatInstruction::dup()),
+        i2g(FloatInstruction::Multiply),
         PushGene::Close,
-        FloatInstruction::Add,
-        FloatInstruction::Add,
-        WithInputInstruction::from("x"),
-        FloatInstruction::dup(),
-        FloatInstruction::Multiply,
-        WithInputInstruction::from("x"),
+        i2g(FloatInstruction::Add),
+        i2g(FloatInstruction::Add),
+        i2g(WithInputInstruction::from("x")),
+        i2g(FloatInstruction::dup()),
+        i2g(FloatInstruction::Multiply),
+        i2g(WithInputInstruction::from("x")),
         PushGene::Close,
-        FloatInstruction::Multiply,
-        FloatInstruction::push(1.0),
-        FloatInstruction::Add,
-        FloatInstruction::dup(),
+        i2g(FloatInstruction::Multiply),
+        i2g(FloatInstruction::push(1.0)),
+        i2g(FloatInstruction::Add),
+        i2g(FloatInstruction::dup()),
         PushGene::Close,
-        FloatInstruction::dup(),
-        FloatInstruction::Multiply,
-        FloatInstruction::Multiply,
-        FloatInstruction::Add,
+        i2g(FloatInstruction::dup()),
+        i2g(FloatInstruction::Multiply),
+        i2g(FloatInstruction::Multiply),
+        i2g(FloatInstruction::Add),
     ];
     Plushy::new(genome)
 }

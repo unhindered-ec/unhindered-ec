@@ -109,6 +109,7 @@ mod test {
         genome::plushy::{Plushy, PushGene},
         instruction::{
             BoolInstruction, ExecInstruction, FloatInstruction, Instruction, IntInstruction,
+            PushInstruction,
         },
         list_into::{arr_into, vec_into},
         push_vm::{HasStack, push_state::PushState},
@@ -116,13 +117,17 @@ mod test {
 
     #[test]
     fn conversion() {
+        fn i2g(i: impl Into<PushInstruction>) -> PushGene {
+            PushGene::Instruction(i.into())
+        }
+
         let genes = arr_into![
-            IntInstruction::Add,
-            ExecInstruction::if_else(),
-            IntInstruction::Multiply,
+            i2g(IntInstruction::Add),
+            i2g(ExecInstruction::if_else()),
+            i2g(IntInstruction::Multiply),
             PushGene::Close,
-            ExecInstruction::dup_block(),
-            IntInstruction::Subtract,
+            i2g(ExecInstruction::dup_block()),
+            i2g(IntInstruction::Subtract),
         ];
         let plushy: Plushy = genes.into_iter().collect();
         let program: Vec<PushProgram> = plushy.into();

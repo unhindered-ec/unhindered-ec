@@ -16,9 +16,10 @@
 
 use push::{
     arr_into,
-    genome::plushy::Plushy,
+    genome::plushy::{Plushy, PushGene},
     instruction::{
-        BoolInstruction, ExecInstruction, IntInstruction, with_input::WithInputInstruction,
+        BoolInstruction, ExecInstruction, IntInstruction, PushInstruction,
+        with_input::WithInputInstruction,
     },
     push_vm::{HasStack, State, program::PushProgram, push_state::PushState},
 };
@@ -63,7 +64,7 @@ fn build_working_median() -> Vec<PushProgram> {
     let b = WithInputInstruction::from("b");
     let c = WithInputInstruction::from("c");
     let a = WithInputInstruction::from("a");
-    let genes = arr_into![
+    let plushy: Plushy = arr_into![<PushInstruction>
         IntInstruction::multiply(),
         c.clone(),
         a,
@@ -78,9 +79,11 @@ fn build_working_median() -> Vec<PushProgram> {
         ExecInstruction::when(),
         IntInstruction::min(),
         IntInstruction::max(),
-    ];
+    ]
+    .into_iter()
+    .map(PushGene::from)
+    .collect();
 
-    let plushy: Plushy = genes.into_iter().collect();
     let program: Vec<PushProgram> = plushy.into();
     program
 }
@@ -119,7 +122,7 @@ fn re_evolved_median() -> Vec<PushProgram> {
     let a = WithInputInstruction::from("a");
     let b = WithInputInstruction::from("b");
     let c = WithInputInstruction::from("c");
-    let genes = arr_into![
+    let plushy: Plushy = arr_into![<PushInstruction>
         b.clone(),
         a.clone(),
         IntInstruction::max(),
@@ -134,9 +137,11 @@ fn re_evolved_median() -> Vec<PushProgram> {
         ExecInstruction::dup_block(),
         IntInstruction::min(),
         IntInstruction::max(),
-    ];
+    ]
+    .into_iter()
+    .map(PushGene::from)
+    .collect();
 
-    let plushy: Plushy = genes.into_iter().collect();
     let program: Vec<PushProgram> = plushy.into();
     program
 }
