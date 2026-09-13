@@ -1,59 +1,64 @@
 use super::{HasStack, push_state::PushState, stack::StackError};
 use crate::{
     error::{Error, InstructionResult},
-    genome::plushy::{Plushy, PushGene},
+    genome::plushy::{GenericPlushy, GenericPushGene},
     instruction::{
         Instruction, NumOpens, PushInstruction, instruction_error::PushInstructionError,
     },
 };
 
 #[derive(Debug, strum_macros::Display, Clone, Eq, PartialEq)]
-pub enum PushProgram {
-    Instruction(PushInstruction),
+pub enum GenericPushProgram<I> {
+    Instruction(I),
     Block(Vec<Self>),
 }
 
-impl Default for PushProgram {
+pub type PushProgram = GenericPushProgram<PushInstruction>;
+
+impl<I> Default for GenericPushProgram<I> {
     fn default() -> Self {
         Self::Block(Vec::new())
     }
 }
 
-impl From<Plushy> for Vec<PushProgram> {
-    fn from(plushy: Plushy) -> Self {
+impl<I> From<GenericPlushy<I>> for Vec<GenericPushProgram<I>>
+where
+    I: NumOpens,
+{
+    fn from(plushy: GenericPlushy<I>) -> Self {
         let mut genes = plushy.into_iter();
         let mut program = Self::new();
-        PushProgram::parse_from_plushy(true, &mut genes, &mut program);
+        GenericPushProgram::parse_from_plushy(true, &mut genes, &mut program);
         program
     }
 }
 
-impl<T> From<T> for PushProgram
-where
-    T: Into<PushInstruction>,
-{
-    fn from(instruction: T) -> Self {
-        Self::Instruction(instruction.into())
+impl<I> From<I> for GenericPushProgram<I> {
+    fn from(instruction: I) -> Self {
+        Self::Instruction(instruction)
     }
 }
 
-impl PushProgram {
+impl<I> GenericPushProgram<I>
+where
+    I: NumOpens,
+{
     // Take a vector of genes, parse out the next complete Push program and
     // return that program and the remaining slice of genes.
     fn parse_from_plushy(
         is_top_level: bool,
-        genes: &mut impl Iterator<Item = PushGene>,
+        genes: &mut impl Iterator<Item = GenericPushGene<I>>,
         program: &mut Vec<Self>,
     ) {
         while let Some(gene) = genes.next() {
             match gene {
-                PushGene::Close => {
+                GenericPushGene::Close => {
                     if !is_top_level {
                         // This closes a block, so return up to the caller.
                         return;
                     } // Otherwise ignore the `Close` and continue on to the next instruction
                 }
-                PushGene::Instruction(i) => {
+                GenericPushGene::Instruction(i) => {
                     let num_opens = i.num_opens();
                     program.push(Self::Instruction(i));
                     for _ in 0..num_opens {
@@ -73,6 +78,8 @@ impl PushProgram {
 // the stack in the correct order, i.e., the first instruction
 // in the block should be the top instruction on the exec
 // stack after all the pushing is done.
+// TODO: Revisit this after genericizing `PushState` to see if this needs
+// updating.
 impl<S, I> Instruction<S> for Vec<I>
 where
     S: HasStack<I>,
@@ -82,8 +89,8 @@ where
     type Error = I::Error;
 
     fn perform(&self, mut state: S) -> InstructionResult<S, Self::Error> {
-        // If the size of the block + the size of the exec stack exceed the max stack
-        // size then we generate a fatal error.
+        // If the size of the block + the size of the exec stack exceed the
+        // max stack size then we generate a fatal error.
         if let Err(err) = state.stack_mut::<I>().push_many(self.iter().cloned()) {
             return Err(Error::fatal(state, err));
         }
@@ -91,6 +98,8 @@ where
     }
 }
 
+// TODO: Revisit this after genericizing `PushProgram` to see if this can be
+// made more generic as well.
 impl Instruction<PushState> for PushProgram {
     type Error = PushInstructionError;
 
@@ -111,9 +120,13 @@ mod test {
             BoolInstruction, ExecInstruction, FloatInstruction, Instruction, IntInstruction,
             PushInstruction,
         },
-        list_into::{arr_into, vec_into},
-        push_vm::{HasStack, push_state::PushState},
+        list_into::arr_into,
+        push_vm::{HasStack, program::GenericPushProgram, push_state::PushState},
     };
+
+    fn p(i: impl Into<PushInstruction>) -> PushProgram {
+        PushProgram::Instruction(i.into())
+    }
 
     #[test]
     fn conversion() {
@@ -136,13 +149,13 @@ mod test {
         // Block([Instruction(Int-Subtract)])])]
         assert_eq!(
             program,
-            vec_into![
-                IntInstruction::Add,
-                ExecInstruction::if_else(),
-                PushProgram::Block(vec_into![IntInstruction::Multiply]),
-                PushProgram::Block(vec_into![
-                    ExecInstruction::dup_block(),
-                    PushProgram::Block(vec_into![IntInstruction::Subtract])
+            vec![
+                p(IntInstruction::Add),
+                p(ExecInstruction::if_else()),
+                GenericPushProgram::Block(vec![p(IntInstruction::Multiply)]),
+                PushProgram::Block(vec![
+                    p(ExecInstruction::dup_block()),
+                    PushProgram::Block(vec![p(IntInstruction::Subtract)])
                 ])
             ]
         );
@@ -150,10 +163,10 @@ mod test {
 
     #[test]
     fn block() {
-        let instructions = vec_into![
-            IntInstruction::Add,
-            FloatInstruction::Multiply,
-            BoolInstruction::And,
+        let instructions = vec![
+            p(IntInstruction::Add),
+            p(FloatInstruction::Multiply),
+            p(BoolInstruction::And),
         ];
         let block = PushProgram::Block(instructions);
         let state = PushState::builder()
@@ -164,18 +177,18 @@ mod test {
         let mut result = block.perform(state).unwrap();
         let exec_stack = result.stack_mut::<PushProgram>();
         assert_eq!(exec_stack.size(), 3);
-        assert_eq!(exec_stack.pop().unwrap(), IntInstruction::Add.into());
-        assert_eq!(exec_stack.pop().unwrap(), FloatInstruction::Multiply.into());
-        assert_eq!(exec_stack.pop().unwrap(), BoolInstruction::And.into());
+        assert_eq!(exec_stack.pop().unwrap(), p(IntInstruction::Add));
+        assert_eq!(exec_stack.pop().unwrap(), p(FloatInstruction::Multiply));
+        assert_eq!(exec_stack.pop().unwrap(), p(BoolInstruction::And));
         assert_eq!(exec_stack.size(), 0);
     }
 
     #[test]
     fn block_overflows() {
-        let instructions = vec_into![
-            IntInstruction::Add,
-            FloatInstruction::Multiply,
-            BoolInstruction::And,
+        let instructions = vec![
+            p(IntInstruction::Add),
+            p(FloatInstruction::Multiply),
+            p(BoolInstruction::And),
         ];
         let block = PushProgram::Block(instructions);
         let state = PushState::builder()
