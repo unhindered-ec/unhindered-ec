@@ -11,12 +11,17 @@ use rand::{Rng, RngExt, prelude::Distribution};
 use crate::instruction::{NumOpens, PushInstruction};
 
 #[derive(Clone, Eq, PartialEq, Debug)]
-pub enum PushGene {
+pub enum GenericPushGene<I> {
     Close,
-    Instruction(PushInstruction),
+    Instruction(I),
 }
 
-impl Display for PushGene {
+pub type PushGene = GenericPushGene<PushInstruction>;
+
+impl<I> Display for GenericPushGene<I>
+where
+    I: Display + NumOpens,
+{
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::Close => {
@@ -35,12 +40,18 @@ impl Display for PushGene {
     }
 }
 
-impl<T> From<T> for PushGene
-where
-    T: Into<PushInstruction>,
-{
-    fn from(instruction: T) -> Self {
-        Self::Instruction(instruction.into())
+impl<I> From<I> for GenericPushGene<I> {
+    fn from(i: I) -> Self {
+        Self::Instruction(i)
+    }
+}
+
+impl<T> GenericPushGene<T> {
+    pub fn new_instruction<I>(i: I) -> Self
+    where
+        I: Into<T>,
+    {
+        Self::Instruction(i.into())
     }
 }
 
@@ -256,7 +267,7 @@ mod test {
     use super::*;
     use crate::{
         instruction::{BoolInstruction, IntInstruction, with_input::WithInputInstruction},
-        list_into::vec_into,
+        list_into::arr_into,
     };
 
     #[test]
@@ -281,13 +292,12 @@ mod test {
     fn umad() {
         let mut rng = rng();
 
-        let instruction_options =
-            uniform_distribution_of![<PushGene> WithInputInstruction::from("x")];
+        let instruction_options = uniform_distribution_of![<PushGene> PushInstruction::from(WithInputInstruction::from("x"))];
 
         let umad = Umad::new(0.3, 0.3, instruction_options);
 
         let parent = Plushy {
-            genes: vec_into![
+            genes: arr_into![<PushInstruction>
                 IntInstruction::Add,
                 BoolInstruction::And,
                 BoolInstruction::Or,
@@ -308,7 +318,10 @@ mod test {
                 BoolInstruction::And,
                 BoolInstruction::Or,
                 IntInstruction::Multiply,
-            ],
+            ]
+            .into_iter()
+            .map(PushGene::from)
+            .collect(),
         };
 
         let child = umad.mutate(parent, &mut rng);
