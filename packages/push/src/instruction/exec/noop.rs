@@ -31,15 +31,19 @@ impl<S> Instruction<S> for Noop {
 mod tests {
     use super::Noop;
     use crate::{
-        instruction::{ExecInstruction, Instruction},
-        push_vm::push_state::PushState,
+        instruction::{ExecInstruction, Instruction, PushInstruction},
+        push_vm::{program::PushProgram, push_state::PushState},
     };
+
+    fn p(i: impl Into<PushInstruction>) -> PushProgram {
+        PushProgram::Instruction(i.into())
+    }
 
     #[test]
     fn noop_is_correct() {
         let state = PushState::builder()
             .with_max_stack_size(2)
-            .with_program([ExecInstruction::noop(), ExecInstruction::noop()])
+            .with_program([p(ExecInstruction::noop()), p(ExecInstruction::noop())])
             .unwrap()
             .with_instruction_step_limit(1000)
             .build();
