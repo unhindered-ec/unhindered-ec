@@ -7,6 +7,9 @@ pub mod instruction;
 pub mod list_into;
 pub mod push_vm;
 
+#[cfg(test)]
+mod test_utils;
+
 #[cfg(feature = "macros")]
 pub use push_macros::*;
 
