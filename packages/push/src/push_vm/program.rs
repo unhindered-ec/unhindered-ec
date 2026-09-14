@@ -98,7 +98,7 @@ where
     }
 }
 
-// TODO: Revisit this after genericizing `PushProgram` to see if this can be
+// TODO: Revisit this after genericizing `PushState` to see if this can be
 // made more generic as well.
 impl Instruction<PushState> for PushProgram {
     type Error = PushInstructionError;
@@ -113,12 +113,14 @@ impl Instruction<PushState> for PushProgram {
 
 #[cfg(test)]
 mod test {
+    use std::iter::once;
+
     use super::PushProgram;
     use crate::{
-        genome::plushy::{Plushy, PushGene},
+        genome::plushy::{GenericPlushy, GenericPushGene, Plushy, PushGene},
         instruction::{
             BoolInstruction, ExecInstruction, FloatInstruction, Instruction, IntInstruction,
-            PushInstruction,
+            NumOpens, PushInstruction,
         },
         list_into::arr_into,
         push_vm::{HasStack, program::GenericPushProgram, push_state::PushState},
@@ -201,6 +203,52 @@ mod test {
         assert!(
             block.perform(state).is_err(),
             "Performing the block didn't generate an overflow error"
+        );
+    }
+
+    #[test]
+    fn custom_instruction() {
+        #[derive(Debug, PartialEq, Eq)]
+        enum CustomInstruction {
+            A,
+            B,
+            HasOpen,
+        }
+
+        impl NumOpens for CustomInstruction {
+            fn num_opens(&self) -> usize {
+                match self {
+                    Self::A | Self::B => 0,
+                    Self::HasOpen => 1,
+                }
+            }
+        }
+
+        fn p(i: impl Into<CustomInstruction>) -> GenericPushProgram<CustomInstruction> {
+            GenericPushProgram::Instruction(i.into())
+        }
+
+        let plushy: GenericPlushy<CustomInstruction> = [
+            CustomInstruction::A,
+            CustomInstruction::B,
+            CustomInstruction::HasOpen,
+            CustomInstruction::A,
+        ]
+        .into_iter()
+        .map(GenericPushGene::Instruction)
+        .chain(once(GenericPushGene::Close))
+        .chain(once(GenericPushGene::Instruction(CustomInstruction::B)))
+        .collect();
+        let program: Vec<GenericPushProgram<CustomInstruction>> = plushy.into();
+        assert_eq!(
+            program,
+            [
+                p(CustomInstruction::A),
+                p(CustomInstruction::B),
+                p(CustomInstruction::HasOpen),
+                GenericPushProgram::Block(vec![p(CustomInstruction::A)]),
+                p(CustomInstruction::B)
+            ]
         );
     }
 }
