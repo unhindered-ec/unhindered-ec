@@ -114,15 +114,19 @@ mod tests {
     use super::Unless;
     use crate::{
         error::into_state::IntoState,
-        instruction::{ExecInstruction, Instruction, PushInstructionError},
-        push_vm::{push_state::PushState, stack::StackError},
+        instruction::{ExecInstruction, Instruction, PushInstruction, PushInstructionError},
+        push_vm::{program::PushProgram, push_state::PushState, stack::StackError},
     };
+
+    fn p(i: impl Into<PushInstruction>) -> PushProgram {
+        PushProgram::Instruction(i.into())
+    }
 
     #[test]
     fn cond_true() {
         let state = PushState::builder()
             .with_max_stack_size(1)
-            .with_program([ExecInstruction::noop()])
+            .with_program([p(ExecInstruction::noop())])
             .unwrap()
             .with_bool_values([true])
             .unwrap()
@@ -137,7 +141,7 @@ mod tests {
     fn cond_false() {
         let state = PushState::builder()
             .with_max_stack_size(1)
-            .with_program([ExecInstruction::noop()])
+            .with_program([p(ExecInstruction::noop())])
             .unwrap()
             .with_bool_values([false])
             .unwrap()
@@ -179,7 +183,7 @@ mod tests {
         // If there's no boolean, we leave the state unchanged and skip the instruction.
         let state = PushState::builder()
             .with_max_stack_size(1)
-            .with_program([ExecInstruction::noop()])
+            .with_program([p(ExecInstruction::noop())])
             .unwrap()
             .with_instruction_step_limit(1000)
             .build();

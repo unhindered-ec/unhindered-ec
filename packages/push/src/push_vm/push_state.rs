@@ -132,7 +132,7 @@ mod tests {
             BoolInstruction, FloatInstruction, IntInstruction, PushInstruction,
             with_input::WithInputInstruction,
         },
-        list_into::vec_into,
+        list_into::arr_into,
         push_vm::{program::PushProgram, push_state::PushState},
     };
 
@@ -150,7 +150,7 @@ mod tests {
             PushInstruction::push_float(OrderedFloat(f))
         }
 
-        let genes: Vec<PushGene> = vec_into![
+        let genes: Vec<PushGene> = arr_into![<PushInstruction>
             WithInputInstruction::from("x"), // [5]
             WithInputInstruction::from("y"), // [8, 5]
             push_bool(true),                 // [true]
@@ -167,7 +167,10 @@ mod tests {
             FloatInstruction::Multiply,      // [12.25]
             WithInputInstruction::from("f"), // [12.25, 0.75]
             FloatInstruction::Add,           // [13.0]
-        ];
+        ]
+        .into_iter()
+        .map(PushGene::from)
+        .collect();
 
         let plushy = Plushy::new(genes);
         let state = PushState::builder()
@@ -206,7 +209,7 @@ mod tests {
             PushInstruction::push_float(OrderedFloat(f))
         }
 
-        let genes: Vec<PushGene> = vec_into![
+        let genes: Vec<PushGene> = arr_into![<PushInstruction>
             WithInputInstruction::from("x"), // [5]
             WithInputInstruction::from("y"), // [8, 5]
             push_bool(true),                 // [true]
@@ -223,7 +226,10 @@ mod tests {
             FloatInstruction::Multiply,      // [12.25]
             WithInputInstruction::from("f"), // [12.25, 0.75]
             FloatInstruction::Add,           // [13.0]
-        ];
+        ]
+        .into_iter()
+        .map(PushGene::from)
+        .collect();
 
         let plushy = Plushy::new(genes);
         let state = PushState::builder()

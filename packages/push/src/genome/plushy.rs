@@ -1,4 +1,4 @@
-use std::fmt::Display;
+use std::{fmt::Display, marker::PhantomData};
 
 use easy_cast::ConvApprox;
 use ec_core::{
@@ -11,12 +11,17 @@ use rand::{Rng, RngExt, prelude::Distribution};
 use crate::instruction::{NumOpens, PushInstruction};
 
 #[derive(Clone, Eq, PartialEq, Debug)]
-pub enum PushGene {
+pub enum GenericPushGene<I> {
     Close,
-    Instruction(PushInstruction),
+    Instruction(I),
 }
 
-impl Display for PushGene {
+pub type PushGene = GenericPushGene<PushInstruction>;
+
+impl<I> Display for GenericPushGene<I>
+where
+    I: Display + NumOpens,
+{
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::Close => {
@@ -35,39 +40,49 @@ impl Display for PushGene {
     }
 }
 
-impl<T> From<T> for PushGene
-where
-    T: Into<PushInstruction>,
-{
-    fn from(instruction: T) -> Self {
-        Self::Instruction(instruction.into())
+impl<I> From<I> for GenericPushGene<I> {
+    fn from(i: I) -> Self {
+        Self::Instruction(i)
+    }
+}
+
+impl<T> GenericPushGene<T> {
+    pub fn new_instruction<I>(i: I) -> Self
+    where
+        I: Into<T>,
+    {
+        Self::Instruction(i.into())
     }
 }
 
 #[derive(Debug, Clone)]
-pub struct GeneGenerator<T>
+pub struct GenericGeneGenerator<I, T>
 where
-    T: Distribution<PushInstruction>,
+    T: Distribution<I>,
 {
     close_probability: f32,
     instruction_distribution: T,
+    _instruction: PhantomData<I>,
 }
 
-impl<T> GeneGenerator<T>
+pub type GeneGenerator<T> = GenericGeneGenerator<PushInstruction, T>;
+
+impl<I, T> GenericGeneGenerator<I, T>
 where
-    T: Distribution<PushInstruction>,
+    T: Distribution<I>,
 {
     #[must_use]
     pub const fn new(close_probability: f32, instructions_distribution: T) -> Self {
         Self {
             close_probability,
             instruction_distribution: instructions_distribution,
+            _instruction: PhantomData,
         }
     }
 }
-impl<T> GeneGenerator<T>
+impl<I, T> GenericGeneGenerator<I, T>
 where
-    T: Distribution<PushInstruction> + Finite,
+    T: Distribution<I> + Finite,
 {
     /// Create a generator where the close tag has the same likelihood of
     /// being chosen as any of the passed in instructions.
@@ -84,92 +99,97 @@ where
     }
 }
 
-pub trait ConvertToGeneGenerator
+pub trait GenericConvertToGeneGenerator<I>
 where
-    Self: Distribution<PushInstruction>,
+    Self: Distribution<I>,
 {
     fn into_gene_generator_with_close_probability(
         self,
         close_probability: f32,
-    ) -> GeneGenerator<Self>
+    ) -> GenericGeneGenerator<I, Self>
     where
         Self: Sized;
 
     fn to_gene_generator_with_close_probability(
         &self,
         close_probability: f32,
-    ) -> GeneGenerator<&Self>;
+    ) -> GenericGeneGenerator<I, &Self>;
 
     /// This creates a new gene generator, defaulting to a close probability
     /// that is uniform with the instructions distribution, eg. (1/(n+1)).
-    fn into_gene_generator(self) -> GeneGenerator<Self>
+    fn into_gene_generator(self) -> GenericGeneGenerator<I, Self>
     where
         Self: Sized + Finite;
 
     /// This creates a new gene generator by borrowing from self, defaulting to
     /// a close probability that is uniform with the instructions distribution,
     /// eg. (1/(n+1)).
-    fn to_gene_generator(&self) -> GeneGenerator<&Self>
+    fn to_gene_generator(&self) -> GenericGeneGenerator<I, &Self>
     where
         Self: Finite;
 }
 
-impl<T> ConvertToGeneGenerator for T
+impl<I, T> GenericConvertToGeneGenerator<I> for T
 where
-    T: Distribution<PushInstruction> + ?Sized,
+    T: Distribution<I> + ?Sized,
 {
     fn into_gene_generator_with_close_probability(
         self,
         close_probability: f32,
-    ) -> GeneGenerator<Self>
+    ) -> GenericGeneGenerator<I, Self>
     where
         Self: Sized,
     {
-        GeneGenerator::new(close_probability, self)
+        GenericGeneGenerator::new(close_probability, self)
     }
 
     fn to_gene_generator_with_close_probability(
         &self,
         close_probability: f32,
-    ) -> GeneGenerator<&Self> {
-        GeneGenerator::new(close_probability, self)
+    ) -> GenericGeneGenerator<I, &Self> {
+        GenericGeneGenerator::new(close_probability, self)
     }
 
-    fn into_gene_generator(self) -> GeneGenerator<Self>
+    fn into_gene_generator(self) -> GenericGeneGenerator<I, Self>
     where
         Self: Sized + Finite,
     {
-        GeneGenerator::with_uniform_close_probability(self)
+        GenericGeneGenerator::with_uniform_close_probability(self)
     }
 
-    fn to_gene_generator(&self) -> GeneGenerator<&Self>
+    fn to_gene_generator(&self) -> GenericGeneGenerator<I, &Self>
     where
         Self: Finite,
     {
-        GeneGenerator::with_uniform_close_probability(self)
+        GenericGeneGenerator::with_uniform_close_probability(self)
     }
 }
 
-impl<T> Distribution<PushGene> for GeneGenerator<T>
+impl<I, T> Distribution<GenericPushGene<I>> for GenericGeneGenerator<I, T>
 where
-    T: Distribution<PushInstruction>,
+    T: Distribution<I>,
 {
-    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> PushGene {
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> GenericPushGene<I> {
         if rng.random::<f32>() < self.close_probability {
-            PushGene::Close
+            GenericPushGene::Close
         } else {
             // this is safe since we check that the slice is not empty in the constructor
-            PushGene::Instruction(self.instruction_distribution.sample(rng))
+            GenericPushGene::Instruction(self.instruction_distribution.sample(rng))
         }
     }
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]
-pub struct Plushy {
-    genes: Vec<PushGene>,
+pub struct GenericPlushy<I> {
+    genes: Vec<GenericPushGene<I>>,
 }
 
-impl Display for Plushy {
+pub type Plushy = GenericPlushy<PushInstruction>;
+
+impl<I> Display for GenericPlushy<I>
+where
+    I: Display + NumOpens,
+{
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let mut iter = self.genes.iter();
         if let Some(gene) = iter.next() {
@@ -188,24 +208,26 @@ impl Display for Plushy {
 // TODO: We might want to implement some sort of `Into`
 // trait instead of just having a getter. Having something
 // like `to_instructions()` since we're cloning?
-impl Plushy {
-    pub fn new(iterable: impl IntoIterator<Item = PushGene>) -> Self {
+impl<I> GenericPlushy<I> {
+    pub fn new(iterable: impl IntoIterator<Item = GenericPushGene<I>>) -> Self {
         Self {
             genes: iterable.into_iter().collect(),
         }
     }
+}
 
+impl<I: Clone> GenericPlushy<I> {
     #[must_use]
-    pub fn get_genes(&self) -> Vec<PushGene> {
+    pub fn get_genes(&self) -> Vec<GenericPushGene<I>> {
         self.genes.clone()
     }
 }
 
-impl Genome for Plushy {
-    type Gene = PushGene;
+impl<I> Genome for GenericPlushy<I> {
+    type Gene = GenericPushGene<I>;
 }
 
-impl Linear for Plushy {
+impl<I> Linear for GenericPlushy<I> {
     fn size(&self) -> usize {
         self.genes.len()
     }
@@ -215,29 +237,29 @@ impl Linear for Plushy {
     }
 }
 
-impl<GG> Distribution<Plushy> for collection::Collection<GG>
+impl<I, GG> Distribution<GenericPlushy<I>> for collection::Collection<GG>
 where
-    GG: Distribution<PushGene>,
+    GG: Distribution<GenericPushGene<I>>,
 {
-    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Plushy {
-        Plushy {
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> GenericPlushy<I> {
+        GenericPlushy {
             genes: rng.sample(self),
         }
     }
 }
 
-impl IntoIterator for Plushy {
-    type Item = PushGene;
+impl<I> IntoIterator for GenericPlushy<I> {
+    type Item = GenericPushGene<I>;
 
-    type IntoIter = std::vec::IntoIter<PushGene>;
+    type IntoIter = std::vec::IntoIter<GenericPushGene<I>>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.genes.into_iter()
     }
 }
 
-impl FromIterator<PushGene> for Plushy {
-    fn from_iter<T: IntoIterator<Item = PushGene>>(iterable: T) -> Self {
+impl<I> FromIterator<GenericPushGene<I>> for GenericPlushy<I> {
+    fn from_iter<T: IntoIterator<Item = GenericPushGene<I>>>(iterable: T) -> Self {
         Self {
             genes: iterable.into_iter().collect(),
         }
@@ -256,7 +278,7 @@ mod test {
     use super::*;
     use crate::{
         instruction::{BoolInstruction, IntInstruction, with_input::WithInputInstruction},
-        list_into::vec_into,
+        list_into::arr_into,
     };
 
     #[test]
@@ -281,13 +303,12 @@ mod test {
     fn umad() {
         let mut rng = rng();
 
-        let instruction_options =
-            uniform_distribution_of![<PushGene> WithInputInstruction::from("x")];
+        let instruction_options = uniform_distribution_of![<PushGene> PushInstruction::from(WithInputInstruction::from("x"))];
 
         let umad = Umad::new(0.3, 0.3, instruction_options);
 
         let parent = Plushy {
-            genes: vec_into![
+            genes: arr_into![<PushInstruction>
                 IntInstruction::Add,
                 BoolInstruction::And,
                 BoolInstruction::Or,
@@ -308,7 +329,10 @@ mod test {
                 BoolInstruction::And,
                 BoolInstruction::Or,
                 IntInstruction::Multiply,
-            ],
+            ]
+            .into_iter()
+            .map(PushGene::from)
+            .collect(),
         };
 
         let child = umad.mutate(parent, &mut rng);

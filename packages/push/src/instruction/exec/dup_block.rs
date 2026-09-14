@@ -80,23 +80,26 @@ where
 mod tests {
     use super::DupBlock;
     use crate::{
-        instruction::{ExecInstruction, Instruction, PushInstructionError},
-        list_into::arr_into,
+        instruction::{ExecInstruction, Instruction, PushInstruction, PushInstructionError},
         push_vm::{program::PushProgram, push_state::PushState, stack::StackError},
     };
+
+    fn p(i: impl Into<PushInstruction>) -> PushProgram {
+        PushProgram::Instruction(i.into())
+    }
 
     #[test]
     fn exec_present_not_full() {
         let state = PushState::builder()
             .with_max_stack_size(2)
-            .with_program([ExecInstruction::noop()])
+            .with_program([p(ExecInstruction::noop())])
             .unwrap()
             .with_instruction_step_limit(1000)
             .build();
         let result_state = DupBlock.perform(state).unwrap();
         assert_eq!(
             result_state.exec,
-            arr_into![<PushProgram> ExecInstruction::noop(), ExecInstruction::noop()]
+            vec![p(ExecInstruction::noop()), p(ExecInstruction::noop())]
         );
     }
 
@@ -119,7 +122,7 @@ mod tests {
     fn exec_present_and_full() {
         let state = PushState::builder()
             .with_max_stack_size(1)
-            .with_program([ExecInstruction::noop()])
+            .with_program([p(ExecInstruction::noop())])
             .unwrap()
             .with_instruction_step_limit(1000)
             .build();

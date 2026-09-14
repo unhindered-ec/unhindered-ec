@@ -30,7 +30,7 @@ use num_traits::Float;
 use ordered_float::OrderedFloat;
 use push::{
     evaluation::{Case, Cases, WithTargetFn},
-    genome::plushy::{ConvertToGeneGenerator, Plushy},
+    genome::plushy::{GenericConvertToGeneGenerator, Plushy},
     instruction::{FloatInstruction, PushInstruction, with_input::WithInputInstruction},
     push_vm::{HasStack, State, program::PushProgram, push_state::PushState},
 };
