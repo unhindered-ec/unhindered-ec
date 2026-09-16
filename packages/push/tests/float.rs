@@ -69,7 +69,11 @@ fn overflow_bool_stack() {
     let result = FloatInstruction::Equal.perform(state).unwrap_err();
     assert_eq!(
         result.error(),
-        &StackError::Overflow { stack_type: "bool" }.into()
+        &StackError::Overflow {
+            stack_type: "bool",
+            max_size: 2
+        }
+        .into()
     );
 }
 
