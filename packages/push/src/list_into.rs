@@ -81,9 +81,24 @@ macro_rules! arr_into {
 
 pub use arr_into;
 
-/// Create a new vector of [`PushGene`]s by wrapping each item with
-/// [`PushGene::new_instruction`]; otherwise it is equivalent to
-/// [`vec_into!`].
+/// Create a new vector of genes.
+///
+/// This has two forms:
+///
+/// - `genes_into![<OutputType> items...]` wraps each item by calling the
+///   `new_instruction` associated function on `OutputType`, i.e.
+///   `OutputType::new_instruction(item)`. This is how raw instructions are
+///   turned into genes, e.g. `genes_into![<PushGene> IntInstruction::Add]`,
+///   which calls
+///   [`PushGene::new_instruction`](crate::genome::plushy::PushGene::new_instruction).
+/// - `genes_into![items...]`, with no explicit type, is equivalent to
+///   [`vec_into!`]: each item is converted with `Into::into` to the vector's
+///   element type. The items must therefore already be (or convert to) genes;
+///   raw instructions are *not* wrapped in this form. Use the explicit-type
+///   form above for that.
+///
+/// An empty invocation (`genes_into![]` or `genes_into![<OutputType>]`)
+/// produces an empty vector.
 ///
 /// ![Railroad diagram for the `genes_into` macro][ref_text]
 ///
@@ -101,6 +116,11 @@ pub use arr_into;
 /// let genes: Vec<PushGene> = vec![
 ///     PushGene::new_instruction(IntInstruction::Add),
 ///     PushGene::new_instruction(BoolInstruction::And),
+/// ];
+///
+/// // The untyped form requires items that are already genes.
+/// let genes: Vec<PushGene> = genes_into![
+///     PushGene::new_instruction(IntInstruction::Add),
 /// ];
 /// ```
 #[macro_railroad_annotation::generate_railroad("ref_text")]
