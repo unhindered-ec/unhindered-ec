@@ -10,6 +10,15 @@ use rand::{Rng, RngExt, prelude::Distribution};
 
 use crate::instruction::{NumOpens, PushInstruction};
 
+/// A gene in a [`Plushy`] genome: either a `Close` marker that closes a block
+/// or an `Instruction`.
+///
+/// The instruction type defaults to [`PushInstruction`], so `PushGene` is the
+/// same as `PushGene<PushInstruction>`; other instruction types can be used by
+/// specifying `I`.
+///
+/// A gene can be built from an instruction with [`PushGene::new_instruction`]
+/// or, when the instruction type already matches, with `From`/`Into`.
 #[derive(Clone, Eq, PartialEq, Debug)]
 pub enum PushGene<I = PushInstruction> {
     Close,
@@ -45,6 +54,12 @@ impl<I> From<I> for PushGene<I> {
 }
 
 impl<T> PushGene<T> {
+    /// Create a gene wrapping `i` as its instruction, converting `i` to the
+    /// gene's instruction type `T` via `Into`.
+    ///
+    /// The surrounding context usually determines `T`. When it doesn't, as in
+    /// a bare `PushGene::new_instruction(x)`, specify it explicitly with
+    /// `PushGene::<T>::new_instruction(x)`.
     pub fn new_instruction<I>(i: I) -> Self
     where
         I: Into<T>,
@@ -179,6 +194,13 @@ where
     }
 }
 
+/// A linear Push genome: an ordered sequence of [`PushGene`]s.
+///
+/// `Plushy` is generic over its instruction type, defaulting to
+/// [`PushInstruction`]. A `Plushy<I>` can be constructed, printed, mutated,
+/// and converted into a `Vec<PushProgram<I>>`, but only
+/// `Plushy<PushInstruction>` (the default) can be *executed*; see
+/// [`PushProgram`](crate::push_vm::program::PushProgram).
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct Plushy<I = PushInstruction> {
     genes: Vec<PushGene<I>>,
@@ -203,16 +225,25 @@ where
     }
 }
 
-// TODO: We might want to implement some sort of `Into`
-// trait instead of just having a getter. Having something
-// like `to_instructions()` since we're cloning?
+// TODO: `Plushy` implements `IntoIterator` (consuming) and `from_instructions`,
+// but `get_genes` is the only non-consuming accessor and it clones. Consider
+// whether a borrowed `to_instructions()` (or an iterator over `&PushGene<I>`)
+// is worth adding.
 impl<I> Plushy<I> {
+    /// Create a plushy from an iterator of [`PushGene`]s.
     pub fn new(iterable: impl IntoIterator<Item = PushGene<I>>) -> Self {
         Self {
             genes: iterable.into_iter().collect(),
         }
     }
 
+    /// Create a plushy from an iterator of instructions, wrapping each one in
+    /// a [`PushGene::Instruction`].
+    ///
+    /// This does not convert between instruction types: the plushy's
+    /// instruction type is the item type `I`. When the items need converting
+    /// (e.g. from a concrete instruction into [`PushInstruction`]), build the
+    /// genes with [`PushGene::new_instruction`] instead.
     pub fn from_instructions(iterable: impl IntoIterator<Item = I>) -> Self {
         Self {
             genes: iterable.into_iter().map(PushGene::Instruction).collect(),
