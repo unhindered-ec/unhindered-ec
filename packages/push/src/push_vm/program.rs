@@ -7,6 +7,14 @@ use crate::{
     },
 };
 
+/// A Push program: a single instruction or a block of programs.
+///
+/// `PushProgram` is generic over its instruction type, defaulting to
+/// [`PushInstruction`]. Programs with other instruction types can still be
+/// constructed, printed, and parsed from a [`Plushy`], but only
+/// `PushProgram<PushInstruction>` can be *executed*: the [`Instruction`]
+/// implementation that runs a program is defined for `PushState` and
+/// `PushInstruction` only.
 #[derive(Debug, strum_macros::Display, Clone, Eq, PartialEq)]
 pub enum PushProgram<I = PushInstruction> {
     Instruction(I),
@@ -38,6 +46,12 @@ impl<I> From<I> for PushProgram<I> {
 }
 
 impl<T> PushProgram<T> {
+    /// Create a program consisting of the single instruction `i`, converting
+    /// `i` to the program's instruction type `T` via `Into`.
+    ///
+    /// The surrounding context usually determines `T`. When it doesn't, as in
+    /// a bare `PushProgram::new_instruction(x)`, specify it explicitly with
+    /// `PushProgram::<T>::new_instruction(x)`.
     pub fn new_instruction<I>(i: I) -> Self
     where
         I: Into<T>,
