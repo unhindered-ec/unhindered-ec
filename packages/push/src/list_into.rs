@@ -81,6 +81,67 @@ macro_rules! arr_into {
 
 pub use arr_into;
 
+/// Create a new vector of genes.
+///
+/// This has two forms:
+///
+/// - `genes_into![<OutputType> items...]` wraps each item by calling the
+///   `new_instruction` associated function on `OutputType`, i.e.
+///   `OutputType::new_instruction(item)`. This is how raw instructions are
+///   turned into genes, e.g. `genes_into![<PushGene> IntInstruction::Add]`,
+///   which calls
+///   [`PushGene::new_instruction`](crate::genome::plushy::PushGene::new_instruction).
+/// - `genes_into![items...]`, with no explicit type, is equivalent to
+///   [`vec_into!`]: each item is converted with `Into::into` to the vector's
+///   element type. The items must therefore already be (or convert to) genes;
+///   raw instructions are *not* wrapped in this form. Use the explicit-type
+///   form above for that.
+///
+/// An empty invocation (`genes_into![]` or `genes_into![<OutputType>]`)
+/// produces an empty vector.
+///
+/// ![Railroad diagram for the `genes_into` macro][ref_text]
+///
+/// # Examples
+/// ```rs
+/// use push::{
+///     genome::plushy::PushGene,
+///     instruction::{BoolInstruction, IntInstruction},
+/// };
+///
+/// let genes: Vec<PushGene> = genes_into![<PushGene>
+///     IntInstruction::Add,
+///     BoolInstruction::And,
+/// ];
+/// let genes: Vec<PushGene> = vec![
+///     PushGene::new_instruction(IntInstruction::Add),
+///     PushGene::new_instruction(BoolInstruction::And),
+/// ];
+///
+/// // The untyped form requires items that are already genes.
+/// let genes: Vec<PushGene> = genes_into![
+///     PushGene::new_instruction(IntInstruction::Add),
+/// ];
+/// ```
+#[macro_railroad_annotation::generate_railroad("ref_text")]
+#[macro_export]
+macro_rules! genes_into {
+    (<$output_type:ty>) => {
+         ::std::vec::Vec::<$output_type>::new()
+    };
+    (<$output_type:ty>$($item:expr),+ $(,)?) => {
+         ::std::vec![$(<$output_type>::new_instruction($item)),+]
+    };
+    () => {
+         ::std::vec::Vec::new()
+    };
+    ($($item:expr),+ $(,)?) => {
+         ::std::vec![$(::std::convert::Into::into($item)),+]
+    };
+}
+
+pub use genes_into;
+
 #[cfg(test)]
 mod test {
     #[test]
@@ -147,5 +208,49 @@ mod test {
     fn arr_explicit_inferred_type() {
         let arr: [u64; 2] = arr_into![4u32, 3u32];
         assert_eq!(arr, [4u64, 3u64]);
+    }
+
+    #[test]
+    fn genes_explicit_given_type() {
+        use crate::{
+            genome::plushy::PushGene,
+            instruction::{BoolInstruction, IntInstruction},
+        };
+
+        let genes: Vec<PushGene> = genes_into![<PushGene>
+            IntInstruction::Add,
+            BoolInstruction::And,
+        ];
+        assert_eq!(
+            genes,
+            vec![
+                PushGene::new_instruction(IntInstruction::Add),
+                PushGene::new_instruction(BoolInstruction::And),
+            ]
+        );
+    }
+
+    #[test]
+    fn genes_empty_given_type() {
+        use crate::genome::plushy::PushGene;
+
+        assert_eq!(genes_into![<PushGene>], Vec::<PushGene>::new());
+    }
+
+    #[test]
+    fn genes_inferred_type() {
+        use crate::{genome::plushy::PushGene, instruction::IntInstruction};
+
+        let genes: Vec<PushGene> = genes_into![
+            PushGene::new_instruction(IntInstruction::Add),
+            PushGene::Close,
+        ];
+        assert_eq!(
+            genes,
+            vec![
+                PushGene::new_instruction(IntInstruction::Add),
+                PushGene::Close,
+            ]
+        );
     }
 }

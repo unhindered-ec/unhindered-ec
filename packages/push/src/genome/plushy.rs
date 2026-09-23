@@ -1,4 +1,4 @@
-use std::fmt::Display;
+use std::{fmt::Display, marker::PhantomData};
 
 use easy_cast::ConvApprox;
 use ec_core::{
@@ -10,13 +10,25 @@ use rand::{Rng, RngExt, prelude::Distribution};
 
 use crate::instruction::{NumOpens, PushInstruction};
 
+/// A gene in a [`Plushy`] genome: either a `Close` marker that closes a block
+/// or an `Instruction`.
+///
+/// The instruction type defaults to [`PushInstruction`], so `PushGene` is the
+/// same as `PushGene<PushInstruction>`; other instruction types can be used by
+/// specifying `I`.
+///
+/// A gene can be built from an instruction with [`PushGene::new_instruction`]
+/// or, when the instruction type already matches, with `From`/`Into`.
 #[derive(Clone, Eq, PartialEq, Debug)]
-pub enum PushGene {
+pub enum PushGene<I = PushInstruction> {
     Close,
-    Instruction(PushInstruction),
+    Instruction(I),
 }
 
-impl Display for PushGene {
+impl<I> Display for PushGene<I>
+where
+    I: Display + NumOpens,
+{
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::Close => {
@@ -35,39 +47,57 @@ impl Display for PushGene {
     }
 }
 
-impl<T> From<T> for PushGene
-where
-    T: Into<PushInstruction>,
-{
-    fn from(instruction: T) -> Self {
-        Self::Instruction(instruction.into())
+impl<I> From<I> for PushGene<I> {
+    fn from(i: I) -> Self {
+        Self::Instruction(i)
+    }
+}
+
+impl<T> PushGene<T> {
+    /// Create a gene wrapping `i` as its instruction, converting `i` to the
+    /// gene's instruction type `T` via `Into`.
+    ///
+    /// The surrounding context usually determines `T`. When it doesn't, as in
+    /// a bare `PushGene::new_instruction(x)`, specify it explicitly with
+    /// `PushGene::<T>::new_instruction(x)`.
+    pub fn new_instruction<I>(i: I) -> Self
+    where
+        I: Into<T>,
+    {
+        Self::Instruction(i.into())
     }
 }
 
 #[derive(Debug, Clone)]
-pub struct GeneGenerator<T>
+pub struct GeneGenerator<T, I = PushInstruction>
 where
-    T: Distribution<PushInstruction>,
+    T: Distribution<I>,
 {
     close_probability: f32,
     instruction_distribution: T,
+    /// `I` only appears in the `T: Distribution<I>` bound, not in any field,
+    /// so this marker keeps it as a type parameter of the struct. It also
+    /// makes the generated genes' instruction type explicit in the value's
+    /// type (`GeneGenerator<T, I>`) rather than being inferred from `T`.
+    _instruction: PhantomData<I>,
 }
 
-impl<T> GeneGenerator<T>
+impl<T, I> GeneGenerator<T, I>
 where
-    T: Distribution<PushInstruction>,
+    T: Distribution<I>,
 {
     #[must_use]
     pub const fn new(close_probability: f32, instructions_distribution: T) -> Self {
         Self {
             close_probability,
             instruction_distribution: instructions_distribution,
+            _instruction: PhantomData,
         }
     }
 }
-impl<T> GeneGenerator<T>
+impl<T, I> GeneGenerator<T, I>
 where
-    T: Distribution<PushInstruction> + Finite,
+    T: Distribution<I> + Finite,
 {
     /// Create a generator where the close tag has the same likelihood of
     /// being chosen as any of the passed in instructions.
@@ -84,44 +114,44 @@ where
     }
 }
 
-pub trait ConvertToGeneGenerator
+pub trait ConvertToGeneGenerator<I = PushInstruction>
 where
-    Self: Distribution<PushInstruction>,
+    Self: Distribution<I>,
 {
     fn into_gene_generator_with_close_probability(
         self,
         close_probability: f32,
-    ) -> GeneGenerator<Self>
+    ) -> GeneGenerator<Self, I>
     where
         Self: Sized;
 
     fn to_gene_generator_with_close_probability(
         &self,
         close_probability: f32,
-    ) -> GeneGenerator<&Self>;
+    ) -> GeneGenerator<&Self, I>;
 
     /// This creates a new gene generator, defaulting to a close probability
     /// that is uniform with the instructions distribution, eg. (1/(n+1)).
-    fn into_gene_generator(self) -> GeneGenerator<Self>
+    fn into_gene_generator(self) -> GeneGenerator<Self, I>
     where
         Self: Sized + Finite;
 
     /// This creates a new gene generator by borrowing from self, defaulting to
     /// a close probability that is uniform with the instructions distribution,
     /// eg. (1/(n+1)).
-    fn to_gene_generator(&self) -> GeneGenerator<&Self>
+    fn to_gene_generator(&self) -> GeneGenerator<&Self, I>
     where
         Self: Finite;
 }
 
-impl<T> ConvertToGeneGenerator for T
+impl<I, T> ConvertToGeneGenerator<I> for T
 where
-    T: Distribution<PushInstruction> + ?Sized,
+    T: Distribution<I> + ?Sized,
 {
     fn into_gene_generator_with_close_probability(
         self,
         close_probability: f32,
-    ) -> GeneGenerator<Self>
+    ) -> GeneGenerator<Self, I>
     where
         Self: Sized,
     {
@@ -131,18 +161,18 @@ where
     fn to_gene_generator_with_close_probability(
         &self,
         close_probability: f32,
-    ) -> GeneGenerator<&Self> {
+    ) -> GeneGenerator<&Self, I> {
         GeneGenerator::new(close_probability, self)
     }
 
-    fn into_gene_generator(self) -> GeneGenerator<Self>
+    fn into_gene_generator(self) -> GeneGenerator<Self, I>
     where
         Self: Sized + Finite,
     {
         GeneGenerator::with_uniform_close_probability(self)
     }
 
-    fn to_gene_generator(&self) -> GeneGenerator<&Self>
+    fn to_gene_generator(&self) -> GeneGenerator<&Self, I>
     where
         Self: Finite,
     {
@@ -150,11 +180,11 @@ where
     }
 }
 
-impl<T> Distribution<PushGene> for GeneGenerator<T>
+impl<I, T> Distribution<PushGene<I>> for GeneGenerator<T, I>
 where
-    T: Distribution<PushInstruction>,
+    T: Distribution<I>,
 {
-    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> PushGene {
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> PushGene<I> {
         if rng.random::<f32>() < self.close_probability {
             PushGene::Close
         } else {
@@ -164,12 +194,22 @@ where
     }
 }
 
+/// A linear Push genome: an ordered sequence of [`PushGene`]s.
+///
+/// `Plushy` is generic over its instruction type, defaulting to
+/// [`PushInstruction`]. A `Plushy<I>` can be constructed, printed, mutated,
+/// and converted into a `Vec<PushProgram<I>>`, but only
+/// `Plushy<PushInstruction>` (the default) can be *executed*; see
+/// [`PushProgram`](crate::push_vm::program::PushProgram).
 #[derive(Debug, Clone, Eq, PartialEq)]
-pub struct Plushy {
-    genes: Vec<PushGene>,
+pub struct Plushy<I = PushInstruction> {
+    genes: Vec<PushGene<I>>,
 }
 
-impl Display for Plushy {
+impl<I> Display for Plushy<I>
+where
+    I: Display + NumOpens,
+{
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let mut iter = self.genes.iter();
         if let Some(gene) = iter.next() {
@@ -185,27 +225,44 @@ impl Display for Plushy {
     }
 }
 
-// TODO: We might want to implement some sort of `Into`
-// trait instead of just having a getter. Having something
-// like `to_instructions()` since we're cloning?
-impl Plushy {
-    pub fn new(iterable: impl IntoIterator<Item = PushGene>) -> Self {
+// TODO: `Plushy` implements `IntoIterator` (consuming) and `from_instructions`,
+// but `get_genes` is the only non-consuming accessor and it clones. Consider
+// whether a borrowed `to_instructions()` (or an iterator over `&PushGene<I>`)
+// is worth adding.
+impl<I> Plushy<I> {
+    /// Create a plushy from an iterator of [`PushGene`]s.
+    pub fn new(iterable: impl IntoIterator<Item = PushGene<I>>) -> Self {
         Self {
             genes: iterable.into_iter().collect(),
         }
     }
 
+    /// Create a plushy from an iterator of instructions, wrapping each one in
+    /// a [`PushGene::Instruction`].
+    ///
+    /// This does not convert between instruction types: the plushy's
+    /// instruction type is the item type `I`. When the items need converting
+    /// (e.g. from a concrete instruction into [`PushInstruction`]), build the
+    /// genes with [`PushGene::new_instruction`] instead.
+    pub fn from_instructions(iterable: impl IntoIterator<Item = I>) -> Self {
+        Self {
+            genes: iterable.into_iter().map(PushGene::Instruction).collect(),
+        }
+    }
+}
+
+impl<I: Clone> Plushy<I> {
     #[must_use]
-    pub fn get_genes(&self) -> Vec<PushGene> {
+    pub fn get_genes(&self) -> Vec<PushGene<I>> {
         self.genes.clone()
     }
 }
 
-impl Genome for Plushy {
-    type Gene = PushGene;
+impl<I> Genome for Plushy<I> {
+    type Gene = PushGene<I>;
 }
 
-impl Linear for Plushy {
+impl<I> Linear for Plushy<I> {
     fn size(&self) -> usize {
         self.genes.len()
     }
@@ -215,29 +272,29 @@ impl Linear for Plushy {
     }
 }
 
-impl<GG> Distribution<Plushy> for collection::Collection<GG>
+impl<I, GG> Distribution<Plushy<I>> for collection::Collection<GG>
 where
-    GG: Distribution<PushGene>,
+    GG: Distribution<PushGene<I>>,
 {
-    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Plushy {
+    fn sample<R: Rng + ?Sized>(&self, rng: &mut R) -> Plushy<I> {
         Plushy {
             genes: rng.sample(self),
         }
     }
 }
 
-impl IntoIterator for Plushy {
-    type Item = PushGene;
+impl<I> IntoIterator for Plushy<I> {
+    type Item = PushGene<I>;
 
-    type IntoIter = std::vec::IntoIter<PushGene>;
+    type IntoIter = std::vec::IntoIter<PushGene<I>>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.genes.into_iter()
     }
 }
 
-impl FromIterator<PushGene> for Plushy {
-    fn from_iter<T: IntoIterator<Item = PushGene>>(iterable: T) -> Self {
+impl<I> FromIterator<PushGene<I>> for Plushy<I> {
+    fn from_iter<T: IntoIterator<Item = PushGene<I>>>(iterable: T) -> Self {
         Self {
             genes: iterable.into_iter().collect(),
         }
@@ -256,8 +313,32 @@ mod test {
     use super::*;
     use crate::{
         instruction::{BoolInstruction, IntInstruction, with_input::WithInputInstruction},
-        list_into::vec_into,
+        list_into::{arr_into, genes_into},
     };
+
+    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+    enum MyInstruction {
+        Add,
+        Block,
+    }
+
+    impl Display for MyInstruction {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            f.write_str(match self {
+                Self::Add => "Add",
+                Self::Block => "Block",
+            })
+        }
+    }
+
+    impl NumOpens for MyInstruction {
+        fn num_opens(&self) -> usize {
+            match self {
+                Self::Add => 0,
+                Self::Block => 1,
+            }
+        }
+    }
 
     #[test]
     fn generator() {
@@ -275,19 +356,65 @@ mod test {
         assert_eq!(10, plushy.genes.len());
     }
 
+    #[test]
+    fn generic_gene_generator() {
+        let mut rng = rng();
+        let plushy: Plushy<MyInstruction> = uniform_distribution_of![<MyInstruction>
+            MyInstruction::Add,
+            MyInstruction::Block,
+        ]
+        .into_gene_generator()
+        .into_collection(10)
+        .sample(&mut rng);
+
+        assert_eq!(10, plushy.size());
+    }
+
+    #[test]
+    fn generic_plushy_display() {
+        let plushy = Plushy::<MyInstruction>::new([
+            MyInstruction::Add.into(),
+            MyInstruction::Block.into(),
+            PushGene::Close,
+        ]);
+
+        assert_eq!("Add Block { }", plushy.to_string());
+    }
+
+    #[test]
+    fn from_instructions() {
+        let plushy = Plushy::from_instructions(arr_into![<PushInstruction>
+            IntInstruction::Add,
+            BoolInstruction::And,
+        ]);
+        assert_eq!(
+            plushy,
+            Plushy::new([
+                PushGene::new_instruction(IntInstruction::Add),
+                PushGene::new_instruction(BoolInstruction::And),
+            ])
+        );
+    }
+
+    #[test]
+    fn from_instructions_generic() {
+        let plushy =
+            Plushy::<MyInstruction>::from_instructions([MyInstruction::Add, MyInstruction::Block]);
+        assert_eq!(plushy.size(), 2);
+    }
+
     #[ignore = "this has about a 2.665% chance on failing at least once across the three test \
                 runners in ci"]
     #[test]
     fn umad() {
         let mut rng = rng();
 
-        let instruction_options =
-            uniform_distribution_of![<PushGene> WithInputInstruction::from("x")];
+        let instruction_options = uniform_distribution_of![<PushGene> PushInstruction::from(WithInputInstruction::from("x"))];
 
         let umad = Umad::new(0.3, 0.3, instruction_options);
 
         let parent = Plushy {
-            genes: vec_into![
+            genes: genes_into![<PushGene>
                 IntInstruction::Add,
                 BoolInstruction::And,
                 BoolInstruction::Or,
@@ -325,5 +452,6 @@ mod test {
         );
     }
 
-    // TODO: Test that `Umad` works here on Plushy genomes.
+    // `Umad` on `Plushy` genomes is covered end-to-end with a custom
+    // instruction type in `packages/push/tests/generic_instruction.rs`.
 }
