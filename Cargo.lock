@@ -430,7 +430,7 @@ dependencies = [
 name = "ec_macros"
 version = "0.1.0"
 dependencies = [
- "manyhow 0.13.0",
+ "manyhow 0.14.0",
  "proc-macro2",
  "quote",
  "syn 3.0.5",
@@ -662,11 +662,11 @@ dependencies = [
 
 [[package]]
 name = "manyhow"
-version = "0.13.0"
+version = "0.14.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e480c047342e73ccc05fb821f0953512868b9257c2559b22a7e3efafc4aad85d"
+checksum = "8c69ea6e469ca785c846b25dd69eac9e9c916b51d8ada1f212866787ee1da12d"
 dependencies = [
- "manyhow-macros 0.13.0",
+ "manyhow-macros 0.14.0",
  "proc-macro2",
  "quote",
  "syn 3.0.5",
@@ -685,9 +685,9 @@ dependencies = [
 
 [[package]]
 name = "manyhow-macros"
-version = "0.13.0"
+version = "0.14.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c3330ca83c69fe1691d12126d522dda965e58735ac26052580f95f56e4169ec4"
+checksum = "22fc5c1b2c4000056dae3619fea36e79ce79dabfee4907d2dcad6612b189e370"
 dependencies = [
  "proc-macro-utils",
  "proc-macro2",
@@ -942,7 +942,7 @@ dependencies = [
  "ident_case_conversions",
  "itertools 0.15.0",
  "macro_railroad_annotation",
- "manyhow 0.13.0",
+ "manyhow 0.14.0",
  "prettyplease",
  "proc-macro2",
  "quote",
