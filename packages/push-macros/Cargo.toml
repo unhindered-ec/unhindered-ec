@@ -20,7 +20,7 @@ proc-macro = true
 ident_case_conversions = "1.0.0"
 itertools = { workspace = true }
 macro_railroad_annotation = { workspace = true }
-manyhow = "0.13.0"
+manyhow = "0.14.0"
 prettyplease = "0.3.0"
 proc-macro2 = "1.0.81"
 quote = "1.0.33"
