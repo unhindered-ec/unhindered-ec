@@ -125,9 +125,13 @@ where
         if bool_stack.is_full()
             && ![TypeId::of::<First>(), TypeId::of::<Second>()].contains(&TypeId::of::<bool>())
         {
+            let max_size = bool_stack.max_stack_size();
             return Err(Error::fatal(
                 state,
-                StackError::Overflow { stack_type: "bool" },
+                StackError::Overflow {
+                    stack_type: "bool",
+                    max_size,
+                },
             ));
         }
 
@@ -267,7 +271,10 @@ mod test {
         assert!(!result.is_recoverable());
         assert_eq!(
             result.error(),
-            &PushInstructionError::StackError(StackError::Overflow { stack_type: "bool" })
+            &PushInstructionError::StackError(StackError::Overflow {
+                stack_type: "bool",
+                max_size: 2
+            })
         );
     }
 
