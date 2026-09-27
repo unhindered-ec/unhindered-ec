@@ -54,7 +54,8 @@ pub struct CliArgs {
     pub upper_input_bound: i64,
 
     /// Penalty value to use when a program doesn't
-    /// have a value on the expected "return" stack.
-    #[clap(short = 'v', long, default_value_t = 1_000)]
+    /// have a value on the expected "return" stack, or when
+    /// running the program generates a fatal error.
+    #[clap(short = 'v', long, default_value_t = 1_000_000_000)]
     pub penalty_value: i128,
 }

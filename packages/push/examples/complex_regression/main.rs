@@ -42,8 +42,9 @@ use crate::args::{CliArgs, RunModel};
  */
 
 // The penalty value to use when an evolved program doesn't have an expected
-// "return" value on the appropriate stack at the end of its execution.
-const PENALTY_VALUE: f64 = 1_000_000.0;
+// "return" value on the appropriate stack at the end of its execution, or when
+// running the program generates a fatal error.
+const PENALTY_VALUE: f64 = 1_000_000_000.0;
 
 type Of64 = OrderedFloat<f64>;
 

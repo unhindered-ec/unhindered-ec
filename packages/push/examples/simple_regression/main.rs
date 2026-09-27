@@ -45,7 +45,10 @@ use crate::args::{CliArgs, RunModel};
 * https://github.com/lspector/Clojush/blob/e2c9d8c830715f7d1e644f6205c192b9e5ceead2/src/clojush/problems/demos/simple_regression.clj
 */
 
-const PENALTY_VALUE: f64 = 1_000.0;
+// The penalty value to use when an evolved program doesn't have an expected
+// "return" value on the appropriate stack at the end of its execution, or when
+// running the program generates a fatal error.
+const PENALTY_VALUE: f64 = 1_000_000_000.0;
 
 type Of64 = OrderedFloat<f64>;
 
