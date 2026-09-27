@@ -130,6 +130,13 @@ impl<S, E> IntoState<S> for Error<S, E> {
             | Self::Fatal(StatefulError { state, .. }) => *state,
         }
     }
+
+    fn as_state(&self) -> &S {
+        match self {
+            Self::Recoverable(StatefulError { state, .. })
+            | Self::Fatal(StatefulError { state, .. }) => state,
+        }
+    }
 }
 
 impl<S, E> TryRecover<S> for Result<S, Error<S, E>> {
