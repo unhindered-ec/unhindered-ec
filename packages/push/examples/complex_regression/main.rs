@@ -22,11 +22,11 @@ use ec_core::{
     uniform_distribution_of,
 };
 use ec_linear::mutator::umad::Umad;
-use miette::{Report, ensure};
+use miette::ensure;
 use num_traits::Float;
 use ordered_float::OrderedFloat;
 use push::{
-    error::into_state::IntoState,
+    error::{into_state::IntoState, logging::PrintError},
     evaluation::{Case, Cases, WithTargetFn},
     genome::plushy::{ConvertToGeneGenerator, Plushy},
     instruction::{FloatInstruction, PushInstruction, with_input::WithInputInstruction},
@@ -47,7 +47,7 @@ type Of64 = OrderedFloat<f64>;
 // The penalty value to use when an evolved program doesn't have an expected
 // "return" value on the appropriate stack at the end of its execution, or when
 // running the program generates a fatal error.
-const PENALTY_VALUE: f64 = 1_000_000_000.0;
+const PENALTY_VALUE: Of64 = OrderedFloat(1e9);
 
 /// The target polynomial is (x^3 + 1)^3 + 1
 /// i.e., x^9 + 3x^6 + 3x^3 + 2
@@ -55,37 +55,22 @@ fn target_fn(input: Of64) -> Of64 {
     (input.powi(3) + 1.0).powi(3) + 1.0
 }
 
-#[expect(
-    clippy::use_debug,
-    reason = "We want to use the pretty miette-based debug formatting here"
-)]
 fn run_case(program: &[PushProgram], Case { input, output }: Case<Of64>) -> Of64 {
-    let penalty_value = Of64::from(PENALTY_VALUE);
-
-    let start_state = match build_state(program, input) {
-        Ok(state) => state,
-        Err(error) => {
-            eprintln!("FATAL: {:?}", Report::new(error));
-            // If we fail to correctly build the initial state (because, for example,
-            // the initial program is longer than the maximum size of the `exec` stack),
-            // then we just return the `penalty_value`.
-            return penalty_value;
-        }
+    let Ok(start_state) = build_state(program, input).print_error() else {
+        // If we fail to correctly build the initial state (because, for example,
+        // the initial program is longer than the maximum size of the `exec` stack),
+        // then we just return the `penalty_value`.
+        return PENALTY_VALUE;
     };
 
-    start_state.run_to_completion().map_or_else(
-        |error| {
-            // If running the program leads to a fatal error, then we extract the state from
-            // the error, and compute the error using that state, i.e., the
-            // values on the stacks when the error occurred. We have to compute
-            // `result` first because `Report::new(error)` takes ownership
-            // of `error`, and thus the enclosed state.`
-            let result = compute_error(error.as_state(), penalty_value, output);
-            eprintln!("FATAL: {:?}", Report::new(error));
-            result
-        },
-        |final_state| compute_error(&final_state, penalty_value, output),
-    )
+    let state = start_state
+        .run_to_completion()
+        // If running the program leads to a fatal error, then we print the error, and then extract
+        // the state from the error, and compute the error using that state, i.e., the
+        // values on the stacks when the error occurred.
+        .print_error()
+        .unwrap_or_else(IntoState::into_state);
+    compute_error(&state, PENALTY_VALUE, output)
 }
 
 fn build_state(program: &[PushProgram], input: Of64) -> Result<PushState, StackError> {
