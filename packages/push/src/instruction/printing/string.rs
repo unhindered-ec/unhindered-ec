@@ -46,7 +46,7 @@ use crate::{
 ///     .with_instruction_step_limit(10)
 ///     .build();
 /// // Print the string "Hello".
-/// let mut result = PrintString("Hello".to_string())
+/// let result = PrintString("Hello".to_string())
 ///     .perform(push_state)
 ///     .unwrap();
 /// // Extract the printed output.

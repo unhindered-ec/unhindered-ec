@@ -74,7 +74,7 @@ use crate::{
 ///     .with_instruction_step_limit(10)
 ///     .build();
 /// // Print the value on the integer stack.
-/// let mut result = Print::<i64>::default().perform(push_state).unwrap();
+/// let result = Print::<i64>::default().perform(push_state).unwrap();
 /// // Assert that the integer stack is now empty.
 /// assert_eq!(result.stack::<i64>().size(), 0);
 /// // Extract the printed output.
@@ -189,7 +189,7 @@ impl<T> NumOpens for Print<T> {
 ///     .with_instruction_step_limit(10)
 ///     .build();
 /// // Print the value on the integer stack.
-/// let mut result = PrintLn::<i64>::default().perform(push_state).unwrap();
+/// let result = PrintLn::<i64>::default().perform(push_state).unwrap();
 /// // Assert that the integer stack is now empty.
 /// assert_eq!(result.stack::<i64>().size(), 0);
 /// // Extract the printed output.
