@@ -11,7 +11,6 @@ use crate::push_vm::{stack::StackError, variables::UnknownVariableError};
 #[error("There was a error evaluating a `PushInstruction`")]
 pub enum PushInstructionError {
     /// Stack errors can be things like stack over- or underflows.
-    // #[error("transparent")]
     #[diagnostic(transparent)]
     StackError(#[from] StackError),
     #[error("Exceeded the maximum step limit {step_limit}")]
@@ -25,15 +24,12 @@ pub enum PushInstructionError {
     StepLimitExceeded { step_limit: usize },
 
     /// Int errors can be things like integer overflows.
-    // #[error(transparent)]
     #[diagnostic(transparent)]
     Int(#[from] IntInstructionError),
 
-    // #[error(transparent)]
     #[diagnostic(transparent)]
     Printing(#[from] PrintingError),
 
-    // #[error(transparent)]
     #[diagnostic(transparent)]
     UnknownVariable(#[from] UnknownVariableError),
 }
