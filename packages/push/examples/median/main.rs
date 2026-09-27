@@ -15,9 +15,9 @@ use ec_core::{
     performance::{error_value::ErrorValue, test_results::TestResults},
 };
 use ec_linear::mutator::umad::Umad;
-use miette::{IntoDiagnostic, Report, ensure};
+use miette::{IntoDiagnostic, ensure};
 use push::{
-    error::into_state::IntoState,
+    error::{into_state::IntoState, logging::PrintError},
     evaluation::{Case, Cases, WithTargetFn},
     genome::plushy::{GeneGenerator, Plushy},
     instruction::{
@@ -152,10 +152,6 @@ fn score_genome(
         .collect()
 }
 
-#[expect(
-    clippy::use_debug,
-    reason = "We want to use the pretty miette-based debug formatting here"
-)]
 fn run_case(
     Case {
         input,
@@ -164,30 +160,21 @@ fn run_case(
     program: &[PushProgram],
     penalty_value: i128,
 ) -> i128 {
-    let start_state = match build_state(program, input) {
-        Ok(state) => state,
-        Err(error) => {
-            eprintln!("FATAL: {:?}", Report::new(error));
-            // If we fail to correctly build the initial state (because, for example,
-            // the initial program is longer than the maximum size of the `exec` stack),
-            // then we just return the `penalty_value`.
-            return penalty_value;
-        }
+    let Ok(start_state) = build_state(program, input).print_error() else {
+        // If we fail to correctly build the initial state (because, for example,
+        // the initial program is longer than the maximum size of the `exec` stack),
+        // then we just return the `penalty_value`.
+        return penalty_value;
     };
 
-    start_state.run_to_completion().map_or_else(
-        |error| {
-            // If running the program leads to a fatal error, then we extract the state from
-            // the error, and compute the error using that state, i.e., the
-            // values on the stacks when the error occurred. We have to compute
-            // `result` first because `Report::new(error)` takes ownership
-            // of `error`, and thus the enclosed state.`
-            let result = compute_error(error.as_state(), penalty_value, expected);
-            eprintln!("FATAL: {:?}", Report::new(error));
-            result
-        },
-        |final_state| compute_error(&final_state, penalty_value, expected),
-    )
+    let state = start_state
+        .run_to_completion()
+        // If running the program leads to a fatal error, then we print the error, and then extract
+        // the state from the error, and compute the error using that state, i.e., the
+        // values on the stacks when the error occurred.
+        .print_error()
+        .unwrap_or_else(IntoState::into_state);
+    compute_error(&state, penalty_value, expected)
 }
 
 fn build_state(program: &[PushProgram], Input([a, b, c]): Input) -> Result<PushState, StackError> {
