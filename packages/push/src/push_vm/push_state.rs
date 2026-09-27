@@ -71,7 +71,7 @@ impl PushState {
     ///
     /// Returns a `FromUtf8Error` if there is a problem converting
     /// the contents of `Self::Stdout` into a `String`.
-    pub fn stdout_string(&mut self) -> Result<String, FromUtf8Error> {
+    pub fn stdout_string(&self) -> Result<String, FromUtf8Error> {
         String::from_utf8(self.stdout.clone().into_inner())
     }
 }

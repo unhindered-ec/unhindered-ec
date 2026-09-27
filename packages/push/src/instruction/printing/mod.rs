@@ -267,7 +267,7 @@ mod tests {
             .unwrap()
             .with_instruction_step_limit(10)
             .build();
-        let mut result = Print::<i64>::default().perform(push_state).unwrap();
+        let result = Print::<i64>::default().perform(push_state).unwrap();
         assert_eq!(result.stack::<i64>().size(), 0);
         let output = result.stdout_string().unwrap();
         assert_eq!(output, "42");
@@ -282,7 +282,7 @@ mod tests {
             .with_no_program()
             .with_instruction_step_limit(10)
             .build();
-        let mut result = Print::<OrderedFloat<f64>>::default()
+        let result = Print::<OrderedFloat<f64>>::default()
             .perform(push_state)
             .unwrap();
         assert_eq!(result.stack::<OrderedFloat<f64>>().size(), 0);
@@ -299,7 +299,7 @@ mod tests {
             .with_no_program()
             .with_instruction_step_limit(10)
             .build();
-        let mut result = Print::<bool>::default().perform(push_state).unwrap();
+        let result = Print::<bool>::default().perform(push_state).unwrap();
         assert_eq!(result.stack::<bool>().size(), 0);
         let output = result.stdout_string().unwrap();
         assert_eq!(output, "true");
@@ -332,7 +332,7 @@ mod tests {
             .unwrap()
             .with_instruction_step_limit(10)
             .build();
-        let mut result = PrintLn::<i64>::default().perform(push_state).unwrap();
+        let result = PrintLn::<i64>::default().perform(push_state).unwrap();
         assert_eq!(result.stack::<i64>().size(), 0);
         let output = result.stdout_string().unwrap();
         assert_eq!(output, "42\n");
@@ -347,7 +347,7 @@ mod tests {
             .with_no_program()
             .with_instruction_step_limit(10)
             .build();
-        let mut result = PrintLn::<OrderedFloat<f64>>::default()
+        let result = PrintLn::<OrderedFloat<f64>>::default()
             .perform(push_state)
             .unwrap();
         assert_eq!(result.stack::<OrderedFloat<f64>>().size(), 0);
@@ -364,7 +364,7 @@ mod tests {
             .with_no_program()
             .with_instruction_step_limit(10)
             .build();
-        let mut result = PrintLn::<bool>::default().perform(push_state).unwrap();
+        let result = PrintLn::<bool>::default().perform(push_state).unwrap();
         assert_eq!(result.stack::<bool>().size(), 0);
         let output = result.stdout_string().unwrap();
         assert_eq!(output, "false\n");
@@ -407,7 +407,7 @@ mod tests {
             .unwrap()
             .with_instruction_step_limit(10)
             .build();
-        let mut result = push_state.run_to_completion().unwrap();
+        let result = push_state.run_to_completion().unwrap();
         assert_eq!(result.stack::<bool>().size(), 0);
         let output = result.stdout_string().unwrap();
         assert_eq!(output, "5false8\n9");

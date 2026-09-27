@@ -116,7 +116,7 @@ mod tests {
             .with_instruction_step_limit(10)
             .build();
 
-        let mut result = PrintChar::<'a'>.perform(push_state).unwrap();
+        let result = PrintChar::<'a'>.perform(push_state).unwrap();
         let output = result.stdout_string().unwrap();
         assert_eq!(output, "a");
     }
@@ -129,7 +129,7 @@ mod tests {
             .with_instruction_step_limit(10)
             .build();
 
-        let mut result = PrintChar::<'\n'>.perform(push_state).unwrap();
+        let result = PrintChar::<'\n'>.perform(push_state).unwrap();
         let output = result.stdout_string().unwrap();
         assert_eq!(output, "\n");
     }
@@ -142,7 +142,7 @@ mod tests {
             .with_instruction_step_limit(10)
             .build();
 
-        let mut result = PrintSpace::default().perform(push_state).unwrap();
+        let result = PrintSpace::default().perform(push_state).unwrap();
         let output = result.stdout_string().unwrap();
         assert_eq!(output, " ");
     }
@@ -155,7 +155,7 @@ mod tests {
             .with_instruction_step_limit(10)
             .build();
 
-        let mut result = PrintNewline::default().perform(push_state).unwrap();
+        let result = PrintNewline::default().perform(push_state).unwrap();
         let output = result.stdout_string().unwrap();
         assert_eq!(output, "\n");
     }
@@ -168,7 +168,7 @@ mod tests {
             .with_instruction_step_limit(10)
             .build();
 
-        let mut result = PrintPeriod::default().perform(push_state).unwrap();
+        let result = PrintPeriod::default().perform(push_state).unwrap();
         let output = result.stdout_string().unwrap();
         assert_eq!(output, ".");
     }

@@ -102,7 +102,7 @@ mod tests {
             .build();
 
         let print_hello = PrintString("Hello, world!".to_string());
-        let mut result = print_hello.perform(state).unwrap();
+        let result = print_hello.perform(state).unwrap();
         let output = result.stdout_string().unwrap();
         assert_eq!(output, "Hello, world!");
     }
@@ -116,7 +116,7 @@ mod tests {
             .build();
 
         let print_empty = PrintString(String::new());
-        let mut result = print_empty.perform(state).unwrap();
+        let result = print_empty.perform(state).unwrap();
         let output = result.stdout_string().unwrap();
         assert_eq!(output, "");
     }
@@ -130,7 +130,7 @@ mod tests {
             .build();
 
         let print_newline = PrintString("Line 1\nLine 2".to_string());
-        let mut result = print_newline.perform(state).unwrap();
+        let result = print_newline.perform(state).unwrap();
         let output = result.stdout_string().unwrap();
         assert_eq!(output, "Line 1\nLine 2");
     }
