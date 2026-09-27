@@ -5,6 +5,7 @@ use self::{
 };
 
 pub mod into_state;
+pub mod logging;
 pub mod stateful;
 pub mod try_recover;
 
