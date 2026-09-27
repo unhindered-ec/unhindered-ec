@@ -25,7 +25,7 @@ use ec_core::{
     uniform_distribution_of,
 };
 use ec_linear::mutator::umad::Umad;
-use miette::ensure;
+use miette::{Report, ensure};
 use num_traits::Float;
 use ordered_float::OrderedFloat;
 use push::{
@@ -77,15 +77,22 @@ fn build_push_state(
         .build()
 }
 
+#[expect(
+    clippy::use_debug,
+    reason = "We want to use the pretty miette-based debug formatting here"
+)]
 fn score_program(
     program: impl DoubleEndedIterator<Item = PushProgram> + ExactSizeIterator,
     Case { input, output }: Case<Of64>,
 ) -> Of64 {
     let state = build_push_state(program, input);
 
-    let Ok(state) = state.run_to_completion() else {
-        // Do some logging, perhaps?
-        return Of64::from(PENALTY_VALUE);
+    let state = match state.run_to_completion() {
+        Ok(state) => state,
+        Err(error) => {
+            eprintln!("FATAL: {:?}", Report::new(error));
+            return Of64::from(PENALTY_VALUE);
+        }
     };
 
     let Ok(&answer) = state.stack::<Of64>().top() else {

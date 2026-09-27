@@ -15,7 +15,7 @@ use ec_core::{
     performance::{error_value::ErrorValue, test_results::TestResults},
 };
 use ec_linear::mutator::umad::Umad;
-use miette::{IntoDiagnostic, ensure};
+use miette::{IntoDiagnostic, Report, ensure};
 use push::{
     evaluation::{Case, Cases, WithTargetFn},
     genome::plushy::{GeneGenerator, Plushy},
@@ -157,6 +157,10 @@ fn score_genome(
         .collect()
 }
 
+#[expect(
+    clippy::use_debug,
+    reason = "We want to use the pretty miette-based debug formatting here"
+)]
 fn run_case(
     Case {
         input,
@@ -165,17 +169,21 @@ fn run_case(
     program: &[PushProgram],
     penalty_value: i128,
 ) -> i128 {
-    build_state(program, input).map_or(penalty_value, |start_state| {
-        // I don't think we're properly handling things like exceeding maximum
-        // stack size. I think the "Push way" here would be to take whatever
-        // value is on top of the relevant stack and go with it, but we instead
-        // return the penalty value.
-        start_state
-            .run_to_completion()
-            .map_or(penalty_value, |final_state| {
-                compute_error(&final_state, penalty_value, expected)
-            })
-    })
+    let Ok(start_state) = build_state(program, input) else {
+        return penalty_value;
+    };
+
+    // I don't think we're properly handling things like exceeding maximum
+    // stack size. I think the "Push way" here would be to take whatever
+    // value is on top of the relevant stack and go with it, but we instead
+    // return the penalty value.
+    start_state.run_to_completion().map_or_else(
+        |error| {
+            eprintln!("FATAL: {:?}", Report::new(error));
+            penalty_value
+        },
+        |final_state| compute_error(&final_state, penalty_value, expected),
+    )
 }
 
 fn build_state(
