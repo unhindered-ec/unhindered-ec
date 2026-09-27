@@ -170,11 +170,15 @@ fn run_case(
     program: &[PushProgram],
     penalty_value: i128,
 ) -> i128 {
-    let Ok(start_state) = build_state(program, input) else {
-        // If we fail to correctly build the initial state (because, for example,
-        // the initial program is longer than the maximum size of the `exec` stack),
-        // then we just return the `penalty_value`.
-        return penalty_value;
+    let start_state = match build_state(program, input) {
+        Ok(state) => state,
+        Err(error) => {
+            eprintln!("FATAL: {:?}", Report::new(error));
+            // If we fail to correctly build the initial state (because, for example,
+            // the initial program is longer than the maximum size of the `exec` stack),
+            // then we just return the `penalty_value`.
+            return penalty_value;
+        }
     };
 
     start_state.run_to_completion().map_or_else(
