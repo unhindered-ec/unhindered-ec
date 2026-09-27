@@ -17,6 +17,7 @@ use ec_core::{
 use ec_linear::mutator::umad::Umad;
 use miette::{IntoDiagnostic, Report, ensure};
 use push::{
+    error::into_state::IntoState,
     evaluation::{Case, Cases, WithTargetFn},
     genome::plushy::{GeneGenerator, Plushy},
     instruction::{
@@ -164,16 +165,22 @@ fn run_case(
     penalty_value: i128,
 ) -> i128 {
     let Ok(start_state) = build_state(program, input) else {
+        // If we fail to correctly build the initial state (because, for example,
+        // the initial program is longer than the maximum size of the `exec` stack),
+        // then we just return the `penalty_value`.
         return penalty_value;
     };
-    // I don't think we're properly handling things like exceeding maximum
-    // stack size. I think the "Push way" here would be to take whatever
-    // value is on top of the relevant stack and go with it, but we instead
-    // return the penalty value.
+
     start_state.run_to_completion().map_or_else(
         |error| {
+            // If running the program leads to a fatal error, then we extract the state from
+            // the error, and compute the error using that state, i.e., the
+            // values on the stacks when the error occurred. We have to compute
+            // `result` first because `Report::new(error)` takes ownership
+            // of `error`, and thus the enclosed state.`
+            let result = compute_error(error.as_state(), penalty_value, expected);
             eprintln!("FATAL: {:?}", Report::new(error));
-            penalty_value
+            result
         },
         |final_state| compute_error(&final_state, penalty_value, expected),
     )
