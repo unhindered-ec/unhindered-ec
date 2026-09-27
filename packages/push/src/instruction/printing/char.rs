@@ -39,7 +39,7 @@ use crate::{
 ///     .with_instruction_step_limit(10)
 ///     .build();
 /// // Print the character 'x'.
-/// let mut result = PrintChar::<'x'>.perform(push_state).unwrap();
+/// let result = PrintChar::<'x'>.perform(push_state).unwrap();
 /// // Extract the printed output.
 /// let output = result.stdout_string().unwrap();
 /// // Assert that this is equal to "x".
