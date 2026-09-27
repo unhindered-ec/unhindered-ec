@@ -81,8 +81,14 @@ impl<S, E, Severity: ErrorSeverity> StatefulError<S, E, Severity> {
 }
 
 impl<S, E, Severity: ErrorSeverity> IntoState<S> for StatefulError<S, E, Severity> {
+    /// Convert the error into its embedded state.
     fn into_state(self) -> S {
         *self.state
+    }
+
+    /// Borrows the state embedded in the error
+    fn as_state(&self) -> &S {
+        &self.state
     }
 }
 
