@@ -89,7 +89,7 @@ struct Output(String);
 // Software Engineering, vol. 41, no. 12, pp. 1236-1256, Dec. 1 2015.
 // doi: 10.1109/TSE.2015.2454513
 //
-// This problem is quite easy as it only requires teh ability to convert
+// This problem is quite easy as it only requires the ability to convert
 // an integer value to a float, add the two values, and print the result.
 fn main() -> miette::Result<()> {
     let CliArgs {
@@ -171,7 +171,7 @@ fn main() -> miette::Result<()> {
             clippy::unwrap_used,
             reason = "The 'best' program should run successfully"
         )]
-        let mut state = build_state(&Vec::<PushProgram>::from(best.genome.clone()), first_input)?
+        let state = build_state(&Vec::<PushProgram>::from(best.genome.clone()), &first_input)?
             .run_to_completion()
             .unwrap();
         #[expect(
@@ -233,7 +233,7 @@ fn build_state(program: &[PushProgram], Input { i, f }: Input) -> Result<PushSta
         .build())
 }
 
-fn compute_error(final_state: &mut PushState, penalty_value: usize, expected: &str) -> usize {
+fn compute_error(final_state: &PushState, penalty_value: usize, expected: &str) -> usize {
     let Ok(output) = final_state.stdout_string() else {
         return penalty_value;
     };
