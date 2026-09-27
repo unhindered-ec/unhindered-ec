@@ -29,7 +29,7 @@ use miette::ensure;
 use num_traits::Float;
 use ordered_float::OrderedFloat;
 use push::{
-    error::{into_state::IntoState, logging::PrintError},
+    error::{IntoState, logging::PrintError},
     evaluation::{Case, Cases, WithTargetFn},
     genome::plushy::{ConvertToGeneGenerator, Plushy},
     instruction::{FloatInstruction, PushInstruction, with_input::WithInputInstruction},

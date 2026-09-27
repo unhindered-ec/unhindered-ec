@@ -114,7 +114,7 @@ where
 mod tests {
     use super::When;
     use crate::{
-        error::into_state::IntoState,
+        error::IntoState,
         instruction::{ExecInstruction, Instruction, PushInstructionError},
         push_vm::{push_state::PushState, stack::StackError},
     };

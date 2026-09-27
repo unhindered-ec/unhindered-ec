@@ -1,9 +1,10 @@
+pub use self::{as_state::AsState, into_state::IntoState};
 use self::{
-    into_state::IntoState,
     stateful::{FatalError, RecoverableError, StatefulError},
     try_recover::TryRecover,
 };
 
+pub mod as_state;
 pub mod into_state;
 pub mod logging;
 pub mod stateful;
@@ -131,7 +132,9 @@ impl<S, E> IntoState<S> for Error<S, E> {
             | Self::Fatal(StatefulError { state, .. }) => *state,
         }
     }
+}
 
+impl<S, E> AsState<S> for Error<S, E> {
     fn as_state(&self) -> &S {
         match self {
             Self::Recoverable(StatefulError { state, .. })

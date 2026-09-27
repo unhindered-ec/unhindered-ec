@@ -8,6 +8,7 @@ use std::{
 use miette::Diagnostic;
 
 use super::{into_state::IntoState, try_recover::TryRecover};
+use crate::error::as_state::AsState;
 
 mod private {
     use super::{Fatal, Recoverable};
@@ -85,7 +86,9 @@ impl<S, E, Severity: ErrorSeverity> IntoState<S> for StatefulError<S, E, Severit
     fn into_state(self) -> S {
         *self.state
     }
+}
 
+impl<S, E, Severity: ErrorSeverity> AsState<S> for StatefulError<S, E, Severity> {
     /// Borrows the state embedded in the error
     fn as_state(&self) -> &S {
         &self.state

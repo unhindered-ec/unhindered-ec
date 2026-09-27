@@ -153,7 +153,7 @@ where
 mod tests {
     use super::IfElse;
     use crate::{
-        error::into_state::IntoState,
+        error::IntoState,
         instruction::{
             ExecInstruction, Instruction, IntInstruction, instruction_error::PushInstructionError,
         },

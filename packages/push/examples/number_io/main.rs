@@ -20,7 +20,7 @@ use ec_linear::mutator::umad::Umad;
 use miette::{Context, IntoDiagnostic, ensure, miette};
 use ordered_float::OrderedFloat;
 use push::{
-    error::{into_state::IntoState, logging::PrintError},
+    error::{IntoState, logging::PrintError},
     evaluation::{Case, Cases, WithTargetFn},
     genome::plushy::{GeneGenerator, Plushy},
     instruction::{
