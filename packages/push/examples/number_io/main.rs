@@ -17,7 +17,7 @@ use ec_core::{
     performance::{error_value::ErrorValue, test_results::TestResults},
 };
 use ec_linear::mutator::umad::Umad;
-use miette::{IntoDiagnostic, Report, ensure};
+use miette::{Context, IntoDiagnostic, Report, ensure, miette};
 use ordered_float::OrderedFloat;
 use push::{
     error::into_state::IntoState,
@@ -163,23 +163,17 @@ fn main() -> miette::Result<()> {
         let best = Best.select(generation.population(), &mut rng)?;
         println!("Generation {generation_number:4} best is {best}");
 
-        #[expect(
-            clippy::unwrap_used,
-            reason = "There should be at least one training case, so this shouldn't fail"
-        )]
-        let first_input = *training_cases.inputs().next().unwrap();
-        #[expect(
-            clippy::unwrap_used,
-            reason = "The 'best' program should run successfully"
-        )]
+        let first_input = *training_cases
+            .inputs()
+            .next()
+            .context("There were no training cases")?;
+
         let state = build_state(&Vec::<PushProgram>::from(best.genome.clone()), &first_input)?
-            .run_to_completion()
-            .unwrap();
-        #[expect(
-            clippy::unwrap_used,
-            reason = "The 'best' program should run successfully"
-        )]
-        let output = state.stdout_string().unwrap();
+            .run_to_completion()?;
+
+        let output = state
+            .stdout_string()
+            .map_err(|err| miette!(err).wrap_err("Failed to convert `stdout` to `String`"))?;
         println!("Stdout for input {first_input}: {output}");
 
         if best.test_results.total().is_some_and(|error| error == &0) {
