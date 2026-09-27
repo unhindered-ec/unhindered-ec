@@ -17,7 +17,7 @@ use ec_core::{
 use ec_linear::mutator::umad::Umad;
 use miette::{IntoDiagnostic, ensure};
 use push::{
-    error::{into_state::IntoState, logging::PrintError},
+    error::{IntoState, logging::PrintError},
     evaluation::{Case, Cases, WithTargetFn},
     genome::plushy::{GeneGenerator, Plushy},
     instruction::{
