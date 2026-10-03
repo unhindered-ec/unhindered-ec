@@ -65,7 +65,7 @@ impl<T> PushGene<T> {
 }
 
 #[derive(Debug, Clone)]
-pub struct GeneGenerator<T, I = PushInstruction>
+pub struct GeneGenerator<T, I>
 where
     T: Distribution<I>,
 {
