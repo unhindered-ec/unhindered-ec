@@ -117,13 +117,14 @@ mod tests {
         error::into_state::IntoState,
         instruction::{ExecInstruction, Instruction, PushInstructionError},
         push_vm::{push_state::PushState, stack::StackError},
+        test_utils::p,
     };
 
     #[test]
     fn cond_true() {
         let state = PushState::builder()
             .with_max_stack_size(1)
-            .with_program([ExecInstruction::noop()])
+            .with_program([p(ExecInstruction::noop())])
             .unwrap()
             .with_bool_values([true])
             .unwrap()
@@ -138,7 +139,7 @@ mod tests {
     fn cond_false() {
         let state = PushState::builder()
             .with_max_stack_size(1)
-            .with_program([ExecInstruction::noop()])
+            .with_program([p(ExecInstruction::noop())])
             .unwrap()
             .with_bool_values([false])
             .unwrap()
@@ -179,7 +180,7 @@ mod tests {
     fn cond_missing() {
         let state = PushState::builder()
             .with_max_stack_size(1)
-            .with_program([ExecInstruction::noop()])
+            .with_program([p(ExecInstruction::noop())])
             .unwrap()
             .with_instruction_step_limit(1000)
             .build();
