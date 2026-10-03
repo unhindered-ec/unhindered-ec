@@ -51,7 +51,7 @@ pub fn sample_genome() -> Plushy<PushInstruction> {
 }
 
 #[must_use]
-pub fn sample_program() -> Vec<PushProgram> {
+pub fn sample_program() -> Vec<PushProgram<PushInstruction>> {
     sample_genome().into()
 }
 
@@ -73,7 +73,7 @@ const INPUT_VALUE: OrderedFloat<f64> = OrderedFloat(0.25);
 /// Panics if for some reason we can't push our program onto the
 /// `exec` stack.
 #[must_use]
-pub fn build_state(program: Vec<PushProgram>) -> PushState {
+pub fn build_state(program: Vec<PushProgram<PushInstruction>>) -> PushState {
     const MAX_STACK_SIZE: usize = 100;
 
     PushState::builder()

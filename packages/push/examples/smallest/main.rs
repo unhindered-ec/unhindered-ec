@@ -152,7 +152,7 @@ fn score_genome(
     training_cases: &Cases<Input, Output>,
     penalty_value: i128,
 ) -> TestResults<ErrorValue<i128>> {
-    let program = Vec::<PushProgram>::from(genome.clone());
+    let program = Vec::<PushProgram<_>>::from(genome.clone());
     training_cases
         .iter()
         .map(|&case: &Case<Input, Output>| run_case(case, &program, penalty_value))
@@ -164,7 +164,7 @@ fn run_case(
         input,
         output: Output(expected),
     }: Case<Input, Output>,
-    program: &[PushProgram],
+    program: &[PushProgram<PushInstruction>],
     penalty_value: i128,
 ) -> i128 {
     let Ok(start_state) = build_state(program, input).print_error() else {
@@ -186,7 +186,7 @@ fn run_case(
 }
 
 fn build_state(
-    program: &[PushProgram],
+    program: &[PushProgram<PushInstruction>],
     Input([a, b, c, d]): Input,
 ) -> Result<PushState, StackError> {
     Ok(PushState::builder()
