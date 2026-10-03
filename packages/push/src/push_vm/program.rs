@@ -170,7 +170,7 @@ mod test {
             PushGene::new_instruction(ExecInstruction::dup_block()),
             PushGene::new_instruction(IntInstruction::Subtract),
         ];
-        let plushy: Plushy = genes.into_iter().collect();
+        let plushy: Plushy<_> = genes.into_iter().collect();
         let program: Vec<PushProgram> = plushy.into();
         // [Instruction(Int-Add), Instruction(Exec-IfElse),
         // Block([Instruction(Int-Multiply)]), Block([Instruction(Exec-Dup),

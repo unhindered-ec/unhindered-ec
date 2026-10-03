@@ -8,7 +8,7 @@ use ec_core::{
 use ec_linear::genome::Linear;
 use rand::{Rng, RngExt, prelude::Distribution};
 
-use crate::instruction::{NumOpens, PushInstruction};
+use crate::instruction::NumOpens;
 
 /// A gene in a [`Plushy`] genome: either a `Close` marker that closes a block
 /// or an `Instruction`.
@@ -184,7 +184,7 @@ where
 /// `Plushy<PushInstruction>` (the default) can be *executed*; see
 /// [`PushProgram`](crate::push_vm::program::PushProgram).
 #[derive(Debug, Clone, Eq, PartialEq)]
-pub struct Plushy<I = PushInstruction> {
+pub struct Plushy<I> {
     genes: Vec<PushGene<I>>,
 }
 
@@ -294,7 +294,9 @@ mod test {
 
     use super::*;
     use crate::{
-        instruction::{BoolInstruction, IntInstruction, with_input::WithInputInstruction},
+        instruction::{
+            BoolInstruction, IntInstruction, PushInstruction, with_input::WithInputInstruction,
+        },
         list_into::{arr_into, genes_into},
     };
 
@@ -325,7 +327,7 @@ mod test {
     #[test]
     fn generator() {
         let mut rng = rng();
-        let plushy: Plushy = uniform_distribution_of![<PushInstruction>
+        let plushy: Plushy<_> = uniform_distribution_of![<PushInstruction>
             IntInstruction::Add,
             IntInstruction::Subtract,
             IntInstruction::Multiply,
