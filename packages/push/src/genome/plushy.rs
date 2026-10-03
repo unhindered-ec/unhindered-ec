@@ -13,14 +13,10 @@ use crate::instruction::{NumOpens, PushInstruction};
 /// A gene in a [`Plushy`] genome: either a `Close` marker that closes a block
 /// or an `Instruction`.
 ///
-/// The instruction type defaults to [`PushInstruction`], so `PushGene` is the
-/// same as `PushGene<PushInstruction>`; other instruction types can be used by
-/// specifying `I`.
-///
 /// A gene can be built from an instruction with [`PushGene::new_instruction`]
 /// or, when the instruction type already matches, with `From`/`Into`.
 #[derive(Clone, Eq, PartialEq, Debug)]
-pub enum PushGene<I = PushInstruction> {
+pub enum PushGene<I> {
     Close,
     Instruction(I),
 }
@@ -410,12 +406,12 @@ mod test {
     fn umad() {
         let mut rng = rng();
 
-        let instruction_options = uniform_distribution_of![<PushGene> PushInstruction::from(WithInputInstruction::from("x"))];
+        let instruction_options = uniform_distribution_of![<PushGene<_>> PushInstruction::from(WithInputInstruction::from("x"))];
 
         let umad = Umad::new(0.3, 0.3, instruction_options);
 
         let parent = Plushy {
-            genes: genes_into![<PushGene>
+            genes: genes_into![<PushGene<_>>
                 IntInstruction::Add,
                 BoolInstruction::And,
                 BoolInstruction::Or,

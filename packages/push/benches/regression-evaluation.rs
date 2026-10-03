@@ -15,7 +15,7 @@ use push::{
     push_vm::{HasStack, State, program::PushProgram, push_state::PushState},
 };
 
-fn i2g(i: impl Into<PushInstruction>) -> PushGene {
+fn i2g(i: impl Into<PushInstruction>) -> PushGene<PushInstruction> {
     PushGene::new_instruction(i)
 }
 

@@ -144,6 +144,8 @@ pub use genes_into;
 
 #[cfg(test)]
 mod test {
+    use crate::instruction::PushInstruction;
+
     #[test]
     fn vec_empty_given_type() {
         assert_eq!(vec_into![<bool>], Vec::<bool>::new());
@@ -217,7 +219,7 @@ mod test {
             instruction::{BoolInstruction, IntInstruction},
         };
 
-        let genes: Vec<PushGene> = genes_into![<PushGene>
+        let genes = genes_into![<PushGene<PushInstruction>>
             IntInstruction::Add,
             BoolInstruction::And,
         ];
@@ -234,14 +236,17 @@ mod test {
     fn genes_empty_given_type() {
         use crate::genome::plushy::PushGene;
 
-        assert_eq!(genes_into![<PushGene>], Vec::<PushGene>::new());
+        assert_eq!(
+            genes_into![<PushGene<PushInstruction>>],
+            Vec::<PushGene<_>>::new()
+        );
     }
 
     #[test]
     fn genes_inferred_type() {
         use crate::{genome::plushy::PushGene, instruction::IntInstruction};
 
-        let genes: Vec<PushGene> = genes_into![
+        let genes: Vec<PushGene<PushInstruction>> = genes_into![
             PushGene::new_instruction(IntInstruction::Add),
             PushGene::Close,
         ];
