@@ -169,8 +169,11 @@ fn main() -> miette::Result<()> {
             .next()
             .context("There were no training cases")?;
 
-        let state = build_state(&Vec::<PushProgram>::from(best.genome.clone()), &first_input)?
-            .run_to_completion()?;
+        let state = build_state(
+            &Vec::<PushProgram<_>>::from(best.genome.clone()),
+            &first_input,
+        )?
+        .run_to_completion()?;
 
         let output = state
             .stdout_string()
@@ -191,7 +194,7 @@ fn score_genome(
     training_cases: &Cases<Input, Output>,
     penalty_value: usize,
 ) -> TestResults<ErrorValue<usize>> {
-    let program = Vec::<PushProgram>::from(genome.clone());
+    let program = Vec::<PushProgram<_>>::from(genome.clone());
     training_cases
         .iter()
         .map(|case: &Case<Input, Output>| run_case(case, &program, penalty_value))
@@ -203,7 +206,7 @@ fn run_case(
         input,
         output: Output(expected),
     }: &Case<Input, Output>,
-    program: &[PushProgram],
+    program: &[PushProgram<PushInstruction>],
     penalty_value: usize,
 ) -> usize {
     let Ok(start_state) = build_state(program, input).print_error() else {
@@ -224,7 +227,10 @@ fn run_case(
     compute_error(&state, penalty_value, expected)
 }
 
-fn build_state(program: &[PushProgram], &Input { i, f }: &Input) -> Result<PushState, StackError> {
+fn build_state(
+    program: &[PushProgram<PushInstruction>],
+    &Input { i, f }: &Input,
+) -> Result<PushState, StackError> {
     Ok(PushState::builder()
         .with_max_stack_size(1000)
         .with_program(program.to_vec())?
