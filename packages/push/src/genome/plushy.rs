@@ -178,11 +178,8 @@ where
 
 /// A linear Push genome: an ordered sequence of [`PushGene`]s.
 ///
-/// `Plushy` is generic over its instruction type, defaulting to
-/// [`PushInstruction`]. A `Plushy<I>` can be constructed, printed, mutated,
-/// and converted into a `Vec<PushProgram<I>>`, but only
-/// `Plushy<PushInstruction>` (the default) can be *executed*; see
-/// [`PushProgram`](crate::push_vm::program::PushProgram).
+/// `Plushy` is generic over its instruction type. A `Plushy<I>` can be
+/// constructed, printed, mutated, and converted into a `Vec<PushProgram<I>>`.
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct Plushy<I> {
     genes: Vec<PushGene<I>>,
@@ -224,8 +221,9 @@ impl<I> Plushy<I> {
     ///
     /// This does not convert between instruction types: the plushy's
     /// instruction type is the item type `I`. When the items need converting
-    /// (e.g. from a concrete instruction into [`PushInstruction`]), build the
-    /// genes with [`PushGene::new_instruction`] instead.
+    /// (e.g. from a concrete instruction into
+    /// [`crate::instruction::PushInstruction`]), build the genes with
+    /// [`PushGene::new_instruction`] instead.
     pub fn from_instructions(iterable: impl IntoIterator<Item = I>) -> Self {
         Self {
             genes: iterable.into_iter().map(PushGene::Instruction).collect(),

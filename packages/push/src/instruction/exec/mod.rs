@@ -17,6 +17,8 @@ use crate::{
     push_vm::{HasStack, program::PushProgram},
 };
 
+// TODO: This (and things like `IfElse`) are dependent on `PushInstruction`.
+// They should be made generic over the instruction type.
 #[derive(Debug, strum_macros::Display, Clone, Eq, PartialEq, EnumIter)]
 #[must_use]
 #[non_exhaustive]
