@@ -2,8 +2,74 @@ use std::ops::Range;
 
 use crate::{genome::Linear, recombinator::errors::MultipleGeneAccess};
 
-// TODO: Does `Crossover` need to be visible outside
-//   this module? If not, should `pub` be replaced/removed?
+/// A genome that supports crossover operations
+///
+/// Crossover operations are operations that swap genes between two genomes of
+/// the same type.
+///
+///
+/// # Example
+/// ```
+/// # use std::ops::Range;
+/// #
+/// # use ec_core::genome::Genome;
+/// # use ec_linear::{genome::Linear, recombinator::crossover::Crossover};
+/// #
+/// # #[allow(dead_code)]
+/// struct MyGenome {
+///     inner: Vec<i32>,
+/// }
+///
+/// impl Genome for MyGenome {
+///     type Gene = i32;
+/// }
+///
+/// impl Linear for MyGenome {
+///     fn size(&self) -> usize {
+///         self.inner.len()
+///     }
+///
+///     fn gene_mut(&mut self, index: usize) -> Option<&mut i32> {
+///         self.inner.get_mut(index)
+///     }
+/// }
+///
+/// # #[allow(dead_code)]
+/// struct IndexOutOfBoundsError;
+///
+/// impl Crossover for MyGenome {
+///     type GeneCrossoverError = IndexOutOfBoundsError;
+///
+///     fn crossover_gene(
+///         &mut self,
+///         other: &mut Self,
+///         index: usize,
+///     ) -> Result<(), Self::GeneCrossoverError> {
+///         std::mem::swap(
+///             self.inner.get_mut(index).ok_or(IndexOutOfBoundsError)?,
+///             other.inner.get_mut(index).ok_or(IndexOutOfBoundsError)?,
+///         );
+///
+///         Ok(())
+///     }
+///     type SegmentCrossoverError = IndexOutOfBoundsError;
+///
+///     fn crossover_segment(
+///         &mut self,
+///         other: &mut Self,
+///         range: Range<usize>,
+///     ) -> Result<(), Self::SegmentCrossoverError> {
+///         <[i32]>::swap_with_slice(
+///             self.inner
+///                 .get_mut(range.clone())
+///                 .ok_or(IndexOutOfBoundsError)?,
+///             other.inner.get_mut(range).ok_or(IndexOutOfBoundsError)?,
+///         );
+///
+///         Ok(())
+///     }
+/// }
+/// ```
 pub trait Crossover {
     /// Error that can happen when calling [`Crossover::crossover_gene`].
     type GeneCrossoverError;
@@ -14,9 +80,84 @@ pub trait Crossover {
     /// Swaps a gene at a randomly selected position, destructively
     /// modifying both this genome and `other`.
     ///
+    /// # Example
+    /// ```
+    /// # use std::ops::Range;
+    /// #
+    /// # use ec_core::genome::Genome;
+    /// # use ec_linear::{genome::Linear, recombinator::crossover::Crossover};
+    /// #
+    /// # #[allow(dead_code)]
+    /// # struct MyGenome {
+    /// #     inner: Vec<i32>,
+    /// # }
+    /// #
+    /// # impl MyGenome {
+    /// #     fn new<const N: usize>(from: [i32; N]) -> Self {
+    /// #         Self { inner: from.into() }
+    /// #     }
+    /// # }
+    /// #
+    /// # impl Genome for MyGenome {
+    /// #     type Gene = i32;
+    /// # }
+    /// #
+    /// # impl Linear for MyGenome {
+    /// #     fn size(&self) -> usize {
+    /// #         self.inner.len()
+    /// #     }
+    /// #
+    /// #     fn gene_mut(&mut self, index: usize) -> Option<&mut i32> {
+    /// #         self.inner.get_mut(index)
+    /// #     }
+    /// # }
+    /// #
+    /// # #[derive(Debug)]
+    /// # struct IndexOutOfBoundsError;
+    /// #
+    /// # impl Crossover for MyGenome {
+    /// #     type GeneCrossoverError = IndexOutOfBoundsError;
+    /// #
+    /// #     fn crossover_gene(
+    /// #         &mut self,
+    /// #         other: &mut Self,
+    /// #         index: usize,
+    /// #     ) -> Result<(), Self::GeneCrossoverError> {
+    /// #         std::mem::swap(
+    /// #             self.inner.get_mut(index).ok_or(IndexOutOfBoundsError)?,
+    /// #             other.inner.get_mut(index).ok_or(IndexOutOfBoundsError)?,
+    /// #         );
+    /// #
+    /// #         Ok(())
+    /// #     }
+    /// #     type SegmentCrossoverError = IndexOutOfBoundsError;
+    /// #
+    /// #     fn crossover_segment(
+    /// #         &mut self,
+    /// #         other: &mut Self,
+    /// #         range: Range<usize>,
+    /// #     ) -> Result<(), Self::SegmentCrossoverError> {
+    /// #         <[i32]>::swap_with_slice(
+    /// #             self.inner
+    /// #                 .get_mut(range.clone())
+    /// #                 .ok_or(IndexOutOfBoundsError)?,
+    /// #             other.inner.get_mut(range).ok_or(IndexOutOfBoundsError)?,
+    /// #         );
+    /// #
+    /// #         Ok(())
+    /// #     }
+    /// # }
+    /// let mut my_genome_1 = MyGenome::new([1; 10]);
+    /// let mut my_genome_2 = MyGenome::new([2; 10]);
+    ///
+    /// my_genome_1.crossover_gene(&mut my_genome_2, 5)?;
+    /// #
+    /// # Ok::<(), IndexOutOfBoundsError>(())
+    /// ```
+    ///
     /// # Errors
-    /// This can fail if an attempt is made to crossover a gene at an index that
-    /// is out of bounds for either this genome or `other`.
+    /// - [`Self::GeneCrossoverError`], for example if a index is out of bounds
+    ///   for either gene.
     fn crossover_gene(
         &mut self,
         other: &mut Self,
@@ -27,9 +168,84 @@ pub trait Crossover {
     /// ends at a randomly selected position. This is destructive, modifying
     /// both this genome and `other`.
     ///
+    /// # Example
+    /// ```
+    /// # use std::ops::Range;
+    /// #
+    /// # use ec_core::genome::Genome;
+    /// # use ec_linear::{genome::Linear, recombinator::crossover::Crossover};
+    /// #
+    /// # #[allow(dead_code)]
+    /// # struct MyGenome {
+    /// #     inner: Vec<i32>,
+    /// # }
+    /// #
+    /// # impl MyGenome {
+    /// #     fn new<const N: usize>(from: [i32; N]) -> Self {
+    /// #         Self { inner: from.into() }
+    /// #     }
+    /// # }
+    /// #
+    /// # impl Genome for MyGenome {
+    /// #     type Gene = i32;
+    /// # }
+    /// #
+    /// # impl Linear for MyGenome {
+    /// #     fn size(&self) -> usize {
+    /// #         self.inner.len()
+    /// #     }
+    /// #
+    /// #     fn gene_mut(&mut self, index: usize) -> Option<&mut i32> {
+    /// #         self.inner.get_mut(index)
+    /// #     }
+    /// # }
+    /// #
+    /// # #[derive(Debug)]
+    /// # struct IndexOutOfBoundsError;
+    /// #
+    /// # impl Crossover for MyGenome {
+    /// #     type GeneCrossoverError = IndexOutOfBoundsError;
+    /// #
+    /// #     fn crossover_gene(
+    /// #         &mut self,
+    /// #         other: &mut Self,
+    /// #         index: usize,
+    /// #     ) -> Result<(), Self::GeneCrossoverError> {
+    /// #         std::mem::swap(
+    /// #             self.inner.get_mut(index).ok_or(IndexOutOfBoundsError)?,
+    /// #             other.inner.get_mut(index).ok_or(IndexOutOfBoundsError)?,
+    /// #         );
+    /// #
+    /// #         Ok(())
+    /// #     }
+    /// #     type SegmentCrossoverError = IndexOutOfBoundsError;
+    /// #
+    /// #     fn crossover_segment(
+    /// #         &mut self,
+    /// #         other: &mut Self,
+    /// #         range: Range<usize>,
+    /// #     ) -> Result<(), Self::SegmentCrossoverError> {
+    /// #         <[i32]>::swap_with_slice(
+    /// #             self.inner
+    /// #                 .get_mut(range.clone())
+    /// #                 .ok_or(IndexOutOfBoundsError)?,
+    /// #             other.inner.get_mut(range).ok_or(IndexOutOfBoundsError)?,
+    /// #         );
+    /// #
+    /// #         Ok(())
+    /// #     }
+    /// # }
+    /// let mut my_genome_1 = MyGenome::new([1; 10]);
+    /// let mut my_genome_2 = MyGenome::new([2; 10]);
+    ///
+    /// my_genome_1.crossover_segment(&mut my_genome_2, 5..8)?;
+    /// #
+    /// # Ok::<(), IndexOutOfBoundsError>(())
+    /// ```
+    ///
     /// # Errors
-    /// This can fail if an attempt is made to crossover a segments whose start
-    /// and end are out of bounds for either this genome or `other`.
+    /// - [`Self::SegmentCrossoverError`], for example if a range index is out
+    ///   of bounds for either gene.
     fn crossover_segment(
         &mut self,
         other: &mut Self,
