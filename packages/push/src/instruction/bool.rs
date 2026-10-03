@@ -145,19 +145,19 @@ where
 {
     type Error = PushInstructionError;
 
-    // TODO: This only "works" because all the stack operations are "transactional",
-    // i.e., things like `pop2()` either completely succeed or return an error
-    // without modifying the (mutable) state. (This is done by checking that
-    // the size of the relevant stack is big enough before removing any
-    // elements.) If any stack operations were _not_ "transactional" then we
-    // could end up passing an inconsistent state to the call to
-    // `Error::recoverable_error()`, which would be bad. Because the `pop` and
-    // `push` calls aren't together, we can still have inconsistent states in the
-    // call to `Error::fatal_error()`. For example, if the boolean is full and the
-    // instruction is `BoolFromInt`, we could pop off an integer before we realize
-    // there's no room to push on the new boolean. We can special case that,
-    // but the burden lies on the programmer, with no help from the type
-    // system.
+    // TODO: This only "works" because all the stack operations are
+    // "transactional", i.e., things like `pop2()` either completely succeed
+    // or return an error without modifying the (mutable) state. (This is
+    // done by checking that the size of the relevant stack is big enough
+    // before removing any elements.) If any stack operations were _not_
+    // "transactional" then we could end up passing an inconsistent state to
+    // the call to `Error::recoverable_error()`, which would be bad. Because
+    // the `pop` and `push` calls aren't together, we can still have
+    // inconsistent states in the call to `Error::fatal_error()`. For
+    // example, if the boolean is full and the instruction is `BoolFromInt`,
+    // we could pop off an integer before we realize there's no room to push
+    // on the new boolean. We can special case that, but the burden lies on
+    // the programmer, with no help from the type system.
 
     /*
     // Get the nth character from a string and push it on the char stack.
@@ -177,8 +177,8 @@ where
     let new_state = transaction.close()?; // Can closing actually fail?
      */
 
-    // [pop string] then [pop integer] contains a closure with a tuple of (string,
-    // int)
+    // [pop string] then [pop integer] contains a closure with a tuple of
+    // (string, int)
 
     // state.transaction().pop::<String>().with_min_length(1)
     //     .and_pop::<Integer>().then_push::<Char>(|(s, i)| s.chars.nth(i))
@@ -190,9 +190,9 @@ where
     // that and query what you would push onto the stack so maybe not ideal.
 
     // Options:
-    //   - Make operations reversible (undo/redo)
-    //   - Hold operations in some kind of queue and apply the at the end when we
-    //     know they'll all work
+    //   '- Make operations reversible (undo/redo)
+    //   '- Hold operations in some kind of queue and apply the at the end when
+    //      we know they'll all work
 
     fn perform(&self, mut state: S) -> InstructionResult<S, Self::Error> {
         let bool_stack = state.stack_mut::<bool>();

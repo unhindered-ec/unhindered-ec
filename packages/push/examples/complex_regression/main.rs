@@ -57,9 +57,10 @@ fn target_fn(input: Of64) -> Of64 {
 
 fn run_case(program: &[PushProgram], Case { input, output }: Case<Of64>) -> Of64 {
     let Ok(start_state) = build_state(program, input).print_error() else {
-        // If we fail to correctly build the initial state (because, for example,
-        // the initial program is longer than the maximum size of the `exec` stack),
-        // then we just return the `penalty_value`.
+        // If we fail to correctly build the initial state (because, for
+        // example, the initial program is longer than the maximum size
+        // of the `exec` stack), then we just return the
+        // `penalty_value`.
         return PENALTY_VALUE;
     };
 
@@ -85,9 +86,10 @@ fn build_state(program: &[PushProgram], input: Of64) -> Result<PushState, StackE
 fn compute_error(final_state: &PushState, penalty_value: Of64, expected: Of64) -> Of64 {
     final_state.stack::<Of64>().top().map_or_else(
         |_| {
-            // TODO: When we introduce proper logging, we probably want to bring this
-            // message back at some (generally ignored) log level.
-            // eprintln!("INFO: Int stack was empty at end of program evaluation");
+            // TODO: When we introduce proper logging, we probably want to bring
+            // this message back at some (generally ignored) log
+            // level. eprintln!("INFO: Int stack was empty at end of
+            // program evaluation");
             penalty_value
         },
         |answer| (answer - expected).abs(),

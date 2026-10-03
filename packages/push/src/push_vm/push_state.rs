@@ -62,8 +62,8 @@ impl PushState {
     //   It seems that if the only way we put things in our `Cursor` is through
     //   `write!()` calls, then the results in the `Cursor` should be legal.
     //   Evolution is weird, though, so it might still make sense to return
-    //   a `Result` just in case we evolve something that breaks the interpretation
-    //   of the `Cursor` as a `String`.
+    //   a `Result` just in case we evolve something that breaks the
+    //   interpretation of the `Cursor` as a `String`.
     //
     /// Return the contents of `stdout` as a `String`
     ///
@@ -85,8 +85,9 @@ impl State for PushState {
         // we return the final state. The scorer can then use whatever
         // values are in that state for its scoring.
         while instruction_steps < self.max_instruction_steps() {
-            // The `pop()` call can only return a `StackError`, which is either underflow or
-            // overflow, with the latter not possible when just popping. So I'm not going to
+            // The `pop()` call can only return a `StackError`, which is either
+            // underflow or overflow, with the latter not possible
+            // when just popping. So I'm not going to
             // bother capturing the error here.
             let Ok(program) = self.exec.pop() else {
                 break;

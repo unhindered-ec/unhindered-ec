@@ -187,8 +187,8 @@ mod tests {
             .with_item_and_weight(Worst, 0)
             .with_item_and_weight(Random, 0)
             .unwrap();
-        // If all the weights are zero, then selection should return an appropriate
-        // error type.
+        // If all the weights are zero, then selection should return an
+        // appropriate error type.
         assert_eq!(
             weighted.select(&pop, &mut rng).unwrap_err(),
             SelectionError::from(ZeroWeight)

@@ -206,9 +206,10 @@ fn run_case(
     penalty_value: usize,
 ) -> usize {
     let Ok(start_state) = build_state(program, input).print_error() else {
-        // If we fail to correctly build the initial state (because, for example,
-        // the initial program is longer than the maximum size of the `exec` stack),
-        // then we just return the `penalty_value`.
+        // If we fail to correctly build the initial state (because, for
+        // example, the initial program is longer than the maximum size
+        // of the `exec` stack), then we just return the
+        // `penalty_value`.
         return penalty_value;
     };
 

@@ -69,12 +69,12 @@ pub fn sample_distinct_uniform_sorted<R: Rng + ?Sized, const N: usize>(
     for (filled, i) in ((length - N)..length).enumerate() {
         debug_assert!(i + start < end);
         debug_assert!((start..=(i + start)).is_empty().not());
-        // Since `i: usize` and thus `i >= 0`, `start..=(i+start)` always has at least
-        // one element, namely `start`.
+        // Since `i: usize` and thus `i >= 0`, `start..=(i+start)` always has at
+        // least one element, namely `start`.
         let t = rng.random_range(start..=(i + start));
 
-        // See if the selected value `t` is already in `result`, i.e., we've already
-        // selected that value.
+        // See if the selected value `t` is already in `result`, i.e., we've
+        // already selected that value.
         match result[..filled].binary_search(&t) {
             // We've selected this before, so we actually insert `i+start`, i.e., the current
             // index. We place this at the end of the `result`, which ensures that `result`

@@ -54,16 +54,17 @@ where
         if len != second_genome.size() {
             return Err(DifferentGenomeLength(len, second_genome.size()).into());
         }
-        // This should be checked in the constructor but since it is const and as such
-        // no runtime cost just check again here just to make sure
+        // This should be checked in the constructor but since it is const and
+        // as such no runtime cost just check again here just to make
+        // sure
         const {
             assert!(
                 N >= 1,
                 "Need at least one crossover point but got less than 1 points."
             );
         }
-        // Since N >= 1 (as checked in the constructor, invariant!) we know that len >=
-        // N + 1 <=> len  >= 2;
+        // Since N >= 1 (as checked in the constructor, invariant!) we know that
+        // len >= N + 1 <=> len  >= 2;
         if len < const { N + 1 } {
             return Err(GenomeLengthTooShort {
                 min_size: const { N + 1 },

@@ -183,10 +183,10 @@ where
         // Candidate set is initially the whole population.
         // Shuffle the (indices of the) test cases.
         // For each test in turn:
-        //   * Find the best score of any individual still in in the candidate set on
-        //     that test case.
-        //   * Remove any individual from the candidate set that is worse than that best
-        //     score on that test case.
+        //   '- Find the best score of any individual still in in the candidate
+        //   set on that test case.
+        //   '- Remove any individual from the candidate set that is worse than
+        //   that best score on that test case.
         // Go until you get to a single individual or you run
         // out of test cases.
         let mut case_indices: Vec<usize> = (0..self.num_test_cases).collect();
@@ -292,8 +292,8 @@ mod tests {
         population_from_scores(scores.into_iter().map(once))
     }
 
-    // Generate a population from a collection of score collections (e.g., arrays),
-    // one per individual.
+    // Generate a population from a collection of score collections (e.g.,
+    // arrays), one per individual.
     fn population_from_scores(
         scores: impl IntoIterator<Item: IntoIterator<Item = i32>>,
     ) -> Vec<EcIndividual<usize, TestResults<i32>>> {
@@ -374,14 +374,15 @@ mod tests {
     // This test uses `proptest` to generate a random set of between 1 and 20
     // vectors of two scores, and then converts those into a vector of
     // `EcIndividual`s (i.e., a population). I then determine the largest of the
-    // first values (i.e., the highest score on the first test case), and then the
-    // largest of the second values. I make a new set of results that is those
-    // highest values with one (randomly chosen by proptest) incremented by 1.
-    // This new result is guaranteed to be "better" than any other in the list,
-    // so it should be what is selected after I add it to the population.
+    // first values (i.e., the highest score on the first test case), and then
+    // the largest of the second values. I make a new set of results that is
+    // those highest values with one (randomly chosen by proptest)
+    // incremented by 1. This new result is guaranteed to be "better" than
+    // any other in the list, so it should be what is selected after I add
+    // it to the population.
     //
-    // There are several helper functions that exist just to support the somewhat
-    // complex logic of this test.
+    // There are several helper functions that exist just to support the
+    // somewhat complex logic of this test.
     #[proptest]
     fn selects_sole_best(
         #[strategy(1..=20usize)] pop_size: usize,
@@ -446,8 +447,8 @@ mod tests {
         (winning_label, winning_individual)
     }
 
-    // Get the largest test case value in the given population from the test case
-    // specified by `index`.
+    // Get the largest test case value in the given population from the test
+    // case specified by `index`.
     fn largest_test_case_value(population: &[TestIndividual], index: usize) -> u16 {
         population
             .iter()

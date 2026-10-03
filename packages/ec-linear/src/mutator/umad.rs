@@ -363,8 +363,9 @@ where
                     _ => None,
                 };
 
-                // This randomly decides with a 50/50 probability which side of the old gene
-                // to place the new gene. This provides consistency with the definition of UMAD
+                // This randomly decides with a 50/50 probability which side of
+                // the old gene to place the new gene. This
+                // provides consistency with the definition of UMAD
                 // in Helmuth et al, lines 6-10 of Algorithm 1.
                 if rng.random::<bool>() {
                     [old_gene, new_gene]
@@ -478,8 +479,8 @@ mod test {
         // A parent with an empty genome
         let parent = Vec::new();
 
-        // Since we don't add genes to empty genomes, this should still be an empty
-        // genome
+        // Since we don't add genes to empty genomes, this should still be an
+        // empty genome
         let Ok(child) = umad.mutate(parent, &mut rng);
         assert_eq!(child, []);
     }
@@ -493,8 +494,8 @@ mod test {
         // A parent with an empty genome
         let parent = Vec::new();
 
-        // With an empty_addition_rate of 1.0, a new gene should always be added to an
-        // empty genome.
+        // With an empty_addition_rate of 1.0, a new gene should always be added
+        // to an empty genome.
         let Ok(child) = umad.mutate(parent, &mut rng);
         assert_eq!(child, ['x']);
     }

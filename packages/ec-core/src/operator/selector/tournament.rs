@@ -312,8 +312,9 @@ mod tests {
         #[filter(|v| [#x, #y].contains(v).not())] z: i32,
     ) {
         let mut rng = rng();
-        // We know from the filters that all the scores are unique, so the selected
-        // score should always be better than the smallest score.
+        // We know from the filters that all the scores are unique, so the
+        // selected score should always be better than the smallest
+        // score.
         let scores = &[x, y, z];
         let population = scores
             .iter()

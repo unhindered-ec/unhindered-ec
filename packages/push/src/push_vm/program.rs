@@ -82,8 +82,8 @@ where
     type Error = I::Error;
 
     fn perform(&self, mut state: S) -> InstructionResult<S, Self::Error> {
-        // If the size of the block + the size of the exec stack exceed the max stack
-        // size then we generate a fatal error.
+        // If the size of the block + the size of the exec stack exceed the max
+        // stack size then we generate a fatal error.
         if let Err(err) = state.stack_mut::<I>().push_many(self.iter().cloned()) {
             return Err(Error::fatal(state, err));
         }

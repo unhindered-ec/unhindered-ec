@@ -315,7 +315,8 @@ fn mod_rems_or_does_nothing(#[any] x: i64, #[any] y: i64) {
         prop_assert_eq!(output, expected_result);
     } else if y == 0 {
         let output: i64 = *result.unwrap().stack_mut::<i64>().top().unwrap();
-        // Modding by zero should always return 0 since x % x == 0 for all x != 0.
+        // Modding by zero should always return 0 since x % x == 0 for all
+        // x != 0.
         prop_assert_eq!(output, 0);
     } else {
         // This only checks that `x` is still on the top of the stack.

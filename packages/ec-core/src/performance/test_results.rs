@@ -153,9 +153,9 @@ impl<R> TestResults<R> {
         self.into_iter()
     }
 
-    // TODO: For now no iter_mut() and get_mut() functions since those would need to
-    // modify the total result after they are called and are thus more difficult to
-    // implement (although certainly possible as well)
+    // TODO: For now no iter_mut() and get_mut() functions since those would
+    // need to modify the total result after they are called and are thus
+    // more difficult to implement (although certainly possible as well)
 }
 
 impl<R, I> Index<I> for TestResults<R>
