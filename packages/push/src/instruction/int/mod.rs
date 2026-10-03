@@ -282,10 +282,11 @@ where
             | Self::Power
             | Self::Min
             | Self::Max => {
-                // All these instructions pop at least one value from the integer stack, so
-                // we're guaranteed that there will be space for the result.
-                // So we don't have to check that
-                // any stacks are full before we start.
+                // All these instructions pop at least one value from the
+                // integer stack, so we're guaranteed that there
+                // will be space for the result. So we don't
+                // have to check that any stacks are full before
+                // we start.
                 let int_stack = state.stack_mut::<i64>();
                 match self {
                     // This works, but is going to be nasty after we repeat a lot. There should
@@ -411,10 +412,12 @@ where
             | Self::LessThanEqual
             | Self::GreaterThan
             | Self::GreaterThanEqual => {
-                // None of these instructions pop anything off the boolean stack, but
-                // they will push a result onto that stack. Thus before we start performing
-                // the instruction, we need to check for the case that the boolean stack is
-                // already full, and return an `Overflow` error if it is.
+                // None of these instructions pop anything off the boolean
+                // stack, but they will push a result onto that
+                // stack. Thus before we start performing
+                // the instruction, we need to check for the case that the
+                // boolean stack is already full, and return an
+                // `Overflow` error if it is.
                 if state.stack::<bool>().is_full() {
                     let max_size = state.stack::<bool>().max_stack_size();
                     return Err(Error::fatal(

@@ -518,7 +518,8 @@ mod tests {
     fn can_wrap_mutator_reference() {
         let genome = [true, false, false, true];
         let mutator = FlipOne;
-        // Wrap a reference to the mutator in a `Mutate` to make it an `Operator`.
+        // Wrap a reference to the mutator in a `Mutate` to make it an
+        // `Operator`.
         let operator = Mutate::new(&mutator);
         let child_genome = operator.apply(genome, &mut rng()).unwrap();
         assert_eq!(count_differences(&genome, &child_genome), 1);
@@ -540,7 +541,8 @@ mod tests {
         // If we flip exactly one of these, we should have exactly one `true`.
         let genome = [false, false, false, false];
         let mutator = FlipOne;
-        // Wrap a reference to the mutator in a `Mutate` to make it an `Operator`.
+        // Wrap a reference to the mutator in a `Mutate` to make it an
+        // `Operator`.
         let operator = Mutate::new(&mutator);
         let count_true = CountTrue;
         let chain = operator.then(count_true);

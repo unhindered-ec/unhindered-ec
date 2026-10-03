@@ -33,8 +33,8 @@ fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     // Create an instance of a random number generator
     let mut rng = rng();
 
-    // Create a scorer from the scoring function above. For Count Ones, this just
-    // counts the number of `true` values in the bitstring.
+    // Create a scorer from the scoring function above. For Count Ones, this
+    // just counts the number of `true` values in the bitstring.
     let scorer = FnScorer(|bitstring: &Bitstring| count_ones(&bitstring.bits));
 
     // Use binary tournament selection to select parents
@@ -45,12 +45,12 @@ fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     // To create a starting population we generate a Distribution of Populations
     // from which we can then sample a single initial, random population:
     //
-    // - start with the `StandardUniform` distribution which, among other things,
-    //   allows sampling of bools
-    // - turn that into a (uniform) Distribution of bitstring genomes
-    // - score each of these genomes to get a distribution of individuals (scored
-    //   genomes)
-    // - turn that into a distribution of collections of individuals, i.e. a
+    // '- start with the `StandardUniform` distribution which, among other
+    //    things, allows sampling of bools
+    // '- turn that into a (uniform) Distribution of bitstring genomes
+    // '- score each of these genomes to get a distribution of individuals
+    //    (scored genomes)
+    // '- turn that into a distribution of collections of individuals, i.e. a
     //   (uniform) Distribution of Populations
     //
     // Finally we sample a single initial population from that
@@ -63,17 +63,19 @@ fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 
     // Create a pipeline that takes a population and generates a new individual.
     //
-    // This is used below to create new individuals for the next generation from the
-    // previous generation:
+    // This is used below to create new individuals for the next generation from
+    // the previous generation:
     //
-    // - Start with the selector that will be used to select parent individuals from
-    //   the previous generation
-    // - Apply that twice to generate a pair of parents
-    // - Map the `GenomeExtractor` to get a pair of genomes from those parents
-    // - Recombine those genomes using two-point crossover, generating a new genome
-    // - Mutate the new genome using `WithOneOverLength`, which flips bits with a
-    //   probability of 1/N, where N is the length of the genome
-    // - Score the mutated genome to create an individual
+    // '- Start with the selector that will be used to select parent individuals
+    //    from the previous generation
+    // '- Apply that twice to generate a pair of parents
+    // '- Map the `GenomeExtractor` to get a pair of genomes from those parents
+    // '- Recombine those genomes using two-point crossover, generating a new
+    //    genome
+    // '- Mutate the new genome using `WithOneOverLength`, which
+    //    flips bits with a   probability of 1/N, where N is the length of the
+    //    genome
+    // -' Score the mutated genome to create an individual
     let make_new_individual = Select::new(selector)
         .apply_twice()
         .then_map(GenomeExtractor)
@@ -90,7 +92,8 @@ fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         // Update the `generation` in place, parallelized for each individual.
         generation.par_next()?;
 
-        // Select a "best" individual, i.e., an individual with the highest score.
+        // Select a "best" individual, i.e., an individual with the highest
+        // score.
         let best = Best.select(generation.population(), &mut rng)?;
         // Print that best individual.
         println!("Generation {generation_number:3} best is {best}");

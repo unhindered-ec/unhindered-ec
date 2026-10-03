@@ -537,11 +537,18 @@ where
         // Should be able to be removed along with workaround
         let mut alias = self;
 
-        // this is the code that should work, but currently doesn't because of NLL
-        // limitations (should compile in future versions of rust just fine)
-        // let population = rayon::iter::repeat_n(&self.population,
-        // self.population.size())     .map_init(rand::rng, |rng, p|
-        // self.child_maker.apply(p, rng))     .collect::<Result<_, _>>()?;
+        // this is the code that should work, but currently doesn't because of
+        // NLL limitations (should compile in future versions of rust
+        // just fine)
+        // let population =
+        // rayon::iter::repeat_n(
+        //     &self.population, self.population.
+        //     size()
+        // )
+        //     .map_init(rand::rng, |rng, p|
+        //          self.child_maker.apply(p, rng)
+        //     )
+        //     .collect::<Result<_, _>>()?;
 
         // Workaround for current compiler limitations
 
@@ -557,8 +564,9 @@ where
 
         // end of workaround
 
-        // TODO: We can reduce allocations by pre-allocating the memory for "old" and
-        // "new"   population in `::new()` and then re-using those vectors here.
+        // TODO: We can reduce allocations by pre-allocating the memory for
+        // "old" and "new" population in `::new()` and then re-using
+        // those vectors here.
         alias.population = new_population;
 
         Ok(())
@@ -663,11 +671,16 @@ where
         let mut alias = self;
         let mut rng = rand::rng();
 
-        // this is the code that should work, but currently doesn't because of NLL
-        // limitations (should compile in future versions of rust just fine)
-        // let new_population = std::iter::repeat_n(&self.population,
-        // self.population.size())     .map(|p| self.child_maker.apply(p, &mut
-        // rng))     .collect::<Result<_, _>>()?;
+        // this is the code that should work, but currently doesn't because of
+        // NLL limitations (should compile in future versions of rust
+        // just fine)
+        // let new_population
+        //     std::iter::repeat_n(
+        //         &self.population,
+        //         self.population.size()
+        //     )
+        //     .map(|p| self.child_maker.apply(p, &mut rng))
+        //     .collect::<Result<_, _>>()?;
 
         // Workaround for current compiler limitations
 
@@ -681,8 +694,9 @@ where
             }
         );
 
-        // TODO: We can reduce allocations by pre-allocating the memory for "old" and
-        // "new"   population in `::new()` and then re-using those vectors here.
+        // TODO: We can reduce allocations by pre-allocating the memory for
+        // "old" and "new" population in `::new()` and then re-using
+        // those vectors here.
         alias.population = new_population;
         Ok(())
     }

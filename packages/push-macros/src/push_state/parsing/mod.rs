@@ -80,7 +80,8 @@ pub fn parse_fields(
             )
         })?;
         let mut i = 0;
-        // Consume elements that are for our macro from the input to not return them
+        // Consume elements that are for our macro from the input to not return
+        // them
         while let Some(to_compare) = attrs.get(i) {
             if to_compare.meta.path() == &syn::parse_quote!(stack) {
                 matching_attrs.push(attrs.remove(i));
@@ -177,8 +178,8 @@ pub fn parse_fields(
                             ));
                         }
                         if *stack_marker_flags.ignore_doctests {
-                            // This actually spans the `#` instead of `exec`, which should probably
-                            // be fixed at some point.
+                            // This actually spans the `#` instead of `exec`,
+                            // which should probably be fixed at some point.
                             return Err(syn::Error::new(
                                 marker_flags.ignore_doctests.span,
                                 "Redundant ignore_doctests flag",

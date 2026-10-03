@@ -105,7 +105,8 @@ where
             // performed next.
             (Ok(true), Ok(_), Ok(_)) => {
                 if let Err(e) = state.stack_mut::<bool>().pop() {
-                    // This should never happen since we just checked that the stack has a boolean.
+                    // This should never happen since we just checked that the
+                    // stack has a boolean.
                     return Err(Error::fatal(state, e));
                 }
                 let r#then = match state.stack_mut::<PushProgram>().pop2() {

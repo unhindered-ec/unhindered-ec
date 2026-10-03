@@ -113,8 +113,8 @@ where
         rng: &mut R,
     ) -> Result<Self::Output, Self::Error> {
         // FIXME: Check if using MaybeUninit<T> over
-        // Option<T> instead creates a measurable performance improvement because of the
-        // not required additional tag information.
+        // Option<T> instead creates a measurable performance improvement
+        // because of the omitted additional tag information.
         let mut output: [Option<F::Output>; N] = [const { None }; N];
 
         for (index, (input, output)) in input.into_iter().zip(output.as_mut_slice()).enumerate() {

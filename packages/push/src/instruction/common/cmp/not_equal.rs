@@ -136,10 +136,11 @@ where
             ));
         }
 
-        // If First=Second (i.e., we're comparing items from the same stack), then we
-        // will need to pop two values from that stack. If they are different we
-        // will need to pop one value from First. So we'll just check the size
-        // of First here, which will include the size of Second if First=Second.
+        // If First=Second (i.e., we're comparing items from the same stack),
+        // then we will need to pop two values from that stack. If they
+        // are different we will need to pop one value from First. So
+        // we'll just check the size of First here, which will include
+        // the size of Second if First=Second.
         let first_stack_required = if TypeId::of::<First>() == TypeId::of::<Second>() {
             2
         } else {
@@ -147,8 +148,8 @@ where
         };
 
         {
-            // Create a scope so we can't accidentally use `first_stack_size` after
-            // we might have modified the `First` stack.
+            // Create a scope so we can't accidentally use `first_stack_size`
+            // after we might have modified the `First` stack.
             let first_stack_size = state.stack::<First>().size();
             // If the `First` stack doesn't have enough items, we want to return
             // a recoverable error right away before we modify any stacks.

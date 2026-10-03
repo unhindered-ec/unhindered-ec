@@ -378,8 +378,8 @@ mod tests {
         }
     }
 
-    // A simple `Operator` that takes a `&str` (or anything that can be treated as
-    // a `&str`, like `&String) and returns its length.
+    // A simple `Operator` that takes a `&str` (or anything that can be treated
+    // as a `&str`, like `&String) and returns its length.
     #[derive(Composable)]
     struct StrLen;
 

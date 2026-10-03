@@ -90,8 +90,8 @@ where
     type Error = PushInstructionError;
 
     fn perform(&self, state: S) -> crate::error::InstructionResult<S, Self::Error> {
-        // If the number of items on the stack is too large to fit in an `i64`, then
-        // we'll replace it with `i64::MAX`.
+        // If the number of items on the stack is too large to fit in an `i64`,
+        // then we'll replace it with `i64::MAX`.
         let stack_size = state.stack::<T>().size().try_into().unwrap_or(i64::MAX);
         state.with_push(stack_size).map_err_into()
     }

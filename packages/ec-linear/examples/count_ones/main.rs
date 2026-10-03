@@ -73,12 +73,13 @@ fn main() -> miette::Result<()> {
 
     println!("{population:?}");
 
-    // Let's assume the process will be generational, i.e., we replace the entire
-    // population with newly created/selected individuals every generation.
-    // `generation` will be a mutable operator (containing the data structures for
-    // the population(s) and recombinators, scorers, etc.) that acts on a population
-    // returning a new population. We'll have different generation operators for
-    // serial vs. parallel generation of new individuals.
+    // Let's assume the process will be generational, i.e., we replace the
+    // entire population with newly created/selected individuals every
+    // generation. `generation` will be a mutable operator (containing the
+    // data structures for the population(s) and recombinators, scorers,
+    // etc.) that acts on a population returning a new population. We'll
+    // have different generation operators for serial vs. parallel
+    // generation of new individuals.
 
     let make_new_individual = Select::new(selector)
         .apply_twice()

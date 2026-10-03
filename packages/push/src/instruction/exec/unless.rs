@@ -176,7 +176,8 @@ mod tests {
 
     #[test]
     fn cond_missing() {
-        // If there's no boolean, we leave the state unchanged and skip the instruction.
+        // If there's no boolean, we leave the state unchanged and skip the
+        // instruction.
         let state = PushState::builder()
             .with_max_stack_size(1)
             .with_program([ExecInstruction::noop()])
