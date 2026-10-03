@@ -121,7 +121,8 @@ fn main() -> miette::Result<()> {
         .take(num_training_cases)
         .with_target_fn(Input::number_io);
 
-    let scorer = FnScorer(|genome: &Plushy| score_genome(genome, &training_cases, penalty_value));
+    let scorer =
+        FnScorer(|genome: &Plushy<_>| score_genome(genome, &training_cases, penalty_value));
 
     let lexicase = Lexicase::new(training_cases.len());
 
@@ -186,7 +187,7 @@ fn main() -> miette::Result<()> {
 }
 
 fn score_genome(
-    genome: &Plushy,
+    genome: &Plushy<PushInstruction>,
     training_cases: &Cases<Input, Output>,
     penalty_value: usize,
 ) -> TestResults<ErrorValue<usize>> {
