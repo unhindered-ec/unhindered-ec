@@ -1,14 +1,13 @@
-pub use self::{as_state::AsState, into_state::IntoState};
-use self::{
-    stateful::{FatalError, RecoverableError, StatefulError},
-    try_recover::TryRecover,
-};
-
 pub mod as_state;
 pub mod into_state;
 pub mod logging;
 pub mod stateful;
 pub mod try_recover;
+
+pub use as_state::AsState;
+pub use into_state::IntoState;
+use stateful::{FatalError, RecoverableError, StatefulError};
+use try_recover::TryRecover;
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum Error<S, E> {
