@@ -22,7 +22,7 @@ fn i2g(i: impl Into<PushInstruction>) -> PushGene<PushInstruction> {
 /// An evolved Plushy genome whose associated Push program evaluates the
 /// polynomial (x^3+1)^3 + 1.
 #[must_use]
-pub fn sample_genome() -> Plushy {
+pub fn sample_genome() -> Plushy<PushInstruction> {
     let genome = [
         i2g(WithInputInstruction::from("x")),
         i2g(FloatInstruction::dup()),

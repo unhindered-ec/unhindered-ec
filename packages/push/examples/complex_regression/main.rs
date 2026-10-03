@@ -96,7 +96,10 @@ fn compute_error(final_state: &PushState, penalty_value: Of64, expected: Of64) -
     )
 }
 
-fn score_genome(genome: &Plushy, training_cases: &Cases<Of64>) -> TestResults<ErrorValue<Of64>> {
+fn score_genome(
+    genome: &Plushy<PushInstruction>,
+    training_cases: &Cases<Of64>,
+) -> TestResults<ErrorValue<Of64>> {
     let program = Vec::<PushProgram>::from(genome.clone());
 
     training_cases
@@ -137,7 +140,7 @@ fn main() -> miette::Result<()> {
      * i.e., the absolute difference between the returned value and the
      * expected value.
      */
-    let scorer = FnScorer(|genome: &Plushy| score_genome(genome, &training_cases));
+    let scorer = FnScorer(|genome: &Plushy<_>| score_genome(genome, &training_cases));
 
     let selector = Lexicase::new(training_cases.len());
 
