@@ -1,6 +1,8 @@
 use crate::{
     error::InstructionResult,
-    instruction::{Instruction, NumOpens, instruction_error::PushInstructionError},
+    instruction::{
+        Instruction, NumOpens, PushInstruction, instruction_error::PushInstructionError,
+    },
     push_vm::{HasStack, program::PushProgram, stack::PushOnto},
 };
 
@@ -67,12 +69,16 @@ impl NumOpens for DupBlock {
 
 impl<S> Instruction<S> for DupBlock
 where
-    S: Clone + HasStack<PushProgram>,
+    S: Clone + HasStack<PushProgram<PushInstruction>>,
 {
     type Error = PushInstructionError;
 
     fn perform(&self, state: S) -> InstructionResult<S, Self::Error> {
-        state.stack::<PushProgram>().top().cloned().push_onto(state)
+        state
+            .stack::<PushProgram<_>>()
+            .top()
+            .cloned()
+            .push_onto(state)
     }
 }
 

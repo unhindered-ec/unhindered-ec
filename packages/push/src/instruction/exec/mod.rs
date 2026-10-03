@@ -22,15 +22,15 @@ use crate::{
 #[non_exhaustive]
 pub enum ExecInstruction {
     // "Common" instructions specialized for the integer stack
-    Pop(Pop<PushProgram>),
+    Pop(Pop<PushProgram<PushInstruction>>),
 
     #[strum(to_string = "{0}")]
-    Push(Box<PushValue<PushProgram>>),
-    Dup(Dup<PushProgram>),
-    Swap(Swap<PushProgram>),
-    IsEmpty(IsEmpty<PushProgram>),
-    StackDepth(StackDepth<PushProgram>),
-    Flush(Flush<PushProgram>),
+    Push(Box<PushValue<PushProgram<PushInstruction>>>),
+    Dup(Dup<PushProgram<PushInstruction>>),
+    Swap(Swap<PushProgram<PushInstruction>>),
+    IsEmpty(IsEmpty<PushProgram<PushInstruction>>),
+    StackDepth(StackDepth<PushProgram<PushInstruction>>),
+    Flush(Flush<PushProgram<PushInstruction>>),
 
     Noop(Noop),
     DupBlock(DupBlock),
@@ -41,25 +41,25 @@ pub enum ExecInstruction {
 
 impl ExecInstruction {
     pub const fn pop() -> Self {
-        Self::Pop(Pop::<PushProgram>::new())
+        Self::Pop(Pop::<PushProgram<_>>::new())
     }
-    pub fn push(value: PushProgram) -> Self {
-        Self::Push(Box::new(PushValue::<PushProgram>::new(value)))
+    pub fn push(value: PushProgram<PushInstruction>) -> Self {
+        Self::Push(Box::new(PushValue::<PushProgram<_>>::new(value)))
     }
     pub const fn dup() -> Self {
-        Self::Dup(Dup::<PushProgram>::new())
+        Self::Dup(Dup::<PushProgram<_>>::new())
     }
     pub const fn swap() -> Self {
-        Self::Swap(Swap::<PushProgram>::new())
+        Self::Swap(Swap::<PushProgram<_>>::new())
     }
     pub const fn is_empty() -> Self {
-        Self::IsEmpty(IsEmpty::<PushProgram>::new())
+        Self::IsEmpty(IsEmpty::<PushProgram<_>>::new())
     }
     pub const fn stack_depth() -> Self {
-        Self::StackDepth(StackDepth::<PushProgram>::new())
+        Self::StackDepth(StackDepth::<PushProgram<_>>::new())
     }
     pub const fn flush() -> Self {
-        Self::Flush(Flush::<PushProgram>::new())
+        Self::Flush(Flush::<PushProgram<_>>::new())
     }
     pub const fn noop() -> Self {
         Self::Noop(Noop)
@@ -105,7 +105,7 @@ impl NumOpens for ExecInstruction {
 
 impl<S> Instruction<S> for ExecInstruction
 where
-    S: Clone + HasStack<PushProgram> + HasStack<bool> + HasStack<i64>,
+    S: Clone + HasStack<PushProgram<PushInstruction>> + HasStack<bool> + HasStack<i64>,
 {
     type Error = PushInstructionError;
 

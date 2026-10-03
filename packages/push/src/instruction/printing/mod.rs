@@ -391,7 +391,7 @@ mod tests {
     #[test]
     fn print_multiple_values() {
         let program =
-            Vec::<PushProgram>::from(Plushy::from_instructions(arr_into![<PushInstruction>
+            Vec::<PushProgram<_>>::from(Plushy::from_instructions(arr_into![<PushInstruction>
                 IntInstruction::Print(Print::<i64>::default()),
                 BoolInstruction::Print(Print::<bool>::default()),
                 IntInstruction::PrintLn(PrintLn::<i64>::default()),

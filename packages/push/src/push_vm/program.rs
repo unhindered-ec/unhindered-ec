@@ -1,10 +1,8 @@
-use super::{HasStack, push_state::PushState, stack::StackError};
+use super::{HasStack, stack::StackError};
 use crate::{
     error::{Error, InstructionResult},
     genome::plushy::{Plushy, PushGene},
-    instruction::{
-        Instruction, NumOpens, PushInstruction, instruction_error::PushInstructionError,
-    },
+    instruction::{Instruction, NumOpens},
 };
 
 /// A Push program: a single instruction or a block of programs.
@@ -16,7 +14,7 @@ use crate::{
 /// implementation that runs a program is defined for `PushState` and
 /// `PushInstruction` only.
 #[derive(Debug, strum_macros::Display, Clone, Eq, PartialEq)]
-pub enum PushProgram<I = PushInstruction> {
+pub enum PushProgram<I> {
     Instruction(I),
     Block(Vec<Self>),
 }
@@ -119,12 +117,15 @@ where
     }
 }
 
-// TODO: Revisit this after genericizing `PushState` to see if this can be
-// made more generic as well.
-impl Instruction<PushState> for PushProgram {
-    type Error = PushInstructionError;
+impl<I, S> Instruction<S> for PushProgram<I>
+where
+    I: Instruction<S> + Clone,
+    I::Error: From<StackError>,
+    S: HasStack<Self>,
+{
+    type Error = I::Error;
 
-    fn perform(&self, state: PushState) -> InstructionResult<PushState, Self::Error> {
+    fn perform(&self, state: S) -> InstructionResult<S, Self::Error> {
         match self {
             Self::Instruction(i) => i.perform(state),
             Self::Block(block) => block.perform(state),
@@ -171,7 +172,7 @@ mod test {
             PushGene::new_instruction(IntInstruction::Subtract),
         ];
         let plushy: Plushy<_> = genes.into_iter().collect();
-        let program: Vec<PushProgram> = plushy.into();
+        let program: Vec<PushProgram<_>> = plushy.into();
         // [Instruction(Int-Add), Instruction(Exec-IfElse),
         // Block([Instruction(Int-Multiply)]), Block([Instruction(Exec-Dup),
         // Block([Instruction(Int-Subtract)])])]
@@ -203,7 +204,7 @@ mod test {
             .with_instruction_step_limit(1000)
             .build();
         let mut result = block.perform(state).unwrap();
-        let exec_stack = result.stack_mut::<PushProgram>();
+        let exec_stack = result.stack_mut::<PushProgram<_>>();
         assert_eq!(exec_stack.size(), 3);
         assert_eq!(exec_stack.pop().unwrap(), p(IntInstruction::Add));
         assert_eq!(exec_stack.pop().unwrap(), p(FloatInstruction::Multiply));
