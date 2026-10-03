@@ -1,4 +1,4 @@
-use std::{fmt::Display, marker::PhantomData};
+use std::fmt::Display;
 
 use easy_cast::ConvApprox;
 use ec_core::{
@@ -65,35 +65,23 @@ impl<T> PushGene<T> {
 }
 
 #[derive(Debug, Clone)]
-pub struct GeneGenerator<T, I>
-where
-    T: Distribution<I>,
-{
+pub struct GeneGenerator<T> {
     close_probability: f32,
     instruction_distribution: T,
-    /// `I` only appears in the `T: Distribution<I>` bound, not in any field,
-    /// so this marker keeps it as a type parameter of the struct. It also
-    /// makes the generated genes' instruction type explicit in the value's
-    /// type (`GeneGenerator<T, I>`) rather than being inferred from `T`.
-    _instruction: PhantomData<I>,
 }
 
-impl<T, I> GeneGenerator<T, I>
-where
-    T: Distribution<I>,
-{
+impl<T> GeneGenerator<T> {
     #[must_use]
     pub const fn new(close_probability: f32, instructions_distribution: T) -> Self {
         Self {
             close_probability,
             instruction_distribution: instructions_distribution,
-            _instruction: PhantomData,
         }
     }
 }
-impl<T, I> GeneGenerator<T, I>
+impl<T> GeneGenerator<T>
 where
-    T: Distribution<I> + Finite,
+    T: Finite,
 {
     /// Create a generator where the close tag has the same likelihood of
     /// being chosen as any of the passed in instructions.
@@ -110,44 +98,41 @@ where
     }
 }
 
-pub trait ConvertToGeneGenerator<I = PushInstruction>
-where
-    Self: Distribution<I>,
-{
+pub trait ConvertToGeneGenerator {
     fn into_gene_generator_with_close_probability(
         self,
         close_probability: f32,
-    ) -> GeneGenerator<Self, I>
+    ) -> GeneGenerator<Self>
     where
         Self: Sized;
 
     fn to_gene_generator_with_close_probability(
         &self,
         close_probability: f32,
-    ) -> GeneGenerator<&Self, I>;
+    ) -> GeneGenerator<&Self>;
 
     /// This creates a new gene generator, defaulting to a close probability
     /// that is uniform with the instructions distribution, eg. (1/(n+1)).
-    fn into_gene_generator(self) -> GeneGenerator<Self, I>
+    fn into_gene_generator(self) -> GeneGenerator<Self>
     where
         Self: Sized + Finite;
 
     /// This creates a new gene generator by borrowing from self, defaulting to
     /// a close probability that is uniform with the instructions distribution,
     /// eg. (1/(n+1)).
-    fn to_gene_generator(&self) -> GeneGenerator<&Self, I>
+    fn to_gene_generator(&self) -> GeneGenerator<&Self>
     where
         Self: Finite;
 }
 
-impl<I, T> ConvertToGeneGenerator<I> for T
+impl<T> ConvertToGeneGenerator for T
 where
-    T: Distribution<I> + ?Sized,
+    T: ?Sized,
 {
     fn into_gene_generator_with_close_probability(
         self,
         close_probability: f32,
-    ) -> GeneGenerator<Self, I>
+    ) -> GeneGenerator<Self>
     where
         Self: Sized,
     {
@@ -157,18 +142,18 @@ where
     fn to_gene_generator_with_close_probability(
         &self,
         close_probability: f32,
-    ) -> GeneGenerator<&Self, I> {
+    ) -> GeneGenerator<&Self> {
         GeneGenerator::new(close_probability, self)
     }
 
-    fn into_gene_generator(self) -> GeneGenerator<Self, I>
+    fn into_gene_generator(self) -> GeneGenerator<Self>
     where
         Self: Sized + Finite,
     {
         GeneGenerator::with_uniform_close_probability(self)
     }
 
-    fn to_gene_generator(&self) -> GeneGenerator<&Self, I>
+    fn to_gene_generator(&self) -> GeneGenerator<&Self>
     where
         Self: Finite,
     {
@@ -176,7 +161,7 @@ where
     }
 }
 
-impl<I, T> Distribution<PushGene<I>> for GeneGenerator<T, I>
+impl<I, T> Distribution<PushGene<I>> for GeneGenerator<T>
 where
     T: Distribution<I>,
 {
