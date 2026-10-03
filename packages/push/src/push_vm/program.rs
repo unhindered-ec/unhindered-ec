@@ -7,12 +7,7 @@ use crate::{
 
 /// A Push program: a single instruction or a block of programs.
 ///
-/// `PushProgram` is generic over its instruction type, defaulting to
-/// [`PushInstruction`]. Programs with other instruction types can still be
-/// constructed, printed, and parsed from a [`Plushy`], but only
-/// `PushProgram<PushInstruction>` can be *executed*: the [`Instruction`]
-/// implementation that runs a program is defined for `PushState` and
-/// `PushInstruction` only.
+/// `PushProgram` is generic over its instruction type.
 #[derive(Debug, strum_macros::Display, Clone, Eq, PartialEq)]
 pub enum PushProgram<I> {
     Instruction(I),
