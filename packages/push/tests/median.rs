@@ -64,7 +64,7 @@ fn build_working_median() -> Vec<PushProgram<PushInstruction>> {
     let b = WithInputInstruction::from("b");
     let c = WithInputInstruction::from("c");
     let a = WithInputInstruction::from("a");
-    let plushy = Plushy::from_instructions(arr_into![<PushInstruction>
+    let plushy = Plushy::from_iter(arr_into![<PushInstruction>
         IntInstruction::multiply(),
         c.clone(),
         a,
@@ -119,7 +119,7 @@ fn re_evolved_median() -> Vec<PushProgram<PushInstruction>> {
     let a = WithInputInstruction::from("a");
     let b = WithInputInstruction::from("b");
     let c = WithInputInstruction::from("c");
-    let plushy = Plushy::from_instructions(arr_into![<PushInstruction>
+    let plushy = Plushy::from_iter(arr_into![<PushInstruction>
         b.clone(),
         a.clone(),
         IntInstruction::max(),
