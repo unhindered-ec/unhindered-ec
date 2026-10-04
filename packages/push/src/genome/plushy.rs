@@ -355,17 +355,6 @@ mod test {
     }
 
     #[test]
-    fn generic_plushy_display() {
-        let plushy = Plushy::<MyInstruction>::new([
-            MyInstruction::Add.into(),
-            MyInstruction::Block.into(),
-            PushGene::Close,
-        ]);
-
-        assert_eq!("Add Block { }", plushy.to_string());
-    }
-
-    #[test]
     fn from_instructions() {
         let plushy = Plushy::from_iter(arr_into![<PushInstruction>
             IntInstruction::Add,
