@@ -55,7 +55,7 @@ fn target_fn(input: Of64) -> Of64 {
     (input.powi(3) + 1.0).powi(3) + 1.0
 }
 
-fn run_case(program: &[PushProgram], Case { input, output }: Case<Of64>) -> Of64 {
+fn run_case(program: &[PushProgram<PushInstruction>], Case { input, output }: Case<Of64>) -> Of64 {
     let Ok(start_state) = build_state(program, input).print_error() else {
         // If we fail to correctly build the initial state (because, for
         // example, the initial program is longer than the maximum size
@@ -74,7 +74,10 @@ fn run_case(program: &[PushProgram], Case { input, output }: Case<Of64>) -> Of64
     compute_error(&state, PENALTY_VALUE, output)
 }
 
-fn build_state(program: &[PushProgram], input: Of64) -> Result<PushState, StackError> {
+fn build_state(
+    program: &[PushProgram<PushInstruction>],
+    input: Of64,
+) -> Result<PushState, StackError> {
     Ok(PushState::builder()
         .with_max_stack_size(1_000)
         .with_program(program.to_vec())?
@@ -96,8 +99,11 @@ fn compute_error(final_state: &PushState, penalty_value: Of64, expected: Of64) -
     )
 }
 
-fn score_genome(genome: &Plushy, training_cases: &Cases<Of64>) -> TestResults<ErrorValue<Of64>> {
-    let program = Vec::<PushProgram>::from(genome.clone());
+fn score_genome(
+    genome: &Plushy<PushInstruction>,
+    training_cases: &Cases<Of64>,
+) -> TestResults<ErrorValue<Of64>> {
+    let program = Vec::<PushProgram<_>>::from(genome.clone());
 
     training_cases
         .iter()
@@ -137,7 +143,7 @@ fn main() -> miette::Result<()> {
      * i.e., the absolute difference between the returned value and the
      * expected value.
      */
-    let scorer = FnScorer(|genome: &Plushy| score_genome(genome, &training_cases));
+    let scorer = FnScorer(|genome: &Plushy<_>| score_genome(genome, &training_cases));
 
     let selector = Lexicase::new(training_cases.len());
 

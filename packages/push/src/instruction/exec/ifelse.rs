@@ -1,7 +1,9 @@
 use super::when::When;
 use crate::{
     error::{Error, InstructionResult},
-    instruction::{Instruction, NumOpens, instruction_error::PushInstructionError},
+    instruction::{
+        Instruction, NumOpens, PushInstruction, instruction_error::PushInstructionError,
+    },
     push_vm::{
         HasStack,
         program::PushProgram,
@@ -81,14 +83,14 @@ impl NumOpens for IfElse {
 
 impl<S> Instruction<S> for IfElse
 where
-    S: Clone + HasStack<PushProgram> + HasStack<bool>,
+    S: Clone + HasStack<PushProgram<PushInstruction>> + HasStack<bool>,
 {
     type Error = PushInstructionError;
 
     fn perform(&self, mut state: S) -> InstructionResult<S, Self::Error> {
         let condition = state.stack::<bool>().top();
-        let top_block = state.stack::<PushProgram>().top();
-        let top_2_blocks = state.stack::<PushProgram>().top2();
+        let top_block = state.stack::<PushProgram<_>>().top();
+        let top_2_blocks = state.stack::<PushProgram<_>>().top2();
 
         let r#then = top_2_blocks.as_ref().map(|(a, _)| *a).or(top_block);
         let r#else = top_2_blocks.map(|(_, b)| b);
@@ -99,7 +101,7 @@ where
             // performed next.
             (Ok(false), Ok(_), Ok(_)) => Ok(state)
                 .with_stack_discard::<bool>(1)
-                .with_stack_discard::<PushProgram>(1),
+                .with_stack_discard::<PushProgram<_>>(1),
             // If there is a boolean that is true and two blocks, discard the boolean
             // and the second (else) block, leaving the first (then) block so that it may be
             // performed next.
@@ -109,7 +111,7 @@ where
                     // stack has a boolean.
                     return Err(Error::fatal(state, e));
                 }
-                let r#then = match state.stack_mut::<PushProgram>().pop2() {
+                let r#then = match state.stack_mut::<PushProgram<_>>().pop2() {
                     Ok((r#then, _)) => r#then,
                     // This case should never happen since we just checked that there are two blocks
                     // on the exec stack.
@@ -128,7 +130,7 @@ where
                 Err(StackError::Underflow { .. }),
                 Ok(_),
                 Ok(_) | Err(StackError::Underflow { .. }),
-            ) => Ok(state).with_stack_discard::<PushProgram>(1),
+            ) => Ok(state).with_stack_discard::<PushProgram<_>>(1),
             // If there are no blocks, then we want to return some sort of error. Currently we're
             // just returning the error for the "else" block.
             // TODO: This ignores the fact that we underflowed on the exec stack twice. We should
@@ -158,15 +160,15 @@ mod tests {
         instruction::{
             ExecInstruction, Instruction, IntInstruction, instruction_error::PushInstructionError,
         },
-        list_into::arr_into,
-        push_vm::{program::PushProgram, push_state::PushState, stack::StackError},
+        push_vm::{push_state::PushState, stack::StackError},
+        test_utils::p,
     };
 
     #[test]
     fn cond_true() {
         let state = PushState::builder()
             .with_max_stack_size(2)
-            .with_program([IntInstruction::push(0), IntInstruction::push(1)])
+            .with_program([p(IntInstruction::push(0)), p(IntInstruction::push(1))])
             .unwrap()
             .with_bool_values([true])
             .unwrap()
@@ -174,17 +176,14 @@ mod tests {
             .build();
         let result_state = IfElse.perform(state).unwrap();
         assert!(result_state.bool.is_empty());
-        assert_eq!(
-            result_state.exec,
-            arr_into![<PushProgram> IntInstruction::push(0)]
-        );
+        assert_eq!(result_state.exec, [p(IntInstruction::push(0))]);
     }
 
     #[test]
     fn cond_false() {
         let state = PushState::builder()
             .with_max_stack_size(2)
-            .with_program([IntInstruction::push(0), IntInstruction::push(1)])
+            .with_program([p(IntInstruction::push(0)), p(IntInstruction::push(1))])
             .unwrap()
             .with_bool_values([false])
             .unwrap()
@@ -192,17 +191,14 @@ mod tests {
             .build();
         let result_state = IfElse.perform(state).unwrap();
         assert!(result_state.bool.is_empty());
-        assert_eq!(
-            result_state.exec,
-            arr_into![<PushProgram> IntInstruction::push(1)]
-        );
+        assert_eq!(result_state.exec, [p(IntInstruction::push(1))]);
     }
 
     #[test]
     fn cond_true_missing_else() {
         let state = PushState::builder()
             .with_max_stack_size(1)
-            .with_program([ExecInstruction::noop()])
+            .with_program([p(ExecInstruction::noop())])
             .unwrap()
             .with_bool_values([true])
             .unwrap()
@@ -217,7 +213,7 @@ mod tests {
     fn cond_false_missing_else() {
         let state = PushState::builder()
             .with_max_stack_size(1)
-            .with_program([ExecInstruction::noop()])
+            .with_program([p(ExecInstruction::noop())])
             .unwrap()
             .with_bool_values([false])
             .unwrap()
@@ -232,16 +228,13 @@ mod tests {
     fn cond_missing() {
         let state = PushState::builder()
             .with_max_stack_size(2)
-            .with_program([IntInstruction::push(0), IntInstruction::push(1)])
+            .with_program([p(IntInstruction::push(0)), p(IntInstruction::push(1))])
             .unwrap()
             .with_instruction_step_limit(1000)
             .build();
         let result_state = IfElse.perform(state).unwrap();
         assert!(result_state.bool.is_empty());
-        assert_eq!(
-            result_state.exec,
-            arr_into![<PushProgram> IntInstruction::push(1)]
-        );
+        assert_eq!(result_state.exec, [p(IntInstruction::push(1))]);
     }
 
     #[test]

@@ -252,9 +252,9 @@ mod tests {
 
     use super::*;
     use crate::{
-        genome::plushy::{Plushy, PushGene},
-        instruction::{BoolInstruction, IntInstruction},
-        list_into::vec_into,
+        genome::plushy::Plushy,
+        instruction::{BoolInstruction, IntInstruction, PushInstruction},
+        list_into::arr_into,
         push_vm::{State, program::PushProgram, push_state::PushState, stack::StackError},
     };
 
@@ -390,13 +390,12 @@ mod tests {
 
     #[test]
     fn print_multiple_values() {
-        let genes: Vec<PushGene> = vec_into![
+        let program = Vec::<PushProgram<_>>::from(Plushy::from_iter(arr_into![<PushInstruction>
             IntInstruction::Print(Print::<i64>::default()),
             BoolInstruction::Print(Print::<bool>::default()),
             IntInstruction::PrintLn(PrintLn::<i64>::default()),
             IntInstruction::Print(Print::<i64>::default()),
-        ];
-        let program = Vec::<PushProgram>::from(Plushy::new(genes));
+        ]));
         let push_state = PushState::builder()
             .with_max_stack_size(4)
             .with_bool_values([false])

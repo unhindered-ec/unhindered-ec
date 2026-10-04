@@ -1,6 +1,8 @@
 use crate::{
     error::InstructionResult,
-    instruction::{Instruction, NumOpens, instruction_error::PushInstructionError},
+    instruction::{
+        Instruction, NumOpens, PushInstruction, instruction_error::PushInstructionError,
+    },
     push_vm::{HasStack, program::PushProgram, stack::PushOnto},
 };
 
@@ -67,12 +69,16 @@ impl NumOpens for DupBlock {
 
 impl<S> Instruction<S> for DupBlock
 where
-    S: Clone + HasStack<PushProgram>,
+    S: Clone + HasStack<PushProgram<PushInstruction>>,
 {
     type Error = PushInstructionError;
 
     fn perform(&self, state: S) -> InstructionResult<S, Self::Error> {
-        state.stack::<PushProgram>().top().cloned().push_onto(state)
+        state
+            .stack::<PushProgram<_>>()
+            .top()
+            .cloned()
+            .push_onto(state)
     }
 }
 
@@ -81,22 +87,22 @@ mod tests {
     use super::DupBlock;
     use crate::{
         instruction::{ExecInstruction, Instruction, PushInstructionError},
-        list_into::arr_into,
-        push_vm::{program::PushProgram, push_state::PushState, stack::StackError},
+        push_vm::{push_state::PushState, stack::StackError},
+        test_utils::p,
     };
 
     #[test]
     fn exec_present_not_full() {
         let state = PushState::builder()
             .with_max_stack_size(2)
-            .with_program([ExecInstruction::noop()])
+            .with_program([p(ExecInstruction::noop())])
             .unwrap()
             .with_instruction_step_limit(1000)
             .build();
         let result_state = DupBlock.perform(state).unwrap();
         assert_eq!(
             result_state.exec,
-            arr_into![<PushProgram> ExecInstruction::noop(), ExecInstruction::noop()]
+            vec![p(ExecInstruction::noop()), p(ExecInstruction::noop())]
         );
     }
 
@@ -119,7 +125,7 @@ mod tests {
     fn exec_present_and_full() {
         let state = PushState::builder()
             .with_max_stack_size(1)
-            .with_program([ExecInstruction::noop()])
+            .with_program([p(ExecInstruction::noop())])
             .unwrap()
             .with_instruction_step_limit(1000)
             .build();

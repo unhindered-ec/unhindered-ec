@@ -11,44 +11,47 @@ use criterion::{Criterion, criterion_group, criterion_main};
 use ordered_float::OrderedFloat;
 use push::{
     genome::plushy::{Plushy, PushGene},
-    instruction::{FloatInstruction, with_input::WithInputInstruction},
+    instruction::{FloatInstruction, PushInstruction, with_input::WithInputInstruction},
     push_vm::{HasStack, State, program::PushProgram, push_state::PushState},
-    vec_into,
 };
+
+fn i2g(i: impl Into<PushInstruction>) -> PushGene<PushInstruction> {
+    PushGene::new_instruction(i)
+}
 
 /// An evolved Plushy genome whose associated Push program evaluates the
 /// polynomial (x^3+1)^3 + 1.
 #[must_use]
-pub fn sample_genome() -> Plushy {
-    let genome = vec_into![
-        WithInputInstruction::from("x"),
-        FloatInstruction::dup(),
-        FloatInstruction::ProtectedDivide,
-        FloatInstruction::dup(),
-        FloatInstruction::Multiply,
+pub fn sample_genome() -> Plushy<PushInstruction> {
+    let genome = [
+        i2g(WithInputInstruction::from("x")),
+        i2g(FloatInstruction::dup()),
+        i2g(FloatInstruction::ProtectedDivide),
+        i2g(FloatInstruction::dup()),
+        i2g(FloatInstruction::Multiply),
         PushGene::Close,
-        FloatInstruction::Add,
-        FloatInstruction::Add,
-        WithInputInstruction::from("x"),
-        FloatInstruction::dup(),
-        FloatInstruction::Multiply,
-        WithInputInstruction::from("x"),
+        i2g(FloatInstruction::Add),
+        i2g(FloatInstruction::Add),
+        i2g(WithInputInstruction::from("x")),
+        i2g(FloatInstruction::dup()),
+        i2g(FloatInstruction::Multiply),
+        i2g(WithInputInstruction::from("x")),
         PushGene::Close,
-        FloatInstruction::Multiply,
-        FloatInstruction::push(1.0),
-        FloatInstruction::Add,
-        FloatInstruction::dup(),
+        i2g(FloatInstruction::Multiply),
+        i2g(FloatInstruction::push(1.0)),
+        i2g(FloatInstruction::Add),
+        i2g(FloatInstruction::dup()),
         PushGene::Close,
-        FloatInstruction::dup(),
-        FloatInstruction::Multiply,
-        FloatInstruction::Multiply,
-        FloatInstruction::Add,
+        i2g(FloatInstruction::dup()),
+        i2g(FloatInstruction::Multiply),
+        i2g(FloatInstruction::Multiply),
+        i2g(FloatInstruction::Add),
     ];
     Plushy::new(genome)
 }
 
 #[must_use]
-pub fn sample_program() -> Vec<PushProgram> {
+pub fn sample_program() -> Vec<PushProgram<PushInstruction>> {
     sample_genome().into()
 }
 
@@ -70,7 +73,7 @@ const INPUT_VALUE: OrderedFloat<f64> = OrderedFloat(0.25);
 /// Panics if for some reason we can't push our program onto the
 /// `exec` stack.
 #[must_use]
-pub fn build_state(program: Vec<PushProgram>) -> PushState {
+pub fn build_state(program: Vec<PushProgram<PushInstruction>>) -> PushState {
     const MAX_STACK_SIZE: usize = 100;
 
     PushState::builder()

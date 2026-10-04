@@ -6,7 +6,8 @@ use super::push_io::HasStdout;
 use crate::{
     error::{stateful::FatalError, try_recover::TryRecover},
     instruction::{
-        constant_expression::ConstantExpression, instruction_error::PushInstructionError,
+        PushInstruction, constant_expression::ConstantExpression,
+        instruction_error::PushInstructionError,
     },
     push_vm::{
         State,
@@ -26,7 +27,7 @@ use crate::{
 #[push_macros::push_state(builder)]
 pub struct PushState {
     #[stack(exec)]
-    pub(crate) exec: Stack<PushProgram>,
+    pub(crate) exec: Stack<PushProgram<PushInstruction>>,
     #[stack(sample_values = [4, 5, 7])]
     pub(crate) int: Stack<i64>,
     #[stack(sample_values = [OrderedFloat(4.3), OrderedFloat(5.1), OrderedFloat(2.1)])]
@@ -77,7 +78,7 @@ impl PushState {
 }
 
 impl State for PushState {
-    type Instruction = PushProgram;
+    type Instruction = PushProgram<PushInstruction>;
 
     fn run_to_completion(mut self) -> Result<Self, FatalError<Self, PushInstructionError>> {
         let mut instruction_steps = 0;
@@ -128,12 +129,12 @@ mod tests {
 
     use super::State;
     use crate::{
-        genome::plushy::{Plushy, PushGene},
+        genome::plushy::Plushy,
         instruction::{
             BoolInstruction, FloatInstruction, IntInstruction, PushInstruction,
             with_input::WithInputInstruction,
         },
-        list_into::vec_into,
+        list_into::arr_into,
         push_vm::{program::PushProgram, push_state::PushState},
     };
 
@@ -151,7 +152,7 @@ mod tests {
             PushInstruction::push_float(OrderedFloat(f))
         }
 
-        let genes: Vec<PushGene> = vec_into![
+        let plushy = Plushy::from_iter(arr_into![<PushInstruction>
             WithInputInstruction::from("x"), // [5]
             WithInputInstruction::from("y"), // [8, 5]
             push_bool(true),                 // [true]
@@ -168,12 +169,10 @@ mod tests {
             FloatInstruction::Multiply,      // [12.25]
             WithInputInstruction::from("f"), // [12.25, 0.75]
             FloatInstruction::Add,           // [13.0]
-        ];
-
-        let plushy = Plushy::new(genes);
+        ]);
         let state = PushState::builder()
             .with_max_stack_size(16)
-            .with_program(Vec::<PushProgram>::from(plushy))
+            .with_program(Vec::<PushProgram<PushInstruction>>::from(plushy))
             .unwrap()
             .with_bool_input("a", true)
             .with_bool_input("b", false)
@@ -207,7 +206,7 @@ mod tests {
             PushInstruction::push_float(OrderedFloat(f))
         }
 
-        let genes: Vec<PushGene> = vec_into![
+        let plushy = Plushy::from_iter(arr_into![<PushInstruction>
             WithInputInstruction::from("x"), // [5]
             WithInputInstruction::from("y"), // [8, 5]
             push_bool(true),                 // [true]
@@ -224,12 +223,10 @@ mod tests {
             FloatInstruction::Multiply,      // [12.25]
             WithInputInstruction::from("f"), // [12.25, 0.75]
             FloatInstruction::Add,           // [13.0]
-        ];
-
-        let plushy = Plushy::new(genes);
+        ]);
         let state = PushState::builder()
             .with_max_stack_size(16)
-            .with_program(Vec::<PushProgram>::from(plushy))
+            .with_program(Vec::<PushProgram<PushInstruction>>::from(plushy))
             .unwrap()
             .with_bool_input("a", true)
             .with_bool_input("b", false)
