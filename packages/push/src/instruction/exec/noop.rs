@@ -1,4 +1,4 @@
-use crate::instruction::{Instruction, NumOpens, instruction_error::PushInstructionError};
+use crate::instruction::{Instruction, NumOpens, Perform, instruction_error::PushInstructionError};
 
 /// A "no-op" instruction that does nothing, i.e., always
 /// runs successfully and makes no changes to the stacks.
@@ -19,7 +19,9 @@ impl NumOpens for Noop {
     }
 }
 
-impl<S> Instruction<S> for Noop {
+impl Instruction for Noop {}
+
+impl<S> Perform<S> for Noop {
     type Error = PushInstructionError;
 
     fn perform(&self, state: S) -> crate::error::InstructionResult<S, Self::Error> {
@@ -31,16 +33,18 @@ impl<S> Instruction<S> for Noop {
 mod tests {
     use super::Noop;
     use crate::{
-        instruction::{ExecInstruction, Instruction},
-        push_vm::push_state::PushState,
-        test_utils::p,
+        instruction::{ExecInstruction, Perform},
+        list_into::arr_into,
+        push_vm::{program::PushProgram, push_state::PushState},
     };
 
     #[test]
     fn noop_is_correct() {
         let state = PushState::builder()
             .with_max_stack_size(2)
-            .with_program([p(ExecInstruction::noop()), p(ExecInstruction::noop())])
+            .with_program(
+                arr_into![<PushProgram<_>> ExecInstruction::noop(), ExecInstruction::noop()],
+            )
             .unwrap()
             .with_instruction_step_limit(1000)
             .build();

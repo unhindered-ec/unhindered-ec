@@ -2,7 +2,7 @@ use std::marker::PhantomData;
 
 use crate::{
     error::InstructionResult,
-    instruction::{Instruction, NumOpens, instruction_error::PushInstructionError},
+    instruction::{Instruction, NumOpens, Perform, instruction_error::PushInstructionError},
     push_vm::HasStack,
 };
 
@@ -61,7 +61,9 @@ impl<T> NumOpens for Flush<T> {
     }
 }
 
-impl<S, T> Instruction<S> for Flush<T>
+impl<T> Instruction for Flush<T> {}
+
+impl<S, T> Perform<S> for Flush<T>
 where
     S: HasStack<T>,
 {
@@ -80,7 +82,7 @@ where
 mod test {
     use super::Flush;
     use crate::{
-        instruction::Instruction,
+        instruction::Perform,
         push_vm::{HasStack, push_state::PushState},
     };
 

@@ -2,7 +2,7 @@ use std::marker::PhantomData;
 
 use crate::{
     error::MapInstructionError,
-    instruction::{Instruction, NumOpens, instruction_error::PushInstructionError},
+    instruction::{Instruction, NumOpens, Perform, instruction_error::PushInstructionError},
     push_vm::HasStack,
 };
 
@@ -83,7 +83,9 @@ impl<T> NumOpens for StackDepth<T> {
     }
 }
 
-impl<S, T> Instruction<S> for StackDepth<T>
+impl<T> Instruction for StackDepth<T> {}
+
+impl<S, T> Perform<S> for StackDepth<T>
 where
     S: HasStack<T> + HasStack<i64>,
 {
@@ -108,7 +110,7 @@ mod tests {
 
     use crate::{
         instruction::{
-            Instruction, common::stack_depth::StackDepth, instruction_error::PushInstructionError,
+            Perform, common::stack_depth::StackDepth, instruction_error::PushInstructionError,
         },
         push_vm::{HasStack, push_state::PushState, stack::StackError},
     };

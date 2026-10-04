@@ -11,7 +11,7 @@ pub use string::PrintString;
 use super::NumOpens;
 use crate::{
     error::{Error, InstructionResult},
-    instruction::Instruction,
+    instruction::{Instruction, Perform},
     push_vm::{HasStack, push_io::HasStdout},
 };
 
@@ -61,7 +61,7 @@ use crate::{
 ///
 /// ```
 /// # use push::{
-/// #    instruction::{Instruction, printing::Print},
+/// #    instruction::{Perform, printing::Print},
 /// #    push_vm::{HasStack, push_state::PushState},
 /// # };
 /// #
@@ -105,7 +105,9 @@ impl<T> Print<T> {
     }
 }
 
-impl<State, T> Instruction<State> for Print<T>
+impl<T> Instruction for Print<T> {}
+
+impl<State, T> Perform<State> for Print<T>
 where
     T: Display,
     State: HasStack<T> + HasStdout,
@@ -176,7 +178,7 @@ impl<T> NumOpens for Print<T> {
 ///
 /// ```
 /// # use push::{
-/// #    instruction::{Instruction, printing::PrintLn},
+/// #    instruction::{Perform, printing::PrintLn},
 /// #    push_vm::{HasStack, push_state::PushState},
 /// # };
 /// #
@@ -221,7 +223,9 @@ impl<T> PrintLn<T> {
     }
 }
 
-impl<State, T> Instruction<State> for PrintLn<T>
+impl<T> Instruction for PrintLn<T> {}
+
+impl<State, T> Perform<State> for PrintLn<T>
 where
     T: Display,
     State: HasStack<T> + HasStdout,

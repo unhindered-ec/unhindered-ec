@@ -1,6 +1,6 @@
 use crate::{
     error::InstructionResult,
-    instruction::{Instruction, instruction_error::PushInstructionError},
+    instruction::{Instruction, Perform, instruction_error::PushInstructionError},
     push_vm::{HasStack, stack::PushOnto},
 };
 
@@ -71,7 +71,9 @@ impl Clamp {
     }
 }
 
-impl<S> Instruction<S> for Clamp
+impl Instruction for Clamp {}
+
+impl<S> Perform<S> for Clamp
 where
     S: Clone + HasStack<i64>,
 {
@@ -97,7 +99,7 @@ mod test {
 
     use super::Clamp;
     use crate::{
-        instruction::{Instruction, instruction_error::PushInstructionError},
+        instruction::{Perform, instruction_error::PushInstructionError},
         push_vm::{HasStack, push_state::PushState, stack::StackError},
     };
 

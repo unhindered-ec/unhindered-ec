@@ -44,7 +44,9 @@ mod int;
  * - dup (int_dup, exec_dup, bool_dup, ...)
  */
 
-pub trait Instruction<S> {
+pub trait Instruction {}
+
+pub trait Perform<S> {
     type Error;
 
     /// # Errors
@@ -55,9 +57,11 @@ pub trait Instruction<S> {
     fn perform(&self, state: S) -> InstructionResult<S, Self::Error>;
 }
 
-static_assertions::assert_obj_safe!(Instruction<(), Error = ()>);
+static_assertions::assert_obj_safe!(Perform<(), Error = ()>);
 
-impl<S, E> Instruction<S> for Box<dyn Instruction<S, Error = E>> {
+impl Instruction for Box<dyn Instruction> {}
+
+impl<S, E> Perform<S> for Box<dyn Perform<S, Error = E>> {
     type Error = E;
 
     fn perform(&self, state: S) -> InstructionResult<S, E> {
@@ -101,18 +105,20 @@ impl PushInstruction {
     }
 }
 
-impl<S> Instruction<S> for PushInstruction
+impl Instruction for PushInstruction {}
+
+impl<S> Perform<S> for PushInstruction
 where
     S: Clone,
-    WithInputInstruction: Instruction<S, Error: Into<PushInstructionError>>,
-    ExecInstruction: Instruction<S, Error: Into<PushInstructionError>>,
-    BoolInstruction: Instruction<S, Error: Into<PushInstructionError>>,
-    IntInstruction: Instruction<S, Error: Into<PushInstructionError>>,
-    FloatInstruction: Instruction<S, Error: Into<PushInstructionError>>,
-    PrintString: Instruction<S, Error: Into<PushInstructionError>>,
-    PrintChar<' '>: Instruction<S, Error: Into<PushInstructionError>>,
-    PrintChar<'\n'>: Instruction<S, Error: Into<PushInstructionError>>,
-    PrintChar<'.'>: Instruction<S, Error: Into<PushInstructionError>>,
+    WithInputInstruction: Perform<S, Error: Into<PushInstructionError>>,
+    ExecInstruction: Perform<S, Error: Into<PushInstructionError>>,
+    BoolInstruction: Perform<S, Error: Into<PushInstructionError>>,
+    IntInstruction: Perform<S, Error: Into<PushInstructionError>>,
+    FloatInstruction: Perform<S, Error: Into<PushInstructionError>>,
+    PrintString: Perform<S, Error: Into<PushInstructionError>>,
+    PrintChar<' '>: Perform<S, Error: Into<PushInstructionError>>,
+    PrintChar<'\n'>: Perform<S, Error: Into<PushInstructionError>>,
+    PrintChar<'.'>: Perform<S, Error: Into<PushInstructionError>>,
 {
     type Error = PushInstructionError;
 

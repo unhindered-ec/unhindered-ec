@@ -1,9 +1,9 @@
 use std::marker::PhantomData;
 
-use super::super::{Instruction, instruction_error::PushInstructionError};
+use super::super::{Perform, instruction_error::PushInstructionError};
 use crate::{
     error::{Error, InstructionResult, MapInstructionError},
-    instruction::NumOpens,
+    instruction::{Instruction, NumOpens},
     push_vm::HasStack,
 };
 
@@ -65,7 +65,9 @@ impl<T> NumOpens for Swap<T> {
     }
 }
 
-impl<S, T> Instruction<S> for Swap<T>
+impl<T> Instruction for Swap<T> {}
+
+impl<S, T> Perform<S> for Swap<T>
 where
     S: Clone + HasStack<T>,
     T: Clone,
@@ -91,7 +93,7 @@ mod tests {
 
     use super::*;
     use crate::{
-        instruction::Instruction,
+        instruction::Perform,
         push_vm::{push_state::PushState, stack::StackError},
     };
 

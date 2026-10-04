@@ -1,9 +1,9 @@
 use std::fmt::Display;
 
-use super::super::{Instruction, instruction_error::PushInstructionError};
+use super::super::{Perform, instruction_error::PushInstructionError};
 use crate::{
     error::{InstructionResult, MapInstructionError},
-    instruction::NumOpens,
+    instruction::{Instruction, NumOpens},
     push_vm::HasStack,
 };
 
@@ -64,7 +64,9 @@ impl<T> NumOpens for PushValue<T> {
     }
 }
 
-impl<S, T> Instruction<S> for PushValue<T>
+impl<T> Instruction for PushValue<T> {}
+
+impl<S, T> Perform<S> for PushValue<T>
 where
     S: Clone + HasStack<T>,
     T: Clone,
@@ -91,7 +93,7 @@ mod tests {
 
     use crate::{
         instruction::{
-            Instruction, common::push_value::PushValue, instruction_error::PushInstructionError,
+            Perform, common::push_value::PushValue, instruction_error::PushInstructionError,
         },
         push_vm::{HasStack, push_state::PushState, stack::StackError},
     };

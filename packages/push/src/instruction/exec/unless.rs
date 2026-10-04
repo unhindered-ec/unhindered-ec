@@ -1,7 +1,7 @@
 use crate::{
     error::{Error, InstructionResult},
     instruction::{
-        Instruction, NumOpens, PushInstruction, instruction_error::PushInstructionError,
+        Instruction, NumOpens, Perform, PushInstruction, instruction_error::PushInstructionError,
     },
     push_vm::{
         HasStack,
@@ -72,7 +72,9 @@ impl NumOpens for Unless {
     }
 }
 
-impl<S> Instruction<S> for Unless
+impl Instruction for Unless {}
+
+impl<S> Perform<S> for Unless
 where
     S: Clone + HasStack<PushProgram<PushInstruction>> + HasStack<bool>,
 {
@@ -116,16 +118,16 @@ mod tests {
     use super::Unless;
     use crate::{
         error::IntoState,
-        instruction::{ExecInstruction, Instruction, PushInstructionError},
-        push_vm::{push_state::PushState, stack::StackError},
-        test_utils::p,
+        instruction::{ExecInstruction, Perform, PushInstructionError},
+        list_into::arr_into,
+        push_vm::{program::PushProgram, push_state::PushState, stack::StackError},
     };
 
     #[test]
     fn cond_true() {
         let state = PushState::builder()
             .with_max_stack_size(1)
-            .with_program([p(ExecInstruction::noop())])
+            .with_program(arr_into![<PushProgram<_>>ExecInstruction::noop()])
             .unwrap()
             .with_bool_values([true])
             .unwrap()
@@ -140,7 +142,7 @@ mod tests {
     fn cond_false() {
         let state = PushState::builder()
             .with_max_stack_size(1)
-            .with_program([p(ExecInstruction::noop())])
+            .with_program(arr_into![<PushProgram<_>>ExecInstruction::noop()])
             .unwrap()
             .with_bool_values([false])
             .unwrap()
@@ -183,7 +185,7 @@ mod tests {
         // instruction.
         let state = PushState::builder()
             .with_max_stack_size(1)
-            .with_program([p(ExecInstruction::noop())])
+            .with_program(arr_into![<PushProgram<_>>ExecInstruction::noop()])
             .unwrap()
             .with_instruction_step_limit(1000)
             .build();

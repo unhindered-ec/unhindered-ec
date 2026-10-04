@@ -2,7 +2,7 @@ use std::{any::TypeId, marker::PhantomData};
 
 use crate::{
     error::{Error, InstructionResult, MapInstructionError},
-    instruction::{Instruction, instruction_error::PushInstructionError},
+    instruction::{Instruction, Perform, instruction_error::PushInstructionError},
     push_vm::{HasStack, stack::StackError},
 };
 
@@ -109,7 +109,9 @@ pub struct NotEqual<T, U = T> {
     _p: PhantomData<(T, U)>,
 }
 
-impl<S, First, Second> Instruction<S> for NotEqual<First, Second>
+impl<T, U> Instruction for NotEqual<T, U> {}
+
+impl<S, First, Second> Perform<S> for NotEqual<First, Second>
 where
     S: Clone + HasStack<First> + HasStack<Second> + HasStack<bool>,
     First: PartialEq<Second> + 'static,
@@ -186,7 +188,7 @@ mod test {
 
     use super::NotEqual;
     use crate::{
-        instruction::{Instruction, instruction_error::PushInstructionError},
+        instruction::{Perform, instruction_error::PushInstructionError},
         push_vm::{HasStack, push_state::PushState, stack::StackError},
     };
 

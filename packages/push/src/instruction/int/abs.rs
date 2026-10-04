@@ -1,6 +1,6 @@
 use crate::{
     error::InstructionResult,
-    instruction::{Instruction, instruction_error::PushInstructionError},
+    instruction::{Instruction, Perform, instruction_error::PushInstructionError},
     push_vm::{HasStack, stack::PushOnto},
 };
 
@@ -81,7 +81,9 @@ impl Abs {
     }
 }
 
-impl<S> Instruction<S> for Abs
+impl Instruction for Abs {}
+
+impl<S> Perform<S> for Abs
 where
     S: Clone + HasStack<i64>,
 {
@@ -103,7 +105,7 @@ mod tests {
 
     use super::Abs;
     use crate::{
-        instruction::Instruction,
+        instruction::Perform,
         push_vm::{HasStack, push_state::PushState},
     };
 

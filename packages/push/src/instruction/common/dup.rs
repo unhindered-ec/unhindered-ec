@@ -1,9 +1,9 @@
 use std::marker::PhantomData;
 
-use super::super::{Instruction, instruction_error::PushInstructionError};
+use super::super::{Perform, instruction_error::PushInstructionError};
 use crate::{
     error::InstructionResult,
-    instruction::NumOpens,
+    instruction::{Instruction, NumOpens},
     push_vm::{HasStack, stack::PushOnto},
 };
 
@@ -86,7 +86,9 @@ impl<T> NumOpens for Dup<T> {
     }
 }
 
-impl<S, T> Instruction<S> for Dup<T>
+impl<T> Instruction for Dup<T> {}
+
+impl<S, T> Perform<S> for Dup<T>
 where
     S: Clone + HasStack<T>,
     T: Clone,

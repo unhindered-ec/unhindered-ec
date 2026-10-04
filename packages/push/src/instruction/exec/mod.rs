@@ -8,12 +8,13 @@ use strum_macros::EnumIter;
 
 use self::{dup_block::DupBlock, ifelse::IfElse, noop::Noop, unless::Unless, when::When};
 use super::{
-    Instruction, NumOpens, PushInstruction,
+    NumOpens, Perform, PushInstruction,
     common::{Dup, Flush, IsEmpty, Pop, PushValue, StackDepth, Swap},
     instruction_error::PushInstructionError,
 };
 use crate::{
     error::InstructionResult,
+    instruction::Instruction,
     push_vm::{HasStack, program::PushProgram},
 };
 
@@ -105,7 +106,9 @@ impl NumOpens for ExecInstruction {
     }
 }
 
-impl<S> Instruction<S> for ExecInstruction
+impl Instruction for ExecInstruction {}
+
+impl<S> Perform<S> for ExecInstruction
 where
     S: Clone + HasStack<PushProgram<PushInstruction>> + HasStack<bool> + HasStack<i64>,
 {

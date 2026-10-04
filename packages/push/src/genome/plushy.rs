@@ -8,7 +8,7 @@ use ec_core::{
 use ec_linear::genome::Linear;
 use rand::{Rng, RngExt, prelude::Distribution};
 
-use crate::instruction::NumOpens;
+use crate::instruction::{Instruction, NumOpens};
 
 /// A gene in a [`Plushy`] genome: either a `Close` marker that closes a block
 /// or an `Instruction`.
@@ -43,9 +43,12 @@ where
     }
 }
 
-impl<I> From<I> for PushGene<I> {
-    fn from(i: I) -> Self {
-        Self::Instruction(i)
+impl<I1, I2> From<I1> for PushGene<I2>
+where
+    I1: Into<I2> + Instruction,
+{
+    fn from(i: I1) -> Self {
+        Self::Instruction(i.into())
     }
 }
 
@@ -295,7 +298,7 @@ mod test {
         instruction::{
             BoolInstruction, IntInstruction, PushInstruction, with_input::WithInputInstruction,
         },
-        list_into::{arr_into, genes_into},
+        list_into::{arr_into, vec_into},
     };
 
     #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -303,6 +306,8 @@ mod test {
         Add,
         Block,
     }
+
+    impl Instruction for MyInstruction {}
 
     impl Display for MyInstruction {
         fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -396,7 +401,7 @@ mod test {
         let umad = Umad::new(0.3, 0.3, instruction_options);
 
         let parent = Plushy {
-            genes: genes_into![<PushGene<_>>
+            genes: vec_into![<PushGene<_>>
                 IntInstruction::Add,
                 BoolInstruction::And,
                 BoolInstruction::Or,

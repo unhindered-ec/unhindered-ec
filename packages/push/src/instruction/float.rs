@@ -2,12 +2,13 @@ use ordered_float::OrderedFloat;
 use strum_macros::EnumIter;
 
 use super::{
-    Instruction, PushInstruction, PushInstructionError,
+    Perform, PushInstruction, PushInstructionError,
     common::{Dup, Flush, IsEmpty, Pop, PushValue, StackDepth, Swap},
     printing::{Print, PrintLn},
 };
 use crate::{
     error::{Error, InstructionResult, MapInstructionError},
+    instruction::Instruction,
     push_vm::{
         HasStack,
         push_io::HasStdout,
@@ -160,7 +161,9 @@ impl From<Flush<OrderedFloat<f64>>> for FloatInstruction {
     }
 }
 
-impl<S> Instruction<S> for FloatInstruction
+impl Instruction for FloatInstruction {}
+
+impl<S> Perform<S> for FloatInstruction
 where
     S: Clone + HasStack<OrderedFloat<f64>> + HasStack<bool> + HasStack<i64> + HasStdout,
 {

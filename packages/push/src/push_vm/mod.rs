@@ -1,6 +1,6 @@
 use crate::{
     error::{InstructionResult, stateful::FatalError},
-    instruction::Instruction,
+    instruction::Perform,
 };
 
 pub mod program;
@@ -12,7 +12,7 @@ pub mod variables;
 pub use self::stack::HasStack;
 
 pub trait State: Sized {
-    type Instruction: Instruction<Self>;
+    type Instruction: Perform<Self>;
 
     /// # Errors
     ///
@@ -20,7 +20,7 @@ pub trait State: Sized {
     fn perform(
         self,
         instruction: &Self::Instruction,
-    ) -> InstructionResult<Self, <Self::Instruction as Instruction<Self>>::Error> {
+    ) -> InstructionResult<Self, <Self::Instruction as Perform<Self>>::Error> {
         instruction.perform(self)
     }
 
@@ -29,7 +29,7 @@ pub trait State: Sized {
     /// Fails if any of the performed instructions fails.
     fn run_to_completion(
         self,
-    ) -> Result<Self, FatalError<Self, <Self::Instruction as Instruction<Self>>::Error>>;
+    ) -> Result<Self, FatalError<Self, <Self::Instruction as Perform<Self>>::Error>>;
 }
 
 /*
