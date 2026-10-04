@@ -139,7 +139,6 @@ mod test {
             BoolInstruction, ExecInstruction, FloatInstruction, Instruction, IntInstruction,
             NumOpens, PushInstruction,
         },
-        list_into::arr_into,
         push_vm::{HasStack, push_state::PushState},
         test_utils::p,
     };
@@ -158,7 +157,7 @@ mod test {
 
     #[test]
     fn conversion() {
-        let genes = arr_into![
+        let genes = [
             PushGene::new_instruction(IntInstruction::Add),
             PushGene::new_instruction(ExecInstruction::if_else()),
             PushGene::new_instruction(IntInstruction::Multiply),

@@ -215,7 +215,9 @@ impl<I> Plushy<I> {
             genes: iterable.into_iter().collect(),
         }
     }
+}
 
+impl<I> FromIterator<I> for Plushy<I> {
     /// Create a plushy from an iterator of instructions, wrapping each one in
     /// a [`PushGene::Instruction`].
     ///
@@ -224,9 +226,9 @@ impl<I> Plushy<I> {
     /// (e.g. from a concrete instruction into
     /// [`crate::instruction::PushInstruction`]), build the genes with
     /// [`PushGene::new_instruction`] instead.
-    pub fn from_instructions(iterable: impl IntoIterator<Item = I>) -> Self {
+    fn from_iter<T: IntoIterator<Item = I>>(iter: T) -> Self {
         Self {
-            genes: iterable.into_iter().map(PushGene::Instruction).collect(),
+            genes: iter.into_iter().map(PushGene::Instruction).collect(),
         }
     }
 }
@@ -365,7 +367,7 @@ mod test {
 
     #[test]
     fn from_instructions() {
-        let plushy = Plushy::from_instructions(arr_into![<PushInstruction>
+        let plushy = Plushy::from_iter(arr_into![<PushInstruction>
             IntInstruction::Add,
             BoolInstruction::And,
         ]);
@@ -380,8 +382,7 @@ mod test {
 
     #[test]
     fn from_instructions_generic() {
-        let plushy =
-            Plushy::<MyInstruction>::from_instructions([MyInstruction::Add, MyInstruction::Block]);
+        let plushy = Plushy::<MyInstruction>::from_iter([MyInstruction::Add, MyInstruction::Block]);
         assert_eq!(plushy.size(), 2);
     }
 

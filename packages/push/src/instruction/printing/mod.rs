@@ -390,13 +390,12 @@ mod tests {
 
     #[test]
     fn print_multiple_values() {
-        let program =
-            Vec::<PushProgram<_>>::from(Plushy::from_instructions(arr_into![<PushInstruction>
-                IntInstruction::Print(Print::<i64>::default()),
-                BoolInstruction::Print(Print::<bool>::default()),
-                IntInstruction::PrintLn(PrintLn::<i64>::default()),
-                IntInstruction::Print(Print::<i64>::default()),
-            ]));
+        let program = Vec::<PushProgram<_>>::from(Plushy::from_iter(arr_into![<PushInstruction>
+            IntInstruction::Print(Print::<i64>::default()),
+            BoolInstruction::Print(Print::<bool>::default()),
+            IntInstruction::PrintLn(PrintLn::<i64>::default()),
+            IntInstruction::Print(Print::<i64>::default()),
+        ]));
         let push_state = PushState::builder()
             .with_max_stack_size(4)
             .with_bool_values([false])

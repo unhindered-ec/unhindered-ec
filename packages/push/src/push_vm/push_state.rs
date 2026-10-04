@@ -152,7 +152,7 @@ mod tests {
             PushInstruction::push_float(OrderedFloat(f))
         }
 
-        let plushy = Plushy::from_instructions(arr_into![<PushInstruction>
+        let plushy = Plushy::from_iter(arr_into![<PushInstruction>
             WithInputInstruction::from("x"), // [5]
             WithInputInstruction::from("y"), // [8, 5]
             push_bool(true),                 // [true]
@@ -206,7 +206,7 @@ mod tests {
             PushInstruction::push_float(OrderedFloat(f))
         }
 
-        let plushy = Plushy::from_instructions(arr_into![<PushInstruction>
+        let plushy = Plushy::from_iter(arr_into![<PushInstruction>
             WithInputInstruction::from("x"), // [5]
             WithInputInstruction::from("y"), // [8, 5]
             push_bool(true),                 // [true]
