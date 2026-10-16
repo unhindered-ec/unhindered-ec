@@ -460,7 +460,10 @@ where
                     Self::IsOdd => int_stack
                         .top()
                         .map_err(PushInstructionError::from)
-                        .map(|&x| x % 2 == 1)
+                        // Note that `x % 2 == 1` would be incorrect here:
+                        // in Rust `-3 % 2 == -1`, so negative odd numbers
+                        // must be compared against `0` instead.
+                        .map(|&x| x % 2 != 0)
                         .push_onto(state)
                         .with_stack_discard::<i64>(1),
 
@@ -540,6 +543,7 @@ where
 #[cfg(test)]
 mod test {
     use super::IntInstruction;
+    use crate::{instruction::Instruction, push_vm::push_state::PushState};
 
     #[test]
     fn auto_display() {
@@ -549,5 +553,53 @@ mod test {
     #[test]
     fn manual_push_display() {
         assert_eq!(format!("{}", IntInstruction::push(1)), "Push(1)");
+    }
+
+    fn state_with_int(value: i64) -> PushState {
+        PushState::builder()
+            .with_max_stack_size(3)
+            .with_no_program()
+            .with_int_values([value])
+            .unwrap()
+            .with_instruction_step_limit(1000)
+            .build()
+    }
+
+    #[test]
+    fn is_even_is_correct() {
+        for value in [0_i64, 2, -2, 4, -4, 100] {
+            let result = IntInstruction::IsEven
+                .perform(state_with_int(value))
+                .unwrap();
+            assert_eq!(result.int.size(), 0);
+            assert_eq!(result.bool.size(), 1);
+            assert!(*result.bool.top().unwrap(), "is_even({value})");
+        }
+
+        for value in [1_i64, -1, 3, -3, 99, -99] {
+            let result = IntInstruction::IsEven
+                .perform(state_with_int(value))
+                .unwrap();
+            assert!(!*result.bool.top().unwrap(), "is_even({value})");
+        }
+    }
+
+    #[test]
+    fn is_odd_is_correct() {
+        for value in [1_i64, -1, 3, -3, 99, -99] {
+            let result = IntInstruction::IsOdd
+                .perform(state_with_int(value))
+                .unwrap();
+            assert_eq!(result.int.size(), 0);
+            assert_eq!(result.bool.size(), 1);
+            assert!(*result.bool.top().unwrap(), "is_odd({value})");
+        }
+
+        for value in [0_i64, 2, -2, 4, -4, 100] {
+            let result = IntInstruction::IsOdd
+                .perform(state_with_int(value))
+                .unwrap();
+            assert!(!*result.bool.top().unwrap(), "is_odd({value})");
+        }
     }
 }
