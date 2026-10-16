@@ -191,54 +191,118 @@ where
 }
 
 #[cfg(test)]
-#[expect(
-    clippy::arithmetic_side_effects,
-    reason = "The tradeoff safety <> ease of writing arguably lies on the ease of writing side \
-              for test code."
-)]
-pub mod tests {
-    use std::convert::Infallible;
-
+mod tests {
     use rand::rng;
 
-    use super::*;
-
-    #[derive(Composable)]
-    struct Increment;
-
-    impl Operator<i32> for Increment {
-        type Output = i32;
-        type Error = Infallible;
-
-        fn apply<R: Rng + ?Sized>(
-            &self,
-            input: i32,
-            _: &mut R,
-        ) -> Result<Self::Output, Self::Error> {
-            Ok(input + 1)
-        }
-    }
-
-    #[derive(Composable)]
-    struct Double;
-
-    impl Operator<i32> for Double {
-        type Output = i32;
-        type Error = Infallible;
-
-        fn apply<R: Rng + ?Sized>(
-            &self,
-            input: i32,
-            _: &mut R,
-        ) -> Result<Self::Output, Self::Error> {
-            Ok(input * 2)
-        }
-    }
+    use super::{
+        super::test_operators::{Double, Increment},
+        *,
+    };
 
     #[test]
     fn increment_then_double() {
         let combo = Increment.then(Double);
         let result = combo.apply(7, &mut rng()).unwrap();
         assert_eq!(16, result);
+    }
+
+    #[derive(Debug, thiserror::Error, miette::Diagnostic, Clone, PartialEq, Eq)]
+    #[error("test error")]
+    struct TestError;
+
+    #[derive(Composable)]
+    struct FailFirst;
+
+    impl Operator<()> for FailFirst {
+        type Output = i32;
+        type Error = TestError;
+
+        fn apply<R: Rng + ?Sized>(&self, (): (), _: &mut R) -> Result<i32, TestError> {
+            Err(TestError)
+        }
+    }
+
+    #[derive(Composable)]
+    struct FailSecond;
+
+    impl Operator<i32> for FailSecond {
+        type Output = i32;
+        type Error = TestError;
+
+        fn apply<R: Rng + ?Sized>(&self, _: i32, _: &mut R) -> Result<i32, TestError> {
+            Err(TestError)
+        }
+    }
+
+    #[test]
+    fn from_tuple_and_into_match_new() {
+        let via_from = Then::from((Increment, Double))
+            .apply(3, &mut rng())
+            .unwrap();
+        let into_operator: Then<_, _> = (Increment, Double).into();
+        let via_into = into_operator.apply(3, &mut rng()).unwrap();
+        let via_new = Then::new(Increment, Double).apply(3, &mut rng()).unwrap();
+
+        assert_eq!(via_from, 8);
+        assert_eq!(via_into, 8);
+        assert_eq!(via_new, 8);
+    }
+
+    #[test]
+    fn first_operator_error_is_wrapped_in_first() {
+        let combo = Then::new(FailFirst, Double);
+        assert_eq!(
+            combo.apply((), &mut rng()),
+            Err(ThenError::First(TestError))
+        );
+    }
+
+    #[test]
+    fn second_operator_error_is_wrapped_in_second() {
+        let combo = Then::new(Increment, FailSecond);
+        assert_eq!(
+            combo.apply(0, &mut rng()),
+            Err(ThenError::Second(TestError))
+        );
+    }
+
+    #[test]
+    fn display_distinguishes_the_failing_operator() {
+        assert_ne!(
+            ThenError::<TestError, TestError>::First(TestError).to_string(),
+            ThenError::<TestError, TestError>::Second(TestError).to_string()
+        );
+    }
+
+    #[test]
+    fn source_returns_the_inner_error() {
+        let first = ThenError::<TestError, TestError>::First(TestError);
+        let second = ThenError::<TestError, TestError>::Second(TestError);
+        assert_eq!(
+            first
+                .source()
+                .and_then(|inner| inner.downcast_ref::<TestError>()),
+            Some(&TestError)
+        );
+        assert_eq!(
+            second
+                .source()
+                .and_then(|inner| inner.downcast_ref::<TestError>()),
+            Some(&TestError)
+        );
+    }
+
+    #[test]
+    fn diagnostic_source_returns_the_inner_diagnostic() {
+        let first = ThenError::<TestError, TestError>::First(TestError);
+        let second = ThenError::<TestError, TestError>::Second(TestError);
+        assert!(std::ptr::addr_eq(
+            first.diagnostic_source().unwrap(),
+            first.source().unwrap(),
+        ));
+        assert!(std::ptr::addr_eq(
+            second.diagnostic_source().unwrap(),
+            second.source().unwrap(),
+        ));
     }
 }
