@@ -1,6 +1,8 @@
 /target
 
-tarpaulin-report.html
+tarpaulin-report*.html
+tarpaulin-report*.json
+lcov*.info
 
 flamegraph.svg
 flamegraph*.svg
