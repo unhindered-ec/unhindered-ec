@@ -201,3 +201,51 @@ where
             .collect()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// A tiny deterministic distribution so tests don't depend on `rand`
+    /// behaviour, and which is `PartialEq` (unlike most `rand` distributions).
+    #[derive(Clone, Copy, PartialEq, Eq, Debug)]
+    struct Fixed;
+
+    impl Distribution<i32> for Fixed {
+        fn sample<R: rand::Rng + ?Sized>(&self, _rng: &mut R) -> i32 {
+            42
+        }
+    }
+
+    #[test]
+    fn from_tuple_matches_new() {
+        assert_eq!(Collection::from((Fixed, 10)), Collection::new(Fixed, 10));
+    }
+
+    #[test]
+    fn collection_constructors_build_the_requested_length() {
+        let owned: Collection<Fixed> = Fixed.into_collection(5);
+        assert_eq!(owned, Collection::new(Fixed, 5));
+
+        let borrowed: Collection<&Fixed> = Fixed.to_collection(5);
+        assert_eq!(borrowed, Collection::new(&Fixed, 5));
+    }
+
+    #[test]
+    fn sampling_produces_collections_of_the_requested_length() {
+        let mut rng = rand::rng();
+        let collection_distribution = Collection::new(Fixed, 7);
+
+        let vec: Vec<i32> = collection_distribution.sample(&mut rng);
+        assert_eq!(vec, vec![42; 7]);
+
+        let list: LinkedList<i32> = collection_distribution.sample(&mut rng);
+        assert!(list.iter().eq([42; 7].iter()));
+
+        let deque: VecDeque<i32> = collection_distribution.sample(&mut rng);
+        assert!(deque.iter().eq([42; 7].iter()));
+
+        let chained: Vec<i32> = Fixed.into_collection(3).sample(&mut rng);
+        assert_eq!(chained, vec![42; 3]);
+    }
+}
