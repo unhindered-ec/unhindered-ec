@@ -164,3 +164,42 @@ where
         Ok(EcIndividual::new(genome, score))
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::GenomeScorer;
+    use crate::{
+        individual::{ec::EcIndividual, scorer::FnScorer},
+        operator::{Composable, Operator, constant::Constant},
+    };
+
+    #[test]
+    fn apply_makes_and_scores_a_genome() {
+        let genome_scorer =
+            GenomeScorer::new(Constant::new(100), FnScorer(|x: &i32| 10i32.abs_diff(*x)));
+
+        let result = genome_scorer.apply(&[0i32; 0], &mut rand::rng()).unwrap();
+
+        assert_eq!(result, EcIndividual::new(100, 90));
+    }
+
+    #[test]
+    fn from_tuple_builds_a_working_scorer() {
+        let genome_scorer =
+            GenomeScorer::from((Constant::new(100), FnScorer(|x: &i32| 10i32.abs_diff(*x))));
+
+        let result = genome_scorer.apply(&[0i32; 0], &mut rand::rng()).unwrap();
+
+        assert_eq!(result, EcIndividual::new(100, 90));
+    }
+
+    #[test]
+    fn wrap_builds_a_working_scorer() {
+        let genome_scorer =
+            Constant::new(100).wrap::<GenomeScorer<_, _>>(FnScorer(|x: &i32| 10i32.abs_diff(*x)));
+
+        let result = genome_scorer.apply(&[0i32; 0], &mut rand::rng()).unwrap();
+
+        assert_eq!(result, EcIndividual::new(100, 90));
+    }
+}
