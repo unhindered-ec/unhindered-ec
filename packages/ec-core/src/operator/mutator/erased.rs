@@ -126,3 +126,121 @@ impl<G, E> Mutator<G> for &dyn DynMutator<G, E> {
         (**self).dyn_mutate(genome, &mut rng)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use std::{rc::Rc, sync::Arc};
+
+    use rand::{Rng, rng};
+
+    use super::DynMutator;
+    use crate::operator::mutator::Mutator;
+
+    #[derive(Debug, thiserror::Error)]
+    #[error("the genome must have at least three bits to flip the third")]
+    struct NotEnoughBits;
+
+    struct FlipThird;
+
+    impl Mutator<Vec<bool>> for FlipThird {
+        type Error = NotEnoughBits;
+
+        fn mutate<R: Rng + ?Sized>(
+            &self,
+            mut genome: Vec<bool>,
+            _rng: &mut R,
+        ) -> Result<Vec<bool>, Self::Error> {
+            let Some(third) = genome.get_mut(2) else {
+                return Err(NotEnoughBits);
+            };
+            *third = !*third;
+            Ok(genome)
+        }
+    }
+
+    #[test]
+    fn box_forwards_mutate_to_the_inner_mutator() {
+        let mutator: Box<dyn DynMutator<Vec<bool>>> = Box::new(FlipThird);
+        assert_eq!(
+            mutator.mutate(vec![true, false, true], &mut rng()).unwrap(),
+            vec![true, false, false]
+        );
+    }
+
+    #[test]
+    fn arc_forwards_mutate_to_the_inner_mutator() {
+        let mutator: Arc<dyn DynMutator<Vec<bool>>> = Arc::new(FlipThird);
+        assert_eq!(
+            mutator.mutate(vec![true, false, true], &mut rng()).unwrap(),
+            vec![true, false, false]
+        );
+    }
+
+    #[test]
+    fn rc_forwards_mutate_to_the_inner_mutator() {
+        let mutator: Rc<dyn DynMutator<Vec<bool>>> = Rc::new(FlipThird);
+        assert_eq!(
+            mutator.mutate(vec![true, false, true], &mut rng()).unwrap(),
+            vec![true, false, false]
+        );
+    }
+
+    #[test]
+    fn shared_reference_forwards_mutate_to_the_inner_mutator() {
+        let inner = FlipThird;
+        let erased: &dyn DynMutator<Vec<bool>> = &inner;
+        assert_eq!(
+            erased.mutate(vec![true, false, true], &mut rng()).unwrap(),
+            vec![true, false, false]
+        );
+    }
+
+    #[test]
+    fn box_forwards_mutate_errors() {
+        let mutator: Box<dyn DynMutator<Vec<bool>>> = Box::new(FlipThird);
+
+        let result = mutator.mutate(vec![true, false], &mut rng());
+        let Err(error) = result else {
+            panic!("expected the inner mutator's error to be forwarded");
+        };
+
+        assert!(error.downcast_ref::<NotEnoughBits>().is_some());
+    }
+
+    #[test]
+    fn arc_forwards_mutate_errors() {
+        let mutator: Arc<dyn DynMutator<Vec<bool>>> = Arc::new(FlipThird);
+
+        let result = mutator.mutate(vec![true, false], &mut rng());
+        let Err(error) = result else {
+            panic!("expected the inner mutator's error to be forwarded");
+        };
+
+        assert!(error.downcast_ref::<NotEnoughBits>().is_some());
+    }
+
+    #[test]
+    fn rc_forwards_mutate_errors() {
+        let mutator: Rc<dyn DynMutator<Vec<bool>>> = Rc::new(FlipThird);
+
+        let result = mutator.mutate(vec![true, false], &mut rng());
+        let Err(error) = result else {
+            panic!("expected the inner mutator's error to be forwarded");
+        };
+
+        assert!(error.downcast_ref::<NotEnoughBits>().is_some());
+    }
+
+    #[test]
+    fn shared_reference_forwards_mutate_errors() {
+        let inner = FlipThird;
+        let erased: &dyn DynMutator<Vec<bool>> = &inner;
+
+        let result = erased.mutate(vec![true, false], &mut rng());
+        let Err(error) = result else {
+            panic!("expected the inner mutator's error to be forwarded");
+        };
+
+        assert!(error.downcast_ref::<NotEnoughBits>().is_some());
+    }
+}

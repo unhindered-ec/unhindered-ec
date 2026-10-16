@@ -121,3 +121,71 @@ impl<I, E, O> Operator<I> for &dyn DynOperator<I, E, Output = O> {
         (**self).dyn_apply(input, &mut rng)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use std::{rc::Rc, sync::Arc};
+
+    use rand::{Rng, rng};
+
+    use super::DynOperator;
+    use crate::operator::{Composable, Operator, constant::Constant};
+
+    #[test]
+    fn box_forwards_apply_to_the_inner_operator() {
+        let operator: Box<dyn DynOperator<(), Output = i32>> = Box::new(Constant::new(5));
+        assert_eq!(operator.apply((), &mut rng()).unwrap(), 5);
+    }
+
+    #[test]
+    fn arc_forwards_apply_to_the_inner_operator() {
+        let operator: Arc<dyn DynOperator<(), Output = i32>> = Arc::new(Constant::new(7));
+        assert_eq!(operator.apply((), &mut rng()).unwrap(), 7);
+    }
+
+    #[test]
+    fn rc_forwards_apply_to_the_inner_operator() {
+        let operator: Rc<dyn DynOperator<(), Output = i32>> = Rc::new(Constant::new(9));
+        assert_eq!(operator.apply((), &mut rng()).unwrap(), 9);
+    }
+
+    #[test]
+    fn shared_reference_forwards_apply_to_the_inner_operator() {
+        let operator = Constant::new(11);
+        let erased: &dyn DynOperator<(), Output = i32> = &operator;
+        assert_eq!(erased.apply((), &mut rng()).unwrap(), 11);
+    }
+
+    #[derive(Debug, PartialEq, Eq)]
+    struct TestError;
+
+    impl std::fmt::Display for TestError {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            f.write_str("test error")
+        }
+    }
+
+    impl std::error::Error for TestError {}
+
+    struct Fail;
+
+    impl Composable for Fail {}
+
+    impl Operator<()> for Fail {
+        type Output = i32;
+        type Error = TestError;
+
+        fn apply<R: Rng + ?Sized>(&self, _input: (), _rng: &mut R) -> Result<i32, TestError> {
+            Err(TestError)
+        }
+    }
+
+    #[test]
+    fn inner_errors_are_converted_and_boxed() {
+        let operator: Box<dyn DynOperator<(), Output = i32>> = Box::new(Fail);
+
+        let error = operator.apply((), &mut rng()).unwrap_err();
+
+        assert_eq!(error.downcast_ref::<TestError>(), Some(&TestError));
+    }
+}

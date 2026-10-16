@@ -278,6 +278,23 @@ mod tests {
     }
 
     #[test]
+    fn default_is_a_binary_tournament() {
+        assert_eq!(Tournament::default(), Tournament::binary());
+    }
+
+    #[test]
+    fn new_diff_constructs_an_error_relative_to_the_population() {
+        let error = TournamentSizeError::new_diff(3, NonZeroUsize::new(2).unwrap());
+        assert_eq!(error.population_size, 3);
+        assert_eq!(error.tournament_size, NonZeroUsize::new(5).unwrap());
+        // The constructed error satisfies the invariant checked by `new`.
+        assert_eq!(
+            TournamentSizeError::new(error.tournament_size, error.population_size),
+            Some(error)
+        );
+    }
+
+    #[test]
     fn tournament_size_1() {
         let mut rng = rng();
         let scores = &[5, 8, 9];
