@@ -2,7 +2,7 @@ use super::{HasStack, stack::StackError};
 use crate::{
     error::{Error, InstructionResult},
     genome::plushy::{Plushy, PushGene},
-    instruction::{NumOpens, Perform},
+    instruction::{Instruction, NumOpens, Perform},
 };
 
 /// A Push program: a single instruction or a block of programs.
@@ -139,8 +139,8 @@ mod test {
     use crate::{
         genome::plushy::{Plushy, PushGene},
         instruction::{
-            BoolInstruction, ExecInstruction, FloatInstruction, IntInstruction, NumOpens, Perform,
-            PushInstruction,
+            BoolInstruction, ExecInstruction, FloatInstruction, Instruction, IntInstruction,
+            NumOpens, Perform, PushInstruction,
         },
         list_into::{arr_into, vec_into},
         push_vm::{HasStack, push_state::PushState},
