@@ -1,9 +1,9 @@
 use std::io::Write;
 
-use super::{super::Perform, error::AppendStdoutError};
+use super::error::AppendStdoutError;
 use crate::{
     error::{Error, InstructionResult},
-    instruction::{Instruction, NumOpens, PushInstruction},
+    instruction::{Instruction, NumOpens, Perform, PushInstruction},
     push_vm::push_io::HasStdout,
 };
 

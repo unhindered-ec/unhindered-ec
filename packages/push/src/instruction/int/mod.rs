@@ -9,13 +9,13 @@ use strum_macros::EnumIter;
 
 use self::{abs::Abs, negate::Negate};
 use super::{
-    Perform, PushInstruction, PushInstructionError,
+    PushInstruction, PushInstructionError,
     common::{Dup, Flush, IsEmpty, Pop, PushValue, StackDepth, Swap},
     printing::{Print, PrintLn},
 };
 use crate::{
     error::{Error, InstructionResult, MapInstructionError},
-    instruction::Instruction,
+    instruction::{Instruction, Perform},
     push_vm::{
         push_io::HasStdout,
         stack::{HasStack, PushOnto, Stack, StackDiscard, StackError},
