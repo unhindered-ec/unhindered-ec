@@ -248,6 +248,8 @@ mod test {
             }
         }
 
+        impl Instruction for CustomInstruction {}
+
         let plushy: Plushy<CustomInstruction> = [
             CustomInstruction::A,
             CustomInstruction::B,
