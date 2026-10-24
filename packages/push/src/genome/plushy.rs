@@ -300,7 +300,7 @@ mod test {
         instruction::{
             BoolInstruction, IntInstruction, PushInstruction, with_input::WithInputInstruction,
         },
-        list_into::{arr_into, genes_into},
+        list_into::{arr_into, vec_into},
     };
 
     #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -389,7 +389,7 @@ mod test {
         let umad = Umad::new(0.3, 0.3, instruction_options);
 
         let parent = Plushy {
-            genes: genes_into![<PushGene<_>>
+            genes: vec_into![<PushGene<_>>
                 IntInstruction::Add,
                 BoolInstruction::And,
                 BoolInstruction::Or,

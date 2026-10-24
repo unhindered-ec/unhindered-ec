@@ -120,15 +120,15 @@ mod tests {
     use crate::{
         error::IntoState,
         instruction::{ExecInstruction, Perform, PushInstructionError},
-        push_vm::{push_state::PushState, stack::StackError},
-        test_utils::p,
+        list_into::arr_into,
+        push_vm::{program::PushProgram, push_state::PushState, stack::StackError},
     };
 
     #[test]
     fn cond_true() {
         let state = PushState::builder()
             .with_max_stack_size(1)
-            .with_program([p(ExecInstruction::noop())])
+            .with_program(arr_into![<PushProgram<_>>ExecInstruction::noop()])
             .unwrap()
             .with_bool_values([true])
             .unwrap()
@@ -143,7 +143,7 @@ mod tests {
     fn cond_false() {
         let state = PushState::builder()
             .with_max_stack_size(1)
-            .with_program([p(ExecInstruction::noop())])
+            .with_program(arr_into![<PushProgram<_>>ExecInstruction::noop()])
             .unwrap()
             .with_bool_values([false])
             .unwrap()
@@ -184,7 +184,7 @@ mod tests {
     fn cond_missing() {
         let state = PushState::builder()
             .with_max_stack_size(1)
-            .with_program([p(ExecInstruction::noop())])
+            .with_program(arr_into![<PushProgram<_>>ExecInstruction::noop()])
             .unwrap()
             .with_instruction_step_limit(1000)
             .build();
