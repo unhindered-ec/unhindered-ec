@@ -34,15 +34,17 @@ mod tests {
     use super::Noop;
     use crate::{
         instruction::{ExecInstruction, Perform},
-        push_vm::push_state::PushState,
-        test_utils::p,
+        list_into::arr_into,
+        push_vm::{program::PushProgram, push_state::PushState},
     };
 
     #[test]
     fn noop_is_correct() {
         let state = PushState::builder()
             .with_max_stack_size(2)
-            .with_program([p(ExecInstruction::noop()), p(ExecInstruction::noop())])
+            .with_program(
+                arr_into![<PushProgram<_>> ExecInstruction::noop(), ExecInstruction::noop()],
+            )
             .unwrap()
             .with_instruction_step_limit(1000)
             .build();
