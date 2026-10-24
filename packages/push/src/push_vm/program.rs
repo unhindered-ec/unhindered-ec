@@ -2,9 +2,7 @@ use super::{HasStack, push_state::PushState, stack::StackError};
 use crate::{
     error::{Error, InstructionResult},
     genome::plushy::{Plushy, PushGene},
-    instruction::{
-        Instruction, NumOpens, PushInstruction, instruction_error::PushInstructionError,
-    },
+    instruction::{NumOpens, Perform, PushInstruction, instruction_error::PushInstructionError},
 };
 
 #[derive(Debug, strum_macros::Display, Clone, Eq, PartialEq)]
@@ -73,10 +71,12 @@ impl PushProgram {
 // the stack in the correct order, i.e., the first instruction
 // in the block should be the top instruction on the exec
 // stack after all the pushing is done.
-impl<S, I> Instruction<S> for Vec<I>
+// TODO: Revisit this after genericizing `PushState` to see if this needs
+// updating.
+impl<S, I> Perform<S> for Vec<I>
 where
     S: HasStack<I>,
-    I: Instruction<S> + Clone,
+    I: Perform<S> + Clone,
     I::Error: From<StackError>,
 {
     type Error = I::Error;
@@ -91,7 +91,7 @@ where
     }
 }
 
-impl Instruction<PushState> for PushProgram {
+impl Perform<PushState> for PushProgram {
     type Error = PushInstructionError;
 
     fn perform(&self, state: PushState) -> InstructionResult<PushState, Self::Error> {
@@ -108,7 +108,7 @@ mod test {
     use crate::{
         genome::plushy::{Plushy, PushGene},
         instruction::{
-            BoolInstruction, ExecInstruction, FloatInstruction, Instruction, IntInstruction,
+            BoolInstruction, ExecInstruction, FloatInstruction, IntInstruction, Perform,
         },
         list_into::{arr_into, vec_into},
         push_vm::{HasStack, push_state::PushState},

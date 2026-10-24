@@ -6,7 +6,7 @@ pub use error::WithInputInstructionError;
 
 use crate::{
     error::{Error, InstructionResult, MapInstructionError},
-    instruction::{Instruction, PushInstruction},
+    instruction::{Instruction, Perform, PushInstruction},
     push_vm::variables::{HasInputs, UnknownVariableError, VariableName},
 };
 
@@ -36,12 +36,13 @@ impl From<WithInputInstruction> for PushInstruction {
         Self::WithInput(value)
     }
 }
+impl Instruction for WithInputInstruction {}
 
-impl<S> Instruction<S> for WithInputInstruction
+impl<S> Perform<S> for WithInputInstruction
 where
     S: HasInputs,
 {
-    type Error = WithInputInstructionError<<S::InputInstruction as Instruction<S>>::Error>;
+    type Error = WithInputInstructionError<<S::InputInstruction as Perform<S>>::Error>;
 
     /// # Errors
     ///
@@ -67,7 +68,7 @@ mod tests {
     use crate::{
         error::Error,
         instruction::{
-            Instruction,
+            Perform,
             with_input::{WithInputInstruction, WithInputInstructionError},
         },
         push_vm::{

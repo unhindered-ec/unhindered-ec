@@ -1,7 +1,9 @@
 use ordered_float::OrderedFloat;
 
 use crate::{
-    instruction::{Instruction, common::PushValue, instruction_error::PushInstructionError},
+    instruction::{
+        Instruction, Perform, common::PushValue, instruction_error::PushInstructionError,
+    },
     push_vm::HasStack,
 };
 
@@ -12,7 +14,9 @@ pub enum ConstantExpression {
     Bool(PushValue<bool>),
 }
 
-impl<S> Instruction<S> for ConstantExpression
+impl Instruction for ConstantExpression {}
+
+impl<S> Perform<S> for ConstantExpression
 where
     S: Clone + HasStack<i64> + HasStack<OrderedFloat<f64>> + HasStack<bool>,
 {
