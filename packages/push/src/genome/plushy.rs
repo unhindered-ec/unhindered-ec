@@ -38,9 +38,12 @@ where
     }
 }
 
-impl<I> From<I> for PushGene<I> {
-    fn from(i: I) -> Self {
-        Self::Instruction(i)
+impl<I1, I2> From<I1> for PushGene<I2>
+where
+    I1: Into<I2> + Instruction,
+{
+    fn from(i: I1) -> Self {
+        Self::Instruction(i.into())
     }
 }
 
