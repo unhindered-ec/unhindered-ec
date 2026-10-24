@@ -1,6 +1,8 @@
 use crate::{
     error::{Error, InstructionResult},
-    instruction::{Instruction, NumOpens, Perform, instruction_error::PushInstructionError},
+    instruction::{
+        Instruction, NumOpens, Perform, PushInstruction, instruction_error::PushInstructionError,
+    },
     push_vm::{
         HasStack,
         program::PushProgram,
@@ -74,13 +76,13 @@ impl Instruction for When {}
 
 impl<S> Perform<S> for When
 where
-    S: Clone + HasStack<PushProgram> + HasStack<bool>,
+    S: Clone + HasStack<PushProgram<PushInstruction>> + HasStack<bool>,
 {
     type Error = PushInstructionError;
 
     fn perform(&self, state: S) -> InstructionResult<S, Self::Error> {
         let condition = state.stack::<bool>().top();
-        let block = state.stack::<PushProgram>().top();
+        let block = state.stack::<PushProgram<_>>().top();
         match (condition, block) {
             // If there is a boolean that is true and a block, discard the boolean
             // and leave the block so that it may be
@@ -91,12 +93,12 @@ where
             // want to perform that block.
             (Ok(false), Ok(_)) => Ok(state)
                 .with_stack_discard::<bool>(1)
-                .with_stack_discard::<PushProgram>(1),
+                .with_stack_discard::<PushProgram<_>>(1),
             // If there is no boolean but there is a block, discard the block since
             // we only want to perform it if there is a
             // boolean that is true.
             (Err(StackError::Underflow { .. }), Ok(_)) => {
-                Ok(state).with_stack_discard::<PushProgram>(1)
+                Ok(state).with_stack_discard::<PushProgram<_>>(1)
             }
             // If there is a boolean but no block, then we just skip this instruction.
             (Ok(_), Err(StackError::Underflow { .. })) => Ok(state),
@@ -118,14 +120,15 @@ mod tests {
     use crate::{
         error::IntoState,
         instruction::{ExecInstruction, Perform, PushInstructionError},
-        push_vm::{push_state::PushState, stack::StackError},
+        list_into::arr_into,
+        push_vm::{program::PushProgram, push_state::PushState, stack::StackError},
     };
 
     #[test]
     fn cond_true() {
         let state = PushState::builder()
             .with_max_stack_size(1)
-            .with_program([ExecInstruction::noop()])
+            .with_program(arr_into![<PushProgram<_>>ExecInstruction::noop()])
             .unwrap()
             .with_bool_values([true])
             .unwrap()
@@ -140,7 +143,7 @@ mod tests {
     fn cond_false() {
         let state = PushState::builder()
             .with_max_stack_size(1)
-            .with_program([ExecInstruction::noop()])
+            .with_program(arr_into![<PushProgram<_>>ExecInstruction::noop()])
             .unwrap()
             .with_bool_values([false])
             .unwrap()
@@ -181,7 +184,7 @@ mod tests {
     fn cond_missing() {
         let state = PushState::builder()
             .with_max_stack_size(1)
-            .with_program([ExecInstruction::noop()])
+            .with_program(arr_into![<PushProgram<_>>ExecInstruction::noop()])
             .unwrap()
             .with_instruction_step_limit(1000)
             .build();

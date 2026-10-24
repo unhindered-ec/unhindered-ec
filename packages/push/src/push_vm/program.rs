@@ -1,24 +1,30 @@
-use super::{HasStack, push_state::PushState, stack::StackError};
+use super::{HasStack, stack::StackError};
 use crate::{
     error::{Error, InstructionResult},
     genome::plushy::{Plushy, PushGene},
-    instruction::{NumOpens, Perform, PushInstruction, instruction_error::PushInstructionError},
+    instruction::{NumOpens, Perform},
 };
 
+/// A Push program: a single instruction or a block of programs.
+///
+/// `PushProgram` is generic over its instruction type.
 #[derive(Debug, strum_macros::Display, Clone, Eq, PartialEq)]
-pub enum PushProgram {
-    Instruction(PushInstruction),
+pub enum PushProgram<I> {
+    Instruction(I),
     Block(Vec<Self>),
 }
 
-impl Default for PushProgram {
+impl<I> Default for PushProgram<I> {
     fn default() -> Self {
         Self::Block(Vec::new())
     }
 }
 
-impl From<Plushy> for Vec<PushProgram> {
-    fn from(plushy: Plushy) -> Self {
+impl<I> From<Plushy<I>> for Vec<PushProgram<I>>
+where
+    I: NumOpens,
+{
+    fn from(plushy: Plushy<I>) -> Self {
         let mut genes = plushy.into_iter();
         let mut program = Self::new();
         PushProgram::parse_from_plushy(true, &mut genes, &mut program);
@@ -26,21 +32,39 @@ impl From<Plushy> for Vec<PushProgram> {
     }
 }
 
-impl<T> From<T> for PushProgram
+impl<I1, I2> From<I1> for PushProgram<I2>
 where
-    T: Into<PushInstruction>,
+    I1: Into<I2> + Instruction,
 {
-    fn from(instruction: T) -> Self {
+    fn from(instruction: I1) -> Self {
         Self::Instruction(instruction.into())
     }
 }
 
-impl PushProgram {
+impl<T> PushProgram<T> {
+    /// Create a program consisting of the single instruction `i`, converting
+    /// `i` to the program's instruction type `T` via `Into`.
+    ///
+    /// The surrounding context usually determines `T`. When it doesn't, as in
+    /// a bare `PushProgram::new_instruction(x)`, specify it explicitly with
+    /// `PushProgram::<T>::new_instruction(x)`.
+    pub fn new_instruction<I>(i: I) -> Self
+    where
+        I: Into<T>,
+    {
+        Self::Instruction(i.into())
+    }
+}
+
+impl<I> PushProgram<I>
+where
+    I: NumOpens,
+{
     // Take a vector of genes, parse out the next complete Push program and
     // return that program and the remaining slice of genes.
     fn parse_from_plushy(
         is_top_level: bool,
-        genes: &mut impl Iterator<Item = PushGene>,
+        genes: &mut impl Iterator<Item = PushGene<I>>,
         program: &mut Vec<Self>,
     ) {
         while let Some(gene) = genes.next() {
@@ -91,10 +115,15 @@ where
     }
 }
 
-impl Perform<PushState> for PushProgram {
-    type Error = PushInstructionError;
+impl<I, S> Perform<S> for PushProgram<I>
+where
+    I: Perform<S> + Clone,
+    I::Error: From<StackError>,
+    S: HasStack<Self>,
+{
+    type Error = I::Error;
 
-    fn perform(&self, state: PushState) -> InstructionResult<PushState, Self::Error> {
+    fn perform(&self, state: S) -> InstructionResult<S, Self::Error> {
         match self {
             Self::Instruction(i) => i.perform(state),
             Self::Block(block) => block.perform(state),
@@ -104,19 +133,34 @@ impl Perform<PushState> for PushProgram {
 
 #[cfg(test)]
 mod test {
+    use std::iter::once;
+
     use super::PushProgram;
     use crate::{
         genome::plushy::{Plushy, PushGene},
         instruction::{
-            BoolInstruction, ExecInstruction, FloatInstruction, IntInstruction, Perform,
+            BoolInstruction, ExecInstruction, FloatInstruction, IntInstruction, NumOpens, Perform,
+            PushInstruction,
         },
         list_into::{arr_into, vec_into},
         push_vm::{HasStack, push_state::PushState},
     };
 
     #[test]
+    fn new_instruction() {
+        assert_eq!(
+            PushProgram::<u32>::new_instruction(1u16),
+            PushProgram::Instruction(1)
+        );
+        assert_eq!(
+            PushProgram::<PushInstruction>::new_instruction(IntInstruction::Add),
+            PushProgram::Instruction(IntInstruction::Add.into())
+        );
+    }
+
+    #[test]
     fn conversion() {
-        let genes = arr_into![
+        let genes = arr_into![<PushGene<PushInstruction>>
             IntInstruction::Add,
             ExecInstruction::if_else(),
             IntInstruction::Multiply,
@@ -124,8 +168,8 @@ mod test {
             ExecInstruction::dup_block(),
             IntInstruction::Subtract,
         ];
-        let plushy: Plushy = genes.into_iter().collect();
-        let program: Vec<PushProgram> = plushy.into();
+        let plushy: Plushy<PushInstruction> = genes.into_iter().collect();
+        let program: Vec<PushProgram<_>> = plushy.into();
         // [Instruction(Int-Add), Instruction(Exec-IfElse),
         // Block([Instruction(Int-Multiply)]), Block([Instruction(Exec-Dup),
         // Block([Instruction(Int-Subtract)])])]
@@ -157,7 +201,7 @@ mod test {
             .with_instruction_step_limit(1000)
             .build();
         let mut result = block.perform(state).unwrap();
-        let exec_stack = result.stack_mut::<PushProgram>();
+        let exec_stack = result.stack_mut::<PushProgram<_>>();
         assert_eq!(exec_stack.size(), 3);
         assert_eq!(exec_stack.pop().unwrap(), IntInstruction::Add.into());
         assert_eq!(exec_stack.pop().unwrap(), FloatInstruction::Multiply.into());
@@ -183,6 +227,48 @@ mod test {
         assert!(
             block.perform(state).is_err(),
             "Performing the block didn't generate an overflow error"
+        );
+    }
+
+    #[test]
+    fn custom_instruction() {
+        #[derive(Debug, PartialEq, Eq)]
+        enum CustomInstruction {
+            A,
+            B,
+            HasOpen,
+        }
+
+        impl NumOpens for CustomInstruction {
+            fn num_opens(&self) -> usize {
+                match self {
+                    Self::A | Self::B => 0,
+                    Self::HasOpen => 1,
+                }
+            }
+        }
+
+        let plushy: Plushy<CustomInstruction> = [
+            CustomInstruction::A,
+            CustomInstruction::B,
+            CustomInstruction::HasOpen,
+            CustomInstruction::A,
+        ]
+        .into_iter()
+        .map(PushGene::Instruction)
+        .chain(once(PushGene::Close))
+        .chain(once(PushGene::Instruction(CustomInstruction::B)))
+        .collect();
+        let program: Vec<PushProgram<CustomInstruction>> = plushy.into();
+        assert_eq!(
+            program,
+            arr_into![
+                CustomInstruction::A,
+                CustomInstruction::B,
+                CustomInstruction::HasOpen,
+                PushProgram::Block(vec_into![CustomInstruction::A]),
+                CustomInstruction::B
+            ]
         );
     }
 }

@@ -11,16 +11,16 @@ use criterion::{Criterion, criterion_group, criterion_main};
 use ordered_float::OrderedFloat;
 use push::{
     genome::plushy::{Plushy, PushGene},
-    instruction::{FloatInstruction, with_input::WithInputInstruction},
+    instruction::{FloatInstruction, PushInstruction, with_input::WithInputInstruction},
+    list_into::arr_into,
     push_vm::{HasStack, State, program::PushProgram, push_state::PushState},
-    vec_into,
 };
 
 /// An evolved Plushy genome whose associated Push program evaluates the
 /// polynomial (x^3+1)^3 + 1.
 #[must_use]
-pub fn sample_genome() -> Plushy {
-    let genome = vec_into![
+pub fn sample_genome() -> Plushy<PushInstruction> {
+    let genome = arr_into![
         WithInputInstruction::from("x"),
         FloatInstruction::dup(),
         FloatInstruction::ProtectedDivide,
@@ -48,7 +48,7 @@ pub fn sample_genome() -> Plushy {
 }
 
 #[must_use]
-pub fn sample_program() -> Vec<PushProgram> {
+pub fn sample_program() -> Vec<PushProgram<PushInstruction>> {
     sample_genome().into()
 }
 
@@ -70,7 +70,7 @@ const INPUT_VALUE: OrderedFloat<f64> = OrderedFloat(0.25);
 /// Panics if for some reason we can't push our program onto the
 /// `exec` stack.
 #[must_use]
-pub fn build_state(program: Vec<PushProgram>) -> PushState {
+pub fn build_state(program: Vec<PushProgram<PushInstruction>>) -> PushState {
     const MAX_STACK_SIZE: usize = 100;
 
     PushState::builder()
