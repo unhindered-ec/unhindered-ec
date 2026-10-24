@@ -8,7 +8,7 @@ use ec_core::{
 use ec_linear::genome::Linear;
 use rand::{Rng, RngExt, prelude::Distribution};
 
-use crate::instruction::NumOpens;
+use crate::instruction::{Instruction, NumOpens};
 
 /// A gene in a [`Plushy`] genome: either a `Close` marker that closes a block
 /// or an `Instruction`.
