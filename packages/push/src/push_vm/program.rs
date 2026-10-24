@@ -29,9 +29,12 @@ where
     }
 }
 
-impl<I> From<I> for PushProgram<I> {
-    fn from(instruction: I) -> Self {
-        Self::Instruction(instruction)
+impl<I1, I2> From<I1> for PushProgram<I2>
+where
+    I1: Into<I2> + Instruction,
+{
+    fn from(instruction: I1) -> Self {
+        Self::Instruction(instruction.into())
     }
 }
 
