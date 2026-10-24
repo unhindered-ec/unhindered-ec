@@ -3,13 +3,13 @@ use std::ops::Not;
 use strum_macros::EnumIter;
 
 use super::{
-    Perform, PushInstruction, PushInstructionError,
+    PushInstruction, PushInstructionError,
     common::{Dup, Flush, IsEmpty, Pop, PushValue, StackDepth, Swap},
     printing::{Print, PrintLn},
 };
 use crate::{
     error::{InstructionResult, MapInstructionError},
-    instruction::Instruction,
+    instruction::{Instruction, Perform},
     push_vm::{
         push_io::HasStdout,
         stack::{HasStack, PushOnto},

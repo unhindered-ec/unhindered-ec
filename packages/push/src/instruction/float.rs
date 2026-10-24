@@ -2,13 +2,13 @@ use ordered_float::OrderedFloat;
 use strum_macros::EnumIter;
 
 use super::{
-    Perform, PushInstruction, PushInstructionError,
+    PushInstruction, PushInstructionError,
     common::{Dup, Flush, IsEmpty, Pop, PushValue, StackDepth, Swap},
     printing::{Print, PrintLn},
 };
 use crate::{
     error::{Error, InstructionResult, MapInstructionError},
-    instruction::Instruction,
+    instruction::{Instruction, Perform},
     push_vm::{
         HasStack,
         push_io::HasStdout,

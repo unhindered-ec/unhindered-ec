@@ -1,9 +1,8 @@
 use std::marker::PhantomData;
 
-use super::super::{Perform, instruction_error::PushInstructionError};
 use crate::{
     error::InstructionResult,
-    instruction::{Instruction, NumOpens},
+    instruction::{Instruction, NumOpens, Perform, instruction_error::PushInstructionError},
     push_vm::{HasStack, stack::PushOnto},
 };
 
