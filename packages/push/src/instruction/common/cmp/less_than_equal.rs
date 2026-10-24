@@ -2,7 +2,7 @@ use std::{any::TypeId, marker::PhantomData};
 
 use crate::{
     error::{Error, InstructionResult, MapInstructionError},
-    instruction::{Instruction, instruction_error::PushInstructionError},
+    instruction::{Instruction, Perform, instruction_error::PushInstructionError},
     push_vm::{HasStack, stack::StackError},
 };
 
@@ -112,7 +112,9 @@ pub struct LessThanEqual<T, U = T> {
     _p: PhantomData<(T, U)>,
 }
 
-impl<S, First, Second> Instruction<S> for LessThanEqual<First, Second>
+impl<T, U> Instruction for LessThanEqual<T, U> {}
+
+impl<S, First, Second> Perform<S> for LessThanEqual<First, Second>
 where
     S: Clone + HasStack<Second> + HasStack<First> + HasStack<bool>,
     First: PartialOrd<Second> + 'static,
@@ -189,7 +191,7 @@ mod test {
 
     use super::LessThanEqual;
     use crate::{
-        instruction::{Instruction, instruction_error::PushInstructionError},
+        instruction::{Perform, instruction_error::PushInstructionError},
         push_vm::{HasStack, push_state::PushState, stack::StackError},
     };
 

@@ -9,12 +9,13 @@ use strum_macros::EnumIter;
 
 use self::{abs::Abs, negate::Negate};
 use super::{
-    Instruction, PushInstruction, PushInstructionError,
+    Perform, PushInstruction, PushInstructionError,
     common::{Dup, Flush, IsEmpty, Pop, PushValue, StackDepth, Swap},
     printing::{Print, PrintLn},
 };
 use crate::{
     error::{Error, InstructionResult, MapInstructionError},
+    instruction::Instruction,
     push_vm::{
         push_io::HasStdout,
         stack::{HasStack, PushOnto, Stack, StackDiscard, StackError},
@@ -246,7 +247,9 @@ pub enum IntInstructionError {
     },
 }
 
-impl<S> Instruction<S> for IntInstruction
+impl Instruction for IntInstruction {}
+
+impl<S> Perform<S> for IntInstruction
 where
     S: Clone + HasStack<i64> + HasStack<bool> + HasStack<OrderedFloat<f64>> + HasStdout,
 {

@@ -3,7 +3,7 @@
 use proptest::prop_assert_eq;
 use push::{
     instruction::{
-        Instruction, IntInstruction, IntInstructionError, instruction_error::PushInstructionError,
+        IntInstruction, IntInstructionError, Perform, instruction_error::PushInstructionError,
     },
     push_vm::{HasStack, push_state::PushState},
 };

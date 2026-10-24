@@ -3,12 +3,13 @@ use std::ops::Not;
 use strum_macros::EnumIter;
 
 use super::{
-    Instruction, PushInstruction, PushInstructionError,
+    Perform, PushInstruction, PushInstructionError,
     common::{Dup, Flush, IsEmpty, Pop, PushValue, StackDepth, Swap},
     printing::{Print, PrintLn},
 };
 use crate::{
     error::{InstructionResult, MapInstructionError},
+    instruction::Instruction,
     push_vm::{
         push_io::HasStdout,
         stack::{HasStack, PushOnto},
@@ -139,7 +140,9 @@ impl From<Flush<bool>> for BoolInstruction {
     }
 }
 
-impl<S> Instruction<S> for BoolInstruction
+impl Instruction for BoolInstruction {}
+
+impl<S> Perform<S> for BoolInstruction
 where
     S: Clone + HasStack<bool> + HasStack<i64> + HasStdout,
 {
@@ -231,7 +234,7 @@ mod property_tests {
     use test_strategy::proptest;
 
     use crate::{
-        instruction::{BoolInstruction, Instruction},
+        instruction::{BoolInstruction, Perform},
         push_vm::push_state::PushState,
     };
 

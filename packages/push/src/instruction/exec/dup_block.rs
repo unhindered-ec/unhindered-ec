@@ -1,6 +1,6 @@
 use crate::{
     error::InstructionResult,
-    instruction::{Instruction, NumOpens, instruction_error::PushInstructionError},
+    instruction::{Instruction, NumOpens, Perform, instruction_error::PushInstructionError},
     push_vm::{HasStack, program::PushProgram, stack::PushOnto},
 };
 
@@ -65,7 +65,9 @@ impl NumOpens for DupBlock {
     }
 }
 
-impl<S> Instruction<S> for DupBlock
+impl Instruction for DupBlock {}
+
+impl<S> Perform<S> for DupBlock
 where
     S: Clone + HasStack<PushProgram>,
 {
@@ -80,7 +82,7 @@ where
 mod tests {
     use super::DupBlock;
     use crate::{
-        instruction::{ExecInstruction, Instruction, PushInstructionError},
+        instruction::{ExecInstruction, Perform, PushInstructionError},
         list_into::arr_into,
         push_vm::{program::PushProgram, push_state::PushState, stack::StackError},
     };
