@@ -142,8 +142,8 @@ mod test {
             BoolInstruction, ExecInstruction, FloatInstruction, IntInstruction, NumOpens, Perform,
             PushInstruction,
         },
+        list_into::{arr_into, vec_into},
         push_vm::{HasStack, push_state::PushState},
-        test_utils::p,
     };
 
     #[test]
@@ -160,28 +160,28 @@ mod test {
 
     #[test]
     fn conversion() {
-        let genes = [
-            PushGene::new_instruction(IntInstruction::Add),
-            PushGene::new_instruction(ExecInstruction::if_else()),
-            PushGene::new_instruction(IntInstruction::Multiply),
+        let genes = arr_into![<PushGene<PushInstruction>>
+            IntInstruction::Add,
+            ExecInstruction::if_else(),
+            IntInstruction::Multiply,
             PushGene::Close,
-            PushGene::new_instruction(ExecInstruction::dup_block()),
-            PushGene::new_instruction(IntInstruction::Subtract),
+            ExecInstruction::dup_block(),
+            IntInstruction::Subtract,
         ];
-        let plushy: Plushy<_> = genes.into_iter().collect();
+        let plushy: Plushy<PushInstruction> = genes.into_iter().collect();
         let program: Vec<PushProgram<_>> = plushy.into();
         // [Instruction(Int-Add), Instruction(Exec-IfElse),
         // Block([Instruction(Int-Multiply)]), Block([Instruction(Exec-Dup),
         // Block([Instruction(Int-Subtract)])])]
         assert_eq!(
             program,
-            vec![
-                p(IntInstruction::Add),
-                p(ExecInstruction::if_else()),
-                PushProgram::Block(vec![p(IntInstruction::Multiply)]),
-                PushProgram::Block(vec![
-                    p(ExecInstruction::dup_block()),
-                    PushProgram::Block(vec![p(IntInstruction::Subtract)])
+            vec_into![
+                IntInstruction::Add,
+                ExecInstruction::if_else(),
+                PushProgram::Block(vec_into![IntInstruction::Multiply]),
+                PushProgram::Block(vec_into![
+                    ExecInstruction::dup_block(),
+                    PushProgram::Block(vec_into![IntInstruction::Subtract])
                 ])
             ]
         );
@@ -189,10 +189,10 @@ mod test {
 
     #[test]
     fn block() {
-        let instructions = vec![
-            p(IntInstruction::Add),
-            p(FloatInstruction::Multiply),
-            p(BoolInstruction::And),
+        let instructions = vec_into![
+            IntInstruction::Add,
+            FloatInstruction::Multiply,
+            BoolInstruction::And,
         ];
         let block = PushProgram::Block(instructions);
         let state = PushState::builder()
@@ -203,18 +203,18 @@ mod test {
         let mut result = block.perform(state).unwrap();
         let exec_stack = result.stack_mut::<PushProgram<_>>();
         assert_eq!(exec_stack.size(), 3);
-        assert_eq!(exec_stack.pop().unwrap(), p(IntInstruction::Add));
-        assert_eq!(exec_stack.pop().unwrap(), p(FloatInstruction::Multiply));
-        assert_eq!(exec_stack.pop().unwrap(), p(BoolInstruction::And));
+        assert_eq!(exec_stack.pop().unwrap(), IntInstruction::Add.into());
+        assert_eq!(exec_stack.pop().unwrap(), FloatInstruction::Multiply.into());
+        assert_eq!(exec_stack.pop().unwrap(), BoolInstruction::And.into());
         assert_eq!(exec_stack.size(), 0);
     }
 
     #[test]
     fn block_overflows() {
-        let instructions = vec![
-            p(IntInstruction::Add),
-            p(FloatInstruction::Multiply),
-            p(BoolInstruction::And),
+        let instructions = vec_into![
+            IntInstruction::Add,
+            FloatInstruction::Multiply,
+            BoolInstruction::And,
         ];
         let block = PushProgram::Block(instructions);
         let state = PushState::builder()
@@ -248,10 +248,6 @@ mod test {
             }
         }
 
-        fn p(i: impl Into<CustomInstruction>) -> PushProgram<CustomInstruction> {
-            PushProgram::Instruction(i.into())
-        }
-
         let plushy: Plushy<CustomInstruction> = [
             CustomInstruction::A,
             CustomInstruction::B,
@@ -266,12 +262,12 @@ mod test {
         let program: Vec<PushProgram<CustomInstruction>> = plushy.into();
         assert_eq!(
             program,
-            [
-                p(CustomInstruction::A),
-                p(CustomInstruction::B),
-                p(CustomInstruction::HasOpen),
-                PushProgram::Block(vec![p(CustomInstruction::A)]),
-                p(CustomInstruction::B)
+            arr_into![
+                CustomInstruction::A,
+                CustomInstruction::B,
+                CustomInstruction::HasOpen,
+                PushProgram::Block(vec_into![CustomInstruction::A]),
+                CustomInstruction::B
             ]
         );
     }
