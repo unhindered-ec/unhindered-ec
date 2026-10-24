@@ -8,7 +8,7 @@
 use ordered_float::OrderedFloat;
 use proptest::prop_assert_eq;
 use push::{
-    instruction::{FloatInstruction, Instruction, PushInstruction},
+    instruction::{FloatInstruction, Perform, PushInstruction},
     push_vm::{HasStack, push_state::PushState, stack::StackError},
 };
 use test_strategy::proptest;

@@ -1,9 +1,9 @@
 use std::io::Write;
 
-use super::{super::Instruction, error::AppendStdoutError};
+use super::{super::Perform, error::AppendStdoutError};
 use crate::{
     error::{Error, InstructionResult},
-    instruction::{NumOpens, PushInstruction},
+    instruction::{Instruction, NumOpens, PushInstruction},
     push_vm::push_io::HasStdout,
 };
 
@@ -28,7 +28,7 @@ use crate::{
 ///
 /// ```
 /// # use push::{
-/// #    instruction::{Instruction, printing::PrintChar},
+/// #    instruction::{Perform, printing::PrintChar},
 /// #    push_vm::push_state::PushState,
 /// # };
 /// #
@@ -59,7 +59,9 @@ impl<const CHAR: char> PrintChar<CHAR> {
     }
 }
 
-impl<State, const CHAR: char> Instruction<State> for PrintChar<CHAR>
+impl<const C: char> Instruction for PrintChar<C> {}
+
+impl<State, const CHAR: char> Perform<State> for PrintChar<CHAR>
 where
     State: HasStdout,
 {

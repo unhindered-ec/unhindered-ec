@@ -1,6 +1,6 @@
 use crate::{
     error::InstructionResult,
-    instruction::{Instruction, PushInstructionError},
+    instruction::{Instruction, Perform, PushInstructionError},
     push_vm::{HasStack, stack::PushOnto},
 };
 
@@ -81,7 +81,9 @@ impl Negate {
     }
 }
 
-impl<S> Instruction<S> for Negate
+impl Instruction for Negate {}
+
+impl<S> Perform<S> for Negate
 where
     S: Clone + HasStack<i64>,
 {
@@ -104,7 +106,7 @@ mod tests {
 
     use super::Negate;
     use crate::{
-        instruction::Instruction,
+        instruction::Perform,
         push_vm::{HasStack, push_state::PushState},
     };
 

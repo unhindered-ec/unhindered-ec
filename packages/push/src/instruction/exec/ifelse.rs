@@ -1,7 +1,7 @@
 use super::when::When;
 use crate::{
     error::{Error, InstructionResult},
-    instruction::{Instruction, NumOpens, instruction_error::PushInstructionError},
+    instruction::{Instruction, NumOpens, Perform, instruction_error::PushInstructionError},
     push_vm::{
         HasStack,
         program::PushProgram,
@@ -79,7 +79,9 @@ impl NumOpens for IfElse {
     }
 }
 
-impl<S> Instruction<S> for IfElse
+impl Instruction for IfElse {}
+
+impl<S> Perform<S> for IfElse
 where
     S: Clone + HasStack<PushProgram> + HasStack<bool>,
 {
@@ -156,7 +158,7 @@ mod tests {
     use crate::{
         error::IntoState,
         instruction::{
-            ExecInstruction, Instruction, IntInstruction, instruction_error::PushInstructionError,
+            ExecInstruction, IntInstruction, Perform, instruction_error::PushInstructionError,
         },
         list_into::arr_into,
         push_vm::{program::PushProgram, push_state::PushState, stack::StackError},

@@ -2,7 +2,7 @@ use std::marker::PhantomData;
 
 use crate::{
     error::{InstructionResult, MapInstructionError},
-    instruction::{Instruction, NumOpens, instruction_error::PushInstructionError},
+    instruction::{Instruction, NumOpens, Perform, instruction_error::PushInstructionError},
     push_vm::HasStack,
 };
 
@@ -73,7 +73,9 @@ impl<T> NumOpens for IsEmpty<T> {
     }
 }
 
-impl<S, T> Instruction<S> for IsEmpty<T>
+impl<T> Instruction for IsEmpty<T> {}
+
+impl<S, T> Perform<S> for IsEmpty<T>
 where
     S: HasStack<T> + HasStack<bool>,
 {
@@ -89,7 +91,7 @@ where
 mod tests {
     use crate::{
         instruction::{
-            Instruction, common::is_empty::IsEmpty, instruction_error::PushInstructionError,
+            Perform, common::is_empty::IsEmpty, instruction_error::PushInstructionError,
         },
         push_vm::{HasStack, push_state::PushState, stack::StackError},
     };
