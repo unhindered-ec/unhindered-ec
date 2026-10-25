@@ -73,6 +73,7 @@ where
     ///
     /// let genome = Bitstring::random(100, &mut rng);
     ///
+    /// // This is going to flip each bit with probability 100%, so all bits will be flipped.
     /// let mutator = WithRate::new(1.0);
     /// let Ok(mutated_genome) = mutator.mutate(genome.clone(), &mut rng);
     ///

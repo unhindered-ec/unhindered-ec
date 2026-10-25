@@ -28,6 +28,12 @@ use super::{
 /// #     }
 /// # };
 /// #
+/// // This creates a weighted choosing between Best, Worst,
+/// // Lexicase and Tournament. Since the total weight is 1 + 1 + 2 + 5 = 8,
+/// // the probabilities of beeing selected become:
+/// //   - 1/8 for both Best and Worst respectively
+/// //   - 2/8 for Lexicase
+/// //   - 5/8 for Tournament
 /// # #[allow(clippy::type_complexity)]
 /// let my_weighted: WeightedPair<
 ///     WeightedPair<WeightedPair<Weighted<Best>, Weighted<Worst>>, Weighted<Lexicase>>,
@@ -64,6 +70,12 @@ where
     /// #     }
     /// # };
     /// #
+    /// // This creates a weighted choosing between Best, Worst,
+    /// // Lexicase and Tournament. Since the total weight is 1 + 1 + 2 + 5 = 8,
+    /// // the probabilities of beeing selected become:
+    /// //   - 1/8 for both Best and Worst respectively
+    /// //   - 2/8 for Lexicase
+    /// //   - 5/8 for Tournament
     /// # #[allow(clippy::type_complexity)]
     /// let my_weighted: WeightedPair<
     ///     WeightedPair<WeightedPair<Weighted<Best>, Weighted<Worst>>, Weighted<Lexicase>>,
@@ -107,6 +119,12 @@ where
     /// #     }
     /// # };
     /// #
+    /// // This creates a weighted choosing between Best, Worst,
+    /// // Lexicase and Tournament. Since the total weight is 1 + 1 + 2 + 5 = 8,
+    /// // the probabilities of beeing selected become:
+    /// //   - 1/8 for both Best and Worst respectively
+    /// //   - 2/8 for Lexicase
+    /// //   - 5/8 for Tournament
     /// # #[allow(clippy::type_complexity)]
     /// let my_weighted: WeightedPair<
     ///     WeightedPair<WeightedPair<Weighted<Best>, Weighted<Worst>>, Weighted<Lexicase>>,
@@ -138,6 +156,12 @@ where
     /// #     }
     /// # };
     /// #
+    /// // This creates a weighted choosing between Best, Worst,
+    /// // Lexicase and Tournament. Since the total weight is 1 + 1 + 2 + 5 = 8,
+    /// // the probabilities of beeing selected become:
+    /// //   - 1/8 for both Best and Worst respectively
+    /// //   - 2/8 for Lexicase
+    /// //   - 5/8 for Tournament
     /// # #[allow(clippy::type_complexity)]
     /// let my_weighted: WeightedPair<
     ///     WeightedPair<Weighted<Best>, Weighted<Worst>>,

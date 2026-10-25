@@ -31,8 +31,8 @@ use crate::{operator::selector::Selector, population::Population};
 /// #
 /// let selector = WeightedPair::new(Weighted::new(Best, 10), Weighted::new(Worst, 10))?;
 ///
-/// let selected = selector.select(&[10, 2, 1, 8, 0], &mut rng())?;
-/// assert!(*selected == 0 || *selected == 10);
+/// let selected = selector.select(&[25, 2, 1, 8, 0], &mut rng())?;
+/// assert!(*selected == 0 || *selected == 25);
 /// # Ok::<(), Box<dyn std::error::Error>>(())
 /// ```
 #[derive(Debug, Copy, Clone)]
@@ -43,6 +43,9 @@ pub struct WeightedPair<A, B> {
     weight_sum: u32,
 }
 
+// Equality only needs to consider the equality of a and b since the other
+// properties are derived from them. We explicitly implement the traits here to
+// avoid involving the derived properties.
 impl<A, B> PartialEq for WeightedPair<A, B>
 where
     A: PartialEq,
@@ -197,8 +200,8 @@ impl<A, B> WithWeight for WeightedPair<A, B> {
     ///
     /// assert_eq!(selector.weight(), 20);
     /// #
-    /// # let selected = selector.select(&[10, 2, 1, 8, 0], &mut rng())?;
-    /// # assert!(*selected == 0 || *selected == 10);
+    /// # let selected = selector.select(&[25, 2, 1, 8, 0], &mut rng())?;
+    /// # assert!(*selected == 0 || *selected == 25);
     /// # Ok::<(), Box<dyn std::error::Error>>(())
     /// ```
     fn weight(&self) -> u32 {

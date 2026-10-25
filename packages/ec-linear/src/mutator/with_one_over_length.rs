@@ -8,7 +8,7 @@ use rand::Rng;
 use super::with_rate::WithRate;
 use crate::genome::Linear;
 
-/// Linear, boolish mutator which inverts each gene in the genome with a rate
+/// Linear mutator which inverts each gene in the genome with a rate
 /// (probability) of `1 / genome.size()`.
 ///
 /// # Example

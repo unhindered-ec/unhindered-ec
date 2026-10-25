@@ -150,8 +150,8 @@ where
 pub enum NPointCrossoverError<E> {
     /// Attempted to crossover genomes with differing lengths
     DifferentGenomeLength(DifferentGenomeLength),
-    /// Attempted to crossover too short of a genome for the crossover point
-    /// count.
+    /// Attempted to crossover a genome that is too short for the specified
+    /// number of  crossover points.
     GenomeLengthTooShort(GenomeLengthTooShort),
     /// Some other error specific to a crossover operation
     Crossover(E),
