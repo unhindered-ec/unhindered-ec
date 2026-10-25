@@ -99,6 +99,8 @@ pub trait Linear: Genome {
     /// # fn foo() -> Option<()> {
     /// let mut my_genome = MyGenome::new([0; 10]);
     /// *my_genome.gene_mut(5)? = 1;
+    ///
+    /// assert_eq!(my_genome.gene_mut(5), Some(&mut 1));
     /// # Some(())
     /// # }
     /// #

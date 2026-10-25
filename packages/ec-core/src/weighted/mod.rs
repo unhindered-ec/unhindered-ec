@@ -83,7 +83,14 @@ where
     /// Select from this weighted type, if the weight is not 0
     ///
     /// This basically directly forwards to the underlying types selector
-    /// implementation and is meant to be used in compositions of
+    /// implementation and is meant to be used in compositions of multiple
+    /// selectors, each having a specific weight, using
+    /// [`WeightedPair`](weighted_pair::WeightedPair).
+    ///
+    /// Since a single `Weighted` is always the one with the most weight in
+    /// isolation, it will always be selected when ran individually, unless the
+    /// weight is 0, meaning it should never be selected and thus `perform`
+    /// errors.
     ///
     /// # Example
     /// ```
@@ -97,6 +104,9 @@ where
     /// # };
     /// # use rand::rng;
     /// #
+    ///
+    /// // Weight doesn't matter here, it is always selected ...
+    /// // (unless the weight is 0, then it errors)
     /// let my_weighted = Weighted::new(Best, 10);
     ///
     /// let selected = my_weighted.select(&[10, 1], &mut rng())?;

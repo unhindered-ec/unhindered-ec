@@ -17,8 +17,8 @@
 ///
 /// assert_eq!(selector.weight(), 10);
 /// #
-/// # let selected = selector.select(&[10, 2, 1, 8, 0], &mut rng())?;
-/// # assert_eq!(selected, &10);
+/// # let selected = selector.select(&[25, 2, 1, 8, 0], &mut rng())?;
+/// # assert_eq!(selected, &25);
 /// # Ok::<(), Box<dyn std::error::Error>>(())
 /// ```
 pub trait WithWeight {
@@ -36,8 +36,8 @@ pub trait WithWeight {
     ///
     /// assert_eq!(selector.weight(), 10);
     /// #
-    /// # let selected = selector.select(&[10, 2, 1, 8, 0], &mut rng())?;
-    /// # assert_eq!(selected, &10);
+    /// # let selected = selector.select(&[25, 2, 1, 8, 0], &mut rng())?;
+    /// # assert_eq!(selected, &25);
     /// # Ok::<(), Box<dyn std::error::Error>>(())
     /// ```
     fn weight(&self) -> u32;

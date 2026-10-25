@@ -20,10 +20,23 @@ use crate::{
 /// Recombinator for fixed-length linear genomes, like
 /// [`Bitstring`](crate::genome::bitstring::Bitstring).
 ///
-/// This recombinator works by having two parents and choosing `N` points, where
-/// the genomes will be swapped every other pair `(n, n+1)`. This is in contrast
-/// to for example [`UniformXo`](super::uniform_xo::UniformXo) which randomly
+/// This recombinator works by having two parents and randomly choosing `N`
+/// points, where alternating segments of the genomes will be swapped. The `N`
+/// points are indices specifying the beginning and end of segments, where the
+/// nth segment has indices in the range `[p(n), p(n+1))`
+/// (inclusive on the left, exclusive on the right). The first segment in
+/// the child comes from the first parent, the second segment in the
+/// child comes from the second parent, and then back to the first
+/// parent for the third segment, etc.
+///
+/// This is in contrast
+/// to, for example [`UniformXo`](super::uniform_xo::UniformXo), which randomly
 /// chooses which gene to keep at each position.
+///
+/// The number of crossover points `N` is specified as a const generic on the
+/// struct, so it is passed as `NPointCrossover::<N>::new()` rather than as an
+/// argument during construction time. This allows us to use static allocations
+/// for the crossover point storage rather than requiring a dynamic allocation.
 ///
 /// # Example
 /// ```
@@ -119,6 +132,13 @@ where
     /// #
     /// # Ok::<(),Box<dyn std::error::Error>>(())
     /// ```
+    ///
+    /// # Errors
+    /// - [`NPointCrossoverError::DifferentGenomeLength`] if trying to crossover
+    ///   genomes of different lengths,
+    /// - [`NPointCrossoverError::GenomeLengthTooShort`] if the genome is too
+    ///   short to have `N` crossover points
+    /// - [`NPointCrossoverError::Crossover`] if crossover of a section failed
     fn recombine<R: Rng + ?Sized>(
         &self,
         [mut first_genome, mut second_genome]: [G; 2],
