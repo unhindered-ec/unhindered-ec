@@ -375,7 +375,13 @@ mod test {
     #[test]
     fn from_instructions_generic() {
         let plushy = Plushy::<MyInstruction>::from_iter([MyInstruction::Add, MyInstruction::Block]);
-        assert_eq!(plushy.size(), 2);
+        assert_eq!(
+            plushy,
+            Plushy::new([
+                PushGene::new_instruction(MyInstruction::Add),
+                PushGene::new_instruction(MyInstruction::Block)
+            ])
+        );
     }
 
     #[ignore = "this has about a 2.665% chance on failing at least once across the three test \
