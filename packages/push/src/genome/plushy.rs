@@ -183,6 +183,101 @@ where
 ///
 /// `Plushy` is generic over its instruction type. A `Plushy<I>` can be
 /// constructed, printed, mutated, and converted into a `Vec<PushProgram<I>>`.
+///
+/// # Example
+///
+/// This example illustrates using pre-defined instructions to create
+/// a `Plushy` genome and a `PushProgram`.
+///
+/// ```
+/// # use push::instruction::{IntInstruction, PushInstruction};
+/// # use push::genome::plushy::{PushGene, Plushy};
+/// # use push::list_into::arr_into;
+/// # use push::push_vm::program::PushProgram;
+/// // Build a Plushy genome from an array of instructions and close markers
+/// let plushy = Plushy::new(arr_into![<PushGene<PushInstruction>>
+///     IntInstruction::Add,
+///     IntInstruction::Multiply,
+///     PushGene::Close,
+///     IntInstruction::abs(),
+/// ]);
+///
+/// let program: Vec<PushProgram<PushInstruction>> = plushy.into();
+/// # let _ = program;
+/// ```
+///
+/// The following examples illustrates using your own instructions.
+///
+/// ```
+/// # use push::instruction::{Instruction, NumOpens};
+/// # use push::genome::plushy::{PushGene, Plushy};
+/// # use push::list_into::arr_into;
+/// # use push::push_vm::program::PushProgram;
+/// # use std::fmt::{self, Display};
+/// #
+/// #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+/// enum MyInstruction {
+///     Increment, // Add one to the top of the integer stack
+///     Block,     // Opens a new code block
+/// }
+///
+/// impl Instruction for MyInstruction {}
+///
+/// impl NumOpens for MyInstruction {
+///     fn num_opens(&self) -> usize {
+///         match self {
+///             MyInstruction::Increment => 0,
+///             MyInstruction::Block => 1,
+///         }
+///     }
+/// }
+///
+/// impl Display for MyInstruction {
+///     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+///         match self {
+///             MyInstruction::Increment => write!(f, "Increment"),
+///             MyInstruction::Block => write!(f, "Open")
+///         }
+///     }
+/// }
+///
+/// // Build a Plushy from genes directly
+/// let plushy = Plushy::new([
+///     PushGene::new_instruction(MyInstruction::Increment),
+///     PushGene::new_instruction(MyInstruction::Block),
+///     PushGene::new_instruction(MyInstruction::Increment),
+///     PushGene::Close,
+/// ]);
+///
+/// // Or construction from an iterator
+/// let plushy2: Plushy<MyInstruction> = [
+///     MyInstruction::Increment,
+///     MyInstruction::Block,
+///     MyInstruction::Increment
+/// ].into_iter().collect();
+///
+/// assert_eq!(
+///     plushy2,
+///     Plushy::new([
+///         PushGene::new_instruction(MyInstruction::Increment),
+///         PushGene::new_instruction(MyInstruction::Block),
+///         PushGene::new_instruction(MyInstruction::Increment)
+///     ])
+/// );
+///
+/// // Or use the `arr_into!` macro`
+/// let plushy3: Plushy<MyInstruction> = arr_into![<PushGene<MyInstruction>>
+///     MyInstruction::Increment,
+///     MyInstruction::Block,
+///     MyInstruction::Increment,
+///     PushGene::Close
+/// ].into_iter().collect();
+///
+/// assert_eq!(plushy, plushy3);
+///
+/// let program: Vec<PushProgram<MyInstruction>> = plushy.into();
+/// # let _ = program;
+/// ```
 #[derive(Debug, Clone, Eq, PartialEq)]
 pub struct Plushy<I> {
     genes: Vec<PushGene<I>>,
