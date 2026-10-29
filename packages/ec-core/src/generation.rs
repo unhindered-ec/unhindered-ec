@@ -5,14 +5,21 @@ use crate::{operator::Operator, population::Population};
 
 /// Collection of data about each iteration in the evolution process.
 ///
-/// Notably, this includes the Population of the current Generation, as well as
-/// a child maker [`Operator`] which describes how to generate the next
-/// generation from this.
+/// Notably, this includes the population of the current Generation, as well as
+/// an [`Operator`] which describes how to use the current population
+/// to generate the new individuals that will form the next
+/// generation.
 ///
 /// Take a look at [`Generation::par_next`] and [`Generation::serial_next`] for
 /// further information on how this is used to generate new generations.
 ///
 /// # Example[^ec-linear-usage]
+///
+/// In the example below `initial_population` is the "parent" population,
+/// and `make_new_individual` is the [`Operator`] that takes the population
+/// and constructs a new "child" individual that will form part of the
+/// `next_generation`.
+///
 /// ```
 /// # use ec_core::{
 /// #     performance::{score_value::ScoreValue, test_results::TestResults},
@@ -97,7 +104,9 @@ pub struct Generation<C, P> {
 }
 
 impl<C, P> From<(C, P)> for Generation<C, P> {
-    /// Convert a `(ChildMaker, Population)` 2-Tuple into a [`Generation`].
+    /// Convert a `(child_maker, population)` pair into a [`Generation`]. The
+    /// `child_maker` will typically be an [`Operator`] that creates a new
+    /// individual (the child) from a `population` of (parent) individuals.
     ///
     /// # Example[^ec-linear-usage]
     /// ```
@@ -353,7 +362,8 @@ impl<P, C> Generation<C, P> {
 }
 
 impl<P, C> Generation<C, P> {
-    /// Create a new [`Generation`] from a `ChildMaker` and a `Population`.
+    /// Create a new [`Generation`] from an [`Operator`] (`child_maker`) that
+    /// constructs children, and an initial population.
     ///
     /// # Example[^ec-linear-usage]
     /// ```
@@ -444,8 +454,8 @@ where
     P::Individual: Send,
     for<'a> C: Operator<&'a P, Output = P::Individual, Error: Send> + Send + Sync,
 {
-    /// Create a new [`Generation`] in-place using the current `Population` and
-    /// `ChildMaker`.
+    /// Create a new [`Generation`] in-place using the current population and
+    /// [`Operator`] for generating new children.
     ///
     /// This version uses [`rayon`](mod@::rayon) to parallelize the generation
     /// of children for each individual. For a serial (single-thread)
@@ -530,7 +540,8 @@ where
     ///
     /// # Errors
     ///
-    /// - `C::Error` if applying the `ChildMaker`-[`Operator`] fails.
+    /// - `C::Error` if applying the [`Operator`] (of type `C`) for generating a
+    ///   new child fails.
     ///
     /// [ec-linear]: #
     pub fn par_next(&mut self) -> Result<(), <C as Operator<&P>>::Error> {
@@ -578,8 +589,8 @@ where
     P: Population + FromIterator<P::Individual>,
     C: for<'a> Operator<&'a P, Output = P::Individual>,
 {
-    /// Create a new [`Generation`] in-place using the current `Population` and
-    /// `ChildMaker`.
+    /// Create a new [`Generation`] in-place using the current population and
+    /// [`Operator`] for generating new children.
     ///
     /// This version uses a simple serial loop to generate the children
     /// for each individual. For a parallel (rayon)
@@ -664,7 +675,8 @@ where
     ///
     /// # Errors
     ///
-    /// - `C::Error` if applying the `ChildMaker`-[`Operator`] fails.
+    /// - `C::Error` if applying the [`Operator`] (of type `C`) for generating a
+    ///   new child fails.
     ///
     /// [ec-linear]: #
     pub fn serial_next(&mut self) -> Result<(), <C as Operator<&P>>::Error> {
