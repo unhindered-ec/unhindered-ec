@@ -1,6 +1,8 @@
 use crate::{
     error::InstructionResult,
-    instruction::{Instruction, NumOpens, Perform, instruction_error::PushInstructionError},
+    instruction::{
+        Instruction, NumOpens, Perform, PushInstruction, instruction_error::PushInstructionError,
+    },
     push_vm::{HasStack, program::PushProgram, stack::PushOnto},
 };
 
@@ -69,12 +71,16 @@ impl Instruction for DupBlock {}
 
 impl<S> Perform<S> for DupBlock
 where
-    S: Clone + HasStack<PushProgram>,
+    S: Clone + HasStack<PushProgram<PushInstruction>>,
 {
     type Error = PushInstructionError;
 
     fn perform(&self, state: S) -> InstructionResult<S, Self::Error> {
-        state.stack::<PushProgram>().top().cloned().push_onto(state)
+        state
+            .stack::<PushProgram<_>>()
+            .top()
+            .cloned()
+            .push_onto(state)
     }
 }
 
@@ -91,14 +97,14 @@ mod tests {
     fn exec_present_not_full() {
         let state = PushState::builder()
             .with_max_stack_size(2)
-            .with_program([ExecInstruction::noop()])
+            .with_program(arr_into![<PushProgram<_>> ExecInstruction::noop()])
             .unwrap()
             .with_instruction_step_limit(1000)
             .build();
         let result_state = DupBlock.perform(state).unwrap();
         assert_eq!(
             result_state.exec,
-            arr_into![<PushProgram> ExecInstruction::noop(), ExecInstruction::noop()]
+            arr_into![ExecInstruction::noop(), ExecInstruction::noop()]
         );
     }
 
@@ -121,7 +127,7 @@ mod tests {
     fn exec_present_and_full() {
         let state = PushState::builder()
             .with_max_stack_size(1)
-            .with_program([ExecInstruction::noop()])
+            .with_program(arr_into![<PushProgram<_>>ExecInstruction::noop()])
             .unwrap()
             .with_instruction_step_limit(1000)
             .build();
