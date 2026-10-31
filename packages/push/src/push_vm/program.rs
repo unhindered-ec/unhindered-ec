@@ -36,23 +36,11 @@ impl<I1, I2> From<I1> for PushProgram<I2>
 where
     I1: Into<I2> + Instruction,
 {
+    /// Create a program consisting of the single `instruction` of type `I1`,
+    /// converting `instruction` to the program's instruction type `I2` via
+    /// `Into`.
     fn from(instruction: I1) -> Self {
         Self::Instruction(instruction.into())
-    }
-}
-
-impl<T> PushProgram<T> {
-    /// Create a program consisting of the single instruction `i`, converting
-    /// `i` to the program's instruction type `T` via `Into`.
-    ///
-    /// The surrounding context usually determines `T`. When it doesn't, as in
-    /// a bare `PushProgram::new_instruction(x)`, specify it explicitly with
-    /// `PushProgram::<T>::new_instruction(x)`.
-    pub fn new_instruction<I>(i: I) -> Self
-    where
-        I: Into<T>,
-    {
-        Self::Instruction(i.into())
     }
 }
 
@@ -147,13 +135,9 @@ mod test {
     };
 
     #[test]
-    fn new_instruction() {
+    fn from_instruction() {
         assert_eq!(
-            PushProgram::<u32>::new_instruction(1u16),
-            PushProgram::Instruction(1)
-        );
-        assert_eq!(
-            PushProgram::<PushInstruction>::new_instruction(IntInstruction::Add),
+            PushProgram::<PushInstruction>::from(IntInstruction::Add),
             PushProgram::Instruction(IntInstruction::Add.into())
         );
     }

@@ -13,8 +13,7 @@ use crate::instruction::{Instruction, NumOpens};
 /// A gene in a [`Plushy`] genome: either a `Close` marker that closes a block
 /// or an `Instruction`.
 ///
-/// A gene can be built from an instruction with [`PushGene::new_instruction`]
-/// or, when the instruction type already matches, with `From`/`Into`.
+/// A gene can be built from an instruction with [`PushGene::from`].
 #[derive(Clone, Eq, PartialEq, Debug)]
 pub enum PushGene<I> {
     Close,
@@ -47,22 +46,9 @@ impl<I1, I2> From<I1> for PushGene<I2>
 where
     I1: Into<I2> + Instruction,
 {
+    /// Create a gene wrapping `i` as its instruction of type `I1`, converting
+    /// `i` to the gene's instruction type `I2` via `Into`.
     fn from(i: I1) -> Self {
-        Self::Instruction(i.into())
-    }
-}
-
-impl<T> PushGene<T> {
-    /// Create a gene wrapping `i` as its instruction, converting `i` to the
-    /// gene's instruction type `T` via `Into`.
-    ///
-    /// The surrounding context usually determines `T`. When it doesn't, as in
-    /// a bare `PushGene::new_instruction(x)`, specify it explicitly with
-    /// `PushGene::<T>::new_instruction(x)`.
-    pub fn new_instruction<I>(i: I) -> Self
-    where
-        I: Into<T>,
-    {
         Self::Instruction(i.into())
     }
 }
@@ -243,9 +229,9 @@ where
 ///
 /// // Build a Plushy from genes directly
 /// let plushy = Plushy::new([
-///     PushGene::new_instruction(MyInstruction::Increment),
-///     PushGene::new_instruction(MyInstruction::Block),
-///     PushGene::new_instruction(MyInstruction::Increment),
+///     PushGene::from(MyInstruction::Increment),
+///     PushGene::from(MyInstruction::Block),
+///     PushGene::from(MyInstruction::Increment),
 ///     PushGene::Close,
 /// ]);
 ///
@@ -259,9 +245,9 @@ where
 /// assert_eq!(
 ///     plushy2,
 ///     Plushy::new([
-///         PushGene::new_instruction(MyInstruction::Increment),
-///         PushGene::new_instruction(MyInstruction::Block),
-///         PushGene::new_instruction(MyInstruction::Increment)
+///         PushGene::from(MyInstruction::Increment),
+///         PushGene::from(MyInstruction::Block),
+///         PushGene::from(MyInstruction::Increment)
 ///     ])
 /// );
 ///
@@ -323,7 +309,7 @@ impl<I> FromIterator<I> for Plushy<I> {
     /// instruction type is the item type `I`. When the items need converting
     /// (e.g. from a concrete instruction into
     /// [`crate::instruction::PushInstruction`]), build the genes with
-    /// [`PushGene::new_instruction`] instead.
+    /// [`PushGene::from`] instead.
     fn from_iter<T: IntoIterator<Item = I>>(iter: T) -> Self {
         Self {
             genes: iter.into_iter().map(PushGene::Instruction).collect(),
@@ -404,6 +390,8 @@ mod test {
         Block,
     }
 
+    impl Instruction for MyInstruction {}
+
     impl Display for MyInstruction {
         fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
             f.write_str(match self {
@@ -461,8 +449,8 @@ mod test {
         assert_eq!(
             plushy,
             Plushy::new([
-                PushGene::new_instruction(IntInstruction::Add),
-                PushGene::new_instruction(BoolInstruction::And),
+                PushGene::from(IntInstruction::Add),
+                PushGene::from(BoolInstruction::And),
             ])
         );
     }
@@ -473,8 +461,8 @@ mod test {
         assert_eq!(
             plushy,
             Plushy::new([
-                PushGene::new_instruction(MyInstruction::Add),
-                PushGene::new_instruction(MyInstruction::Block)
+                PushGene::from(MyInstruction::Add),
+                PushGene::from(MyInstruction::Block)
             ])
         );
     }
