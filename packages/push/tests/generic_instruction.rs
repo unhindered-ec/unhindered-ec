@@ -7,7 +7,7 @@ use ec_core::{
 use ec_linear::{genome::Linear, mutator::umad::Umad};
 use push::{
     genome::plushy::{ConvertToGeneGenerator, Plushy, PushGene},
-    instruction::NumOpens,
+    instruction::{Instruction, NumOpens},
     push_vm::program::PushProgram,
 };
 use rand::{SeedableRng, prelude::Distribution, rngs::StdRng};
@@ -17,6 +17,8 @@ enum MyInstruction {
     Add,
     Block,
 }
+
+impl Instruction for MyInstruction {}
 
 impl NumOpens for MyInstruction {
     fn num_opens(&self) -> usize {
@@ -42,11 +44,11 @@ type MyProgram = PushProgram<MyInstruction>;
 #[test]
 fn custom_instruction_parses_into_the_expected_program() {
     let plushy: MyPlushy = Plushy::new([
-        PushGene::new_instruction(MyInstruction::Add),
-        PushGene::new_instruction(MyInstruction::Block),
-        PushGene::new_instruction(MyInstruction::Add),
+        PushGene::from(MyInstruction::Add),
+        PushGene::from(MyInstruction::Block),
+        PushGene::from(MyInstruction::Add),
         PushGene::Close,
-        PushGene::new_instruction(MyInstruction::Block),
+        PushGene::from(MyInstruction::Block),
     ]);
 
     // The block opened by the first `Block` captures the following `Add` and is
