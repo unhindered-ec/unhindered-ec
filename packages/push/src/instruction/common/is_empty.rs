@@ -25,8 +25,8 @@ use crate::{
 /// instruction was performed. Otherwise the stack of type `T` is unchanged.
 ///
 /// If the boolean stack is full before this instruction is performed, then
-/// a fatal [`StackError::Overflow`](crate::push_vm::stack::StackError::Overflow) is returned,
-/// terminating the running of the program.
+/// a fatal [`StackError::Overflow`] is returned, terminating the running of the
+/// program.
 ///
 /// ## Action Table
 ///
@@ -47,14 +47,13 @@ use crate::{
 /// | ------------- | ------------- | ------------- | ------------- |
 /// | empty  | false | ✅ | `true` is pushed onto the `bool` stack |
 /// | not empty  | false | ✅ | `false` is pushed onto the `bool` stack |
-/// | irrelevant  | true | [‼️..](crate::push_vm::stack::StackError::Overflow) | Program is terminated |
+/// | irrelevant  | true | [‼️..](StackError::Overflow) | Program is terminated |
 ///
 /// # Errors
 ///
 /// If the stack access returns any error other than a
-/// [`StackError::Underflow`](crate::push_vm::stack::StackError::Underflow)
-/// then this returns that as a [`Error::Fatal`](crate::error::Error::Fatal)
-/// error.
+/// [`StackError::Underflow`] then this returns that as a
+/// [`Error::Fatal`](crate::error::Error::Fatal) error.
 #[derive(Debug, Copy, Clone, Default, Eq, PartialEq)]
 pub struct IsEmpty<T> {
     _p: PhantomData<T>,

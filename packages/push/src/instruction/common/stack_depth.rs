@@ -22,13 +22,12 @@ use crate::{
 ///
 /// If the type `T` is `int`, this will push the size of the `int`
 /// stack prior to the execution of this instruction onto the `int` stack,
-/// causing it to grow by one. If the `int`
-/// stack was empty, it would push the value 0 onto that stack.
-/// Otherwise the stack of type `T` is unchanged.
+/// causing it to grow by one. If the `int` stack was empty, it would push the
+/// value 0 onto that stack. Otherwise the stack of type `T` is unchanged.
 ///
 /// If the int stack is full before this instruction is performed, then
-/// a fatal [`StackError::Overflow`](crate::push_vm::stack::StackError::Overflow) is returned,
-/// terminating the running of the program.
+/// a fatal [`StackError::Overflow`] is returned, terminating the running of the
+/// program.
 ///
 /// If the size of the stack exceeds the maximum value of an
 /// `i64`, then `i64::MAX` will be pushed onto the int stack. This would only
@@ -54,7 +53,7 @@ use crate::{
 /// | `Stack<int>` full |  Success | Note |
 /// | ------------- | ------------- | ------------- |
 /// | false | ✅ | the size of `Stack<T>` is pushed onto the int stack |
-/// | true | [‼️..](crate::push_vm::stack::StackError::Overflow) | Program is terminated |
+/// | true | [‼️..](StackError::Overflow) | Program is terminated |
 ///
 /// Note that if the size of `Stack<T>` is too big to fit in an `i64`, then
 /// `i64::MAX` will be pushed onto the int stack instead.
@@ -62,8 +61,8 @@ use crate::{
 /// # Errors
 ///
 /// This returns a [`Error::Fatal`](crate::error::Error::Fatal)
-/// [`StackError::Overflow`](crate::push_vm::stack::StackError::Overflow)
-/// error if pushing the depth overflows the integer stack.
+/// [`StackError::Overflow`] error if pushing the depth overflows the integer
+/// stack.
 #[derive(Debug, Copy, Clone, Default, Eq, PartialEq)]
 pub struct StackDepth<T> {
     _p: PhantomData<T>,

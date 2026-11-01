@@ -19,8 +19,8 @@ use crate::{
 /// type `T`.
 ///
 /// If the stack is full before this instruction is performed, then
-/// a fatal [`StackError::Overflow`](crate::push_vm::stack::StackError::Overflow) is returned,
-/// terminating the running of the program.
+/// a fatal [`StackError::Overflow`] is returned, terminating the running of the
+/// program.
 ///
 /// ## Action Table
 ///
@@ -39,14 +39,13 @@ use crate::{
 /// | `Stack<T>` full |  Success | Note |
 /// | ------------- | ------------- | ------------- |
 /// | false | ✅ | The internal value is pushed onto the stack |
-/// | true | [‼️..](crate::push_vm::stack::StackError::Overflow) | Program is terminated |
+/// | true | [‼️..](StackError::Overflow) | Program is terminated |
 ///
 /// # Errors
 ///
 /// If the stack is full
 /// then this returns a [`Error::Fatal`](crate::error::Error::Fatal)
-/// [`StackError::Overflow`](crate::push_vm::stack::StackError::Overflow)
-/// error.
+/// [`StackError::Overflow`] error.
 #[derive(Debug, Default, Copy, Clone, Eq, PartialEq)]
 pub struct PushValue<T>(pub T);
 

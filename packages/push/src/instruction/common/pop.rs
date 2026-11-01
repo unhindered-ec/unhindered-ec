@@ -19,8 +19,7 @@ use crate::{
 ///
 /// The `Pop` instruction removes the top value on the stack of type `T`.
 ///
-/// If stack is empty, this is a no-op,
-/// and the state is returned unchanged.
+/// If stack is empty, this is a no-op, and the state is returned unchanged.
 ///
 /// ## Action Table
 ///
@@ -39,13 +38,12 @@ use crate::{
 /// | `Stack<T>`  | Success | Note |
 /// | ------------- | ------------- | ------------- |
 /// | exists  | ✅ | The top value is removed |
-/// | missing | [❗…](crate::push_vm::stack::StackError::Underflow) | State is unchanged |
+/// | missing | [❗…](StackError::Underflow) | State is unchanged |
 ///
 /// # Errors
 ///
 /// The only possible error here is
-/// [`StackError::Underflow`](crate::push_vm::stack::StackError::Underflow)
-/// and the instruction will then be ignored.
+/// [`StackError::Underflow`] and the instruction will then be ignored.
 #[derive(Debug, Copy, Clone, Default, Eq, PartialEq)]
 pub struct Pop<T> {
     _p: PhantomData<T>,
