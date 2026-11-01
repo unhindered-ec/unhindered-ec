@@ -547,6 +547,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "ghost"
+version = "0.1.23"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9f7fd7247b1c72af85f623505f1fc97aec79c383632e0d830f5196045e40f1a3"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 3.0.9",
+]
+
+[[package]]
 name = "gimli"
 version = "0.32.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -997,6 +1008,7 @@ dependencies = [
  "easy-cast",
  "ec-core",
  "ec-linear",
+ "ghost",
  "macro_railroad_annotation",
  "miette",
  "num-traits",

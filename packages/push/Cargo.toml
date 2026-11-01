@@ -24,6 +24,7 @@ collectable = "0.0.2"
 easy-cast = "0.7.0"
 ec-core = { workspace = true }
 ec-linear = { workspace = true }
+ghost = { workspace = true }
 macro_railroad_annotation = { workspace = true }
 miette = { workspace = true }
 num-traits = { workspace = true }
