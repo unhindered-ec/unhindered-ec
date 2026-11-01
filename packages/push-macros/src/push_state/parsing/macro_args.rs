@@ -36,9 +36,9 @@ impl ToTokens for PushStateFlagsKw {
 impl Parse for PushStateFlagsKw {
     fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
         Ok(if input.peek(builder) {
-            PushStateFlagsKw::Builder(input.parse()?)
+            Self::Builder(input.parse()?)
         } else if input.peek(has_stack) {
-            PushStateFlagsKw::HasStack(input.parse()?)
+            Self::HasStack(input.parse()?)
         } else {
             return Err(input.error("Expected flag"));
         })
@@ -47,14 +47,14 @@ impl Parse for PushStateFlagsKw {
 
 impl Parse for PushStateFlags {
     fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
-        let default_flags = PushStateFlags::default();
+        let default_flags = Self::default();
         let parsed_flags_list =
             Punctuated::<FlagsValue<PushStateFlagsKw>, Token![,]>::parse_terminated(input)?;
 
         let mut builder_flag_set = false;
         let mut has_stack_flag_set = false;
 
-        let mut current_flags = PushStateFlags::default();
+        let mut current_flags = Self::default();
         for flag in parsed_flags_list {
             let (flag, set_to) = flag.seperate();
 
