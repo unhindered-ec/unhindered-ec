@@ -1,10 +1,9 @@
 use std::marker::PhantomData;
 
-use super::super::{Perform, instruction_error::PushInstructionError};
 use crate::{
     error::{Error, InstructionResult},
-    instruction::{Instruction, NumOpens},
-    push_vm::HasStack,
+    instruction::{Instruction, NumOpens, Perform},
+    push_vm::{HasStack, stack::StackError},
 };
 
 /// An instruction that pops (removes) the top
@@ -72,7 +71,7 @@ where
     S: Clone + HasStack<T>,
     T: Clone,
 {
-    type Error = PushInstructionError;
+    type Error = StackError;
 
     fn perform(&self, mut state: S) -> InstructionResult<S, Self::Error> {
         match state.stack_mut::<T>().pop() {
@@ -105,10 +104,10 @@ mod tests {
         assert!(result.is_recoverable());
         assert_eq!(
             result.error(),
-            &PushInstructionError::StackError(StackError::Underflow {
+            &StackError::Underflow {
                 num_requested: 1,
                 num_present: 0
-            })
+            }
         );
     }
 

@@ -1,10 +1,8 @@
 use ordered_float::OrderedFloat;
 
 use crate::{
-    instruction::{
-        Instruction, Perform, common::PushValue, instruction_error::PushInstructionError,
-    },
-    push_vm::HasStack,
+    instruction::{Instruction, Perform, common::PushValue},
+    push_vm::{HasStack, stack::StackError},
 };
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -20,7 +18,7 @@ impl<S> Perform<S> for ConstantExpression
 where
     S: Clone + HasStack<i64> + HasStack<OrderedFloat<f64>> + HasStack<bool>,
 {
-    type Error = PushInstructionError;
+    type Error = StackError;
 
     fn perform(&self, state: S) -> crate::error::InstructionResult<S, Self::Error> {
         match self {

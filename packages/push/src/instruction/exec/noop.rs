@@ -1,4 +1,6 @@
-use crate::instruction::{Instruction, NumOpens, Perform, instruction_error::PushInstructionError};
+use std::convert::Infallible;
+
+use crate::instruction::{Instruction, NumOpens, Perform};
 
 /// A "no-op" instruction that does nothing, i.e., always
 /// runs successfully and makes no changes to the stacks.
@@ -22,7 +24,7 @@ impl NumOpens for Noop {
 impl Instruction for Noop {}
 
 impl<S> Perform<S> for Noop {
-    type Error = PushInstructionError;
+    type Error = Infallible;
 
     fn perform(&self, state: S) -> crate::error::InstructionResult<S, Self::Error> {
         Ok(state)

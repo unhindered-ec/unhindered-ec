@@ -1,3 +1,5 @@
+use std::convert::Infallible;
+
 use miette::Diagnostic;
 
 use super::{
@@ -32,6 +34,12 @@ pub enum PushInstructionError {
 
     #[diagnostic(transparent)]
     UnknownVariable(#[from] UnknownVariableError),
+}
+
+impl From<Infallible> for PushInstructionError {
+    fn from(value: Infallible) -> Self {
+        match value {}
+    }
 }
 
 impl From<AppendStdoutError> for PushInstructionError {

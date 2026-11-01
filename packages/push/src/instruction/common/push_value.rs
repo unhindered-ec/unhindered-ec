@@ -1,10 +1,9 @@
 use std::fmt::Display;
 
-use super::super::{Perform, instruction_error::PushInstructionError};
 use crate::{
-    error::{InstructionResult, MapInstructionError},
-    instruction::{Instruction, NumOpens},
-    push_vm::HasStack,
+    error::InstructionResult,
+    instruction::{Instruction, NumOpens, Perform},
+    push_vm::{HasStack, stack::StackError},
 };
 
 /// An instruction that pushes a value type `T` on the
@@ -71,10 +70,10 @@ where
     S: Clone + HasStack<T>,
     T: Clone,
 {
-    type Error = PushInstructionError;
+    type Error = StackError;
 
     fn perform(&self, state: S) -> InstructionResult<S, Self::Error> {
-        state.with_push(self.0.clone()).map_err_into()
+        state.with_push(self.0.clone())
     }
 }
 
@@ -92,9 +91,7 @@ mod tests {
     use test_strategy::proptest;
 
     use crate::{
-        instruction::{
-            Perform, common::push_value::PushValue, instruction_error::PushInstructionError,
-        },
+        instruction::{Perform, common::push_value::PushValue},
         push_vm::{HasStack, push_state::PushState, stack::StackError},
     };
 
@@ -138,10 +135,10 @@ mod tests {
         assert!(result.is_fatal());
         assert_eq!(
             result.error(),
-            &PushInstructionError::StackError(StackError::Overflow {
+            &StackError::Overflow {
                 stack_type: "i64",
                 max_size: 0
-            })
+            }
         );
     }
 }

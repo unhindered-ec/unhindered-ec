@@ -1,9 +1,13 @@
+use ghost::phantom;
+
 use crate::{
     error::InstructionResult,
-    instruction::{
-        Instruction, NumOpens, Perform, PushInstruction, instruction_error::PushInstructionError,
+    instruction::{Instruction, NumOpens, Perform},
+    push_vm::{
+        HasStack,
+        program::PushProgram,
+        stack::{PushOnto, StackError},
     },
-    push_vm::{HasStack, program::PushProgram, stack::PushOnto},
 };
 
 /// An instruction that duplicates (clones) the top
@@ -58,22 +62,24 @@ use crate::{
 /// [`StackError::Underflow`](crate::push_vm::stack::StackError::Underflow)
 /// then this returns that as a [`Error::Fatal`](crate::error::Error::Fatal)
 /// error.
+#[phantom]
 #[derive(Debug, Copy, Clone, Default, Eq, PartialEq)]
-pub struct DupBlock;
+pub struct DupBlock<I>;
 
-impl NumOpens for DupBlock {
+impl<I> NumOpens for DupBlock<I> {
     fn num_opens(&self) -> usize {
         1
     }
 }
 
-impl Instruction for DupBlock {}
+impl<I> Instruction for DupBlock<I> {}
 
-impl<S> Perform<S> for DupBlock
+impl<I, S> Perform<S> for DupBlock<I>
 where
-    S: Clone + HasStack<PushProgram<PushInstruction>>,
+    I: Clone,
+    S: Clone + HasStack<PushProgram<I>>,
 {
-    type Error = PushInstructionError;
+    type Error = StackError;
 
     fn perform(&self, state: S) -> InstructionResult<S, Self::Error> {
         state
@@ -88,7 +94,7 @@ where
 mod tests {
     use super::DupBlock;
     use crate::{
-        instruction::{ExecInstruction, Perform, PushInstructionError},
+        instruction::{ExecInstruction, Perform},
         list_into::arr_into,
         push_vm::{program::PushProgram, push_state::PushState, stack::StackError},
     };
@@ -117,10 +123,7 @@ mod tests {
             .build();
         let result_error = DupBlock.perform(state).unwrap_err();
         assert!(result_error.is_recoverable());
-        assert!(matches!(
-            result_error.error(),
-            PushInstructionError::StackError(StackError::Underflow { .. }),
-        ));
+        assert!(matches!(result_error.error(), StackError::Underflow { .. },));
     }
 
     #[test]
@@ -133,9 +136,6 @@ mod tests {
             .build();
         let result_error = DupBlock.perform(state).unwrap_err();
         assert!(result_error.is_fatal());
-        assert!(matches!(
-            result_error.error(),
-            PushInstructionError::StackError(StackError::Overflow { .. }),
-        ));
+        assert!(matches!(result_error.error(), StackError::Overflow { .. },));
     }
 }

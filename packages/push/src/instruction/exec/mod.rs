@@ -6,16 +6,15 @@ mod when;
 
 use strum_macros::EnumIter;
 
-use self::{dup_block::DupBlock, ifelse::IfElse, noop::Noop, unless::Unless, when::When};
+pub use self::{dup_block::DupBlock, ifelse::IfElse, noop::Noop, unless::Unless, when::When};
 use super::{
     NumOpens, Perform, PushInstruction,
     common::{Dup, Flush, IsEmpty, Pop, PushValue, StackDepth, Swap},
-    instruction_error::PushInstructionError,
 };
 use crate::{
-    error::InstructionResult,
+    error::{InstructionResult, MapInstructionError},
     instruction::Instruction,
-    push_vm::{HasStack, program::PushProgram},
+    push_vm::{HasStack, program::PushProgram, stack::StackError},
 };
 
 // TODO: This (and things like `IfElse`) are dependent on `PushInstruction`.
@@ -23,30 +22,30 @@ use crate::{
 #[derive(Debug, strum_macros::Display, Clone, Eq, PartialEq, EnumIter)]
 #[must_use]
 #[non_exhaustive]
-pub enum ExecInstruction {
+pub enum ExecInstruction<I> {
     // "Common" instructions specialized for the integer stack
-    Pop(Pop<PushProgram<PushInstruction>>),
+    Pop(Pop<PushProgram<I>>),
 
     #[strum(to_string = "{0}")]
-    Push(Box<PushValue<PushProgram<PushInstruction>>>),
-    Dup(Dup<PushProgram<PushInstruction>>),
-    Swap(Swap<PushProgram<PushInstruction>>),
-    IsEmpty(IsEmpty<PushProgram<PushInstruction>>),
-    StackDepth(StackDepth<PushProgram<PushInstruction>>),
-    Flush(Flush<PushProgram<PushInstruction>>),
+    Push(Box<PushValue<PushProgram<I>>>),
+    Dup(Dup<PushProgram<I>>),
+    Swap(Swap<PushProgram<I>>),
+    IsEmpty(IsEmpty<PushProgram<I>>),
+    StackDepth(StackDepth<PushProgram<I>>),
+    Flush(Flush<PushProgram<I>>),
 
     Noop(Noop),
-    DupBlock(DupBlock),
-    When(When),
-    Unless(Unless),
-    IfElse(IfElse),
+    DupBlock(DupBlock<I>),
+    When(When<I>),
+    Unless(Unless<I>),
+    IfElse(IfElse<I>),
 }
 
-impl ExecInstruction {
+impl<I> ExecInstruction<I> {
     pub const fn pop() -> Self {
         Self::Pop(Pop::<PushProgram<_>>::new())
     }
-    pub fn push(value: PushProgram<PushInstruction>) -> Self {
+    pub fn push(value: PushProgram<I>) -> Self {
         Self::Push(Box::new(PushValue::<PushProgram<_>>::new(value)))
     }
     pub const fn dup() -> Self {
@@ -81,13 +80,13 @@ impl ExecInstruction {
     }
 }
 
-impl From<ExecInstruction> for PushInstruction {
-    fn from(instr: ExecInstruction) -> Self {
+impl From<ExecInstruction<Self>> for PushInstruction {
+    fn from(instr: ExecInstruction<Self>) -> Self {
         Self::Exec(instr)
     }
 }
 
-impl NumOpens for ExecInstruction {
+impl<I> NumOpens for ExecInstruction<I> {
     fn num_opens(&self) -> usize {
         match self {
             Self::Pop(pop) => pop.num_opens(),
@@ -106,28 +105,29 @@ impl NumOpens for ExecInstruction {
     }
 }
 
-impl Instruction for ExecInstruction {}
+impl<I> Instruction for ExecInstruction<I> {}
 
-impl<S> Perform<S> for ExecInstruction
+impl<I, S> Perform<S> for ExecInstruction<I>
 where
-    S: Clone + HasStack<PushProgram<PushInstruction>> + HasStack<bool> + HasStack<i64>,
+    S: Clone + HasStack<PushProgram<I>> + HasStack<bool> + HasStack<i64>,
+    I: Clone,
 {
-    type Error = PushInstructionError;
+    type Error = StackError;
 
     fn perform(&self, state: S) -> InstructionResult<S, Self::Error> {
         match self {
-            Self::Pop(pop) => pop.perform(state),
-            Self::Push(push) => push.perform(state),
-            Self::Dup(dup) => dup.perform(state),
-            Self::Swap(swap) => swap.perform(state),
-            Self::IsEmpty(is_empty) => is_empty.perform(state),
-            Self::StackDepth(stack_depth) => stack_depth.perform(state),
-            Self::Flush(flush) => flush.perform(state),
-            Self::Noop(noop) => noop.perform(state),
-            Self::When(when) => when.perform(state),
-            Self::Unless(unless) => unless.perform(state),
-            Self::IfElse(if_else) => if_else.perform(state),
-            Self::DupBlock(dup) => dup.perform(state),
+            Self::Pop(pop) => pop.perform(state).map_err_into(),
+            Self::Push(push) => push.perform(state).map_err_into(),
+            Self::Dup(dup) => dup.perform(state).map_err_into(),
+            Self::Swap(swap) => swap.perform(state).map_err_into(),
+            Self::IsEmpty(is_empty) => is_empty.perform(state).map_err_into(),
+            Self::StackDepth(stack_depth) => stack_depth.perform(state).map_err_into(),
+            Self::Flush(flush) => flush.perform(state).map_err_into(),
+            Self::Noop(noop) => noop.perform(state).map_err_into(),
+            Self::When(when) => when.perform(state).map_err_into(),
+            Self::Unless(unless) => unless.perform(state).map_err_into(),
+            Self::IfElse(if_else) => if_else.perform(state).map_err_into(),
+            Self::DupBlock(dup) => dup.perform(state).map_err_into(),
         }
     }
 }

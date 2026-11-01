@@ -1,9 +1,9 @@
+use ghost::phantom;
+
 use super::when::When;
 use crate::{
     error::{Error, InstructionResult},
-    instruction::{
-        Instruction, NumOpens, Perform, PushInstruction, instruction_error::PushInstructionError,
-    },
+    instruction::{Instruction, NumOpens, Perform},
     push_vm::{
         HasStack,
         program::PushProgram,
@@ -72,22 +72,23 @@ use crate::{
 /// If either of the stack accesses returns any error other than a
 /// [`StackError::Underflow`] then this returns that as a [`Error::Fatal`]
 /// error.
+#[phantom]
 #[derive(Debug, Copy, Clone, Default, Eq, PartialEq)]
-pub struct IfElse;
+pub struct IfElse<I>;
 
-impl NumOpens for IfElse {
+impl<I> NumOpens for IfElse<I> {
     fn num_opens(&self) -> usize {
         2
     }
 }
 
-impl Instruction for IfElse {}
+impl<I> Instruction for IfElse<I> {}
 
-impl<S> Perform<S> for IfElse
+impl<I, S> Perform<S> for IfElse<I>
 where
-    S: Clone + HasStack<PushProgram<PushInstruction>> + HasStack<bool>,
+    S: Clone + HasStack<PushProgram<I>> + HasStack<bool>,
 {
-    type Error = PushInstructionError;
+    type Error = StackError;
 
     fn perform(&self, mut state: S) -> InstructionResult<S, Self::Error> {
         let condition = state.stack::<bool>().top();
@@ -159,9 +160,7 @@ mod tests {
     use super::IfElse;
     use crate::{
         error::IntoState,
-        instruction::{
-            ExecInstruction, IntInstruction, Perform, instruction_error::PushInstructionError,
-        },
+        instruction::{ExecInstruction, IntInstruction, Perform},
         list_into::arr_into,
         push_vm::{program::PushProgram, push_state::PushState, stack::StackError},
     };
@@ -256,10 +255,7 @@ mod tests {
             .build();
         let result_error = IfElse.perform(state.clone()).unwrap_err();
         assert!(result_error.is_recoverable());
-        assert!(matches!(
-            result_error.error(),
-            PushInstructionError::StackError(StackError::Underflow { .. })
-        ));
+        assert!(matches!(result_error.error(), StackError::Underflow { .. }));
         assert_eq!(result_error.into_state(), state);
     }
 
@@ -274,10 +270,7 @@ mod tests {
             .build();
         let result_error = IfElse.perform(state.clone()).unwrap_err();
         assert!(result_error.is_recoverable());
-        assert!(matches!(
-            result_error.error(),
-            PushInstructionError::StackError(StackError::Underflow { .. })
-        ));
+        assert!(matches!(result_error.error(), StackError::Underflow { .. }));
         assert_eq!(result_error.into_state(), state);
     }
 
@@ -293,10 +286,7 @@ mod tests {
 
         let result_error = IfElse.perform(state.clone()).unwrap_err();
         assert!(result_error.is_recoverable());
-        assert!(matches!(
-            result_error.error(),
-            PushInstructionError::StackError(StackError::Underflow { .. })
-        ));
+        assert!(matches!(result_error.error(), StackError::Underflow { .. }));
         assert_eq!(result_error.into_state(), state);
     }
 }

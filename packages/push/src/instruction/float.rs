@@ -171,13 +171,13 @@ where
 
     fn perform(&self, mut state: S) -> InstructionResult<S, Self::Error> {
         match self {
-            Self::Pop(pop) => pop.perform(state),
-            Self::Push(push) => push.perform(state),
-            Self::Dup(dup) => dup.perform(state),
-            Self::Swap(swap) => swap.perform(state),
-            Self::IsEmpty(is_empty) => is_empty.perform(state),
-            Self::StackDepth(stack_depth) => stack_depth.perform(state),
-            Self::Flush(flush) => flush.perform(state),
+            Self::Pop(pop) => pop.perform(state).map_err_into(),
+            Self::Push(push) => push.perform(state).map_err_into(),
+            Self::Dup(dup) => dup.perform(state).map_err_into(),
+            Self::Swap(swap) => swap.perform(state).map_err_into(),
+            Self::IsEmpty(is_empty) => is_empty.perform(state).map_err_into(),
+            Self::StackDepth(stack_depth) => stack_depth.perform(state).map_err_into(),
+            Self::Flush(flush) => flush.perform(state).map_err_into(),
             Self::Print(print) => print.perform(state).map_err_into(),
             Self::PrintLn(println) => println.perform(state).map_err_into(),
 

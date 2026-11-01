@@ -2,8 +2,11 @@ use std::marker::PhantomData;
 
 use crate::{
     error::InstructionResult,
-    instruction::{Instruction, NumOpens, Perform, instruction_error::PushInstructionError},
-    push_vm::{HasStack, stack::PushOnto},
+    instruction::{Instruction, NumOpens, Perform},
+    push_vm::{
+        HasStack,
+        stack::{PushOnto, StackError},
+    },
 };
 
 /// An instruction that duplicates (clones) the top
@@ -92,7 +95,7 @@ where
     S: Clone + HasStack<T>,
     T: Clone,
 {
-    type Error = PushInstructionError;
+    type Error = StackError;
 
     fn perform(&self, state: S) -> InstructionResult<S, Self::Error> {
         state.stack::<T>().top().cloned().push_onto(state)
@@ -119,10 +122,10 @@ mod tests {
         assert!(result.is_recoverable());
         assert_eq!(
             result.error(),
-            &PushInstructionError::StackError(StackError::Underflow {
+            &StackError::Underflow {
                 num_requested: 1,
                 num_present: 0
-            })
+            }
         );
     }
 
@@ -155,10 +158,10 @@ mod tests {
         assert!(result.is_fatal());
         assert_eq!(
             result.error(),
-            &PushInstructionError::StackError(StackError::Overflow {
+            &StackError::Overflow {
                 stack_type: "i64",
                 max_size: 1
-            })
+            }
         );
     }
 
