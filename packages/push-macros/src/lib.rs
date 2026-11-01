@@ -17,12 +17,12 @@ mod push_state;
 /// ```text
 /// #[push_state(!default_enabled_feature, default_disabled_feature)]
 /// ```
-/// This would set the default_enabled_feature to be disabled
-/// and the default_disabled_feature to enabled
+/// This would set the `default_enabled_feature` to be disabled
+/// and the `default_disabled_feature` to enabled
 ///
 /// # Features
-/// ## HasStack (enabled by default)
-/// This derives the HasStack trait for all stacks in the state.
+/// ## `HasStack` (enabled by default)
+/// This derives the `HasStack` trait for all stacks in the state.
 /// You need to indicate which fields are stacks
 /// using the `#[stack]` attribute on the corresponding field.
 ///
@@ -114,7 +114,7 @@ pub fn push_state(
                 &stacks,
                 &exec_stack,
                 input_instructions,
-                max_instruction_steps,
+                &max_instruction_steps,
             )
         })
         .transpose()?;

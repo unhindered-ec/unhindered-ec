@@ -26,3 +26,6 @@ manyhow = "0.14.0"
 proc-macro2 = "1.0.81"
 quote = "1.0.33"
 syn = { version = "3.0.3", features = ["full", "printing"] }
+
+[lints]
+workspace = true

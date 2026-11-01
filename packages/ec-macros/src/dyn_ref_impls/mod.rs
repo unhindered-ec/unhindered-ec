@@ -2,7 +2,7 @@ use quote::quote;
 use syn::TypeReference;
 
 mod modification;
-use modification::*;
+use modification::{AddAutoTraits, Modification, Passthrough, wrap_modification};
 
 wrap_modification!(Pointer; ty ; &#ty);
 wrap_modification!(MutPointer; ty ; &mut #ty);
@@ -36,6 +36,10 @@ static SHARED_ALTERNATIVES: fn() -> Vec<Box<dyn Modification>> = || {
     ]
 };
 
+#[expect(
+    clippy::needless_pass_by_value,
+    reason = "manyhow expects this signature"
+)]
 pub fn dyn_ref_impls(a: proc_macro2::TokenStream, tokens: syn::ItemImpl) -> manyhow::Result {
     manyhow::ensure!(a.is_empty(), a, "Expected no inputs");
 
