@@ -27,7 +27,7 @@ miette = "7.6.0"
 num-traits = "0.2.18"
 polonius-the-crab = "0.6.0"
 proptest = "1.11.0"
-push = { path = "packages/push" }
+# push = { path = "packages/push" }
 push_macros = { path = "packages/push-macros" }
 rand = "0.10.2"
 static_assertions = "1.1.0"
