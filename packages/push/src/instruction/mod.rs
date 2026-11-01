@@ -51,7 +51,7 @@ pub trait Perform<S> {
 
     /// # Errors
     ///
-    /// This returns an error if the instruction being performed
+    /// Returns an error if the instruction being performed
     /// returns some kind of error. This could include things like
     /// stack over- or underflows, or numeric errors like integer overflow.
     fn perform(&self, state: S) -> InstructionResult<S, Self::Error>;
@@ -73,7 +73,7 @@ impl<S, E> Perform<S> for Box<dyn Perform<S, Error = E>> {
 #[non_exhaustive]
 pub enum PushInstruction {
     WithInput(WithInputInstruction),
-    Exec(ExecInstruction),
+    Exec(ExecInstruction<Self>),
     BoolInstruction(BoolInstruction),
     IntInstruction(IntInstruction),
     FloatInstruction(FloatInstruction),
@@ -111,7 +111,7 @@ impl<S> Perform<S> for PushInstruction
 where
     S: Clone,
     WithInputInstruction: Perform<S, Error: Into<PushInstructionError>>,
-    ExecInstruction: Perform<S, Error: Into<PushInstructionError>>,
+    ExecInstruction<Self>: Perform<S, Error: Into<PushInstructionError>>,
     BoolInstruction: Perform<S, Error: Into<PushInstructionError>>,
     IntInstruction: Perform<S, Error: Into<PushInstructionError>>,
     FloatInstruction: Perform<S, Error: Into<PushInstructionError>>,

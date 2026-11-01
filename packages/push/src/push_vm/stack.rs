@@ -1,3 +1,5 @@
+use std::convert::Infallible;
+
 use collectable::TryExtend;
 use miette::Diagnostic;
 
@@ -110,6 +112,12 @@ pub enum StackError {
         stack_type: &'static str,
         max_size: usize,
     },
+}
+
+impl From<Infallible> for StackError {
+    fn from(value: Infallible) -> Self {
+        match value {}
+    }
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]

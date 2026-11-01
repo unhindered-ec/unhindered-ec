@@ -1,9 +1,9 @@
 use std::marker::PhantomData;
 
 use crate::{
-    error::{InstructionResult, MapInstructionError},
-    instruction::{Instruction, NumOpens, Perform, instruction_error::PushInstructionError},
-    push_vm::HasStack,
+    error::InstructionResult,
+    instruction::{Instruction, NumOpens, Perform},
+    push_vm::{HasStack, stack::StackError},
 };
 
 /// An instruction that pushes a boolean onto the bool stack
@@ -79,20 +79,18 @@ impl<S, T> Perform<S> for IsEmpty<T>
 where
     S: HasStack<T> + HasStack<bool>,
 {
-    type Error = PushInstructionError;
+    type Error = StackError;
 
     fn perform(&self, state: S) -> InstructionResult<S, Self::Error> {
         let is_empty = state.stack::<T>().is_empty();
-        state.with_push(is_empty).map_err_into()
+        state.with_push(is_empty)
     }
 }
 
 #[cfg(test)]
 mod tests {
     use crate::{
-        instruction::{
-            Perform, common::is_empty::IsEmpty, instruction_error::PushInstructionError,
-        },
+        instruction::{Perform, common::is_empty::IsEmpty},
         push_vm::{HasStack, push_state::PushState, stack::StackError},
     };
 
@@ -169,10 +167,10 @@ mod tests {
         assert!(result.is_fatal());
         assert_eq!(
             result.error(),
-            &PushInstructionError::StackError(StackError::Overflow {
+            &StackError::Overflow {
                 stack_type: "bool",
                 max_size: 1
-            })
+            }
         );
     }
 }

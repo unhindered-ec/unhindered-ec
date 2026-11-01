@@ -1,10 +1,9 @@
 use std::marker::PhantomData;
 
-use super::super::{Perform, instruction_error::PushInstructionError};
 use crate::{
-    error::{Error, InstructionResult, MapInstructionError},
-    instruction::{Instruction, NumOpens},
-    push_vm::HasStack,
+    error::{Error, InstructionResult},
+    instruction::{Instruction, NumOpens, Perform},
+    push_vm::{HasStack, stack::StackError},
 };
 
 /// An instruction that swaps the top two values of a stack of type `T`.
@@ -72,15 +71,11 @@ where
     S: Clone + HasStack<T>,
     T: Clone,
 {
-    type Error = PushInstructionError;
+    type Error = StackError;
 
     fn perform(&self, mut state: S) -> InstructionResult<S, Self::Error> {
         match state.stack_mut::<T>().pop2() {
-            Ok((x, y)) => state
-                .with_push(x)
-                .map_err_into()?
-                .with_push(y)
-                .map_err_into(),
+            Ok((x, y)) => state.with_push(x)?.with_push(y),
             Err(error) => Err(Error::recoverable(state, error)),
         }
     }
@@ -108,10 +103,10 @@ mod tests {
         assert!(result.is_recoverable());
         assert_eq!(
             result.error(),
-            &PushInstructionError::StackError(StackError::Underflow {
+            &StackError::Underflow {
                 num_requested: 2,
                 num_present: 0
-            })
+            }
         );
     }
 
@@ -129,10 +124,10 @@ mod tests {
         let result = Swap::<i64>::new().perform(state).unwrap_err();
         assert_eq!(
             result.error(),
-            &PushInstructionError::StackError(StackError::Underflow {
+            &StackError::Underflow {
                 num_requested: 2,
                 num_present: 1
-            })
+            }
         );
     }
 

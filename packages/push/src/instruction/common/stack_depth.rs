@@ -1,9 +1,8 @@
 use std::marker::PhantomData;
 
 use crate::{
-    error::MapInstructionError,
-    instruction::{Instruction, NumOpens, Perform, instruction_error::PushInstructionError},
-    push_vm::HasStack,
+    instruction::{Instruction, NumOpens, Perform},
+    push_vm::{HasStack, stack::StackError},
 };
 
 /// An instruction that pushes a integer value onto the int stack
@@ -89,13 +88,13 @@ impl<S, T> Perform<S> for StackDepth<T>
 where
     S: HasStack<T> + HasStack<i64>,
 {
-    type Error = PushInstructionError;
+    type Error = StackError;
 
     fn perform(&self, state: S) -> crate::error::InstructionResult<S, Self::Error> {
         // If the number of items on the stack is too large to fit in an `i64`,
         // then we'll replace it with `i64::MAX`.
         let stack_size = state.stack::<T>().size().try_into().unwrap_or(i64::MAX);
-        state.with_push(stack_size).map_err_into()
+        state.with_push(stack_size)
     }
 }
 
@@ -109,9 +108,7 @@ mod tests {
     use test_strategy::proptest;
 
     use crate::{
-        instruction::{
-            Perform, common::stack_depth::StackDepth, instruction_error::PushInstructionError,
-        },
+        instruction::{Perform, common::stack_depth::StackDepth},
         push_vm::{HasStack, push_state::PushState, stack::StackError},
     };
 
@@ -200,10 +197,10 @@ mod tests {
         assert!(result.is_fatal());
         assert_eq!(
             result.error(),
-            &PushInstructionError::StackError(StackError::Overflow {
+            &StackError::Overflow {
                 stack_type: "i64",
                 max_size: 3
-            })
+            }
         );
     }
 }

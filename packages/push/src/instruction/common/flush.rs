@@ -1,8 +1,8 @@
-use std::marker::PhantomData;
+use std::{convert::Infallible, marker::PhantomData};
 
 use crate::{
     error::InstructionResult,
-    instruction::{Instruction, NumOpens, Perform, instruction_error::PushInstructionError},
+    instruction::{Instruction, NumOpens, Perform},
     push_vm::HasStack,
 };
 
@@ -67,7 +67,7 @@ impl<S, T> Perform<S> for Flush<T>
 where
     S: HasStack<T>,
 {
-    type Error = PushInstructionError;
+    type Error = Infallible;
 
     fn perform(&self, mut state: S) -> InstructionResult<S, Self::Error> {
         let stack = state.stack_mut::<T>();

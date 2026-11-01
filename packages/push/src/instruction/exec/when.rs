@@ -1,8 +1,8 @@
+use ghost::phantom;
+
 use crate::{
     error::{Error, InstructionResult},
-    instruction::{
-        Instruction, NumOpens, Perform, PushInstruction, instruction_error::PushInstructionError,
-    },
+    instruction::{Instruction, NumOpens, Perform},
     push_vm::{
         HasStack,
         program::PushProgram,
@@ -63,22 +63,23 @@ use crate::{
 /// If either of the stack accesses returns any error other than a
 /// [`StackError::Underflow`] then this returns that as a [`Error::Fatal`]
 /// error.
+#[phantom]
 #[derive(Debug, Copy, Clone, Default, Eq, PartialEq)]
-pub struct When;
+pub struct When<I>;
 
-impl NumOpens for When {
+impl<I> NumOpens for When<I> {
     fn num_opens(&self) -> usize {
         1
     }
 }
 
-impl Instruction for When {}
+impl<I> Instruction for When<I> {}
 
-impl<S> Perform<S> for When
+impl<I, S> Perform<S> for When<I>
 where
-    S: Clone + HasStack<PushProgram<PushInstruction>> + HasStack<bool>,
+    S: Clone + HasStack<PushProgram<I>> + HasStack<bool>,
 {
-    type Error = PushInstructionError;
+    type Error = StackError;
 
     fn perform(&self, state: S) -> InstructionResult<S, Self::Error> {
         let condition = state.stack::<bool>().top();
@@ -119,7 +120,7 @@ mod tests {
     use super::When;
     use crate::{
         error::IntoState,
-        instruction::{ExecInstruction, Perform, PushInstructionError},
+        instruction::{ExecInstruction, Perform},
         list_into::arr_into,
         push_vm::{program::PushProgram, push_state::PushState, stack::StackError},
     };
@@ -203,10 +204,7 @@ mod tests {
             .build();
         let result_error = When.perform(state.clone()).unwrap_err();
         assert!(result_error.is_recoverable());
-        assert!(matches!(
-            result_error.error(),
-            PushInstructionError::StackError(StackError::Underflow { .. })
-        ));
+        assert!(matches!(result_error.error(), StackError::Underflow { .. }));
         assert_eq!(result_error.into_state(), state);
     }
 }
