@@ -38,14 +38,14 @@ use crate::{
 /// | `Stack<T>` top | `Stack<T>` next-to-top | Success | Note |
 /// | ------------- | ------------- | ------------- |
 /// | exists | exists  | ✅ | The top two values are swapped |
-/// | exists | missing | [❗…](crate::push_vm::stack::StackError::Underflow) | State is unchanged |
-/// | missing | irrelevant | [❗…](crate::push_vm::stack::StackError::Underflow) | State is unchanged |
+/// | exists | missing | [❗…](StackError::Underflow) | State is unchanged |
+/// | missing | irrelevant | [❗…](StackError::Underflow) | State is unchanged |
 ///
 /// # Errors
 ///
 /// This returns a [`Error::Recoverable`]
-/// [`StackError::Underflow`](crate::push_vm::stack::StackError::Underflow)
-/// error if `Stack<T>` doesn't have at least two values.
+/// [`StackError::Underflow`] error if `Stack<T>` doesn't have at least two
+/// values.
 #[derive(Debug, Copy, Clone, Default, Eq, PartialEq)]
 pub struct Swap<T> {
     _p: PhantomData<T>,

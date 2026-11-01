@@ -31,8 +31,8 @@ use crate::{
 /// and the state is returned unchanged.
 ///
 /// If the `Exec` stack is full before this instruction is performed, then
-/// a fatal [`StackError::Overflow`](crate::push_vm::stack::StackError::Overflow)
-/// is returned, terminating the running of the program.
+/// a fatal [`StackError::Overflow`] is returned, terminating the running of the
+/// program.
 ///
 /// ## Action Table
 ///
@@ -53,15 +53,14 @@ use crate::{
 /// | Exec stack  | Exec stack full |  Success | Note |
 /// | ------------- | ------------- | ------------- | ------------- |
 /// | exists  | false | ✅ | The top block is cloned |
-/// | missing | irrelevant | [❗…](crate::push_vm::stack::StackError::Underflow) | State is unchanged |
-/// | exists  | true | [‼️..](crate::push_vm::stack::StackError::Overflow) | Program is terminated |
+/// | missing | irrelevant | [❗…](StackError::Underflow) | State is unchanged |
+/// | exists  | true | [‼️..](StackError::Overflow) | Program is terminated |
 ///
 /// # Errors
 ///
 /// If the stack access returns any error other than a
-/// [`StackError::Underflow`](crate::push_vm::stack::StackError::Underflow)
-/// then this returns that as a [`Error::Fatal`](crate::error::Error::Fatal)
-/// error.
+/// [`StackError::Underflow`] then this returns that as a
+/// [`Error::Fatal`](crate::error::Error::Fatal) error.
 #[phantom]
 #[derive(Debug, Copy, Clone, Default, Eq, PartialEq)]
 pub struct DupBlock<I>;

@@ -23,15 +23,13 @@ use crate::{
 /// The `Dup` instruction clones the top block on the stack of type `T`,
 /// leaving both the original and the copy on that stack.
 ///
-/// If stack is empty,  then
-/// a recoverable
-/// [`StackError::Underflow`](crate::push_vm::stack::StackError::Underflow)
+/// If stack is empty,  then a recoverable [`StackError::Underflow`]
 /// is returned containing the state unchanged, allowing the interpreter to
 /// continue with the next instruction.
 ///
 /// If the stack is full before this instruction is performed, then
-/// a fatal [`StackError::Overflow`](crate::push_vm::stack::StackError::Overflow) is returned,
-/// terminating the running of the program.
+/// a fatal [`StackError::Overflow`] is returned, terminating the running of the
+/// program.
 ///
 /// This is similar to the `Exec::DupBlock` instruction, but that instruction:
 ///
@@ -61,15 +59,14 @@ use crate::{
 /// | `Stack<T>`  | `Stack<T>` full |  Success | Note |
 /// | ------------- | ------------- | ------------- | ------------- |
 /// | exists  | false | ✅ | The top value is cloned |
-/// | missing | irrelevant | [❗…](crate::push_vm::stack::StackError::Underflow) | State is unchanged |
-/// | exists  | true | [‼️..](crate::push_vm::stack::StackError::Overflow) | Program is terminated |
+/// | missing | irrelevant | [❗…](StackError::Underflow) | State is unchanged |
+/// | exists  | true | [‼️..](StackError::Overflow) | Program is terminated |
 ///
 /// # Errors
 ///
 /// If the stack access returns any error other than a
-/// [`StackError::Underflow`](crate::push_vm::stack::StackError::Underflow)
-/// then this returns that as a [`Error::Fatal`](crate::error::Error::Fatal)
-/// error.
+/// [`StackError::Underflow`] then this returns that as a
+/// [`Error::Fatal`](crate::error::Error::Fatal) error.
 #[derive(Debug, Copy, Clone, Default, Eq, PartialEq)]
 pub struct Dup<T> {
     _p: PhantomData<T>,
