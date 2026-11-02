@@ -28,8 +28,8 @@ impl<T> FlagsValue<T> {
 
     pub fn seperate(self) -> (T, bool) {
         match self {
-            FlagsValue::Set(v) => (v, true),
-            FlagsValue::Unset(v) => (v, false),
+            Self::Set(v) => (v, true),
+            Self::Unset(v) => (v, false),
         }
     }
 }
@@ -40,7 +40,7 @@ impl<T: Parse> Parse for FlagsValue<T> {
             input.parse::<Token![!]>()?;
             Self::parse(input)?.inverted()
         } else {
-            FlagsValue::Set(input.parse()?)
+            Self::Set(input.parse()?)
         })
     }
 }
@@ -49,6 +49,11 @@ pub type StacksInput = BTreeMap<Ident, (StackMarkerFlags, Type)>;
 pub type ExecStackInput = Option<(Ident, StackMarkerFlags, Type)>;
 pub type SingleFieldInput = Option<Ident>;
 
+#[expect(
+    clippy::too_many_lines,
+    reason = "Needs to be refactored; kind of difficult to do with parsing code; so ignoring for \
+              now"
+)]
 pub fn parse_fields(
     fields: &mut Punctuated<Field, Token![,]>,
     macro_span: Span,
@@ -121,7 +126,7 @@ pub fn parse_fields(
                 max_instruction_steps = Some(ident.clone());
                 continue;
             }
-            i += 1;
+            i = i.saturating_add(1);
         }
         if matching_attrs.is_empty() {
             continue;
@@ -165,9 +170,8 @@ pub fn parse_fields(
                                 marker_flags.builder_name.span,
                                 "Builder name cannot be set for exec stacks",
                             ));
-                        } else {
-                            stack_marker_flags.is_exec = marker_flags.is_exec.clone();
                         }
+                        stack_marker_flags.is_exec = marker_flags.is_exec.clone();
                     }
                     if *marker_flags.ignore_doctests {
                         if !generate_builder {
@@ -184,10 +188,8 @@ pub fn parse_fields(
                                 marker_flags.ignore_doctests.span,
                                 "Redundant ignore_doctests flag",
                             ));
-                        } else {
-                            stack_marker_flags.ignore_doctests =
-                                marker_flags.ignore_doctests.clone();
                         }
+                        stack_marker_flags.ignore_doctests = marker_flags.ignore_doctests.clone();
                     }
 
                     if marker_flags.builder_name.is_some() {
@@ -208,9 +210,8 @@ pub fn parse_fields(
                                 marker_flags.builder_name.span,
                                 "Builder name cannot be set for exec stacks",
                             ));
-                        } else {
-                            stack_marker_flags.builder_name = marker_flags.builder_name;
                         }
+                        stack_marker_flags.builder_name = marker_flags.builder_name;
                     }
 
                     if marker_flags.instruction_name.is_some() {
@@ -232,9 +233,8 @@ pub fn parse_fields(
                                 marker_flags.instruction_name.span,
                                 "Instruction name cannot be set for exec stacks",
                             ));
-                        } else {
-                            stack_marker_flags.instruction_name = marker_flags.instruction_name
                         }
+                        stack_marker_flags.instruction_name = marker_flags.instruction_name;
                     }
 
                     if marker_flags.sample_values.is_some() {
@@ -251,9 +251,8 @@ pub fn parse_fields(
                                 marker_flags.sample_values.span,
                                 "Sample values already set explicitly",
                             ));
-                        } else {
-                            stack_marker_flags.sample_values = marker_flags.sample_values
                         }
+                        stack_marker_flags.sample_values = marker_flags.sample_values;
                     }
                 }
                 syn::Meta::NameValue(n) => {
@@ -278,9 +277,8 @@ pub fn parse_fields(
                     stack_marker_flags.is_exec.span,
                     "Only one exec stack supported",
                 ));
-            } else {
-                exec_stack = Some((ident, stack_marker_flags, ty.clone()))
             }
+            exec_stack = Some((ident, stack_marker_flags, ty.clone()));
         } else {
             stacks.insert(ident, (stack_marker_flags, ty.clone()));
         }

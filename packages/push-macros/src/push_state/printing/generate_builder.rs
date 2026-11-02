@@ -23,7 +23,7 @@ use crate::{
 macro_rules! derived_ident {
     ($($literal_part: expr),*) => {
         {
-            #[allow(unused_imports)]
+            #[allow(clippy::allow_attributes,unused_imports, reason = "Inside macro; might not be used depending on params.")]
             use syn::ext::IdentExt;
             syn::Ident::new_raw(
                 &[$(format!(
@@ -46,6 +46,11 @@ macro_rules! derived_ident {
     clippy::too_many_arguments,
     reason = "We'll fix this with a eventual rewrite"
 )]
+#[expect(
+    clippy::too_many_lines,
+    reason = "Needs to be refactored; kind of difficult to do with parsing code; so ignoring for \
+              now"
+)]
 pub fn generate_builder(
     macro_span: Span,
     struct_ident: &Ident,
@@ -54,7 +59,7 @@ pub fn generate_builder(
     stacks: &StacksInput,
     exec_stack: &ExecStackInput,
     input_instructions: SingleFieldInput,
-    max_instruction_steps: SingleFieldInput,
+    max_instruction_steps: &SingleFieldInput,
 ) -> syn::Result<TokenStream> {
     let Some((exec_stack_ident, _, exec_stack_ty)) = exec_stack else {
         return Err(syn::Error::new(
@@ -100,27 +105,22 @@ pub fn generate_builder(
 
     let max_instruction_steps_generic = max_instruction_steps
         .as_ref()
-        .map(|_| quote! {__MaxInstructionSteps,})
-        .unwrap_or_default();
+        .map_or_default(|_| quote! {__MaxInstructionSteps,});
     let max_instruction_steps_generic_with_state_bound = max_instruction_steps
         .as_ref()
-        .map(|_| quote! {__MaxInstructionSteps: #utilities_mod_ident::StackState,})
-        .unwrap_or_default();
+        .map_or_default(|_| quote! {__MaxInstructionSteps: #utilities_mod_ident::StackState,});
 
     let max_instruction_steps_generic_with_dataless_bound = max_instruction_steps
         .as_ref()
-        .map(|_| quote! {__MaxInstructionSteps: #utilities_mod_ident::StackState,})
-        .unwrap_or_default();
+        .map_or_default(|_| quote! {__MaxInstructionSteps: #utilities_mod_ident::StackState,});
 
     let max_instruction_steps_generic_with_size_and_data = max_instruction_steps
         .as_ref()
-        .map(|_| quote! {#utilities_mod_ident::WithSizeAndData,})
-        .unwrap_or_default();
+        .map_or_default(|_| quote! {#utilities_mod_ident::WithSizeAndData,});
 
     let max_instruction_steps_generic_default = max_instruction_steps
         .as_ref()
-        .map(|_| quote! {(),})
-        .unwrap_or_default();
+        .map_or_default(|_| quote! {(),});
 
     // List with length |stacks| of ()
     let default_states = stack_generics
@@ -285,10 +285,10 @@ pub fn generate_builder(
                 });
 
                 let fn_ident = derived_ident!("with_", stack_ident, "_values").unraw();
-                let doctest_tokenstream = sample_values.as_ref().map(|sample_values| {
-                    let max_stack_size = ((sample_values.len() / 100) + 1) * 100;
+                let doctest_tokenstream = sample_values.as_ref().and_then(|sample_values| {
+                    let max_stack_size = sample_values.len().next_multiple_of(100);
                     let number_values = sample_values.len();
-                    let first_value = sample_values.iter().next().unwrap();
+                    let first_value = sample_values.iter().next()?;
                     let imports = [
                         Import::Path(
                             Some(syn::token::PathSep::default()),
@@ -302,8 +302,7 @@ pub fn generate_builder(
 
                     let with_max_instruction_steps = max_instruction_steps
                             .as_ref()
-                            .map(|_| quote! { .with_instruction_step_limit(1_000)})
-                            .unwrap_or_default();
+                            .map_or_default(|_| quote! { .with_instruction_step_limit(1_000)});
 
                     let doctest_code = quote! {
                         let state = #struct_ident::builder()
@@ -324,7 +323,7 @@ pub fn generate_builder(
                     )
                         .then_some("ignore");
 
-                    doctest(Some(&imports), None::<&str>, doctest_code, Some(outro), ignore_attr)
+                    Some(doctest(Some(&imports), None::<&str>, &doctest_code.to_string(), Some(outro), ignore_attr))
                 });
 
                 let example_section = sample_values.is_some().then_some(quote! {
@@ -499,8 +498,7 @@ pub fn generate_builder(
 
             let with_max_instruction_steps = max_instruction_steps
                     .as_ref()
-                    .map(|_| quote! { .with_instruction_step_limit(1_000)})
-                    .unwrap_or_default();
+                    .map_or_default(|_| quote! { .with_instruction_step_limit(1_000)});
 
             let doctest_code = quote! {
                 let state = #struct_ident::builder()
@@ -521,7 +519,7 @@ pub fn generate_builder(
             let doctest_tokenstream = doctest(
                 Some(&imports),
                 None::<&str>,
-                doctest_code,
+                &doctest_code.to_string(),
                 Some(outro),
                 ignore_attr
             );
