@@ -122,3 +122,130 @@ where
         (**self).dyn_select(population, &mut rng)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use std::{rc::Rc, sync::Arc};
+
+    use rand::{Rng, rng};
+
+    use super::DynSelector;
+    use crate::{
+        operator::selector::{Selector, best::Best},
+        population::Population,
+    };
+
+    const POPULATION: [i32; 4] = [1, 5, 3, 2];
+
+    /// The value the [`Best`] selector is expected to pick.
+    fn best_value() -> i32 {
+        *POPULATION.iter().max().unwrap()
+    }
+
+    #[test]
+    fn dyn_select_forwards_to_the_inner_selector() {
+        let erased: &dyn DynSelector<[i32; 4]> = &Best;
+        assert_eq!(
+            *erased.dyn_select(&POPULATION, &mut rng()).unwrap(),
+            best_value()
+        );
+    }
+
+    #[test]
+    fn box_forwards_select_to_the_inner_selector() {
+        let selector: Box<dyn DynSelector<[i32; 4]>> = Box::new(Best);
+        assert_eq!(
+            *selector.select(&POPULATION, &mut rng()).unwrap(),
+            best_value()
+        );
+    }
+
+    #[test]
+    fn arc_forwards_select_to_the_inner_selector() {
+        let selector: Arc<dyn DynSelector<[i32; 4]>> = Arc::new(Best);
+        assert_eq!(
+            *selector.select(&POPULATION, &mut rng()).unwrap(),
+            best_value()
+        );
+    }
+
+    #[test]
+    fn rc_forwards_select_to_the_inner_selector() {
+        let selector: Rc<dyn DynSelector<[i32; 4]>> = Rc::new(Best);
+        assert_eq!(
+            *selector.select(&POPULATION, &mut rng()).unwrap(),
+            best_value()
+        );
+    }
+
+    #[test]
+    fn shared_reference_forwards_select_to_the_inner_selector() {
+        let best = Best;
+        let erased: &dyn DynSelector<[i32; 4]> = &best;
+        assert_eq!(
+            *erased.select(&POPULATION, &mut rng()).unwrap(),
+            best_value()
+        );
+    }
+
+    #[derive(Debug, thiserror::Error, miette::Diagnostic, Clone, PartialEq, Eq)]
+    #[error("selector test error")]
+    struct TestError;
+
+    struct FailSelector;
+
+    impl<P> Selector<P> for FailSelector
+    where
+        P: Population,
+    {
+        type Error = TestError;
+
+        fn select<'pop, R: Rng + ?Sized>(
+            &self,
+            _population: &'pop P,
+            _rng: &mut R,
+        ) -> Result<&'pop P::Individual, TestError> {
+            Err(TestError)
+        }
+    }
+
+    #[test]
+    fn inner_errors_are_boxed_and_downcastable() {
+        let selector: Box<dyn DynSelector<[i32; 4]>> = Box::new(FailSelector);
+        let error = selector.select(&POPULATION, &mut rng()).unwrap_err();
+        assert_eq!(error.downcast_ref::<TestError>(), Some(&TestError));
+    }
+
+    #[test]
+    fn arc_forwards_errors() {
+        let selector: Arc<dyn DynSelector<[i32; 4]>> = Arc::new(FailSelector);
+        let error = selector.select(&POPULATION, &mut rng()).unwrap_err();
+        assert_eq!(error.downcast_ref::<TestError>(), Some(&TestError));
+    }
+
+    #[test]
+    fn rc_forwards_errors() {
+        let selector: Rc<dyn DynSelector<[i32; 4]>> = Rc::new(FailSelector);
+        let error = selector.select(&POPULATION, &mut rng()).unwrap_err();
+        assert_eq!(error.downcast_ref::<TestError>(), Some(&TestError));
+    }
+
+    #[test]
+    fn dyn_select_forwards_errors() {
+        let erased: &dyn DynSelector<[i32; 4], TestError> = &FailSelector;
+
+        let result = erased.dyn_select(&POPULATION, &mut rng());
+
+        assert!(matches!(result, Err(TestError)));
+    }
+
+    #[test]
+    fn shared_reference_forwards_errors() {
+        let inner = FailSelector;
+        let erased: &dyn DynSelector<[i32; 4], TestError> = &inner;
+
+        let result = erased.select(&POPULATION, &mut rng());
+
+        assert!(matches!(result, Err(TestError)));
+    }
+}
