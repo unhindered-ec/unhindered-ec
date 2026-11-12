@@ -113,3 +113,28 @@ where
         self.0.sample(rng).clone()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use rand::{distr::Distribution, rng};
+
+    use super::ChooseCloning;
+    use crate::distributions::finite::Finite;
+
+    #[test]
+    fn sample_space_size_matches_the_slice() {
+        let collection = [vec![0], vec![1], vec![2]];
+        let distribution = ChooseCloning::new(&collection).unwrap();
+        assert_eq!(distribution.sample_space_size().get(), 3);
+    }
+
+    #[test]
+    fn sample_clones_an_element_of_the_slice() {
+        let collection = [vec![0], vec![1], vec![2]];
+        let distribution = ChooseCloning::new(&collection).unwrap();
+        // `distribution` only borrows `collection`, so the owned `sample` must
+        // be a clone of an element rather than a move out of the slice.
+        let sample: Vec<i32> = distribution.sample(&mut rng());
+        assert!(collection.contains(&sample));
+    }
+}

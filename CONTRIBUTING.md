@@ -21,3 +21,12 @@ The following steps are usually required:
 
 ## Publishing v1.0.0
 Once we publish any of this to crates.io we need to replace some placeholder links with actual URLs to docs.rs. These placeholders are not yet valid because the packages don't exist in the registry. To find them, search for `]: #` in the code.
+
+# Tests
+We enable the `unwrap_used` and `expect_used` lints workspace-wide (see `Cargo.toml`), which would normally forbid `.unwrap()` and `.expect()`. We deliberately relax them inside tests via the `allow-unwrap-in-tests`, `allow-expect-in-tests`, and `allow-panic-in-tests` options in `clippy.toml`.
+
+As such, prefer `.unwrap()`/`.expect()` in `#[test]` functions over returning a `Result` and using `?`. This keeps tests consistent across the code base, and means a failure points at the exact call that failed: a propagated `?` instead reports the error at the end of the test and doesn't identify which of several fallible calls went wrong.
+
+We still use assertions such as `assert!(result.is_err())` or `matches!(result, Err(..))` when the failure is itself the behaviour under test; the guidance above is only about errors that are part of a test's setup.
+
+Error messages are user-facing prose, so avoid asserting their exact wording (including capitalization or substrings) in tests; cosmetic rewording shouldn't break a test. Prefer structural checks instead — e.g. that a wrapper forwards the wrapped error's message, or that two variants produce distinguishable messages. More generally, only assert `Display` output that is part of a type's contract (such as a `Bitstring` rendering as `"10110"`), not incidental formatting.

@@ -375,3 +375,56 @@ where
         ChooseCloning::new(self)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use proptest::{collection::vec, prelude::*};
+    use rand::distr::Distribution;
+    use test_strategy::proptest;
+
+    use super::{IntoDistribution, ToDistribution};
+
+    #[test]
+    fn empty_collections_return_an_error() {
+        let empty_vec: Vec<i32> = Vec::new();
+        let empty_array: [i32; 0] = [];
+        let empty_slice: &[i32] = &[];
+        let empty_ref_array: &[i32; 0] = &[];
+
+        // Reference-returning implementations.
+        assert!(IntoDistribution::<&i32>::into_distribution(&empty_vec).is_err());
+        assert!(IntoDistribution::<&i32>::into_distribution(empty_slice).is_err());
+        assert!(IntoDistribution::<&i32>::into_distribution(empty_ref_array).is_err());
+
+        // Cloning implementations.
+        assert!(IntoDistribution::<i32>::into_distribution(&empty_vec).is_err());
+        assert!(IntoDistribution::<i32>::into_distribution(empty_slice).is_err());
+        assert!(IntoDistribution::<i32>::into_distribution(empty_ref_array).is_err());
+
+        // Owning implementations.
+        assert!(empty_vec.into_distribution().is_err());
+        assert!(empty_array.into_distribution().is_err());
+    }
+
+    #[test]
+    fn to_distribution_succeeds_for_non_empty_and_errors_for_empty_collections() {
+        let my_vec = vec![0, 1, 2];
+        assert!(ToDistribution::<i32>::to_distribution(&my_vec).is_ok());
+
+        let empty_vec: Vec<i32> = Vec::new();
+        assert!(ToDistribution::<i32>::to_distribution(&empty_vec).is_err());
+    }
+
+    #[proptest]
+    fn sampling_returns_a_member_of_the_collection(
+        #[strategy(vec(any::<i32>(), 1..=8))] members: Vec<i32>,
+    ) {
+        let owning = members.clone().into_distribution().unwrap();
+        let sampled_owning = owning.sample(&mut rand::rng());
+        assert!(members.contains(&sampled_owning));
+
+        let borrowed = IntoDistribution::<&i32>::into_distribution(&members).unwrap();
+        let sampled_borrowed = borrowed.sample(&mut rand::rng());
+        assert!(members.contains(sampled_borrowed));
+    }
+}

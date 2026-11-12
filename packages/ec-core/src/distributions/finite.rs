@@ -78,3 +78,35 @@ where
         (**self).sample_space_size()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use std::num::NonZeroUsize;
+
+    use rand::distr::slice::Choose;
+
+    use super::Finite;
+
+    #[test]
+    fn choose_sample_space_size_is_the_number_of_choices() {
+        let choose = Choose::new(&[1, 2, 3]).unwrap();
+        assert_eq!(choose.sample_space_size(), NonZeroUsize::new(3).unwrap());
+    }
+
+    #[test]
+    fn references_report_the_underlying_sample_space_size() {
+        let choose = Choose::new(&[1, 2, 3, 4]).unwrap();
+        let shared = &choose;
+        assert_eq!(
+            Finite::sample_space_size(&shared),
+            NonZeroUsize::new(4).unwrap()
+        );
+
+        let mut choose = Choose::new(&[1, 2]).unwrap();
+        let exclusive = &mut choose;
+        assert_eq!(
+            Finite::sample_space_size(&exclusive),
+            NonZeroUsize::new(2).unwrap()
+        );
+    }
+}
