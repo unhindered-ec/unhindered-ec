@@ -205,6 +205,29 @@ mod tests {
     use super::DynWeighted;
     use crate::operator::selector::{Selector, best::Best, worst::Worst};
 
+    #[test]
+    fn debug_distinguishes_different_weights() {
+        let weighted = DynWeighted::<Vec<i32>>::new(Best, 1).with_selector(Worst, 3);
+        let other_weights = DynWeighted::<Vec<i32>>::new(Best, 1).with_selector(Worst, 4);
+        assert_ne!(format!("{weighted:?}"), format!("{other_weights:?}"));
+    }
+
+    #[test]
+    fn debug_distinguishes_different_selector_counts() {
+        let one_selector = DynWeighted::<Vec<i32>>::new(Best, 1);
+        let two_selectors = DynWeighted::<Vec<i32>>::new(Best, 1).with_selector(Worst, 3);
+        assert_ne!(format!("{one_selector:?}"), format!("{two_selectors:?}"));
+    }
+
+    #[test]
+    fn from_iter_collects_selectors_with_their_weights() {
+        let weighted = vec![(Best, 1), (Best, 2)]
+            .into_iter()
+            .collect::<DynWeighted<Vec<i32>>>();
+        let expected = DynWeighted::<Vec<i32>>::new(Best, 1).with_selector(Best, 2);
+        assert_eq!(format!("{weighted:?}"), format!("{expected:?}"));
+    }
+
     #[proptest]
     fn best_or_worst(#[map(|v: [i32;10]| v.into())] pop: Vec<i32>) {
         let mut rng = rand::rng();

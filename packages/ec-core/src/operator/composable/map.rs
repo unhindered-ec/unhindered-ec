@@ -196,3 +196,80 @@ where
             .collect()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use rand::Rng;
+
+    use super::{Map, MapError};
+    use crate::operator::{Composable, Operator};
+
+    #[derive(Debug, PartialEq, Eq)]
+    struct MyError;
+
+    /// An operator that fails whenever its input equals the value it was
+    /// constructed with, and otherwise returns the input unchanged.
+    struct FailOn(i32);
+
+    impl Composable for FailOn {}
+
+    impl Operator<i32> for FailOn {
+        type Output = i32;
+        type Error = MyError;
+
+        fn apply<R: Rng + ?Sized>(&self, input: i32, _rng: &mut R) -> Result<i32, MyError> {
+            if input == self.0 {
+                Err(MyError)
+            } else {
+                Ok(input)
+            }
+        }
+    }
+
+    #[test]
+    fn vector_reports_the_failing_index() {
+        let result = Map::new(FailOn(2)).apply(vec![0, 1, 2, 3], &mut rand::rng());
+        assert!(matches!(result, Err(MapError(MyError, 2))));
+    }
+
+    #[test]
+    fn array_reports_the_failing_index() {
+        let result = Map::new(FailOn(1)).apply([0, 1, 2], &mut rand::rng());
+        assert!(matches!(result, Err(MapError(MyError, 1))));
+    }
+
+    #[test]
+    fn tuple_reports_the_first_index() {
+        let result = Map::new(FailOn(0)).apply((0, 5), &mut rand::rng());
+        assert!(matches!(result, Err(MapError(MyError, 0))));
+    }
+
+    #[test]
+    fn tuple_reports_the_second_index() {
+        let result = Map::new(FailOn(5)).apply((0, 5), &mut rand::rng());
+        assert!(matches!(result, Err(MapError(MyError, 1))));
+    }
+
+    #[test]
+    fn empty_containers_map_to_empty_outputs() {
+        let empty_vec = Map::new(FailOn(0)).apply(Vec::<i32>::new(), &mut rand::rng());
+        assert_eq!(empty_vec.unwrap(), Vec::<i32>::new());
+
+        let empty_array = Map::new(FailOn(0)).apply([0i32; 0], &mut rand::rng());
+        assert_eq!(empty_array.unwrap(), [0i32; 0]);
+    }
+
+    #[test]
+    fn successful_map_preserves_each_value() {
+        let result = Map::new(FailOn(99)).apply(vec![1, 2, 3], &mut rand::rng());
+        assert_eq!(result.unwrap(), vec![1, 2, 3]);
+    }
+
+    #[test]
+    fn error_display_reflects_the_index() {
+        assert_ne!(
+            MapError(MyError, 7).to_string(),
+            MapError(MyError, 8).to_string()
+        );
+    }
+}

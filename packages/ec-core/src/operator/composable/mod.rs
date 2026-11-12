@@ -27,7 +27,7 @@ pub use then::*;
 ///      instances of `false`, returning another array of 5 instances of
 ///      `false`.
 ///    - `.then_map(Constant::new(10))` converts each of those `false` values
-///      into `5`, yielding an array of 5 instance of the value 5.
+///      into `10`, yielding an array of 5 instances of the value 10.
 ///
 /// These operations are all implemented in terms of the composable trait.
 ///
@@ -300,4 +300,83 @@ pub trait Wrappable<T> {
     ///
     /// [`Operator`]: super::Operator
     fn construct(wrapped: T, context: Self::Context) -> Self;
+}
+
+#[cfg(test)]
+#[expect(
+    clippy::arithmetic_side_effects,
+    reason = "The tradeoff safety <> ease of writing arguably lies on the ease of writing side \
+              for test code."
+)]
+mod test_operators {
+    use std::convert::Infallible;
+
+    use rand::Rng;
+
+    use super::{super::Operator, Composable};
+
+    #[derive(Composable)]
+    pub(super) struct Increment;
+
+    impl Operator<i32> for Increment {
+        type Output = i32;
+        type Error = Infallible;
+
+        fn apply<R: Rng + ?Sized>(
+            &self,
+            input: i32,
+            _: &mut R,
+        ) -> Result<Self::Output, Self::Error> {
+            Ok(input + 1)
+        }
+    }
+
+    #[derive(Composable)]
+    pub(super) struct Double;
+
+    impl Operator<i32> for Double {
+        type Output = i32;
+        type Error = Infallible;
+
+        fn apply<R: Rng + ?Sized>(
+            &self,
+            input: i32,
+            _: &mut R,
+        ) -> Result<Self::Output, Self::Error> {
+            Ok(input * 2)
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{Composable, test_operators::Double};
+    use crate::operator::{Operator, constant::Constant};
+
+    #[test]
+    fn then_map_maps_over_each_element() {
+        let operator = Constant::new(5).apply_twice().map(Double);
+
+        let result = operator.apply((), &mut rand::rng()).unwrap();
+
+        assert_eq!(result, [10, 10]);
+    }
+
+    #[test]
+    fn and_pairs_the_outputs_of_two_operators() {
+        let operator = Constant::new(5).and(Constant::new(6));
+
+        let result = operator.apply((), &mut rand::rng()).unwrap();
+
+        assert_eq!(result, (5, 6));
+    }
+
+    #[test]
+    fn apply_twice_and_apply_n_times_repeat_the_output() {
+        let twice = Constant::new(5).apply_twice();
+        assert_eq!(twice.apply((), &mut rand::rng()).unwrap(), [5, 5]);
+
+        let thrice = Constant::new(7).apply_n_times::<3>();
+        assert_eq!(thrice.apply((), &mut rand::rng()).unwrap(), [7, 7, 7]);
+    }
 }

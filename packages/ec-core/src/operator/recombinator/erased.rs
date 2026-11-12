@@ -133,3 +133,145 @@ impl<GS, O, E> Recombinator<GS> for &dyn DynRecombinator<GS, E, Output = O> {
         (**self).dyn_recombine(genomes, &mut rng)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use std::{rc::Rc, sync::Arc};
+
+    use rand::{Rng, rng};
+
+    use super::DynRecombinator;
+    use crate::operator::recombinator::Recombinator;
+
+    type Parents = (Vec<i32>, Vec<i32>);
+    type Erased = dyn DynRecombinator<Parents, LengthMismatch, Output = Vec<i32>>;
+
+    #[derive(Debug, thiserror::Error)]
+    #[error("the second parent must have the same length as the first")]
+    struct LengthMismatch;
+
+    /// Deterministically zips the parents, taking the first element from the
+    /// first parent and the second from the second parent, so the output
+    /// depends on both parents and differs from either of them.
+    ///
+    /// Rejects a second parent whose length differs from the first, giving us a
+    /// fallible case to exercise the erased error path.
+    struct Zipper;
+
+    impl Recombinator<Parents> for Zipper {
+        type Output = Vec<i32>;
+        type Error = LengthMismatch;
+
+        fn recombine<R: Rng + ?Sized>(
+            &self,
+            (first, second): Parents,
+            _rng: &mut R,
+        ) -> Result<Self::Output, Self::Error> {
+            if first.len() != second.len() {
+                return Err(LengthMismatch);
+            }
+            Ok(first
+                .into_iter()
+                .zip(second)
+                .enumerate()
+                .map(|(i, (a, b))| if i % 2 == 0 { a } else { b })
+                .collect())
+        }
+    }
+
+    fn parents() -> Parents {
+        (vec![1, 2, 3, 4], vec![5, 6, 7, 8])
+    }
+
+    #[test]
+    fn dyn_recombine_forwards_to_the_inner_recombinator() {
+        let erased: &Erased = &Zipper;
+        assert_eq!(
+            erased.dyn_recombine(parents(), &mut rng()).unwrap(),
+            vec![1, 6, 3, 8]
+        );
+    }
+
+    #[test]
+    fn box_forwards_recombine_to_the_inner_recombinator() {
+        let recombinator: Box<Erased> = Box::new(Zipper);
+        assert_eq!(
+            recombinator.recombine(parents(), &mut rng()).unwrap(),
+            vec![1, 6, 3, 8]
+        );
+    }
+
+    #[test]
+    fn arc_forwards_recombine_to_the_inner_recombinator() {
+        let recombinator: Arc<Erased> = Arc::new(Zipper);
+        assert_eq!(
+            recombinator.recombine(parents(), &mut rng()).unwrap(),
+            vec![1, 6, 3, 8]
+        );
+    }
+
+    #[test]
+    fn rc_forwards_recombine_to_the_inner_recombinator() {
+        let recombinator: Rc<Erased> = Rc::new(Zipper);
+        assert_eq!(
+            recombinator.recombine(parents(), &mut rng()).unwrap(),
+            vec![1, 6, 3, 8]
+        );
+    }
+
+    #[test]
+    fn shared_reference_forwards_recombine_to_the_inner_recombinator() {
+        let inner = Zipper;
+        let erased: &Erased = &inner;
+        assert_eq!(
+            erased.recombine(parents(), &mut rng()).unwrap(),
+            vec![1, 6, 3, 8]
+        );
+    }
+
+    #[test]
+    fn dyn_recombine_forwards_errors() {
+        let erased: &Erased = &Zipper;
+
+        let result = erased.dyn_recombine((vec![1, 2, 3], vec![4, 5]), &mut rng());
+
+        assert!(matches!(result, Err(LengthMismatch)));
+    }
+
+    #[test]
+    fn box_forwards_recombine_errors() {
+        let recombinator: Box<Erased> = Box::new(Zipper);
+
+        let result = recombinator.recombine((vec![1, 2, 3], vec![4, 5]), &mut rng());
+
+        assert!(matches!(result, Err(LengthMismatch)));
+    }
+
+    #[test]
+    fn arc_forwards_recombine_errors() {
+        let recombinator: Arc<Erased> = Arc::new(Zipper);
+
+        let result = recombinator.recombine((vec![1, 2, 3], vec![4, 5]), &mut rng());
+
+        assert!(matches!(result, Err(LengthMismatch)));
+    }
+
+    #[test]
+    fn rc_forwards_recombine_errors() {
+        let recombinator: Rc<Erased> = Rc::new(Zipper);
+
+        let result = recombinator.recombine((vec![1, 2, 3], vec![4, 5]), &mut rng());
+
+        assert!(matches!(result, Err(LengthMismatch)));
+    }
+
+    #[test]
+    fn shared_reference_forwards_recombine_errors() {
+        let inner = Zipper;
+        let erased: &Erased = &inner;
+
+        let result = erased.recombine((vec![1, 2, 3], vec![4, 5]), &mut rng());
+
+        assert!(matches!(result, Err(LengthMismatch)));
+    }
+}

@@ -150,3 +150,82 @@ where
         Ok((f_value, g_value))
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use std::error::Error;
+
+    use rand::Rng;
+
+    use super::{And, AndError};
+    use crate::operator::{Composable, Operator, constant::Constant};
+
+    #[derive(Debug, PartialEq, Eq)]
+    struct MyError;
+
+    impl std::fmt::Display for MyError {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            f.write_str("my error")
+        }
+    }
+
+    impl Error for MyError {}
+
+    /// An operator that always fails.
+    struct FailAlways;
+
+    impl Composable for FailAlways {}
+
+    impl Operator<()> for FailAlways {
+        type Output = i32;
+        type Error = MyError;
+
+        fn apply<R: Rng + ?Sized>(&self, _input: (), _rng: &mut R) -> Result<i32, MyError> {
+            Err(MyError)
+        }
+    }
+
+    #[test]
+    fn both_succeed() {
+        let result = And::new(Constant::new(1), Constant::new(2)).apply((), &mut rand::rng());
+        assert_eq!(result.unwrap(), (1, 2));
+    }
+
+    #[test]
+    fn first_failure_maps_to_first() {
+        let result = And::new(FailAlways, Constant::new(2)).apply((), &mut rand::rng());
+        assert!(matches!(result, Err(AndError::First(MyError))));
+    }
+
+    #[test]
+    fn second_failure_maps_to_second() {
+        let result = And::new(Constant::new(1), FailAlways).apply((), &mut rand::rng());
+        assert!(matches!(result, Err(AndError::Second(MyError))));
+    }
+
+    #[test]
+    fn error_source_is_the_inner_error() {
+        let first: AndError<MyError, std::convert::Infallible> = AndError::First(MyError);
+        assert_eq!(
+            first
+                .source()
+                .and_then(|inner| inner.downcast_ref::<MyError>()),
+            Some(&MyError)
+        );
+
+        let second: AndError<std::convert::Infallible, MyError> = AndError::Second(MyError);
+        assert_eq!(
+            second
+                .source()
+                .and_then(|inner| inner.downcast_ref::<MyError>()),
+            Some(&MyError)
+        );
+    }
+
+    #[test]
+    fn display_distinguishes_the_failing_operator() {
+        let first: AndError<MyError, std::convert::Infallible> = AndError::First(MyError);
+        let second: AndError<std::convert::Infallible, MyError> = AndError::Second(MyError);
+        assert_ne!(first.to_string(), second.to_string());
+    }
+}
