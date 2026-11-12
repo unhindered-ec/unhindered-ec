@@ -3,7 +3,7 @@ use quote::{ToTokens, quote};
 use syn::{LitStr, Token};
 
 #[derive(Debug, Clone)]
-pub(crate) enum Import {
+pub enum Import {
     Path(Option<Token![::]>, syn::UseTree),
     SuperRelativePath(syn::UseTree),
 }
@@ -17,20 +17,18 @@ impl From<syn::UseTree> for Import {
 impl ToTokens for Import {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         match self {
-            Import::Path(leading_colon, path) => {
+            Self::Path(leading_colon, path) => {
                 let import_statement = format!(
                     "# use {leading_colon}{path};",
                     path = path.to_token_stream().to_string().replace('\n', ""),
-                    leading_colon = leading_colon
-                        .map(|lc| lc.into_token_stream())
-                        .unwrap_or_default()
+                    leading_colon = leading_colon.map_or_default(ToTokens::into_token_stream)
                 );
                 let import_lit = syn::LitStr::new(&import_statement, Span::mixed_site());
                 tokens.extend(quote! {
                     #[doc = #import_lit]
                 });
             }
-            Import::SuperRelativePath(path) => {
+            Self::SuperRelativePath(path) => {
                 let import_statement = format!(
                     "::{path};",
                     path = path.to_token_stream().to_string().replace('\n', "")
@@ -44,11 +42,11 @@ impl ToTokens for Import {
     }
 }
 
-pub(crate) fn doctest<'a, 'b>(
+pub fn doctest<'a, 'b>(
     imports: Option<impl IntoIterator<Item = &'a Import>>,
-    intro: Option<impl ToString>,
-    tokens: impl ToString,
-    outro: Option<impl ToString>,
+    intro: Option<&str>,
+    tokens: &str,
+    outro: Option<&str>,
     attribute: Option<&'b str>,
 ) -> TokenStream {
     let mut token_stream = TokenStream::new();
@@ -68,12 +66,12 @@ pub(crate) fn doctest<'a, 'b>(
     }
 
     if let Some(intro) = intro {
-        create_doc_attrs_from_string(intro.to_string(), &mut token_stream, false);
+        let _ = create_doc_attrs_from_string(intro, &mut token_stream, false);
     }
-    create_doc_attrs_from_string(tokens.to_string(), &mut token_stream, true);
+    let _ = create_doc_attrs_from_string(tokens, &mut token_stream, true);
 
     if let Some(outro) = outro {
-        create_doc_attrs_from_string(outro.to_string(), &mut token_stream, false);
+        let _ = create_doc_attrs_from_string(outro, &mut token_stream, false);
     }
     token_stream.extend(quote! {
         /// ```
@@ -82,10 +80,14 @@ pub(crate) fn doctest<'a, 'b>(
     token_stream
 }
 
-fn create_doc_attrs_from_string(input: String, tokens: &mut TokenStream, do_format: bool) {
+fn create_doc_attrs_from_string(
+    input: &str,
+    tokens: &mut TokenStream,
+    do_format: bool,
+) -> Result<(), syn::Error> {
     let line_iter = if do_format {
         let input_block = format!("fn main() {{ {input}  }}");
-        let file_contents = vec![syn::Item::Fn(syn::parse_str(&input_block).unwrap())];
+        let file_contents = vec![syn::Item::Fn(syn::parse_str(&input_block)?)];
         let formatted = prettyplease::unparse(&syn::File {
             frontmatter: None,
             shebang: None,
@@ -97,9 +99,9 @@ fn create_doc_attrs_from_string(input: String, tokens: &mut TokenStream, do_form
             .skip(1)
             .map(|l| format!(" {line}", line = l.get(4..).unwrap_or_default()))
             .collect();
-        if !without_lines.is_empty() {
-            without_lines.swap_remove(without_lines.len() - 1);
-        }
+
+        // remove the last item, if any
+        without_lines.pop();
 
         without_lines
     } else {
@@ -112,6 +114,7 @@ fn create_doc_attrs_from_string(input: String, tokens: &mut TokenStream, do_form
         let line_lit = LitStr::new(&line, Span::mixed_site());
         tokens.extend(quote! {
             #[doc = #line_lit]
-        })
+        });
     }
+    Ok(())
 }

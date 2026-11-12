@@ -80,13 +80,13 @@ impl ToTokens for StackFieldOption {
 impl Parse for StackFieldOption {
     fn parse(input: ParseStream) -> syn::Result<Self> {
         Ok(if input.peek(exec) {
-            StackFieldOption::Exec(input.parse()?)
+            Self::Exec(input.parse()?)
         } else if input.peek(ignore_doctests) {
-            StackFieldOption::IgnoreDoctests(input.parse()?)
+            Self::IgnoreDoctests(input.parse()?)
         } else if input.peek(builder_name) {
-            StackFieldOption::BuilderName(input.parse()?, input.parse()?, input.parse()?)
+            Self::BuilderName(input.parse()?, input.parse()?, input.parse()?)
         } else if input.peek(instruction_name) {
-            StackFieldOption::InstructionName(input.parse()?, input.parse()?, input.parse()?)
+            Self::InstructionName(input.parse()?, input.parse()?, input.parse()?)
         } else if input.peek(sample_values) {
             let kw = input.parse()?;
             let eq_sign = input.parse()?;
@@ -94,7 +94,7 @@ impl Parse for StackFieldOption {
             let bracket_token = bracketed!(stream in input);
             let exprs = Punctuated::<Expr, Token![,]>::parse_terminated(&stream)?;
 
-            StackFieldOption::SampleValues(kw, eq_sign, bracket_token, exprs)
+            Self::SampleValues(kw, eq_sign, bracket_token, exprs)
         } else {
             return Err(input.error("Expected flag"));
         })
