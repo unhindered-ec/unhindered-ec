@@ -9,8 +9,7 @@ use strum_macros::EnumIter;
 
 use self::{abs::Abs, negate::Negate};
 use super::{
-    PushInstruction, PushInstructionError,
-    common::{Dup, Flush, IsEmpty, Pop, PushValue, StackDepth, Swap},
+    PushInstruction, PushInstructionError, TypedInstruction,
     printing::{Print, PrintLn},
 };
 use crate::{
@@ -22,19 +21,14 @@ use crate::{
     },
 };
 
+/// The instructions for the integer stack.
+pub type IntInstruction = TypedInstruction<i64, IntOp>;
+
+/// The integer-specific instructions in [`IntInstruction`].
 #[derive(Debug, strum_macros::Display, Copy, Clone, PartialEq, Eq, EnumIter)]
 #[non_exhaustive]
 #[must_use]
-pub enum IntInstruction {
-    // "Common" instructions specialized for the integer stack
-    Pop(Pop<i64>),
-    #[strum(to_string = "{0}")]
-    Push(PushValue<i64>),
-    Dup(Dup<i64>),
-    Swap(Swap<i64>),
-    IsEmpty(IsEmpty<i64>),
-    StackDepth(StackDepth<i64>),
-    Flush(Flush<i64>),
+pub enum IntOp {
     Print(Print<i64>),
     PrintLn(PrintLn<i64>),
 
@@ -73,161 +67,98 @@ pub enum IntInstruction {
 }
 
 impl IntInstruction {
-    pub const fn pop() -> Self {
-        Self::Pop(Pop::<i64>::new())
-    }
-    pub const fn push(value: i64) -> Self {
-        Self::Push(PushValue::<i64>::new(value))
-    }
-    pub const fn dup() -> Self {
-        Self::Dup(Dup::<i64>::new())
-    }
-    pub const fn swap() -> Self {
-        Self::Swap(Swap::<i64>::new())
-    }
-    pub const fn is_empty() -> Self {
-        Self::IsEmpty(IsEmpty::<i64>::new())
-    }
-    pub const fn stack_depth() -> Self {
-        Self::StackDepth(StackDepth::<i64>::new())
-    }
-    pub const fn flush() -> Self {
-        Self::Flush(Flush::<i64>::new())
-    }
     pub const fn print() -> Self {
-        Self::Print(Print::<i64>::new())
+        Self::Op(IntOp::Print(Print::new()))
     }
     pub const fn print_ln() -> Self {
-        Self::PrintLn(PrintLn::<i64>::new())
+        Self::Op(IntOp::PrintLn(PrintLn::new()))
     }
     pub const fn negate() -> Self {
-        Self::Negate(Negate::new())
+        Self::Op(IntOp::Negate(Negate::new()))
     }
     pub const fn abs() -> Self {
-        Self::Abs(Abs::new())
+        Self::Op(IntOp::Abs(Abs::new()))
     }
     pub const fn min() -> Self {
-        Self::Min
+        Self::Op(IntOp::Min)
     }
     pub const fn max() -> Self {
-        Self::Max
+        Self::Op(IntOp::Max)
     }
     pub const fn clamp() -> Self {
-        Self::Clamp(Clamp::new())
+        Self::Op(IntOp::Clamp(Clamp::new()))
     }
     pub const fn inc() -> Self {
-        Self::Inc
+        Self::Op(IntOp::Inc)
     }
     pub const fn dec() -> Self {
-        Self::Dec
+        Self::Op(IntOp::Dec)
     }
     pub const fn add() -> Self {
-        Self::Add
+        Self::Op(IntOp::Add)
     }
     pub const fn subtract() -> Self {
-        Self::Subtract
+        Self::Op(IntOp::Subtract)
     }
     pub const fn multiply() -> Self {
-        Self::Multiply
+        Self::Op(IntOp::Multiply)
     }
     pub const fn protected_divide() -> Self {
-        Self::ProtectedDivide
+        Self::Op(IntOp::ProtectedDivide)
     }
     pub const fn r#mod() -> Self {
-        Self::Mod
+        Self::Op(IntOp::Mod)
     }
     pub const fn power() -> Self {
-        Self::Power
+        Self::Op(IntOp::Power)
     }
     pub const fn square() -> Self {
-        Self::Square
+        Self::Op(IntOp::Square)
     }
     pub const fn is_zero() -> Self {
-        Self::IsZero
+        Self::Op(IntOp::IsZero)
     }
     pub const fn is_positive() -> Self {
-        Self::IsPositive
+        Self::Op(IntOp::IsPositive)
     }
     pub const fn is_negative() -> Self {
-        Self::IsNegative
+        Self::Op(IntOp::IsNegative)
     }
     pub const fn is_even() -> Self {
-        Self::IsEven
+        Self::Op(IntOp::IsEven)
     }
     pub const fn is_odd() -> Self {
-        Self::IsOdd
+        Self::Op(IntOp::IsOdd)
     }
     pub const fn equal() -> Self {
-        Self::Equal
+        Self::Op(IntOp::Equal)
     }
     pub const fn not_equal() -> Self {
-        Self::NotEqual
+        Self::Op(IntOp::NotEqual)
     }
     pub const fn less_than() -> Self {
-        Self::LessThan
+        Self::Op(IntOp::LessThan)
     }
     pub const fn less_than_equal() -> Self {
-        Self::LessThanEqual
+        Self::Op(IntOp::LessThanEqual)
     }
     pub const fn greater_than() -> Self {
-        Self::GreaterThan
+        Self::Op(IntOp::GreaterThan)
     }
     pub const fn greater_than_equal() -> Self {
-        Self::GreaterThanEqual
+        Self::Op(IntOp::GreaterThanEqual)
     }
     pub const fn from_boolean() -> Self {
-        Self::FromBoolean
+        Self::Op(IntOp::FromBoolean)
     }
     pub const fn from_float_approx() -> Self {
-        Self::FromFloatApprox
+        Self::Op(IntOp::FromFloatApprox)
     }
 }
 
 impl From<IntInstruction> for PushInstruction {
     fn from(instr: IntInstruction) -> Self {
         Self::IntInstruction(instr)
-    }
-}
-
-impl From<Pop<i64>> for IntInstruction {
-    fn from(pop: Pop<i64>) -> Self {
-        Self::Pop(pop)
-    }
-}
-
-impl From<PushValue<i64>> for IntInstruction {
-    fn from(push: PushValue<i64>) -> Self {
-        Self::Push(push)
-    }
-}
-
-impl From<Dup<i64>> for IntInstruction {
-    fn from(dup: Dup<i64>) -> Self {
-        Self::Dup(dup)
-    }
-}
-
-impl From<Swap<i64>> for IntInstruction {
-    fn from(swap: Swap<i64>) -> Self {
-        Self::Swap(swap)
-    }
-}
-
-impl From<IsEmpty<i64>> for IntInstruction {
-    fn from(is_empty: IsEmpty<i64>) -> Self {
-        Self::IsEmpty(is_empty)
-    }
-}
-
-impl From<StackDepth<i64>> for IntInstruction {
-    fn from(stack_depth: StackDepth<i64>) -> Self {
-        Self::StackDepth(stack_depth)
-    }
-}
-
-impl From<Flush<i64>> for IntInstruction {
-    fn from(flush: Flush<i64>) -> Self {
-        Self::Flush(flush)
     }
 }
 
@@ -247,9 +178,9 @@ pub enum IntInstructionError {
     },
 }
 
-impl Instruction for IntInstruction {}
+impl Instruction for IntOp {}
 
-impl<S> Perform<S> for IntInstruction
+impl<S> Perform<S> for IntOp
 where
     S: Clone + HasStack<i64> + HasStack<bool> + HasStack<OrderedFloat<f64>> + HasStdout,
 {
@@ -261,13 +192,6 @@ where
     )]
     fn perform(&self, mut state: S) -> InstructionResult<S, Self::Error> {
         match self {
-            Self::Pop(pop) => pop.perform(state).map_err_into(),
-            Self::Push(push) => push.perform(state).map_err_into(),
-            Self::Dup(dup) => dup.perform(state).map_err_into(),
-            Self::Swap(swap) => swap.perform(state).map_err_into(),
-            Self::IsEmpty(is_empty) => is_empty.perform(state).map_err_into(),
-            Self::StackDepth(stack_depth) => stack_depth.perform(state).map_err_into(),
-            Self::Flush(flush) => flush.perform(state).map_err_into(),
             Self::Print(print) => print.perform(state).map_err_into(),
             Self::PrintLn(println) => println.perform(state).map_err_into(),
 
@@ -300,8 +224,10 @@ where
                         .map_err(PushInstructionError::from)
                         .map(|&i| i.checked_add(1))
                         .and_then(|v| {
-                            v.ok_or(IntInstructionError::Overflow { op: *self })
-                                .map_err(Into::into)
+                            v.ok_or(IntInstructionError::Overflow {
+                                op: IntInstruction::Op(*self),
+                            })
+                            .map_err(Into::into)
                         })
                         .replace_on(1, state),
 
@@ -310,8 +236,10 @@ where
                         .map_err(PushInstructionError::from)
                         .map(|&i| i.checked_sub(1))
                         .and_then(|v| {
-                            v.ok_or(IntInstructionError::Overflow { op: *self })
-                                .map_err(Into::into)
+                            v.ok_or(IntInstructionError::Overflow {
+                                op: IntInstruction::Op(*self),
+                            })
+                            .map_err(Into::into)
                         })
                         .replace_on(1, state),
 
@@ -320,8 +248,10 @@ where
                         .map_err(PushInstructionError::from)
                         .map(|&x| x.checked_mul(x))
                         .and_then(|v| {
-                            v.ok_or(IntInstructionError::Overflow { op: *self })
-                                .map_err(Into::into)
+                            v.ok_or(IntInstructionError::Overflow {
+                                op: IntInstruction::Op(*self),
+                            })
+                            .map_err(Into::into)
                         })
                         .replace_on(1, state),
 
@@ -330,8 +260,10 @@ where
                         .map_err(PushInstructionError::from)
                         .map(|(&x, &y)| x.checked_add(y))
                         .and_then(|v| {
-                            v.ok_or(IntInstructionError::Overflow { op: *self })
-                                .map_err(Into::into)
+                            v.ok_or(IntInstructionError::Overflow {
+                                op: IntInstruction::Op(*self),
+                            })
+                            .map_err(Into::into)
                         })
                         .replace_on(2, state),
 
@@ -340,8 +272,10 @@ where
                         .map_err(PushInstructionError::from)
                         .map(|(&x, &y)| x.checked_sub(y))
                         .and_then(|v| {
-                            v.ok_or(IntInstructionError::Overflow { op: *self })
-                                .map_err(Into::into)
+                            v.ok_or(IntInstructionError::Overflow {
+                                op: IntInstruction::Op(*self),
+                            })
+                            .map_err(Into::into)
                         })
                         .replace_on(2, state),
 
@@ -350,8 +284,10 @@ where
                         .map_err(PushInstructionError::from)
                         .map(|(x, y)| (*x).checked_mul(*y))
                         .and_then(|v| {
-                            v.ok_or(IntInstructionError::Overflow { op: *self })
-                                .map_err(Into::into)
+                            v.ok_or(IntInstructionError::Overflow {
+                                op: IntInstruction::Op(*self),
+                            })
+                            .map_err(Into::into)
                         })
                         .replace_on(2, state),
 
@@ -360,8 +296,10 @@ where
                         .map_err(PushInstructionError::from)
                         .map(|(&x, &y)| if y == 0 { Some(1) } else { x.checked_div(y) })
                         .and_then(|v| {
-                            v.ok_or(IntInstructionError::Overflow { op: *self })
-                                .map_err(Into::into)
+                            v.ok_or(IntInstructionError::Overflow {
+                                op: IntInstruction::Op(*self),
+                            })
+                            .map_err(Into::into)
                         })
                         .replace_on(2, state),
 
@@ -370,8 +308,10 @@ where
                         .map_err(PushInstructionError::from)
                         .map(|(&x, &y)| if y == 0 { Some(0) } else { x.checked_rem(y) })
                         .and_then(|v| {
-                            v.ok_or(IntInstructionError::Overflow { op: *self })
-                                .map_err(Into::into)
+                            v.ok_or(IntInstructionError::Overflow {
+                                op: IntInstruction::Op(*self),
+                            })
+                            .map_err(Into::into)
                         })
                         .replace_on(2, state),
 
@@ -383,8 +323,10 @@ where
                             x.checked_pow(y)
                         })
                         .and_then(|v| {
-                            v.ok_or(IntInstructionError::Overflow { op: *self })
-                                .map_err(Into::into)
+                            v.ok_or(IntInstructionError::Overflow {
+                                op: IntInstruction::Op(*self),
+                            })
+                            .map_err(Into::into)
                         })
                         .replace_on(2, state),
 
@@ -542,11 +484,52 @@ where
 
 #[cfg(test)]
 mod test {
-    use super::IntInstruction;
+    use strum::IntoEnumIterator;
+
+    use super::{IntInstruction, IntOp};
+
+    // The constructors are in the same order as the `IntOp` variants.
+    #[test]
+    fn constructors_wrap_int_ops() {
+        assert_eq!(
+            IntOp::iter().map(IntInstruction::Op).collect::<Vec<_>>(),
+            [
+                IntInstruction::print(),
+                IntInstruction::print_ln(),
+                IntInstruction::negate(),
+                IntInstruction::abs(),
+                IntInstruction::min(),
+                IntInstruction::max(),
+                IntInstruction::clamp(),
+                IntInstruction::inc(),
+                IntInstruction::dec(),
+                IntInstruction::add(),
+                IntInstruction::subtract(),
+                IntInstruction::multiply(),
+                IntInstruction::protected_divide(),
+                IntInstruction::r#mod(),
+                IntInstruction::power(),
+                IntInstruction::square(),
+                IntInstruction::is_zero(),
+                IntInstruction::is_positive(),
+                IntInstruction::is_negative(),
+                IntInstruction::is_even(),
+                IntInstruction::is_odd(),
+                IntInstruction::equal(),
+                IntInstruction::not_equal(),
+                IntInstruction::less_than(),
+                IntInstruction::less_than_equal(),
+                IntInstruction::greater_than(),
+                IntInstruction::greater_than_equal(),
+                IntInstruction::from_boolean(),
+                IntInstruction::from_float_approx(),
+            ]
+        );
+    }
 
     #[test]
     fn auto_display() {
-        assert_eq!(format!("{}", IntInstruction::IsZero), "IsZero");
+        assert_eq!(format!("{}", IntInstruction::is_zero()), "IsZero");
     }
 
     #[test]

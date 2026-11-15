@@ -6,7 +6,7 @@ pub use self::{
     bool::{BoolInstruction, BoolOp},
     exec::ExecInstruction,
     float::FloatInstruction,
-    int::{IntInstruction, IntInstructionError},
+    int::{IntInstruction, IntInstructionError, IntOp},
     typed::TypedInstruction,
 };
 use crate::{

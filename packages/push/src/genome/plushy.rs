@@ -182,8 +182,8 @@ where
 /// # use push::push_vm::program::PushProgram;
 /// // Build a Plushy genome from an array of instructions and close markers
 /// let plushy = Plushy::new(arr_into![<PushGene<PushInstruction>>
-///     IntInstruction::Add,
-///     IntInstruction::Multiply,
+///     IntInstruction::add(),
+///     IntInstruction::multiply(),
 ///     PushGene::Close,
 ///     IntInstruction::abs(),
 /// ]);
@@ -414,10 +414,10 @@ mod test {
     fn generator() {
         let mut rng = rng();
         let plushy: Plushy<_> = uniform_distribution_of![<PushInstruction>
-            IntInstruction::Add,
-            IntInstruction::Subtract,
-            IntInstruction::Multiply,
-            IntInstruction::ProtectedDivide,
+            IntInstruction::add(),
+            IntInstruction::subtract(),
+            IntInstruction::multiply(),
+            IntInstruction::protected_divide(),
         ]
         .into_gene_generator()
         .into_collection(10)
@@ -443,13 +443,13 @@ mod test {
     #[test]
     fn from_instructions() {
         let plushy = Plushy::from_iter(arr_into![<PushInstruction>
-            IntInstruction::Add,
+            IntInstruction::add(),
             BoolInstruction::and(),
         ]);
         assert_eq!(
             plushy,
             Plushy::new([
-                PushGene::from(IntInstruction::Add),
+                PushGene::from(IntInstruction::add()),
                 PushGene::from(BoolInstruction::and()),
             ])
         );
@@ -479,26 +479,26 @@ mod test {
 
         let parent = Plushy {
             genes: vec_into![<PushGene<_>>
-                IntInstruction::Add,
+                IntInstruction::add(),
                 BoolInstruction::and(),
                 BoolInstruction::or(),
-                IntInstruction::Multiply,
-                IntInstruction::Add,
+                IntInstruction::multiply(),
+                IntInstruction::add(),
                 BoolInstruction::and(),
                 BoolInstruction::or(),
-                IntInstruction::Multiply,
-                IntInstruction::Add,
+                IntInstruction::multiply(),
+                IntInstruction::add(),
                 BoolInstruction::and(),
                 BoolInstruction::or(),
-                IntInstruction::Multiply,
-                IntInstruction::Add,
+                IntInstruction::multiply(),
+                IntInstruction::add(),
                 BoolInstruction::and(),
                 BoolInstruction::or(),
-                IntInstruction::Multiply,
-                IntInstruction::Add,
+                IntInstruction::multiply(),
+                IntInstruction::add(),
                 BoolInstruction::and(),
                 BoolInstruction::or(),
-                IntInstruction::Multiply,
+                IntInstruction::multiply(),
             ],
         };
 

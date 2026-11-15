@@ -395,10 +395,10 @@ mod tests {
     #[test]
     fn print_multiple_values() {
         let program = Vec::<PushProgram<_>>::from(Plushy::from_iter(arr_into![<PushInstruction>
-            IntInstruction::Print(Print::<i64>::default()),
+            IntInstruction::print(),
             BoolInstruction::print(),
-            IntInstruction::PrintLn(PrintLn::<i64>::default()),
-            IntInstruction::Print(Print::<i64>::default()),
+            IntInstruction::print_ln(),
+            IntInstruction::print(),
         ]));
         let push_state = PushState::builder()
             .with_max_stack_size(4)
