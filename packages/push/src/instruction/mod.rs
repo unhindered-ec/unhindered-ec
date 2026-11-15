@@ -5,7 +5,7 @@ use self::instruction_error::PushInstructionError;
 pub use self::{
     bool::{BoolInstruction, BoolOp},
     exec::ExecInstruction,
-    float::FloatInstruction,
+    float::{FloatInstruction, FloatOp},
     int::{IntInstruction, IntInstructionError, IntOp},
     typed::TypedInstruction,
 };
@@ -103,7 +103,7 @@ impl PushInstruction {
 
     #[must_use]
     pub fn push_float(f: OrderedFloat<f64>) -> Self {
-        FloatInstruction::push_ordered_float(f).into()
+        FloatInstruction::push(f).into()
     }
 }
 

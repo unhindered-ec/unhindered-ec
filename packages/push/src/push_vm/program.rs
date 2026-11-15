@@ -175,7 +175,7 @@ mod test {
     fn block() {
         let instructions = vec_into![
             IntInstruction::add(),
-            FloatInstruction::Multiply,
+            FloatInstruction::multiply(),
             BoolInstruction::and(),
         ];
         let block = PushProgram::Block(instructions);
@@ -188,7 +188,10 @@ mod test {
         let exec_stack = result.stack_mut::<PushProgram<_>>();
         assert_eq!(exec_stack.size(), 3);
         assert_eq!(exec_stack.pop().unwrap(), IntInstruction::add().into());
-        assert_eq!(exec_stack.pop().unwrap(), FloatInstruction::Multiply.into());
+        assert_eq!(
+            exec_stack.pop().unwrap(),
+            FloatInstruction::multiply().into()
+        );
         assert_eq!(exec_stack.pop().unwrap(), BoolInstruction::and().into());
         assert_eq!(exec_stack.size(), 0);
     }
@@ -197,7 +200,7 @@ mod test {
     fn block_overflows() {
         let instructions = vec_into![
             IntInstruction::add(),
-            FloatInstruction::Multiply,
+            FloatInstruction::multiply(),
             BoolInstruction::and(),
         ];
         let block = PushProgram::Block(instructions);

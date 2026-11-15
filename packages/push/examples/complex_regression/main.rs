@@ -148,13 +148,13 @@ fn main() -> miette::Result<()> {
     let selector = Lexicase::new(training_cases.len());
 
     let gene_generator = uniform_distribution_of![<PushInstruction>
-        FloatInstruction::Add,
-        FloatInstruction::Subtract,
-        FloatInstruction::Multiply,
-        FloatInstruction::ProtectedDivide,
+        FloatInstruction::add(),
+        FloatInstruction::subtract(),
+        FloatInstruction::multiply(),
+        FloatInstruction::protected_divide(),
         FloatInstruction::dup(),
-        FloatInstruction::push(0.0),
-        FloatInstruction::push(1.0),
+        FloatInstruction::push_f64(0.0),
+        FloatInstruction::push_f64(1.0),
         WithInputInstruction::from("x")
     ]
     .into_gene_generator();

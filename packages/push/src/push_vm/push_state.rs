@@ -166,9 +166,9 @@ mod tests {
             WithInputInstruction::from("b"), // [false, true]
             push_float(3.5),                 // [3.5]
             FloatInstruction::dup(),         // [3.5, 3.5]
-            FloatInstruction::Multiply,      // [12.25]
+            FloatInstruction::multiply(),      // [12.25]
             WithInputInstruction::from("f"), // [12.25, 0.75]
-            FloatInstruction::Add,           // [13.0]
+            FloatInstruction::add(),           // [13.0]
         ]);
         let state = PushState::builder()
             .with_max_stack_size(16)
@@ -220,9 +220,9 @@ mod tests {
             WithInputInstruction::from("b"), // [false, true]
             push_float(3.5),                 // [3.5]
             FloatInstruction::dup(),         // [3.5, 3.5]
-            FloatInstruction::Multiply,      // [12.25]
+            FloatInstruction::multiply(),      // [12.25]
             WithInputInstruction::from("f"), // [12.25, 0.75]
-            FloatInstruction::Add,           // [13.0]
+            FloatInstruction::add(),           // [13.0]
         ]);
         let state = PushState::builder()
             .with_max_stack_size(16)
