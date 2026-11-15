@@ -9,7 +9,12 @@
 
 use std::fmt::Debug;
 
-use push::instruction::{BoolInstruction, FloatInstruction, IntInstruction};
+use push::{
+    instruction::{
+        BoolInstruction, ExecInstruction, FloatInstruction, IntInstruction, PushInstruction,
+    },
+    push_vm::program::PushProgram,
+};
 use strum::IntoEnumIterator;
 
 fn assert_iter_contains<I>(expected: impl IntoIterator<Item = I>)
@@ -66,5 +71,19 @@ fn float_iter_contains_stack_and_float_instructions() {
         FloatInstruction::print(),
         FloatInstruction::print_ln(),
         FloatInstruction::add(),
+    ]);
+}
+
+#[test]
+fn exec_iter_contains_stack_and_exec_instructions() {
+    assert_iter_contains([
+        ExecInstruction::<PushInstruction>::pop(),
+        ExecInstruction::push(PushProgram::Block(vec![])),
+        ExecInstruction::dup(),
+        ExecInstruction::swap(),
+        ExecInstruction::is_empty(),
+        ExecInstruction::stack_depth(),
+        ExecInstruction::flush(),
+        ExecInstruction::noop(),
     ]);
 }
