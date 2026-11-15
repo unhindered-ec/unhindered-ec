@@ -36,10 +36,10 @@
 /// `IntInstruction`, `BoolInstruction`, and `FloatInstruction`).
 /// ```ignore
 /// let instruction_set = uniform_distribution_of![<PushInstruction>
-///     IntInstruction::Add,
-///     IntInstruction::Subtract,
-///     BoolInstruction::And,
-///     FloatInstruction::Multiply,
+///     IntInstruction::add(),
+///     IntInstruction::subtract(),
+///     BoolInstruction::and(),
+///     FloatInstruction::multiply(),
 /// ];
 /// ```
 #[macro_railroad_annotation::generate_railroad("ref_text")]
