@@ -492,8 +492,7 @@ mod test {
     #[test]
     fn constructors_wrap_int_ops() {
         assert_eq!(
-            IntOp::iter().map(IntInstruction::Op).collect::<Vec<_>>(),
-            [
+            vec![
                 IntInstruction::print(),
                 IntInstruction::print_ln(),
                 IntInstruction::negate(),
@@ -523,7 +522,8 @@ mod test {
                 IntInstruction::greater_than_equal(),
                 IntInstruction::from_boolean(),
                 IntInstruction::from_float_approx(),
-            ]
+            ],
+            IntOp::iter().map(IntInstruction::Op).collect::<Vec<_>>()
         );
     }
 

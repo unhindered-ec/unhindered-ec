@@ -202,8 +202,7 @@ mod test {
     #[test]
     fn constructors_wrap_float_ops() {
         assert_eq!(
-            FloatOp::iter().map(FloatInstruction::Op).collect::<Vec<_>>(),
-            [
+            vec![
                 FloatInstruction::print(),
                 FloatInstruction::print_ln(),
                 FloatInstruction::add(),
@@ -217,7 +216,10 @@ mod test {
                 FloatInstruction::greater_than_or_equal(),
                 FloatInstruction::less_than_or_equal(),
                 FloatInstruction::from_int_approx(),
-            ]
+            ],
+            FloatOp::iter()
+                .map(FloatInstruction::Op)
+                .collect::<Vec<_>>()
         );
     }
 

@@ -215,10 +215,19 @@ mod tests {
 
     #[test]
     fn iter_gives_stack_instructions_and_ops() {
-        let all: Vec<TestInstruction> = TestInstruction::iter().collect();
-        assert_eq!(all.len(), 8);
-        assert!(all.contains(&TestInstruction::dup()));
-        assert!(all.contains(&TestInstruction::Op(TestOp::Not)));
+        assert_eq!(
+            TestInstruction::iter().collect::<Vec<_>>(),
+            [
+                TestInstruction::pop(),
+                TestInstruction::push(false),
+                TestInstruction::dup(),
+                TestInstruction::swap(),
+                TestInstruction::is_empty(),
+                TestInstruction::stack_depth(),
+                TestInstruction::flush(),
+                TestInstruction::Op(TestOp::Not),
+            ]
+        );
     }
 
     #[test]
