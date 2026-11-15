@@ -7,6 +7,7 @@ pub use self::{
     exec::ExecInstruction,
     float::FloatInstruction,
     int::{IntInstruction, IntInstructionError},
+    typed::TypedInstruction,
 };
 use crate::{
     error::{InstructionResult, MapInstructionError},
@@ -23,6 +24,7 @@ mod bool;
 mod exec;
 mod float;
 mod int;
+mod typed;
 
 /*
  * exec_if requires a boolean and two (additional) values on the exec stack.
