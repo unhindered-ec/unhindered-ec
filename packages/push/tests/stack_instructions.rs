@@ -8,17 +8,13 @@ use std::fmt::{Debug, Display};
 use push::instruction::{BoolInstruction, FloatInstruction, IntInstruction};
 use strum::IntoEnumIterator;
 
-fn assert_iter_contains<I>(expected: [I; 9])
+// One assert on the first nine items reports every missing or reordered
+// stack instruction at once.
+fn assert_iter_starts_with<I>(expected: [I; 9])
 where
     I: IntoEnumIterator + PartialEq + Debug,
 {
-    let all: Vec<I> = I::iter().collect();
-    for instruction in expected {
-        assert!(
-            all.contains(&instruction),
-            "{instruction:?} missing from iter()"
-        );
-    }
+    assert_eq!(I::iter().take(9).collect::<Vec<_>>(), expected);
 }
 
 fn iter_names<I>() -> Vec<String>
@@ -29,8 +25,8 @@ where
 }
 
 #[test]
-fn bool_iter_contains_stack_instructions() {
-    assert_iter_contains([
+fn bool_iter_starts_with_stack_instructions() {
+    assert_iter_starts_with([
         BoolInstruction::pop(),
         BoolInstruction::push(false),
         BoolInstruction::dup(),
@@ -44,8 +40,8 @@ fn bool_iter_contains_stack_instructions() {
 }
 
 #[test]
-fn int_iter_contains_stack_instructions() {
-    assert_iter_contains([
+fn int_iter_starts_with_stack_instructions() {
+    assert_iter_starts_with([
         IntInstruction::pop(),
         IntInstruction::push(0),
         IntInstruction::dup(),
@@ -59,8 +55,8 @@ fn int_iter_contains_stack_instructions() {
 }
 
 #[test]
-fn float_iter_contains_stack_instructions() {
-    assert_iter_contains([
+fn float_iter_starts_with_stack_instructions() {
+    assert_iter_starts_with([
         FloatInstruction::pop(),
         FloatInstruction::push(0.0),
         FloatInstruction::dup(),
