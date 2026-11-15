@@ -176,7 +176,7 @@ mod test {
         let instructions = vec_into![
             IntInstruction::Add,
             FloatInstruction::Multiply,
-            BoolInstruction::And,
+            BoolInstruction::and(),
         ];
         let block = PushProgram::Block(instructions);
         let state = PushState::builder()
@@ -189,7 +189,7 @@ mod test {
         assert_eq!(exec_stack.size(), 3);
         assert_eq!(exec_stack.pop().unwrap(), IntInstruction::Add.into());
         assert_eq!(exec_stack.pop().unwrap(), FloatInstruction::Multiply.into());
-        assert_eq!(exec_stack.pop().unwrap(), BoolInstruction::And.into());
+        assert_eq!(exec_stack.pop().unwrap(), BoolInstruction::and().into());
         assert_eq!(exec_stack.size(), 0);
     }
 
@@ -198,7 +198,7 @@ mod test {
         let instructions = vec_into![
             IntInstruction::Add,
             FloatInstruction::Multiply,
-            BoolInstruction::And,
+            BoolInstruction::and(),
         ];
         let block = PushProgram::Block(instructions);
         let state = PushState::builder()

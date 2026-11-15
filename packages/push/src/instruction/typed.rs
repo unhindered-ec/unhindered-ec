@@ -2,7 +2,10 @@ use std::fmt::{self, Display};
 
 use strum::IntoEnumIterator;
 
-use super::{Instruction, Perform, PushInstructionError, common::StackInstruction};
+use super::{
+    Instruction, Perform, PushInstructionError,
+    common::{Dup, Flush, IsEmpty, Pop, PushValue, StackDepth, StackInstruction, Swap},
+};
 use crate::error::{InstructionResult, MapInstructionError};
 
 /// The instructions for a stack of type `T`: the common stack
@@ -40,6 +43,28 @@ impl<T, Op> TypedInstruction<T, Op> {
     pub const fn flush() -> Self {
         Self::Stack(StackInstruction::flush())
     }
+}
+
+macro_rules! from_stack_instruction {
+    ($($instruction:ident => $variant:ident),* $(,)?) => {
+        $(
+            impl<T, Op> From<$instruction<T>> for TypedInstruction<T, Op> {
+                fn from(instruction: $instruction<T>) -> Self {
+                    Self::Stack(StackInstruction::$variant(instruction))
+                }
+            }
+        )*
+    };
+}
+
+from_stack_instruction! {
+    Pop => Pop,
+    PushValue => Push,
+    Dup => Dup,
+    Swap => Swap,
+    IsEmpty => IsEmpty,
+    StackDepth => StackDepth,
+    Flush => Flush,
 }
 
 impl<T, Op> Display for TypedInstruction<T, Op>
@@ -99,7 +124,10 @@ mod tests {
     use super::TypedInstruction;
     use crate::{
         error::InstructionResult,
-        instruction::{Perform, common::StackInstruction},
+        instruction::{
+            Perform,
+            common::{Dup, Flush, IsEmpty, Pop, PushValue, StackDepth, StackInstruction, Swap},
+        },
         push_vm::{
             HasStack,
             push_state::PushState,
@@ -158,6 +186,30 @@ mod tests {
                 StackInstruction::flush(),
             ]
             .map(TestInstruction::Stack)
+        );
+    }
+
+    #[test]
+    fn from_wraps_each_stack_instruction() {
+        assert_eq!(
+            [
+                TestInstruction::from(Pop::new()),
+                TestInstruction::from(PushValue::new(true)),
+                TestInstruction::from(Dup::new()),
+                TestInstruction::from(Swap::new()),
+                TestInstruction::from(IsEmpty::new()),
+                TestInstruction::from(StackDepth::new()),
+                TestInstruction::from(Flush::new()),
+            ],
+            [
+                TestInstruction::pop(),
+                TestInstruction::push(true),
+                TestInstruction::dup(),
+                TestInstruction::swap(),
+                TestInstruction::is_empty(),
+                TestInstruction::stack_depth(),
+                TestInstruction::flush(),
+            ]
         );
     }
 

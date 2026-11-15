@@ -3,7 +3,7 @@ use printing::{PrintNewline, PrintPeriod, PrintSpace, PrintString};
 
 use self::instruction_error::PushInstructionError;
 pub use self::{
-    bool::BoolInstruction,
+    bool::{BoolInstruction, BoolOp},
     exec::ExecInstruction,
     float::FloatInstruction,
     int::{IntInstruction, IntInstructionError},

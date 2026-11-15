@@ -3,8 +3,7 @@ use std::ops::Not;
 use strum_macros::EnumIter;
 
 use super::{
-    PushInstruction, PushInstructionError,
-    common::{Dup, Flush, IsEmpty, Pop, PushValue, StackDepth, Swap},
+    PushInstruction, PushInstructionError, TypedInstruction,
     printing::{Print, PrintLn},
 };
 use crate::{
@@ -16,21 +15,16 @@ use crate::{
     },
 };
 
-#[derive(Debug, strum_macros::Display, Clone, PartialEq, Eq, EnumIter)]
+/// The instructions for the boolean stack.
+pub type BoolInstruction = TypedInstruction<bool, BoolOp>;
+
+/// The boolean-specific instructions in [`BoolInstruction`].
+#[derive(Debug, strum_macros::Display, Copy, Clone, PartialEq, Eq, EnumIter)]
 #[non_exhaustive]
 #[must_use]
-pub enum BoolInstruction {
-    // "Common" instructions specialized for the integer stack
-    Pop(Pop<bool>),
-    #[strum(to_string = "{0}")]
-    Push(PushValue<bool>),
-    Dup(Dup<bool>),
-    Swap(Swap<bool>),
-    IsEmpty(IsEmpty<bool>),
-    StackDepth(StackDepth<bool>),
-    Flush(Flush<bool>),
+pub enum BoolOp {
     Print(Print<bool>),
-    Println(PrintLn<bool>),
+    PrintLn(PrintLn<bool>),
 
     Not,
     Or,
@@ -45,50 +39,29 @@ pub enum BoolInstruction {
 }
 
 impl BoolInstruction {
-    pub const fn pop() -> Self {
-        Self::Pop(Pop::<bool>::new())
-    }
-    pub const fn push(value: bool) -> Self {
-        Self::Push(PushValue::<bool>::new(value))
-    }
-    pub const fn dup() -> Self {
-        Self::Dup(Dup::<bool>::new())
-    }
-    pub const fn swap() -> Self {
-        Self::Swap(Swap::<bool>::new())
-    }
-    pub const fn is_empty() -> Self {
-        Self::IsEmpty(IsEmpty::<bool>::new())
-    }
-    pub const fn stack_depth() -> Self {
-        Self::StackDepth(StackDepth::<bool>::new())
-    }
-    pub const fn flush() -> Self {
-        Self::Flush(Flush::<bool>::new())
-    }
     pub const fn print() -> Self {
-        Self::Print(Print::<bool>::new())
+        Self::Op(BoolOp::Print(Print::new()))
     }
-    pub const fn println() -> Self {
-        Self::Println(PrintLn::<bool>::new())
+    pub const fn print_ln() -> Self {
+        Self::Op(BoolOp::PrintLn(PrintLn::new()))
     }
     pub const fn not() -> Self {
-        Self::Not
+        Self::Op(BoolOp::Not)
     }
     pub const fn or() -> Self {
-        Self::Or
+        Self::Op(BoolOp::Or)
     }
     pub const fn and() -> Self {
-        Self::And
+        Self::Op(BoolOp::And)
     }
     pub const fn xor() -> Self {
-        Self::Xor
+        Self::Op(BoolOp::Xor)
     }
     pub const fn implies() -> Self {
-        Self::Implies
+        Self::Op(BoolOp::Implies)
     }
     pub const fn from_int() -> Self {
-        Self::FromInt
+        Self::Op(BoolOp::FromInt)
     }
 }
 
@@ -98,51 +71,21 @@ impl From<BoolInstruction> for PushInstruction {
     }
 }
 
-impl From<Pop<bool>> for BoolInstruction {
-    fn from(pop: Pop<bool>) -> Self {
-        Self::Pop(pop)
+impl From<Print<bool>> for BoolInstruction {
+    fn from(print: Print<bool>) -> Self {
+        Self::Op(BoolOp::Print(print))
     }
 }
 
-impl From<PushValue<bool>> for BoolInstruction {
-    fn from(push: PushValue<bool>) -> Self {
-        Self::Push(push)
+impl From<PrintLn<bool>> for BoolInstruction {
+    fn from(println: PrintLn<bool>) -> Self {
+        Self::Op(BoolOp::PrintLn(println))
     }
 }
 
-impl From<Dup<bool>> for BoolInstruction {
-    fn from(dup: Dup<bool>) -> Self {
-        Self::Dup(dup)
-    }
-}
+impl Instruction for BoolOp {}
 
-impl From<Swap<bool>> for BoolInstruction {
-    fn from(swap: Swap<bool>) -> Self {
-        Self::Swap(swap)
-    }
-}
-
-impl From<IsEmpty<bool>> for BoolInstruction {
-    fn from(is_empty: IsEmpty<bool>) -> Self {
-        Self::IsEmpty(is_empty)
-    }
-}
-
-impl From<StackDepth<bool>> for BoolInstruction {
-    fn from(stack_depth: StackDepth<bool>) -> Self {
-        Self::StackDepth(stack_depth)
-    }
-}
-
-impl From<Flush<bool>> for BoolInstruction {
-    fn from(flush: Flush<bool>) -> Self {
-        Self::Flush(flush)
-    }
-}
-
-impl Instruction for BoolInstruction {}
-
-impl<S> Perform<S> for BoolInstruction
+impl<S> Perform<S> for BoolOp
 where
     S: Clone + HasStack<bool> + HasStack<i64> + HasStdout,
 {
@@ -200,15 +143,8 @@ where
     fn perform(&self, mut state: S) -> InstructionResult<S, Self::Error> {
         let bool_stack = state.stack_mut::<bool>();
         match self {
-            Self::Pop(pop) => pop.perform(state).map_err_into(),
-            Self::Push(push) => push.perform(state).map_err_into(),
-            Self::Dup(dup) => dup.perform(state).map_err_into(),
-            Self::Swap(swap) => swap.perform(state).map_err_into(),
-            Self::IsEmpty(is_empty) => is_empty.perform(state).map_err_into(),
-            Self::StackDepth(stack_depth) => stack_depth.perform(state).map_err_into(),
-            Self::Flush(flush) => flush.perform(state).map_err_into(),
             Self::Print(print) => print.perform(state).map_err_into(),
-            Self::Println(println) => println.perform(state).map_err_into(),
+            Self::PrintLn(println) => println.perform(state).map_err_into(),
 
             Self::Not => bool_stack.pop().map(Not::not).push_onto(state),
             Self::And => bool_stack.pop2().map(|(x, y)| x && y).push_onto(state),
@@ -271,7 +207,7 @@ mod property_tests {
             .unwrap()
             .with_instruction_step_limit(1000)
             .build();
-        let result_state = BoolInstruction::And.perform(state).unwrap();
+        let result_state = BoolInstruction::and().perform(state).unwrap();
 
         prop_assert_eq!(result_state.bool.size(), 1);
         prop_assert_eq!(*result_state.bool.top().unwrap(), x && y);
@@ -286,7 +222,7 @@ mod property_tests {
             .unwrap()
             .with_instruction_step_limit(1000)
             .build();
-        let result_state = BoolInstruction::Implies.perform(state).unwrap();
+        let result_state = BoolInstruction::implies().perform(state).unwrap();
 
         prop_assert_eq!(result_state.bool.size(), 1);
         prop_assert_eq!(*result_state.bool.top().unwrap(), !x || y);
@@ -295,11 +231,51 @@ mod property_tests {
 
 #[cfg(test)]
 mod test {
-    use super::BoolInstruction;
+    use super::{BoolInstruction, BoolOp};
+    use crate::instruction::printing::{Print, PrintLn};
+
+    #[test]
+    fn constructors_wrap_bool_ops() {
+        assert_eq!(
+            [
+                BoolInstruction::print(),
+                BoolInstruction::print_ln(),
+                BoolInstruction::not(),
+                BoolInstruction::or(),
+                BoolInstruction::and(),
+                BoolInstruction::xor(),
+                BoolInstruction::implies(),
+                BoolInstruction::from_int(),
+            ],
+            [
+                BoolOp::Print(Print::new()),
+                BoolOp::PrintLn(PrintLn::new()),
+                BoolOp::Not,
+                BoolOp::Or,
+                BoolOp::And,
+                BoolOp::Xor,
+                BoolOp::Implies,
+                BoolOp::FromInt,
+            ]
+            .map(BoolInstruction::Op)
+        );
+    }
+
+    #[test]
+    fn from_wraps_print_instructions() {
+        assert_eq!(
+            BoolInstruction::from(Print::new()),
+            BoolInstruction::print()
+        );
+        assert_eq!(
+            BoolInstruction::from(PrintLn::new()),
+            BoolInstruction::print_ln()
+        );
+    }
 
     #[test]
     fn auto_display() {
-        assert_eq!(format!("{}", BoolInstruction::Not), "Not");
+        assert_eq!(format!("{}", BoolInstruction::not()), "Not");
     }
 
     #[test]

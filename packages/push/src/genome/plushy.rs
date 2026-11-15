@@ -444,13 +444,13 @@ mod test {
     fn from_instructions() {
         let plushy = Plushy::from_iter(arr_into![<PushInstruction>
             IntInstruction::Add,
-            BoolInstruction::And,
+            BoolInstruction::and(),
         ]);
         assert_eq!(
             plushy,
             Plushy::new([
                 PushGene::from(IntInstruction::Add),
-                PushGene::from(BoolInstruction::And),
+                PushGene::from(BoolInstruction::and()),
             ])
         );
     }
@@ -480,24 +480,24 @@ mod test {
         let parent = Plushy {
             genes: vec_into![<PushGene<_>>
                 IntInstruction::Add,
-                BoolInstruction::And,
-                BoolInstruction::Or,
+                BoolInstruction::and(),
+                BoolInstruction::or(),
                 IntInstruction::Multiply,
                 IntInstruction::Add,
-                BoolInstruction::And,
-                BoolInstruction::Or,
+                BoolInstruction::and(),
+                BoolInstruction::or(),
                 IntInstruction::Multiply,
                 IntInstruction::Add,
-                BoolInstruction::And,
-                BoolInstruction::Or,
+                BoolInstruction::and(),
+                BoolInstruction::or(),
                 IntInstruction::Multiply,
                 IntInstruction::Add,
-                BoolInstruction::And,
-                BoolInstruction::Or,
+                BoolInstruction::and(),
+                BoolInstruction::or(),
                 IntInstruction::Multiply,
                 IntInstruction::Add,
-                BoolInstruction::And,
-                BoolInstruction::Or,
+                BoolInstruction::and(),
+                BoolInstruction::or(),
                 IntInstruction::Multiply,
             ],
         };

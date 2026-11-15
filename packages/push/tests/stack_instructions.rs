@@ -37,7 +37,7 @@ fn bool_iter_contains_stack_and_bool_instructions() {
         BoolInstruction::stack_depth(),
         BoolInstruction::flush(),
         BoolInstruction::print(),
-        BoolInstruction::println(),
+        BoolInstruction::print_ln(),
         BoolInstruction::not(),
     ]);
 }
