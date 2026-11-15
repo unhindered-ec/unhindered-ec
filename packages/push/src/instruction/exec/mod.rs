@@ -4,13 +4,10 @@ mod noop;
 mod unless;
 mod when;
 
-use strum_macros::EnumIter;
+use strum::IntoEnumIterator;
 
 pub use self::{dup_block::DupBlock, ifelse::IfElse, noop::Noop, unless::Unless, when::When};
-use super::{
-    NumOpens, Perform, PushInstruction,
-    common::{Dup, Flush, IsEmpty, Pop, PushValue, StackDepth, Swap},
-};
+use super::{NumOpens, Perform, PushInstruction, common::StackInstruction};
 use crate::{
     error::{InstructionResult, MapInstructionError},
     instruction::Instruction,
@@ -19,20 +16,15 @@ use crate::{
 
 // TODO: This (and things like `IfElse`) are dependent on `PushInstruction`.
 // They should be made generic over the instruction type.
-#[derive(Debug, strum_macros::Display, Clone, Eq, PartialEq, EnumIter)]
+// `IntoEnumIterator` is written by hand, because the `EnumIter` derive needs
+// `Default` for the boxed `StackInstruction`.
+#[derive(Debug, strum_macros::Display, Clone, Eq, PartialEq)]
 #[must_use]
 #[non_exhaustive]
 pub enum ExecInstruction<I> {
-    // "Common" instructions specialized for the integer stack
-    Pop(Pop<PushProgram<I>>),
-
+    // Boxed to keep `ExecInstruction` small: a `PushProgram` holds a `Vec`.
     #[strum(to_string = "{0}")]
-    Push(Box<PushValue<PushProgram<I>>>),
-    Dup(Dup<PushProgram<I>>),
-    Swap(Swap<PushProgram<I>>),
-    IsEmpty(IsEmpty<PushProgram<I>>),
-    StackDepth(StackDepth<PushProgram<I>>),
-    Flush(Flush<PushProgram<I>>),
+    Stack(Box<StackInstruction<PushProgram<I>>>),
 
     Noop(Noop),
     DupBlock(DupBlock<I>),
@@ -42,26 +34,29 @@ pub enum ExecInstruction<I> {
 }
 
 impl<I> ExecInstruction<I> {
-    pub const fn pop() -> Self {
-        Self::Pop(Pop::<PushProgram<_>>::new())
+    pub fn pop() -> Self {
+        Self::stack(StackInstruction::pop())
     }
     pub fn push(value: PushProgram<I>) -> Self {
-        Self::Push(Box::new(PushValue::<PushProgram<_>>::new(value)))
+        Self::stack(StackInstruction::push(value))
     }
-    pub const fn dup() -> Self {
-        Self::Dup(Dup::<PushProgram<_>>::new())
+    pub fn dup() -> Self {
+        Self::stack(StackInstruction::dup())
     }
-    pub const fn swap() -> Self {
-        Self::Swap(Swap::<PushProgram<_>>::new())
+    pub fn swap() -> Self {
+        Self::stack(StackInstruction::swap())
     }
-    pub const fn is_empty() -> Self {
-        Self::IsEmpty(IsEmpty::<PushProgram<_>>::new())
+    pub fn is_empty() -> Self {
+        Self::stack(StackInstruction::is_empty())
     }
-    pub const fn stack_depth() -> Self {
-        Self::StackDepth(StackDepth::<PushProgram<_>>::new())
+    pub fn stack_depth() -> Self {
+        Self::stack(StackInstruction::stack_depth())
     }
-    pub const fn flush() -> Self {
-        Self::Flush(Flush::<PushProgram<_>>::new())
+    pub fn flush() -> Self {
+        Self::stack(StackInstruction::flush())
+    }
+    fn stack(instruction: StackInstruction<PushProgram<I>>) -> Self {
+        Self::Stack(Box::new(instruction))
     }
     pub const fn noop() -> Self {
         Self::Noop(Noop)
@@ -80,6 +75,28 @@ impl<I> ExecInstruction<I> {
     }
 }
 
+// Keep this list in step with the `ExecInstruction` variants.
+impl<I> IntoEnumIterator for ExecInstruction<I>
+where
+    I: Clone,
+{
+    type Iterator = std::vec::IntoIter<Self>;
+
+    fn iter() -> Self::Iterator {
+        StackInstruction::iter()
+            .map(Self::stack)
+            .chain([
+                Self::noop(),
+                Self::dup_block(),
+                Self::when(),
+                Self::unless(),
+                Self::if_else(),
+            ])
+            .collect::<Vec<_>>()
+            .into_iter()
+    }
+}
+
 impl From<ExecInstruction<Self>> for PushInstruction {
     fn from(instr: ExecInstruction<Self>) -> Self {
         Self::Exec(instr)
@@ -89,13 +106,7 @@ impl From<ExecInstruction<Self>> for PushInstruction {
 impl<I> NumOpens for ExecInstruction<I> {
     fn num_opens(&self) -> usize {
         match self {
-            Self::Pop(pop) => pop.num_opens(),
-            Self::Push(push) => push.num_opens(),
-            Self::Dup(dup) => dup.num_opens(),
-            Self::Swap(swap) => swap.num_opens(),
-            Self::IsEmpty(is_empty) => is_empty.num_opens(),
-            Self::StackDepth(stack_depth) => stack_depth.num_opens(),
-            Self::Flush(flush) => flush.num_opens(),
+            Self::Stack(instruction) => instruction.num_opens(),
             Self::Noop(noop) => noop.num_opens(),
             Self::DupBlock(dup) => dup.num_opens(),
             Self::When(when) => when.num_opens(),
@@ -116,13 +127,7 @@ where
 
     fn perform(&self, state: S) -> InstructionResult<S, Self::Error> {
         match self {
-            Self::Pop(pop) => pop.perform(state).map_err_into(),
-            Self::Push(push) => push.perform(state).map_err_into(),
-            Self::Dup(dup) => dup.perform(state).map_err_into(),
-            Self::Swap(swap) => swap.perform(state).map_err_into(),
-            Self::IsEmpty(is_empty) => is_empty.perform(state).map_err_into(),
-            Self::StackDepth(stack_depth) => stack_depth.perform(state).map_err_into(),
-            Self::Flush(flush) => flush.perform(state).map_err_into(),
+            Self::Stack(instruction) => instruction.perform(state),
             Self::Noop(noop) => noop.perform(state).map_err_into(),
             Self::When(when) => when.perform(state).map_err_into(),
             Self::Unless(unless) => unless.perform(state).map_err_into(),
