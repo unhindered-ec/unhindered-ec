@@ -487,6 +487,62 @@ mod test {
     use strum::IntoEnumIterator;
 
     use super::{IntInstruction, IntOp};
+    use crate::{
+        instruction::{Perform, instruction_error::PushInstructionError},
+        push_vm::{HasStack, push_state::PushState, stack::StackError},
+    };
+
+    // The top of the int stack is 7, and the value below it is 0.
+    #[test]
+    fn mod_by_zero_pushes_zero() {
+        let state = PushState::builder()
+            .with_max_stack_size(2)
+            .with_int_values([7, 0])
+            .unwrap()
+            .with_no_program()
+            .with_instruction_step_limit(1000)
+            .build();
+        let result = IntInstruction::r#mod().perform(state).unwrap();
+        assert_eq!(result.stack::<i64>().size(), 1);
+        assert_eq!(result.stack::<i64>().top(), Ok(&0));
+    }
+
+    // The top of the int stack is 7, and the value below it is 2.
+    #[test]
+    fn mod_by_non_zero_pushes_remainder() {
+        let state = PushState::builder()
+            .with_max_stack_size(2)
+            .with_int_values([7, 2])
+            .unwrap()
+            .with_no_program()
+            .with_instruction_step_limit(1000)
+            .build();
+        let result = IntInstruction::r#mod().perform(state).unwrap();
+        assert_eq!(result.stack::<i64>().size(), 1);
+        assert_eq!(result.stack::<i64>().top(), Ok(&1));
+    }
+
+    #[test]
+    fn comparison_fails_when_bool_stack_is_full() {
+        let state = PushState::builder()
+            .with_max_stack_size(2)
+            .with_int_values([1, 2])
+            .unwrap()
+            .with_bool_values([true, false])
+            .unwrap()
+            .with_no_program()
+            .with_instruction_step_limit(1000)
+            .build();
+        let error = IntInstruction::equal().perform(state).unwrap_err();
+        assert!(error.is_fatal());
+        assert_eq!(
+            error.error(),
+            &PushInstructionError::StackError(StackError::Overflow {
+                stack_type: "bool",
+                max_size: 2,
+            })
+        );
+    }
 
     // The constructors are in the same order as the `IntOp` variants.
     #[test]

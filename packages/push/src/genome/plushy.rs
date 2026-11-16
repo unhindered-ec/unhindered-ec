@@ -374,7 +374,7 @@ mod test {
         uniform_distribution_of,
     };
     use ec_linear::mutator::umad::Umad;
-    use rand::rng;
+    use rand::{SeedableRng, rng, rngs::StdRng};
 
     use super::*;
     use crate::{
@@ -408,6 +408,20 @@ mod test {
                 Self::Block => 1,
             }
         }
+    }
+
+    #[test]
+    fn display_of_empty_plushy_is_empty() {
+        let plushy = Plushy::<PushInstruction> { genes: Vec::new() };
+        assert_eq!(plushy.to_string(), "");
+    }
+
+    #[test]
+    fn display_separates_genes_with_spaces() {
+        let plushy = Plushy::<PushInstruction> {
+            genes: vec_into![<PushGene<_>> IntInstruction::add(), BoolInstruction::and()],
+        };
+        assert_eq!(plushy.to_string(), "Int-Add Bool-And");
     }
 
     #[test]
@@ -467,13 +481,14 @@ mod test {
         );
     }
 
-    #[ignore = "this has about a 2.665% chance on failing at least once across the three test \
-                runners in ci"]
     #[test]
     fn umad() {
-        let mut rng = rng();
+        // A fixed seed makes the result the same on each run. With a random
+        // seed, the test failed about 2.665% of the time across the three
+        // test runners in CI.
+        let mut rng = StdRng::seed_from_u64(530);
 
-        let instruction_options = uniform_distribution_of![<PushGene<_>> PushInstruction::from(WithInputInstruction::from("x"))];
+        let instruction_options = uniform_distribution_of![<PushGene<PushInstruction>> PushInstruction::from(WithInputInstruction::from("x"))];
 
         let umad = Umad::new(0.3, 0.3, instruction_options);
 
@@ -508,7 +523,9 @@ mod test {
             .unwrap()
             .genes
             .iter()
-            .filter(|c| matches!(c, PushGene::Instruction(PushInstruction::WithInput(v)) if v == &WithInputInstruction::from("x")))
+            .filter(|&c| {
+                c == &PushGene::from(PushInstruction::from(WithInputInstruction::from("x")))
+            })
             .count();
         assert!(
             num_inputs > 0,

@@ -90,7 +90,7 @@ where
 {
     type Error = StackError;
 
-    fn perform(&self, mut state: S) -> InstructionResult<S, Self::Error> {
+    fn perform(&self, state: S) -> InstructionResult<S, Self::Error> {
         let condition = state.stack::<bool>().top();
         let top_block = state.stack::<PushProgram<_>>().top();
         let top_2_blocks = state.stack::<PushProgram<_>>().top2();
@@ -109,11 +109,7 @@ where
             // and the second (else) block, leaving the first (then) block so that it may be
             // performed next.
             (Ok(true), Ok(_), Ok(_)) => {
-                if let Err(e) = state.stack_mut::<bool>().pop() {
-                    // This should never happen since we just checked that the
-                    // stack has a boolean.
-                    return Err(Error::fatal(state, e));
-                }
+                let mut state = Ok(state).with_stack_discard::<bool>(1)?;
                 let r#then = match state.stack_mut::<PushProgram<_>>().pop2() {
                     Ok((r#then, _)) => r#then,
                     // This case should never happen since we just checked that there are two blocks
