@@ -1,7 +1,7 @@
 use strum_macros::EnumIter;
 
 use super::{
-    PushInstructionError, TypedInstruction,
+    PushInstruction, PushInstructionError, TypedInstruction,
     printing::{Print, PrintLn},
 };
 use crate::{
@@ -51,6 +51,12 @@ impl StringInstruction {
     }
 }
 
+impl From<StringInstruction> for PushInstruction {
+    fn from(instr: StringInstruction) -> Self {
+        Self::StringInstruction(instr)
+    }
+}
+
 impl Instruction for StringOp {}
 
 impl<S> Perform<S> for StringOp
@@ -96,7 +102,7 @@ where
 mod tests {
     use super::{Print, PrintLn, StringInstruction, StringOp};
     use crate::{
-        instruction::{Perform, instruction_error::PushInstructionError},
+        instruction::{Perform, PushInstruction, instruction_error::PushInstructionError},
         push_vm::{HasStack, push_state::PushState, stack::StackError},
     };
 
@@ -132,6 +138,19 @@ mod tests {
             ]
             .map(StringInstruction::Op)
         );
+    }
+
+    #[test]
+    fn push_instruction_performs_string_instruction() {
+        let instruction = PushInstruction::from(StringInstruction::concat());
+        let result = instruction.perform(state(2, [42])).unwrap();
+        assert_eq!(result.stack::<String>().top(), Ok(&"ab".to_string()));
+    }
+
+    #[test]
+    fn push_instruction_display_names_the_string_type() {
+        let instruction = PushInstruction::from(StringInstruction::concat());
+        assert_eq!(instruction.to_string(), "String-Concat");
     }
 
     #[test]
