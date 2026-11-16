@@ -7,6 +7,7 @@ pub use self::{
     exec::ExecInstruction,
     float::{FloatInstruction, FloatOp},
     int::{IntInstruction, IntInstructionError, IntOp},
+    string::StringOp,
     typed::TypedInstruction,
 };
 use crate::{
@@ -24,6 +25,7 @@ mod bool;
 mod exec;
 mod float;
 mod int;
+mod string;
 mod typed;
 
 /*
