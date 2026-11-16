@@ -7,7 +7,7 @@ pub use self::{
     exec::ExecInstruction,
     float::{FloatInstruction, FloatOp},
     int::{IntInstruction, IntInstructionError, IntOp},
-    string::StringOp,
+    string::{StringInstruction, StringOp},
     typed::TypedInstruction,
 };
 use crate::{

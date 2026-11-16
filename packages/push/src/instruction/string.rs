@@ -1,7 +1,7 @@
 use strum_macros::EnumIter;
 
 use super::{
-    PushInstructionError,
+    PushInstructionError, TypedInstruction,
     printing::{Print, PrintLn},
 };
 use crate::{
@@ -13,7 +13,10 @@ use crate::{
     },
 };
 
-/// The string-specific instructions.
+/// The instructions for the string stack.
+pub type StringInstruction = TypedInstruction<String, StringOp>;
+
+/// The string-specific instructions in [`StringInstruction`].
 #[derive(Debug, strum_macros::Display, Clone, PartialEq, Eq, EnumIter)]
 #[non_exhaustive]
 #[must_use]
@@ -28,6 +31,24 @@ pub enum StringOp {
     Length,
     /// Pops an int and pushes its decimal text onto the string stack.
     FromInt,
+}
+
+impl StringInstruction {
+    pub const fn print() -> Self {
+        Self::Op(StringOp::Print(Print::new()))
+    }
+    pub const fn print_ln() -> Self {
+        Self::Op(StringOp::PrintLn(PrintLn::new()))
+    }
+    pub const fn concat() -> Self {
+        Self::Op(StringOp::Concat)
+    }
+    pub const fn length() -> Self {
+        Self::Op(StringOp::Length)
+    }
+    pub const fn from_int() -> Self {
+        Self::Op(StringOp::FromInt)
+    }
 }
 
 impl Instruction for StringOp {}
@@ -73,7 +94,7 @@ where
 
 #[cfg(test)]
 mod tests {
-    use super::StringOp;
+    use super::{Print, PrintLn, StringInstruction, StringOp};
     use crate::{
         instruction::{Perform, instruction_error::PushInstructionError},
         push_vm::{HasStack, push_state::PushState, stack::StackError},
@@ -90,6 +111,27 @@ mod tests {
             .unwrap()
             .with_instruction_step_limit(1000)
             .build()
+    }
+
+    #[test]
+    fn constructors_wrap_string_ops() {
+        assert_eq!(
+            [
+                StringInstruction::print(),
+                StringInstruction::print_ln(),
+                StringInstruction::concat(),
+                StringInstruction::length(),
+                StringInstruction::from_int(),
+            ],
+            [
+                StringOp::Print(Print::new()),
+                StringOp::PrintLn(PrintLn::new()),
+                StringOp::Concat,
+                StringOp::Length,
+                StringOp::FromInt,
+            ]
+            .map(StringInstruction::Op)
+        );
     }
 
     #[test]
@@ -133,7 +175,7 @@ mod tests {
 
     #[test]
     fn print_writes_top_string() {
-        let result = StringOp::Print(super::Print::new())
+        let result = StringOp::Print(Print::new())
             .perform(state(2, [42]))
             .unwrap();
         assert_eq!(result.stdout_string().unwrap(), "b");
@@ -141,7 +183,7 @@ mod tests {
 
     #[test]
     fn print_ln_writes_top_string_and_newline() {
-        let result = StringOp::PrintLn(super::PrintLn::new())
+        let result = StringOp::PrintLn(PrintLn::new())
             .perform(state(2, [42]))
             .unwrap();
         assert_eq!(result.stdout_string().unwrap(), "b\n");
