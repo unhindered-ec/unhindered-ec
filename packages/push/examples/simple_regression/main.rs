@@ -148,10 +148,10 @@ fn main() -> miette::Result<()> {
         .with_selector(Tournament::binary(), population_size - 1);
 
     let gene_generator = uniform_distribution_of![<PushInstruction>
-        FloatInstruction::add(),
-        FloatInstruction::subtract(),
-        FloatInstruction::multiply(),
-        FloatInstruction::protected_divide(),
+        FloatInstruction::Add,
+        FloatInstruction::Subtract,
+        FloatInstruction::Multiply,
+        FloatInstruction::ProtectedDivide,
         WithInputInstruction::from("x")
     ]
     .into_gene_generator();

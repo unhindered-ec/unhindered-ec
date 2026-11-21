@@ -31,13 +31,13 @@ use crate::{
 ///
 /// # Inputs
 ///
-/// The `IntOp::Abs` instruction takes the following inputs:
+/// The `IntInstruction::Abs` instruction takes the following inputs:
 ///    - `i64` stack
 ///      - One value
 ///
 /// # Behavior
 ///
-/// The `IntOp::Abs` instruction takes the absolute value of the top
+/// The `IntInstruction::Abs` instruction takes the absolute value of the top
 /// value of the `i64` stack. The one exception (as described above) is when
 /// the value is `i64::MIN`, where `Abs` removes it and pushes
 /// on `i64::MAX` in its place.

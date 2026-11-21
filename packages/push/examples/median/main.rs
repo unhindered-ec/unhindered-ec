@@ -213,7 +213,7 @@ fn compute_error(final_state: &PushState, penalty_value: i128, expected: i64) ->
 fn instructions() -> impl Iterator<Item = PushInstruction> {
     let int_instructions = IntInstruction::iter()
         // Restore this line to remove `Min` from the instruction set.
-        // .filter(|&i| i != IntInstruction::min())
+        // .filter(|&i| i != IntInstruction::Min)
         // Restore this line to remove `Clamp` from the instruction set.
         // .filter(|&i| i != IntInstruction::clamp())
         .map(Into::into);

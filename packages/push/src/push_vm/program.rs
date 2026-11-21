@@ -137,20 +137,20 @@ mod test {
     #[test]
     fn from_instruction() {
         assert_eq!(
-            PushProgram::<PushInstruction>::from(IntInstruction::add()),
-            PushProgram::Instruction(IntInstruction::add().into())
+            PushProgram::<PushInstruction>::from(IntInstruction::Add),
+            PushProgram::Instruction(IntInstruction::Add.into())
         );
     }
 
     #[test]
     fn conversion() {
         let genes = arr_into![<PushGene<PushInstruction>>
-            IntInstruction::add(),
+            IntInstruction::Add,
             ExecInstruction::if_else(),
-            IntInstruction::multiply(),
+            IntInstruction::Multiply,
             PushGene::Close,
             ExecInstruction::dup_block(),
-            IntInstruction::subtract(),
+            IntInstruction::Subtract,
         ];
         let plushy: Plushy<PushInstruction> = genes.into_iter().collect();
         let program: Vec<PushProgram<_>> = plushy.into();
@@ -160,12 +160,12 @@ mod test {
         assert_eq!(
             program,
             vec_into![
-                IntInstruction::add(),
+                IntInstruction::Add,
                 ExecInstruction::if_else(),
-                PushProgram::Block(vec_into![IntInstruction::multiply()]),
+                PushProgram::Block(vec_into![IntInstruction::Multiply]),
                 PushProgram::Block(vec_into![
                     ExecInstruction::dup_block(),
-                    PushProgram::Block(vec_into![IntInstruction::subtract()])
+                    PushProgram::Block(vec_into![IntInstruction::Subtract])
                 ])
             ]
         );
@@ -174,9 +174,9 @@ mod test {
     #[test]
     fn block() {
         let instructions = vec_into![
-            IntInstruction::add(),
-            FloatInstruction::multiply(),
-            BoolInstruction::and(),
+            IntInstruction::Add,
+            FloatInstruction::Multiply,
+            BoolInstruction::And,
         ];
         let block = PushProgram::Block(instructions);
         let state = PushState::builder()
@@ -187,21 +187,18 @@ mod test {
         let mut result = block.perform(state).unwrap();
         let exec_stack = result.stack_mut::<PushProgram<_>>();
         assert_eq!(exec_stack.size(), 3);
-        assert_eq!(exec_stack.pop().unwrap(), IntInstruction::add().into());
-        assert_eq!(
-            exec_stack.pop().unwrap(),
-            FloatInstruction::multiply().into()
-        );
-        assert_eq!(exec_stack.pop().unwrap(), BoolInstruction::and().into());
+        assert_eq!(exec_stack.pop().unwrap(), IntInstruction::Add.into());
+        assert_eq!(exec_stack.pop().unwrap(), FloatInstruction::Multiply.into());
+        assert_eq!(exec_stack.pop().unwrap(), BoolInstruction::And.into());
         assert_eq!(exec_stack.size(), 0);
     }
 
     #[test]
     fn block_overflows() {
         let instructions = vec_into![
-            IntInstruction::add(),
-            FloatInstruction::multiply(),
-            BoolInstruction::and(),
+            IntInstruction::Add,
+            FloatInstruction::Multiply,
+            BoolInstruction::And,
         ];
         let block = PushProgram::Block(instructions);
         let state = PushState::builder()

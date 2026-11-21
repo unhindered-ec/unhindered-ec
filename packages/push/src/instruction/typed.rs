@@ -8,6 +8,26 @@ use super::{
 };
 use crate::error::{InstructionResult, MapInstructionError};
 
+/// Adds an associated constant for each listed `Op` variant, named like the
+/// variant. Code that used the variants of the old typed enums, for example
+/// `IntInstruction::Add`, then still compiles. A variant with a field gives
+/// its value after `=`.
+macro_rules! op_constants {
+    ($instruction:ty, $op:ident { $($name:ident $(= $value:expr)?),* $(,)? }) => {
+        #[expect(
+            non_upper_case_globals,
+            reason = "The names match the variants of the old typed enums."
+        )]
+        impl $instruction {
+            $(pub const $name: Self = Self::Op(op_constants!(@value $op $name $($value)?));)*
+        }
+    };
+    (@value $op:ident $name:ident) => { $op::$name };
+    (@value $op:ident $name:ident $value:expr) => { $value };
+}
+
+pub(crate) use op_constants;
+
 /// The instructions for a stack of type `T`: the common stack
 /// instructions, plus the type-specific instructions in `Op`.
 ///

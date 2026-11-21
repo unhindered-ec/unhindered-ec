@@ -182,8 +182,8 @@ where
 /// # use push::push_vm::program::PushProgram;
 /// // Build a Plushy genome from an array of instructions and close markers
 /// let plushy = Plushy::new(arr_into![<PushGene<PushInstruction>>
-///     IntInstruction::add(),
-///     IntInstruction::multiply(),
+///     IntInstruction::Add,
+///     IntInstruction::Multiply,
 ///     PushGene::Close,
 ///     IntInstruction::abs(),
 /// ]);
@@ -419,7 +419,7 @@ mod test {
     #[test]
     fn display_separates_genes_with_spaces() {
         let plushy = Plushy::<PushInstruction> {
-            genes: vec_into![<PushGene<_>> IntInstruction::add(), BoolInstruction::and()],
+            genes: vec_into![<PushGene<_>> IntInstruction::Add, BoolInstruction::And],
         };
         assert_eq!(plushy.to_string(), "Int-Add Bool-And");
     }
@@ -428,10 +428,10 @@ mod test {
     fn generator() {
         let mut rng = rng();
         let plushy: Plushy<_> = uniform_distribution_of![<PushInstruction>
-            IntInstruction::add(),
-            IntInstruction::subtract(),
-            IntInstruction::multiply(),
-            IntInstruction::protected_divide(),
+            IntInstruction::Add,
+            IntInstruction::Subtract,
+            IntInstruction::Multiply,
+            IntInstruction::ProtectedDivide,
         ]
         .into_gene_generator()
         .into_collection(10)
@@ -457,14 +457,14 @@ mod test {
     #[test]
     fn from_instructions() {
         let plushy = Plushy::from_iter(arr_into![<PushInstruction>
-            IntInstruction::add(),
-            BoolInstruction::and(),
+            IntInstruction::Add,
+            BoolInstruction::And,
         ]);
         assert_eq!(
             plushy,
             Plushy::new([
-                PushGene::from(IntInstruction::add()),
-                PushGene::from(BoolInstruction::and()),
+                PushGene::from(IntInstruction::Add),
+                PushGene::from(BoolInstruction::And),
             ])
         );
     }
@@ -494,26 +494,26 @@ mod test {
 
         let parent = Plushy {
             genes: vec_into![<PushGene<_>>
-                IntInstruction::add(),
-                BoolInstruction::and(),
-                BoolInstruction::or(),
-                IntInstruction::multiply(),
-                IntInstruction::add(),
-                BoolInstruction::and(),
-                BoolInstruction::or(),
-                IntInstruction::multiply(),
-                IntInstruction::add(),
-                BoolInstruction::and(),
-                BoolInstruction::or(),
-                IntInstruction::multiply(),
-                IntInstruction::add(),
-                BoolInstruction::and(),
-                BoolInstruction::or(),
-                IntInstruction::multiply(),
-                IntInstruction::add(),
-                BoolInstruction::and(),
-                BoolInstruction::or(),
-                IntInstruction::multiply(),
+                IntInstruction::Add,
+                BoolInstruction::And,
+                BoolInstruction::Or,
+                IntInstruction::Multiply,
+                IntInstruction::Add,
+                BoolInstruction::And,
+                BoolInstruction::Or,
+                IntInstruction::Multiply,
+                IntInstruction::Add,
+                BoolInstruction::And,
+                BoolInstruction::Or,
+                IntInstruction::Multiply,
+                IntInstruction::Add,
+                BoolInstruction::And,
+                BoolInstruction::Or,
+                IntInstruction::Multiply,
+                IntInstruction::Add,
+                BoolInstruction::And,
+                BoolInstruction::Or,
+                IntInstruction::Multiply,
             ],
         };
 

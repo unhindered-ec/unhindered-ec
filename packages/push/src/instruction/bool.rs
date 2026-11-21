@@ -5,6 +5,7 @@ use strum_macros::EnumIter;
 use super::{
     PushInstruction, PushInstructionError, TypedInstruction,
     printing::{Print, PrintLn},
+    typed::op_constants,
 };
 use crate::{
     error::{InstructionResult, MapInstructionError},
@@ -62,6 +63,33 @@ impl BoolInstruction {
     }
     pub const fn from_int() -> Self {
         Self::Op(BoolOp::FromInt)
+    }
+}
+
+op_constants!(
+    BoolInstruction,
+    BoolOp {
+        Not,
+        Or,
+        And,
+        Xor,
+        Implies,
+        FromInt
+    }
+);
+
+/// Functions named like the old `Print` and `PrintLn` variants, so that code
+/// such as `BoolInstruction::Print(Print::default())` still compiles.
+#[expect(
+    non_snake_case,
+    reason = "The names match the variants of the old typed enums."
+)]
+impl BoolInstruction {
+    pub const fn Print(print: Print<bool>) -> Self {
+        Self::Op(BoolOp::Print(print))
+    }
+    pub const fn PrintLn(println: PrintLn<bool>) -> Self {
+        Self::Op(BoolOp::PrintLn(println))
     }
 }
 
@@ -258,6 +286,18 @@ mod test {
                 BoolOp::FromInt,
             ]
             .map(BoolInstruction::Op)
+        );
+    }
+
+    #[test]
+    fn print_functions_wrap_print_instructions() {
+        assert_eq!(
+            BoolInstruction::Print(Print::new()),
+            BoolInstruction::print()
+        );
+        assert_eq!(
+            BoolInstruction::PrintLn(PrintLn::new()),
+            BoolInstruction::print_ln()
         );
     }
 

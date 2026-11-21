@@ -15,7 +15,7 @@ use test_strategy::proptest;
 
 #[test]
 fn to_push_instruction() {
-    let float_instruction = FloatInstruction::add();
+    let float_instruction = FloatInstruction::Add;
     let push_instruction: PushInstruction = float_instruction.into();
     matches!(push_instruction, PushInstruction::FloatInstruction(fi) if fi == float_instruction);
 }
@@ -28,7 +28,9 @@ fn push_float() {
         .with_no_program()
         .with_instruction_step_limit(1000)
         .build();
-    let result = FloatInstruction::push(x).perform(state).unwrap();
+    let result = FloatInstruction::push_ordered_float(x)
+        .perform(state)
+        .unwrap();
     assert_eq!(result.stack::<OrderedFloat<f64>>().size(), 1);
     assert_eq!(*result.stack::<OrderedFloat<f64>>().top().unwrap(), x);
 }
@@ -44,7 +46,7 @@ fn add() {
         .with_no_program()
         .with_instruction_step_limit(1000)
         .build();
-    let result = FloatInstruction::add().perform(state).unwrap();
+    let result = FloatInstruction::Add.perform(state).unwrap();
     assert_eq!(result.stack::<OrderedFloat<f64>>().size(), 1);
     assert_eq!(*result.stack::<OrderedFloat<f64>>().top().unwrap(), x + y);
 }
@@ -55,7 +57,7 @@ fn overflow_bool_stack() {
     let state = PushState::builder()
         // Set the max stack size to 2 so we can cause it to overflow.
         .with_max_stack_size(2)
-        // Push two copies of x so we can call `FloatInstruction::equal()`
+        // Push two copies of x so we can call `FloatInstruction::Equal`
         .with_float_values([x, x])
         .unwrap()
         // Now fill the boolean stack so that it overflows when we check the floats for equality
@@ -64,7 +66,7 @@ fn overflow_bool_stack() {
         .with_no_program()
         .with_instruction_step_limit(1000)
         .build();
-    let result = FloatInstruction::equal().perform(state).unwrap_err();
+    let result = FloatInstruction::Equal.perform(state).unwrap_err();
     assert_eq!(
         result.error(),
         &StackError::Overflow {
@@ -103,7 +105,7 @@ fn add_prop(#[any] x: OrderedFloat<f64>, #[any] y: OrderedFloat<f64>) {
         .with_no_program()
         .with_instruction_step_limit(1000)
         .build();
-    let result = FloatInstruction::add().perform(state).unwrap();
+    let result = FloatInstruction::Add.perform(state).unwrap();
     let output = result.stack::<OrderedFloat<f64>>().top().unwrap();
     prop_assert_eq!(*output, expected_result);
 }
@@ -118,7 +120,7 @@ fn subtract_prop(#[any] x: OrderedFloat<f64>, #[any] y: OrderedFloat<f64>) {
         .with_no_program()
         .with_instruction_step_limit(1000)
         .build();
-    let result = FloatInstruction::subtract().perform(state).unwrap();
+    let result = FloatInstruction::Subtract.perform(state).unwrap();
     let output = result.stack::<OrderedFloat<f64>>().top().unwrap();
     prop_assert_eq!(*output, expected_result);
 }
@@ -133,7 +135,7 @@ fn multiply_prop(#[any] x: OrderedFloat<f64>, #[any] y: OrderedFloat<f64>) {
         .with_no_program()
         .with_instruction_step_limit(1000)
         .build();
-    let result = FloatInstruction::multiply().perform(state).unwrap();
+    let result = FloatInstruction::Multiply.perform(state).unwrap();
     let output = result.stack::<OrderedFloat<f64>>().top().unwrap();
     prop_assert_eq!(*output, expected_result);
 }
@@ -148,7 +150,7 @@ fn protected_divide_prop(#[any] x: OrderedFloat<f64>, #[any] y: OrderedFloat<f64
         .with_no_program()
         .with_instruction_step_limit(1000)
         .build();
-    let result = FloatInstruction::protected_divide().perform(state).unwrap();
+    let result = FloatInstruction::ProtectedDivide.perform(state).unwrap();
     let output = result.stack::<OrderedFloat<f64>>().top().unwrap();
     prop_assert_eq!(*output, expected_result);
 }
@@ -163,7 +165,7 @@ fn equal_prop(#[any] x: OrderedFloat<f64>, #[any] y: OrderedFloat<f64>) {
         .with_no_program()
         .with_instruction_step_limit(1000)
         .build();
-    let result = FloatInstruction::equal().perform(state).unwrap();
+    let result = FloatInstruction::Equal.perform(state).unwrap();
     let output = result.stack::<bool>().top().unwrap();
     prop_assert_eq!(*output, expected_result);
 }
@@ -178,7 +180,7 @@ fn not_equal_prop(#[any] x: OrderedFloat<f64>, #[any] y: OrderedFloat<f64>) {
         .with_no_program()
         .with_instruction_step_limit(1000)
         .build();
-    let result = FloatInstruction::not_equal().perform(state).unwrap();
+    let result = FloatInstruction::NotEqual.perform(state).unwrap();
     let output = result.stack::<bool>().top().unwrap();
     prop_assert_eq!(*output, expected_result);
 }
@@ -193,7 +195,7 @@ fn greater_than_prop(#[any] x: OrderedFloat<f64>, #[any] y: OrderedFloat<f64>) {
         .with_no_program()
         .with_instruction_step_limit(1000)
         .build();
-    let result = FloatInstruction::greater_than().perform(state).unwrap();
+    let result = FloatInstruction::GreaterThan.perform(state).unwrap();
     let output = result.stack::<bool>().top().unwrap();
     prop_assert_eq!(*output, expected_result);
 }
@@ -208,7 +210,7 @@ fn less_than_prop(#[any] x: OrderedFloat<f64>, #[any] y: OrderedFloat<f64>) {
         .with_no_program()
         .with_instruction_step_limit(1000)
         .build();
-    let result = FloatInstruction::less_than().perform(state).unwrap();
+    let result = FloatInstruction::LessThan.perform(state).unwrap();
     let output = result.stack::<bool>().top().unwrap();
     prop_assert_eq!(*output, expected_result);
 }
@@ -223,9 +225,7 @@ fn greater_than_or_equal_prop(#[any] x: OrderedFloat<f64>, #[any] y: OrderedFloa
         .with_no_program()
         .with_instruction_step_limit(1000)
         .build();
-    let result = FloatInstruction::greater_than_or_equal()
-        .perform(state)
-        .unwrap();
+    let result = FloatInstruction::GreaterThanOrEqual.perform(state).unwrap();
     let output = result.stack::<bool>().top().unwrap();
     prop_assert_eq!(*output, expected_result);
 }
@@ -240,9 +240,7 @@ fn less_than_or_equal_prop(#[any] x: OrderedFloat<f64>, #[any] y: OrderedFloat<f
         .with_no_program()
         .with_instruction_step_limit(1000)
         .build();
-    let result = FloatInstruction::less_than_or_equal()
-        .perform(state)
-        .unwrap();
+    let result = FloatInstruction::LessThanOrEqual.perform(state).unwrap();
     let output = result.stack::<bool>().top().unwrap();
     prop_assert_eq!(*output, expected_result);
 }

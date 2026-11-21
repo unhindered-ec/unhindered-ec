@@ -4,6 +4,7 @@ use strum_macros::EnumIter;
 use super::{
     PushInstruction, PushInstructionError, TypedInstruction,
     printing::{Print, PrintLn},
+    typed::op_constants,
 };
 use crate::{
     error::{Error, InstructionResult, MapInstructionError},
@@ -45,6 +46,9 @@ impl FloatInstruction {
     pub const fn push_f64(value: f64) -> Self {
         Self::push(OrderedFloat(value))
     }
+    pub const fn push_ordered_float(value: OrderedFloat<f64>) -> Self {
+        Self::push(value)
+    }
     pub const fn print() -> Self {
         Self::Op(FloatOp::Print(Print::new()))
     }
@@ -83,6 +87,38 @@ impl FloatInstruction {
     }
     pub const fn from_int_approx() -> Self {
         Self::Op(FloatOp::FromIntApprox)
+    }
+}
+
+op_constants!(
+    FloatInstruction,
+    FloatOp {
+        Add,
+        Subtract,
+        Multiply,
+        ProtectedDivide,
+        Equal,
+        NotEqual,
+        GreaterThan,
+        LessThan,
+        GreaterThanOrEqual,
+        LessThanOrEqual,
+        FromIntApprox,
+    }
+);
+
+/// Functions named like the old `Print` and `PrintLn` variants, so that code
+/// such as `FloatInstruction::Print(Print::default())` still compiles.
+#[expect(
+    non_snake_case,
+    reason = "The names match the variants of the old typed enums."
+)]
+impl FloatInstruction {
+    pub const fn Print(print: Print<OrderedFloat<f64>>) -> Self {
+        Self::Op(FloatOp::Print(print))
+    }
+    pub const fn PrintLn(println: PrintLn<OrderedFloat<f64>>) -> Self {
+        Self::Op(FloatOp::PrintLn(println))
     }
 }
 
@@ -220,6 +256,18 @@ mod test {
             FloatOp::iter()
                 .map(FloatInstruction::Op)
                 .collect::<Vec<_>>()
+        );
+    }
+
+    #[test]
+    fn print_functions_wrap_print_instructions() {
+        assert_eq!(
+            FloatInstruction::Print(super::Print::new()),
+            FloatInstruction::print()
+        );
+        assert_eq!(
+            FloatInstruction::PrintLn(super::PrintLn::new()),
+            FloatInstruction::print_ln()
         );
     }
 

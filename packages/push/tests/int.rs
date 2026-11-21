@@ -21,7 +21,7 @@ fn add() {
         .with_no_program()
         .with_instruction_step_limit(1000)
         .build();
-    let result = IntInstruction::add().perform(state).unwrap();
+    let result = IntInstruction::Add.perform(state).unwrap();
     assert_eq!(result.stack::<i64>().size(), 1);
     assert_eq!(*result.stack::<i64>().top().unwrap(), x + y);
 }
@@ -38,12 +38,12 @@ fn add_overflows() {
         .with_instruction_step_limit(1000)
         .build();
 
-    let result = IntInstruction::add().perform(state).unwrap_err();
+    let result = IntInstruction::Add.perform(state).unwrap_err();
     assert_eq!(result.state().stack::<i64>().size(), 2);
     assert_eq!(
         result.error(),
         &PushInstructionError::from(IntInstructionError::Overflow {
-            op: IntInstruction::add()
+            op: IntInstruction::Add
         })
     );
     assert!(result.is_recoverable());
@@ -60,13 +60,13 @@ fn inc_overflows() {
         .with_instruction_step_limit(1000)
         .build();
 
-    let result = IntInstruction::inc().perform(state).unwrap_err();
+    let result = IntInstruction::Inc.perform(state).unwrap_err();
     assert_eq!(result.state().stack::<i64>().size(), 1);
     assert_eq!(result.state().stack::<i64>().top().unwrap(), &i64::MAX);
     assert_eq!(
         result.error(),
         &IntInstructionError::Overflow {
-            op: IntInstruction::inc()
+            op: IntInstruction::Inc
         }
         .into()
     );
@@ -83,13 +83,13 @@ fn dec_overflows() {
         .with_no_program()
         .with_instruction_step_limit(1000)
         .build();
-    let result = IntInstruction::dec().perform(state).unwrap_err();
+    let result = IntInstruction::Dec.perform(state).unwrap_err();
     assert_eq!(result.state().stack::<i64>().size(), 1);
     assert_eq!(result.state().stack::<i64>().top().unwrap(), &i64::MIN);
     assert_eq!(
         result.error(),
         &IntInstructionError::Overflow {
-            op: IntInstruction::dec()
+            op: IntInstruction::Dec
         }
         .into()
     );
@@ -109,7 +109,7 @@ fn sqr(#[any] x: i64) {
         .with_no_program()
         .with_instruction_step_limit(1000)
         .build();
-    let result = IntInstruction::square().perform(state);
+    let result = IntInstruction::Square.perform(state);
     if let Some(x_squared) = x.checked_mul(x) {
         let result = result.unwrap();
         prop_assert_eq!(result.stack::<i64>().size(), 1);
@@ -120,7 +120,7 @@ fn sqr(#[any] x: i64) {
         assert_eq!(
             result.error(),
             &IntInstructionError::Overflow {
-                op: IntInstruction::square()
+                op: IntInstruction::Square
             }
             .into()
         );
@@ -139,7 +139,7 @@ fn add_does_not_crash(#[any] x: i64, #[any] y: i64) {
         .with_no_program()
         .with_instruction_step_limit(1000)
         .build();
-    let _ = IntInstruction::add().perform(state);
+    let _ = IntInstruction::Add.perform(state);
 }
 
 #[proptest]
@@ -151,7 +151,7 @@ fn add_adds_or_does_nothing(#[any] x: i64, #[any] y: i64) {
         .with_no_program()
         .with_instruction_step_limit(1000)
         .build();
-    let result = IntInstruction::add().perform(state);
+    let result = IntInstruction::Add.perform(state);
     if let Some(expected_result) = x.checked_add(y) {
         let output = result.unwrap().stack_mut::<i64>().pop().unwrap();
         prop_assert_eq!(output, expected_result);
@@ -164,7 +164,7 @@ fn add_adds_or_does_nothing(#[any] x: i64, #[any] y: i64) {
         assert_eq!(
             result.error(),
             &IntInstructionError::Overflow {
-                op: IntInstruction::add()
+                op: IntInstruction::Add
             }
             .into()
         );
@@ -183,7 +183,7 @@ fn subtract_subs_or_does_nothing(#[any] x: i64, #[any] y: i64) {
         .with_no_program()
         .with_instruction_step_limit(1000)
         .build();
-    let result = IntInstruction::subtract().perform(state);
+    let result = IntInstruction::Subtract.perform(state);
     if let Some(expected_result) = x.checked_sub(y) {
         let output = result.unwrap().stack_mut::<i64>().pop().unwrap();
         prop_assert_eq!(output, expected_result);
@@ -196,7 +196,7 @@ fn subtract_subs_or_does_nothing(#[any] x: i64, #[any] y: i64) {
         assert_eq!(
             result.error(),
             &IntInstructionError::Overflow {
-                op: IntInstruction::subtract()
+                op: IntInstruction::Subtract
             }
             .into()
         );
@@ -215,7 +215,7 @@ fn multiply_works_or_does_nothing(#[any] x: i64, #[any] y: i64) {
         .with_no_program()
         .with_instruction_step_limit(1000)
         .build();
-    let result = IntInstruction::multiply().perform(state);
+    let result = IntInstruction::Multiply.perform(state);
     if let Some(expected_result) = x.checked_mul(y) {
         let output = result.unwrap().stack_mut::<i64>().pop().unwrap();
         prop_assert_eq!(output, expected_result);
@@ -228,7 +228,7 @@ fn multiply_works_or_does_nothing(#[any] x: i64, #[any] y: i64) {
         assert_eq!(
             result.error(),
             &IntInstructionError::Overflow {
-                op: IntInstruction::multiply()
+                op: IntInstruction::Multiply
             }
             .into()
         );
@@ -247,7 +247,7 @@ fn protected_divide_zero_denominator(#[any] x: i64) {
         .with_no_program()
         .with_instruction_step_limit(1000)
         .build();
-    let result = IntInstruction::protected_divide().perform(state);
+    let result = IntInstruction::ProtectedDivide.perform(state);
     let output = result.unwrap().stack_mut::<i64>().pop().unwrap();
     // Dividing by zero should always return 1.
     prop_assert_eq!(output, 1);
@@ -262,7 +262,7 @@ fn protected_divide_works_or_does_nothing(#[any] x: i64, #[any] y: i64) {
         .with_no_program()
         .with_instruction_step_limit(1000)
         .build();
-    let result = IntInstruction::protected_divide().perform(state);
+    let result = IntInstruction::ProtectedDivide.perform(state);
     if let Some(expected_result) = x.checked_div(y) {
         let output = result.unwrap().stack_mut::<i64>().pop().unwrap();
         prop_assert_eq!(output, expected_result);
@@ -275,7 +275,7 @@ fn protected_divide_works_or_does_nothing(#[any] x: i64, #[any] y: i64) {
         assert_eq!(
             result.error(),
             &IntInstructionError::Overflow {
-                op: IntInstruction::protected_divide()
+                op: IntInstruction::ProtectedDivide
             }
             .into()
         );
@@ -294,7 +294,7 @@ fn mod_zero_denominator(#[any] x: i64) {
         .with_no_program()
         .with_instruction_step_limit(1000)
         .build();
-    let result = IntInstruction::r#mod().perform(state);
+    let result = IntInstruction::Mod.perform(state);
     let output = result.unwrap().stack_mut::<i64>().pop().unwrap();
     // Modding by zero should always return 0 since x % x = 0 for all x != 0.
     prop_assert_eq!(output, 0);
@@ -309,7 +309,7 @@ fn mod_rems_or_does_nothing(#[any] x: i64, #[any] y: i64) {
         .with_no_program()
         .with_instruction_step_limit(1000)
         .build();
-    let result = IntInstruction::r#mod().perform(state);
+    let result = IntInstruction::Mod.perform(state);
     if let Some(expected_result) = x.checked_rem(y) {
         let output = result.unwrap().stack_mut::<i64>().pop().unwrap();
         prop_assert_eq!(output, expected_result);
@@ -327,7 +327,7 @@ fn mod_rems_or_does_nothing(#[any] x: i64, #[any] y: i64) {
         assert_eq!(
             result.error(),
             &IntInstructionError::Overflow {
-                op: IntInstruction::r#mod()
+                op: IntInstruction::Mod
             }
             .into()
         );
@@ -346,7 +346,7 @@ fn inc_does_not_crash(#[any] x: i64) {
         .with_no_program()
         .with_instruction_step_limit(1000)
         .build();
-    let _ = IntInstruction::inc().perform(state);
+    let _ = IntInstruction::Inc.perform(state);
 }
 
 #[proptest]

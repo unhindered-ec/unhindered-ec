@@ -11,6 +11,7 @@ use self::{abs::Abs, negate::Negate};
 use super::{
     PushInstruction, PushInstructionError, TypedInstruction,
     printing::{Print, PrintLn},
+    typed::op_constants,
 };
 use crate::{
     error::{Error, InstructionResult, MapInstructionError},
@@ -153,6 +154,51 @@ impl IntInstruction {
     }
     pub const fn from_float_approx() -> Self {
         Self::Op(IntOp::FromFloatApprox)
+    }
+}
+
+op_constants!(IntInstruction, IntOp {
+    Negate = IntOp::Negate(Negate::new()),
+    Abs = IntOp::Abs(Abs::new()),
+    Min,
+    Max,
+    Clamp = IntOp::Clamp(Clamp::new()),
+    Inc,
+    Dec,
+    Add,
+    Subtract,
+    Multiply,
+    ProtectedDivide,
+    Mod,
+    Power,
+    Square,
+    IsZero,
+    IsPositive,
+    IsNegative,
+    IsEven,
+    IsOdd,
+    Equal,
+    NotEqual,
+    LessThan,
+    LessThanEqual,
+    GreaterThan,
+    GreaterThanEqual,
+    FromBoolean,
+    FromFloatApprox,
+});
+
+/// Functions named like the old `Print` and `PrintLn` variants, so that code
+/// such as `IntInstruction::Print(Print::default())` still compiles.
+#[expect(
+    non_snake_case,
+    reason = "The names match the variants of the old typed enums."
+)]
+impl IntInstruction {
+    pub const fn Print(print: Print<i64>) -> Self {
+        Self::Op(IntOp::Print(print))
+    }
+    pub const fn PrintLn(println: PrintLn<i64>) -> Self {
+        Self::Op(IntOp::PrintLn(println))
     }
 }
 
