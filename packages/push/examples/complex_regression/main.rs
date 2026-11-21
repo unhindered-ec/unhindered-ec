@@ -153,8 +153,8 @@ fn main() -> miette::Result<()> {
         FloatInstruction::Multiply,
         FloatInstruction::ProtectedDivide,
         FloatInstruction::dup(),
-        FloatInstruction::push_f64(0.0),
-        FloatInstruction::push_f64(1.0),
+        FloatInstruction::push(0.0),
+        FloatInstruction::push(1.0),
         WithInputInstruction::from("x")
     ]
     .into_gene_generator();

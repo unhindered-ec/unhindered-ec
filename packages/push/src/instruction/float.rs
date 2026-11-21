@@ -1,10 +1,10 @@
 use ordered_float::OrderedFloat;
-use strum_macros::EnumIter;
+use strum::IntoEnumIterator;
 
 use super::{
-    PushInstruction, PushInstructionError, TypedInstruction,
+    PushInstruction, PushInstructionError,
+    common::{Dup, Flush, IsEmpty, Pop, PushValue, StackDepth, StackInstruction, Swap},
     printing::{Print, PrintLn},
-    typed::op_constants,
 };
 use crate::{
     error::{Error, InstructionResult, MapInstructionError},
@@ -16,14 +16,15 @@ use crate::{
     },
 };
 
-/// The instructions for the float stack.
-pub type FloatInstruction = TypedInstruction<OrderedFloat<f64>, FloatOp>;
-
-/// The float-specific instructions in [`FloatInstruction`].
-#[derive(Debug, strum_macros::Display, Copy, Clone, EnumIter, Eq, PartialEq)]
+// `IntoEnumIterator` is written by hand below, because the `EnumIter`
+// derive gives only one instruction for the `Stack` variant.
+#[derive(Debug, strum_macros::Display, Copy, Clone, Eq, PartialEq)]
 #[non_exhaustive]
 #[must_use]
-pub enum FloatOp {
+pub enum FloatInstruction {
+    // The common stack instructions, for the float stack
+    #[strum(to_string = "{0}")]
+    Stack(StackInstruction<OrderedFloat<f64>>),
     Print(Print<OrderedFloat<f64>>),
     PrintLn(PrintLn<OrderedFloat<f64>>),
 
@@ -43,82 +44,95 @@ pub enum FloatOp {
 }
 
 impl FloatInstruction {
-    pub const fn push_f64(value: f64) -> Self {
-        Self::push(OrderedFloat(value))
+    pub const fn pop() -> Self {
+        Self::Stack(StackInstruction::pop())
+    }
+    pub const fn push(value: f64) -> Self {
+        Self::Stack(StackInstruction::push(OrderedFloat(value)))
     }
     pub const fn push_ordered_float(value: OrderedFloat<f64>) -> Self {
-        Self::push(value)
+        Self::Stack(StackInstruction::push(value))
+    }
+    pub const fn dup() -> Self {
+        Self::Stack(StackInstruction::dup())
+    }
+    pub const fn swap() -> Self {
+        Self::Stack(StackInstruction::swap())
+    }
+    pub const fn is_empty() -> Self {
+        Self::Stack(StackInstruction::is_empty())
+    }
+    pub const fn stack_depth() -> Self {
+        Self::Stack(StackInstruction::stack_depth())
+    }
+    pub const fn flush() -> Self {
+        Self::Stack(StackInstruction::flush())
     }
     pub const fn print() -> Self {
-        Self::Op(FloatOp::Print(Print::new()))
+        Self::Print(Print::<OrderedFloat<f64>>::new())
     }
     pub const fn print_ln() -> Self {
-        Self::Op(FloatOp::PrintLn(PrintLn::new()))
+        Self::PrintLn(PrintLn::<OrderedFloat<f64>>::new())
     }
     pub const fn add() -> Self {
-        Self::Op(FloatOp::Add)
+        Self::Add
     }
     pub const fn subtract() -> Self {
-        Self::Op(FloatOp::Subtract)
+        Self::Subtract
     }
     pub const fn multiply() -> Self {
-        Self::Op(FloatOp::Multiply)
+        Self::Multiply
     }
     pub const fn protected_divide() -> Self {
-        Self::Op(FloatOp::ProtectedDivide)
+        Self::ProtectedDivide
     }
     pub const fn equal() -> Self {
-        Self::Op(FloatOp::Equal)
+        Self::Equal
     }
     pub const fn not_equal() -> Self {
-        Self::Op(FloatOp::NotEqual)
+        Self::NotEqual
     }
     pub const fn greater_than() -> Self {
-        Self::Op(FloatOp::GreaterThan)
+        Self::GreaterThan
     }
     pub const fn less_than() -> Self {
-        Self::Op(FloatOp::LessThan)
+        Self::LessThan
     }
     pub const fn greater_than_or_equal() -> Self {
-        Self::Op(FloatOp::GreaterThanOrEqual)
+        Self::GreaterThanOrEqual
     }
     pub const fn less_than_or_equal() -> Self {
-        Self::Op(FloatOp::LessThanOrEqual)
+        Self::LessThanOrEqual
     }
     pub const fn from_int_approx() -> Self {
-        Self::Op(FloatOp::FromIntApprox)
+        Self::FromIntApprox
     }
 }
 
-op_constants!(
-    FloatInstruction,
-    FloatOp {
-        Add,
-        Subtract,
-        Multiply,
-        ProtectedDivide,
-        Equal,
-        NotEqual,
-        GreaterThan,
-        LessThan,
-        GreaterThanOrEqual,
-        LessThanOrEqual,
-        FromIntApprox,
-    }
-);
+// Keep this list in step with the variants of `FloatInstruction`.
+impl IntoEnumIterator for FloatInstruction {
+    type Iterator = std::vec::IntoIter<Self>;
 
-/// Functions named like the old `Print` and `PrintLn` variants, so that code
-/// such as `FloatInstruction::Print(Print::default())` still compiles.
-#[expect(
-    non_snake_case,
-    reason = "The names match the variants of the old typed enums."
-)]
-impl FloatInstruction {
-    pub const fn Print(print: Print<OrderedFloat<f64>>) -> Self {
-        Self::Op(FloatOp::Print(print))
-    }
-    pub const fn PrintLn(println: PrintLn<OrderedFloat<f64>>) -> Self {
-        Self::Op(FloatOp::PrintLn(println))
+    fn iter() -> Self::Iterator {
+        StackInstruction::iter()
+            .map(Self::Stack)
+            .chain([
+                Self::Print(Print::new()),
+                Self::PrintLn(PrintLn::new()),
+                Self::Add,
+                Self::Subtract,
+                Self::Multiply,
+                Self::ProtectedDivide,
+                Self::Equal,
+                Self::NotEqual,
+                Self::GreaterThan,
+                Self::LessThan,
+                Self::GreaterThanOrEqual,
+                Self::LessThanOrEqual,
+                Self::FromIntApprox,
+            ])
+            .collect::<Vec<_>>()
+            .into_iter()
     }
 }
 
@@ -128,9 +142,51 @@ impl From<FloatInstruction> for PushInstruction {
     }
 }
 
-impl Instruction for FloatOp {}
+impl From<Pop<OrderedFloat<f64>>> for FloatInstruction {
+    fn from(pop: Pop<OrderedFloat<f64>>) -> Self {
+        Self::Stack(StackInstruction::Pop(pop))
+    }
+}
 
-impl<S> Perform<S> for FloatOp
+impl From<PushValue<OrderedFloat<f64>>> for FloatInstruction {
+    fn from(push: PushValue<OrderedFloat<f64>>) -> Self {
+        Self::Stack(StackInstruction::Push(push))
+    }
+}
+
+impl From<Dup<OrderedFloat<f64>>> for FloatInstruction {
+    fn from(dup: Dup<OrderedFloat<f64>>) -> Self {
+        Self::Stack(StackInstruction::Dup(dup))
+    }
+}
+
+impl From<Swap<OrderedFloat<f64>>> for FloatInstruction {
+    fn from(swap: Swap<OrderedFloat<f64>>) -> Self {
+        Self::Stack(StackInstruction::Swap(swap))
+    }
+}
+
+impl From<IsEmpty<OrderedFloat<f64>>> for FloatInstruction {
+    fn from(is_empty: IsEmpty<OrderedFloat<f64>>) -> Self {
+        Self::Stack(StackInstruction::IsEmpty(is_empty))
+    }
+}
+
+impl From<StackDepth<OrderedFloat<f64>>> for FloatInstruction {
+    fn from(stack_depth: StackDepth<OrderedFloat<f64>>) -> Self {
+        Self::Stack(StackInstruction::StackDepth(stack_depth))
+    }
+}
+
+impl From<Flush<OrderedFloat<f64>>> for FloatInstruction {
+    fn from(flush: Flush<OrderedFloat<f64>>) -> Self {
+        Self::Stack(StackInstruction::Flush(flush))
+    }
+}
+
+impl Instruction for FloatInstruction {}
+
+impl<S> Perform<S> for FloatInstruction
 where
     S: Clone + HasStack<OrderedFloat<f64>> + HasStack<bool> + HasStack<i64> + HasStdout,
 {
@@ -138,6 +194,7 @@ where
 
     fn perform(&self, mut state: S) -> InstructionResult<S, Self::Error> {
         match self {
+            Self::Stack(instruction) => instruction.perform(state).map_err_into(),
             Self::Print(print) => print.perform(state).map_err_into(),
             Self::PrintLn(println) => println.perform(state).map_err_into(),
 
@@ -184,7 +241,7 @@ where
     }
 }
 
-impl FloatOp {
+impl FloatInstruction {
     fn binary_arithmetic<S>(
         mut state: S,
         op: impl FnOnce(OrderedFloat<f64>, OrderedFloat<f64>) -> OrderedFloat<f64>,
@@ -229,63 +286,41 @@ impl FloatOp {
 
 #[cfg(test)]
 mod test {
-    use ordered_float::OrderedFloat;
-    use strum::IntoEnumIterator;
+    use super::FloatInstruction;
 
-    use super::{FloatInstruction, FloatOp};
-
-    // The constructors are in the same order as the `FloatOp` variants.
     #[test]
-    fn constructors_wrap_float_ops() {
+    fn from_wraps_each_stack_instruction() {
+        use crate::instruction::common::{Dup, Flush, IsEmpty, Pop, PushValue, StackDepth, Swap};
+
         assert_eq!(
-            vec![
-                FloatInstruction::print(),
-                FloatInstruction::print_ln(),
-                FloatInstruction::add(),
-                FloatInstruction::subtract(),
-                FloatInstruction::multiply(),
-                FloatInstruction::protected_divide(),
-                FloatInstruction::equal(),
-                FloatInstruction::not_equal(),
-                FloatInstruction::greater_than(),
-                FloatInstruction::less_than(),
-                FloatInstruction::greater_than_or_equal(),
-                FloatInstruction::less_than_or_equal(),
-                FloatInstruction::from_int_approx(),
+            [
+                FloatInstruction::from(Pop::new()),
+                FloatInstruction::from(PushValue::new(ordered_float::OrderedFloat(1.5))),
+                FloatInstruction::from(Dup::new()),
+                FloatInstruction::from(Swap::new()),
+                FloatInstruction::from(IsEmpty::new()),
+                FloatInstruction::from(StackDepth::new()),
+                FloatInstruction::from(Flush::new()),
             ],
-            FloatOp::iter()
-                .map(FloatInstruction::Op)
-                .collect::<Vec<_>>()
-        );
-    }
-
-    #[test]
-    fn print_functions_wrap_print_instructions() {
-        assert_eq!(
-            FloatInstruction::Print(super::Print::new()),
-            FloatInstruction::print()
-        );
-        assert_eq!(
-            FloatInstruction::PrintLn(super::PrintLn::new()),
-            FloatInstruction::print_ln()
-        );
-    }
-
-    #[test]
-    fn push_f64_wraps_value() {
-        assert_eq!(
-            FloatInstruction::push_f64(1.5),
-            FloatInstruction::push(OrderedFloat(1.5))
+            [
+                FloatInstruction::pop(),
+                FloatInstruction::push(1.5),
+                FloatInstruction::dup(),
+                FloatInstruction::swap(),
+                FloatInstruction::is_empty(),
+                FloatInstruction::stack_depth(),
+                FloatInstruction::flush(),
+            ]
         );
     }
 
     #[test]
     fn auto_display() {
-        assert_eq!(format!("{}", FloatInstruction::not_equal()), "NotEqual");
+        assert_eq!(format!("{}", FloatInstruction::NotEqual), "NotEqual");
     }
 
     #[test]
     fn manual_push_display() {
-        assert_eq!(format!("{}", FloatInstruction::push_f64(1.0)), "Push(1)");
+        assert_eq!(format!("{}", FloatInstruction::push(1.0)), "Push(1)");
     }
 }

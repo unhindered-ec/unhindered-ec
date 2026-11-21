@@ -35,7 +35,7 @@ pub fn sample_genome() -> Plushy<PushInstruction> {
         WithInputInstruction::from("x"),
         PushGene::Close,
         FloatInstruction::Multiply,
-        FloatInstruction::push_f64(1.0),
+        FloatInstruction::push(1.0),
         FloatInstruction::Add,
         FloatInstruction::dup(),
         PushGene::Close,

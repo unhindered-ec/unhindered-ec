@@ -3,11 +3,10 @@ use printing::{PrintNewline, PrintPeriod, PrintSpace, PrintString};
 
 use self::instruction_error::PushInstructionError;
 pub use self::{
-    bool::{BoolInstruction, BoolOp},
+    bool::BoolInstruction,
     exec::ExecInstruction,
-    float::{FloatInstruction, FloatOp},
-    int::{IntInstruction, IntInstructionError, IntOp},
-    typed::TypedInstruction,
+    float::FloatInstruction,
+    int::{IntInstruction, IntInstructionError},
 };
 use crate::{
     error::{InstructionResult, MapInstructionError},
@@ -24,7 +23,6 @@ mod bool;
 mod exec;
 mod float;
 mod int;
-mod typed;
 
 /*
  * exec_if requires a boolean and two (additional) values on the exec stack.

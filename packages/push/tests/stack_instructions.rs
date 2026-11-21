@@ -62,7 +62,7 @@ fn int_iter_contains_stack_and_int_instructions() {
 fn float_iter_contains_stack_and_float_instructions() {
     assert_iter_contains([
         FloatInstruction::pop(),
-        FloatInstruction::push_f64(0.0),
+        FloatInstruction::push(0.0),
         FloatInstruction::dup(),
         FloatInstruction::swap(),
         FloatInstruction::is_empty(),
