@@ -31,26 +31,3 @@ impl PartialEq for AppendStdoutError {
 }
 
 impl Eq for AppendStdoutError {}
-
-#[cfg(test)]
-mod tests {
-    use std::io::{Error, ErrorKind};
-
-    use super::AppendStdoutError;
-
-    #[test]
-    fn errors_with_same_kind_and_message_are_equal() {
-        assert_eq!(
-            AppendStdoutError::from(Error::new(ErrorKind::WriteZero, "full")),
-            AppendStdoutError::from(Error::new(ErrorKind::WriteZero, "full"))
-        );
-    }
-
-    #[test]
-    fn errors_with_different_kinds_are_not_equal() {
-        assert_ne!(
-            AppendStdoutError::from(Error::new(ErrorKind::WriteZero, "full")),
-            AppendStdoutError::from(Error::new(ErrorKind::BrokenPipe, "full"))
-        );
-    }
-}

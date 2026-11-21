@@ -679,45 +679,6 @@ mod test {
     use super::{Stack, StackError};
 
     #[test]
-    fn pop3_returns_top_three_values() {
-        let mut stack: Stack<i64> = Stack::default();
-        stack.push(1).unwrap();
-        stack.push(2).unwrap();
-        stack.push(3).unwrap();
-        assert_eq!(stack.pop3(), Ok((3, 2, 1)));
-        assert_eq!(stack.size(), 0);
-    }
-
-    #[test]
-    fn pop3_from_two_values_fails() {
-        let mut stack: Stack<i64> = Stack::default();
-        stack.push(1).unwrap();
-        stack.push(2).unwrap();
-        assert_eq!(
-            stack.pop3(),
-            Err(StackError::Underflow {
-                num_requested: 3,
-                num_present: 2
-            })
-        );
-        assert_eq!(stack.size(), 2);
-    }
-
-    #[test]
-    fn discard_more_than_size_fails() {
-        let mut stack: Stack<i64> = Stack::default();
-        stack.push(1).unwrap();
-        assert_eq!(
-            stack.discard(2),
-            Err(StackError::Underflow {
-                num_requested: 2,
-                num_present: 1
-            })
-        );
-        assert_eq!(stack.size(), 1);
-    }
-
-    #[test]
     fn top_from_empty_fails() {
         let stack: Stack<bool> = Stack::default();
         let result = stack.top().unwrap_err();

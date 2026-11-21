@@ -25,7 +25,7 @@ pub type BoolInstruction = TypedInstruction<bool, BoolOp>;
 #[must_use]
 pub enum BoolOp {
     Print(Print<bool>),
-    PrintLn(PrintLn<bool>),
+    Println(PrintLn<bool>),
 
     Not,
     Or,
@@ -43,8 +43,8 @@ impl BoolInstruction {
     pub const fn print() -> Self {
         Self::Op(BoolOp::Print(Print::new()))
     }
-    pub const fn print_ln() -> Self {
-        Self::Op(BoolOp::PrintLn(PrintLn::new()))
+    pub const fn println() -> Self {
+        Self::Op(BoolOp::Println(PrintLn::new()))
     }
     pub const fn not() -> Self {
         Self::Op(BoolOp::Not)
@@ -78,7 +78,7 @@ op_constants!(
     }
 );
 
-/// Functions named like the old `Print` and `PrintLn` variants, so that code
+/// Functions named like the old `Print` and `Println` variants, so that code
 /// such as `BoolInstruction::Print(Print::default())` still compiles.
 #[expect(
     non_snake_case,
@@ -88,26 +88,14 @@ impl BoolInstruction {
     pub const fn Print(print: Print<bool>) -> Self {
         Self::Op(BoolOp::Print(print))
     }
-    pub const fn PrintLn(println: PrintLn<bool>) -> Self {
-        Self::Op(BoolOp::PrintLn(println))
+    pub const fn Println(println: PrintLn<bool>) -> Self {
+        Self::Op(BoolOp::Println(println))
     }
 }
 
 impl From<BoolInstruction> for PushInstruction {
     fn from(instr: BoolInstruction) -> Self {
         Self::BoolInstruction(instr)
-    }
-}
-
-impl From<Print<bool>> for BoolInstruction {
-    fn from(print: Print<bool>) -> Self {
-        Self::Op(BoolOp::Print(print))
-    }
-}
-
-impl From<PrintLn<bool>> for BoolInstruction {
-    fn from(println: PrintLn<bool>) -> Self {
-        Self::Op(BoolOp::PrintLn(println))
     }
 }
 
@@ -172,7 +160,7 @@ where
         let bool_stack = state.stack_mut::<bool>();
         match self {
             Self::Print(print) => print.perform(state).map_err_into(),
-            Self::PrintLn(println) => println.perform(state).map_err_into(),
+            Self::Println(println) => println.perform(state).map_err_into(),
 
             Self::Not => bool_stack.pop().map(Not::not).push_onto(state),
             Self::And => bool_stack.pop2().map(|(x, y)| x && y).push_onto(state),
@@ -267,7 +255,7 @@ mod test {
         assert_eq!(
             [
                 BoolInstruction::print(),
-                BoolInstruction::print_ln(),
+                BoolInstruction::println(),
                 BoolInstruction::not(),
                 BoolInstruction::or(),
                 BoolInstruction::and(),
@@ -277,7 +265,7 @@ mod test {
             ],
             [
                 BoolOp::Print(Print::new()),
-                BoolOp::PrintLn(PrintLn::new()),
+                BoolOp::Println(PrintLn::new()),
                 BoolOp::Not,
                 BoolOp::Or,
                 BoolOp::And,
@@ -296,20 +284,8 @@ mod test {
             BoolInstruction::print()
         );
         assert_eq!(
-            BoolInstruction::PrintLn(PrintLn::new()),
-            BoolInstruction::print_ln()
-        );
-    }
-
-    #[test]
-    fn from_wraps_print_instructions() {
-        assert_eq!(
-            BoolInstruction::from(Print::new()),
-            BoolInstruction::print()
-        );
-        assert_eq!(
-            BoolInstruction::from(PrintLn::new()),
-            BoolInstruction::print_ln()
+            BoolInstruction::Println(PrintLn::new()),
+            BoolInstruction::println()
         );
     }
 

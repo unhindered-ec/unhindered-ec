@@ -12,7 +12,6 @@ use std::fmt::Debug;
 use push::{
     instruction::{
         BoolInstruction, ExecInstruction, FloatInstruction, IntInstruction, PushInstruction,
-        StringInstruction,
     },
     push_vm::program::PushProgram,
 };
@@ -38,7 +37,7 @@ fn bool_iter_contains_stack_and_bool_instructions() {
         BoolInstruction::stack_depth(),
         BoolInstruction::flush(),
         BoolInstruction::print(),
-        BoolInstruction::print_ln(),
+        BoolInstruction::println(),
         BoolInstruction::not(),
     ]);
 }
@@ -86,21 +85,5 @@ fn exec_iter_contains_stack_and_exec_instructions() {
         ExecInstruction::stack_depth(),
         ExecInstruction::flush(),
         ExecInstruction::noop(),
-    ]);
-}
-
-#[test]
-fn string_iter_contains_stack_and_string_instructions() {
-    assert_iter_contains([
-        StringInstruction::pop(),
-        StringInstruction::push(String::new()),
-        StringInstruction::dup(),
-        StringInstruction::swap(),
-        StringInstruction::is_empty(),
-        StringInstruction::stack_depth(),
-        StringInstruction::flush(),
-        StringInstruction::print(),
-        StringInstruction::print_ln(),
-        StringInstruction::concat(),
     ]);
 }

@@ -312,20 +312,4 @@ mod test {
         prop_assert_eq!(result.stack::<bool>().top().unwrap(), &(a < b));
         prop_assert_eq!(result.stack::<bool>().size(), 1);
     }
-
-    #[test]
-    fn compares_different_stack_types() {
-        use super::super::test_support::{Small, compare_mixed};
-
-        // 3 against 5
-        assert!(compare_mixed(&LessThan::<i64, Small>::default(), 3, 5));
-    }
-
-    #[test]
-    fn full_bool_stack_is_fine_when_comparing_bools() {
-        use super::super::test_support::compare_on_full_bool_stack;
-
-        // The top value, true, against false
-        assert!(!compare_on_full_bool_stack(&LessThan::<bool>::default()));
-    }
 }

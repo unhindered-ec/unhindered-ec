@@ -42,18 +42,6 @@ macro_rules! derived_ident {
     }
 }
 
-/// The name of the builder generic for a stack field, for example `__Int`
-/// for the field `int`. The `__` prefix keeps the name from hiding a type in
-/// the field types: without it, the field `string` gives a generic `String`
-/// that hides `std::string::String`.
-fn stack_generic_ident(field: &Ident) -> Ident {
-    let pascal_case = field
-        .unraw()
-        .to_pascal_case_spanned(Span::mixed_site())
-        .unraw();
-    Ident::new(&format!("__{pascal_case}"), Span::mixed_site())
-}
-
 #[expect(
     clippy::too_many_arguments,
     reason = "We'll fix this with a eventual rewrite"
@@ -93,10 +81,13 @@ pub fn generate_builder(
 
     let fields = stacks.keys().collect::<Vec<_>>();
 
-    // Generic bounds for stacks, like `__Int: StackState, __Bool: StackState`
+    // Generic bounds for stacks, like `Int: StackState, Bool: StackState`
     let stack_generics = fields
         .iter()
-        .map(|i| stack_generic_ident(i))
+        .map(|i| {
+            i.unraw()
+                .to_pascal_case_spanned(proc_macro2::Span::mixed_site())
+        })
         .collect::<Vec<_>>();
     let stack_generics_with_state_bounds = stack_generics
         .iter()
@@ -270,7 +261,9 @@ pub fn generate_builder(
                 // Where bounds where the current stack is required to be SizeSet
                 //  and every other stack can be in any state
                 let where_bounds = stacks.keys().map(|ident| {
-                    let generic_name = stack_generic_ident(ident);
+                    let generic_name = ident
+                        .unraw()
+                        .to_pascal_case_spanned(proc_macro2::Span::mixed_site());
                     if ident == field {
                         quote! {#generic_name: #utilities_mod_ident::SizeSet}
                     } else {
@@ -284,7 +277,9 @@ pub fn generate_builder(
                     if ident == field {
                         quote! {#utilities_mod_ident::WithSizeAndData}
                     } else {
-                        let generic_name = stack_generic_ident(ident);
+                        let generic_name = ident
+                            .unraw()
+                            .to_pascal_case_spanned(proc_macro2::Span::mixed_site());
                         quote! {#generic_name}
                     }
                 });
@@ -415,7 +410,9 @@ pub fn generate_builder(
                 // Where bounds where the current stack is required
                 // to be SizeSet and every other stack can be in any state
                 let where_bounds = stacks.keys().map(|ident| {
-                    let generic_name = stack_generic_ident(ident);
+                    let generic_name = ident
+                        .unraw()
+                        .to_pascal_case_spanned(proc_macro2::Span::mixed_site());
 
                     if ident == field {
                         quote! {#generic_name: #utilities_mod_ident::Dataless}
@@ -430,7 +427,9 @@ pub fn generate_builder(
                     if ident == field {
                         quote! {#utilities_mod_ident::WithSize}
                     } else {
-                        let generic_name = stack_generic_ident(ident);
+                        let generic_name = ident
+                            .unraw()
+                            .to_pascal_case_spanned(proc_macro2::Span::mixed_site());
                         quote! {#generic_name}
                     }
                 });

@@ -7,7 +7,6 @@ pub use self::{
     exec::ExecInstruction,
     float::{FloatInstruction, FloatOp},
     int::{IntInstruction, IntInstructionError, IntOp},
-    string::{StringInstruction, StringOp},
     typed::TypedInstruction,
 };
 use crate::{
@@ -25,7 +24,6 @@ mod bool;
 mod exec;
 mod float;
 mod int;
-mod string;
 mod typed;
 
 /*
@@ -81,7 +79,6 @@ pub enum PushInstruction {
     BoolInstruction(BoolInstruction),
     IntInstruction(IntInstruction),
     FloatInstruction(FloatInstruction),
-    StringInstruction(StringInstruction),
     PrintSpace(PrintSpace),
     PrintNewline(PrintNewline),
     PrintPeriod(PrintPeriod),
@@ -120,7 +117,6 @@ where
     BoolInstruction: Perform<S, Error: Into<PushInstructionError>>,
     IntInstruction: Perform<S, Error: Into<PushInstructionError>>,
     FloatInstruction: Perform<S, Error: Into<PushInstructionError>>,
-    StringInstruction: Perform<S, Error: Into<PushInstructionError>>,
     PrintString: Perform<S, Error: Into<PushInstructionError>>,
     PrintChar<' '>: Perform<S, Error: Into<PushInstructionError>>,
     PrintChar<'\n'>: Perform<S, Error: Into<PushInstructionError>>,
@@ -135,7 +131,6 @@ where
             Self::BoolInstruction(i) => i.perform(state).map_err_into(),
             Self::IntInstruction(i) => i.perform(state).map_err_into(),
             Self::FloatInstruction(i) => i.perform(state).map_err_into(),
-            Self::StringInstruction(i) => i.perform(state).map_err_into(),
             Self::PrintString(i) => i.perform(state).map_err_into(),
             Self::PrintSpace(i) => i.perform(state).map_err_into(),
             Self::PrintNewline(i) => i.perform(state).map_err_into(),
@@ -169,7 +164,6 @@ impl std::fmt::Display for PushInstruction {
             Self::BoolInstruction(instruction) => write!(f, "Bool-{instruction}"),
             Self::IntInstruction(instruction) => write!(f, "Int-{instruction}"),
             Self::FloatInstruction(instruction) => write!(f, "Float-{instruction}"),
-            Self::StringInstruction(instruction) => write!(f, "String-{instruction}"),
             Self::PrintString(instruction) => write!(f, "PrintString({})", instruction.0),
             Self::PrintSpace(_) => write!(f, "PrintSpace"),
             Self::PrintNewline(_) => write!(f, "PrintNewline"),
