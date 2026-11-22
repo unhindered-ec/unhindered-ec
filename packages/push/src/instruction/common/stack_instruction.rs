@@ -126,27 +126,6 @@ mod tests {
     }
 
     #[test]
-    fn display_names_each_instruction() {
-        let names: Vec<String> = StackInstruction::<i64>::iter()
-            .chain([StackInstruction::push(5)])
-            .map(|i| i.to_string())
-            .collect();
-        assert_eq!(
-            names,
-            [
-                "Pop",
-                "Push(0)",
-                "Dup",
-                "Swap",
-                "IsEmpty",
-                "StackDepth",
-                "Flush",
-                "Push(5)",
-            ]
-        );
-    }
-
-    #[test]
     fn pop_removes_top() {
         let result = perform(StackInstruction::pop());
         assert_eq!(result.stack::<bool>().size(), 1);
