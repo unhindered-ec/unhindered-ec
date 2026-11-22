@@ -1,4 +1,4 @@
-use std::fmt::{self, Display};
+use std::fmt::Display;
 
 use strum::IntoEnumIterator;
 
@@ -14,13 +14,18 @@ use crate::{
 /// The typed instruction enums (for example
 /// [`BoolInstruction`](crate::instruction::BoolInstruction)) include these
 /// instructions instead of listing each one again.
-// `Display` and `IntoEnumIterator` are written by hand: the strum derives
-// would put `T: Display` and `T: Default` bounds on the whole enum.
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+// The strum `Display` derive copies only the `where` clause of the enum, so
+// the enum needs the `T: Display` bound. `IntoEnumIterator` is written by
+// hand, because the strum derive would also need `T: Default` on the enum.
+#[derive(Debug, strum_macros::Display, Copy, Clone, PartialEq, Eq)]
 #[non_exhaustive]
 #[must_use]
-pub enum StackInstruction<T> {
+pub enum StackInstruction<T>
+where
+    T: Display,
+{
     Pop(Pop<T>),
+    #[strum(to_string = "{0}")]
     Push(PushValue<T>),
     Dup(Dup<T>),
     Swap(Swap<T>),
@@ -29,7 +34,10 @@ pub enum StackInstruction<T> {
     Flush(Flush<T>),
 }
 
-impl<T> StackInstruction<T> {
+impl<T> StackInstruction<T>
+where
+    T: Display,
+{
     pub const fn pop() -> Self {
         Self::Pop(Pop::new())
     }
@@ -53,26 +61,9 @@ impl<T> StackInstruction<T> {
     }
 }
 
-impl<T> Display for StackInstruction<T>
-where
-    T: Display,
-{
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::Pop(_) => f.write_str("Pop"),
-            Self::Push(push) => push.fmt(f),
-            Self::Dup(_) => f.write_str("Dup"),
-            Self::Swap(_) => f.write_str("Swap"),
-            Self::IsEmpty(_) => f.write_str("IsEmpty"),
-            Self::StackDepth(_) => f.write_str("StackDepth"),
-            Self::Flush(_) => f.write_str("Flush"),
-        }
-    }
-}
-
 impl<T> IntoEnumIterator for StackInstruction<T>
 where
-    T: Clone + Default,
+    T: Clone + Default + Display,
 {
     type Iterator = std::array::IntoIter<Self, 7>;
 
@@ -90,14 +81,14 @@ where
     }
 }
 
-impl<T> NumOpens for StackInstruction<T> {}
+impl<T> NumOpens for StackInstruction<T> where T: Display {}
 
-impl<T> Instruction for StackInstruction<T> {}
+impl<T> Instruction for StackInstruction<T> where T: Display {}
 
 impl<S, T> Perform<S> for StackInstruction<T>
 where
     S: Clone + HasStack<T> + HasStack<bool> + HasStack<i64>,
-    T: Clone,
+    T: Clone + Display,
 {
     type Error = StackError;
 
