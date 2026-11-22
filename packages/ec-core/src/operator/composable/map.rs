@@ -200,6 +200,7 @@ where
 #[cfg(test)]
 mod tests {
     use rand::Rng;
+    use test_case::test_case;
 
     use super::{Map, MapError};
     use crate::operator::{Composable, Operator};
@@ -226,28 +227,18 @@ mod tests {
         }
     }
 
-    #[test]
-    fn vector_reports_the_failing_index() {
-        let result = Map::new(FailOn(2)).apply(vec![0, 1, 2, 3], &mut rand::rng());
-        assert!(matches!(result, Err(MapError(MyError, 2))));
-    }
-
-    #[test]
-    fn array_reports_the_failing_index() {
-        let result = Map::new(FailOn(1)).apply([0, 1, 2], &mut rand::rng());
-        assert!(matches!(result, Err(MapError(MyError, 1))));
-    }
-
-    #[test]
-    fn tuple_reports_the_first_index() {
-        let result = Map::new(FailOn(0)).apply((0, 5), &mut rand::rng());
-        assert!(matches!(result, Err(MapError(MyError, 0))));
-    }
-
-    #[test]
-    fn tuple_reports_the_second_index() {
-        let result = Map::new(FailOn(5)).apply((0, 5), &mut rand::rng());
-        assert!(matches!(result, Err(MapError(MyError, 1))));
+    #[test_case(2, vec![0,1,2,3], 2)]
+    #[test_case(0, vec![0,1,2,3], 0)]
+    #[test_case(1, [0, 1, 2], 1)]
+    #[test_case(2, [2, 1, 0], 0)]
+    #[test_case(0, (0, 5), 0)]
+    #[test_case(5, (0, 5), 1)]
+    fn map_reports_the_failing_index<T>(fail: i32, input: T, index: usize)
+    where
+        Map<FailOn>: Operator<T, Error = MapError<MyError>>,
+    {
+        let result = Map::new(FailOn(fail)).apply(input, &mut rand::rng());
+        assert!(matches!(result, Err(MapError(MyError, i)) if i == index));
     }
 
     #[test]

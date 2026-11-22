@@ -63,7 +63,7 @@ pub struct NPointXo<const N: usize>(());
 impl<const N: usize> NPointXo<N> {
     /// Create a new [`NPointXo`] recombinator with `N` crossover points
     ///
-    /// This ensures at compile time that at least one croosover point is
+    /// This ensures at compile time that at least one crossover point is
     /// specified.
     ///
     /// # Example
@@ -88,7 +88,7 @@ impl<const N: usize> NPointXo<N> {
 impl<const N: usize> Default for NPointXo<N> {
     /// Create a new [`NPointXo`] recombinator with `N` crossover points
     ///
-    /// This ensures at compile time that at least one croosover point is
+    /// This ensures at compile time that at least one crossover point is
     /// specified.
     ///
     /// # Example
