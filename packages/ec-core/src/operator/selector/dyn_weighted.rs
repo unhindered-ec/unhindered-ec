@@ -225,7 +225,16 @@ mod tests {
             .into_iter()
             .collect::<DynWeighted<Vec<i32>>>();
         let expected = DynWeighted::<Vec<i32>>::new(Best, 1).with_selector(Best, 2);
-        assert_eq!(format!("{weighted:?}"), format!("{expected:?}"));
+        assert_eq!(weighted.selectors.len(), expected.selectors.len());
+        // Check that the weights match. We can't check the selectors because
+        // `dyn DynSelector<>` is not `Eq`.
+        assert!(
+            weighted
+                .selectors
+                .iter()
+                .map(|(_, weight)| weight)
+                .eq(expected.selectors.iter().map(|(_, weight)| weight))
+        );
     }
 
     #[proptest]
