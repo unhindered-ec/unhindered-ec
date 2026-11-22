@@ -1,4 +1,4 @@
-use std::fmt::Display;
+use std::{borrow::Borrow, fmt::Display};
 
 use strum_macros::EnumIter;
 
@@ -14,18 +14,22 @@ use crate::{
 /// The typed instruction enums (for example
 /// [`BoolInstruction`](crate::instruction::BoolInstruction)) include these
 /// instructions instead of listing each one again.
+///
+/// `P` is the type that holds the value of the `Push` instruction. A stack can
+/// set `P` to `Box<PushValue<T>>` if `T` contains the instruction type itself.
 // The strum derives copy only the `where` clause of the enum into their
 // impls. `Display` needs `T: Display`, and `EnumIter` needs `T: Default`.
 #[derive(Debug, strum_macros::Display, Copy, Clone, PartialEq, Eq, EnumIter)]
 #[non_exhaustive]
 #[must_use]
-pub enum StackInstruction<T>
+pub enum StackInstruction<T, P = PushValue<T>>
 where
     T: Default + Display,
+    P: Default + Display,
 {
     Pop(Pop<T>),
     #[strum(to_string = "{0}")]
-    Push(PushValue<T>),
+    Push(P),
     Dup(Dup<T>),
     Swap(Swap<T>),
     IsEmpty(IsEmpty<T>),
@@ -37,11 +41,18 @@ impl<T> StackInstruction<T>
 where
     T: Default + Display,
 {
-    pub const fn pop() -> Self {
-        Self::Pop(Pop::new())
-    }
     pub const fn push(value: T) -> Self {
         Self::Push(PushValue::new(value))
+    }
+}
+
+impl<T, P> StackInstruction<T, P>
+where
+    T: Default + Display,
+    P: Default + Display,
+{
+    pub const fn pop() -> Self {
+        Self::Pop(Pop::new())
     }
     pub const fn dup() -> Self {
         Self::Dup(Dup::new())
@@ -60,21 +71,32 @@ where
     }
 }
 
-impl<T> NumOpens for StackInstruction<T> where T: Default + Display {}
+impl<T, P> NumOpens for StackInstruction<T, P>
+where
+    T: Default + Display,
+    P: Default + Display,
+{
+}
 
-impl<T> Instruction for StackInstruction<T> where T: Default + Display {}
+impl<T, P> Instruction for StackInstruction<T, P>
+where
+    T: Default + Display,
+    P: Default + Display,
+{
+}
 
-impl<S, T> Perform<S> for StackInstruction<T>
+impl<S, T, P> Perform<S> for StackInstruction<T, P>
 where
     S: Clone + HasStack<T> + HasStack<bool> + HasStack<i64>,
     T: Clone + Default + Display,
+    P: Borrow<PushValue<T>> + Default + Display,
 {
     type Error = StackError;
 
     fn perform(&self, state: S) -> InstructionResult<S, Self::Error> {
         match self {
             Self::Pop(pop) => pop.perform(state),
-            Self::Push(push) => push.perform(state),
+            Self::Push(push) => push.borrow().perform(state),
             Self::Dup(dup) => dup.perform(state),
             Self::Swap(swap) => swap.perform(state),
             Self::IsEmpty(is_empty) => is_empty.perform(state),

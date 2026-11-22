@@ -7,7 +7,10 @@ mod when;
 use strum::IntoEnumIterator;
 
 pub use self::{dup_block::DupBlock, ifelse::IfElse, noop::Noop, unless::Unless, when::When};
-use super::{NumOpens, Perform, PushInstruction, common::StackInstruction};
+use super::{
+    NumOpens, Perform, PushInstruction,
+    common::{PushValue, StackInstruction},
+};
 use crate::{
     error::{InstructionResult, MapInstructionError},
     instruction::Instruction,
@@ -16,15 +19,16 @@ use crate::{
 
 // TODO: This (and things like `IfElse`) are dependent on `PushInstruction`.
 // They should be made generic over the instruction type.
-// `IntoEnumIterator` is written by hand, because the `EnumIter` derive needs
-// `Default` for the boxed `StackInstruction`.
+// `IntoEnumIterator` is written by hand, because the `EnumIter` derive gives
+// only one instruction for the `Stack` variant.
 #[derive(Debug, strum_macros::Display, Clone, Eq, PartialEq)]
 #[must_use]
 #[non_exhaustive]
 pub enum ExecInstruction<I> {
-    // Boxed to keep `ExecInstruction` small: a `PushProgram` holds a `Vec`.
+    // The `Push` value is boxed, because a `PushProgram` can contain an
+    // `ExecInstruction`. Without the box, the type has an infinite size.
     #[strum(to_string = "{0}")]
-    Stack(Box<StackInstruction<PushProgram<I>>>),
+    Stack(StackInstruction<PushProgram<I>, Box<PushValue<PushProgram<I>>>>),
 
     Noop(Noop),
     DupBlock(DupBlock<I>),
@@ -34,29 +38,26 @@ pub enum ExecInstruction<I> {
 }
 
 impl<I> ExecInstruction<I> {
-    pub fn pop() -> Self {
-        Self::stack(StackInstruction::pop())
+    pub const fn pop() -> Self {
+        Self::Stack(StackInstruction::pop())
     }
     pub fn push(value: PushProgram<I>) -> Self {
-        Self::stack(StackInstruction::push(value))
+        Self::Stack(StackInstruction::Push(Box::new(PushValue::new(value))))
     }
-    pub fn dup() -> Self {
-        Self::stack(StackInstruction::dup())
+    pub const fn dup() -> Self {
+        Self::Stack(StackInstruction::dup())
     }
-    pub fn swap() -> Self {
-        Self::stack(StackInstruction::swap())
+    pub const fn swap() -> Self {
+        Self::Stack(StackInstruction::swap())
     }
-    pub fn is_empty() -> Self {
-        Self::stack(StackInstruction::is_empty())
+    pub const fn is_empty() -> Self {
+        Self::Stack(StackInstruction::is_empty())
     }
-    pub fn stack_depth() -> Self {
-        Self::stack(StackInstruction::stack_depth())
+    pub const fn stack_depth() -> Self {
+        Self::Stack(StackInstruction::stack_depth())
     }
-    pub fn flush() -> Self {
-        Self::stack(StackInstruction::flush())
-    }
-    fn stack(instruction: StackInstruction<PushProgram<I>>) -> Self {
-        Self::Stack(Box::new(instruction))
+    pub const fn flush() -> Self {
+        Self::Stack(StackInstruction::flush())
     }
     pub const fn noop() -> Self {
         Self::Noop(Noop)
@@ -84,7 +85,7 @@ where
 
     fn iter() -> Self::Iterator {
         StackInstruction::iter()
-            .map(Self::stack)
+            .map(Self::Stack)
             .chain([
                 Self::noop(),
                 Self::dup_block(),
