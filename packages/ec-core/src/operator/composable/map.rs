@@ -205,7 +205,8 @@ mod tests {
     use super::{Map, MapError};
     use crate::operator::{Composable, Operator};
 
-    #[derive(Debug, PartialEq, Eq)]
+    #[derive(Debug, PartialEq, Eq, thiserror::Error)]
+    #[error("my error")]
     struct MyError;
 
     /// An operator that fails whenever its input equals the value it was

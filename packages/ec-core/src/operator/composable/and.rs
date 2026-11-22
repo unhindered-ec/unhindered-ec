@@ -160,16 +160,9 @@ mod tests {
     use super::{And, AndError};
     use crate::operator::{Composable, Operator, constant::Constant};
 
-    #[derive(Debug, PartialEq, Eq)]
+    #[derive(Debug, PartialEq, Eq, thiserror::Error)]
+    #[error("my error")]
     struct MyError;
-
-    impl std::fmt::Display for MyError {
-        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-            f.write_str("my error")
-        }
-    }
-
-    impl Error for MyError {}
 
     /// An operator that always fails.
     struct FailAlways;
