@@ -1,6 +1,6 @@
 use std::fmt::Display;
 
-use strum::IntoEnumIterator;
+use strum_macros::EnumIter;
 
 use super::{Dup, Flush, IsEmpty, Pop, PushValue, StackDepth, Swap};
 use crate::{
@@ -14,15 +14,14 @@ use crate::{
 /// The typed instruction enums (for example
 /// [`BoolInstruction`](crate::instruction::BoolInstruction)) include these
 /// instructions instead of listing each one again.
-// The strum `Display` derive copies only the `where` clause of the enum, so
-// the enum needs the `T: Display` bound. `IntoEnumIterator` is written by
-// hand, because the strum derive would also need `T: Default` on the enum.
-#[derive(Debug, strum_macros::Display, Copy, Clone, PartialEq, Eq)]
+// The strum derives copy only the `where` clause of the enum into their
+// impls. `Display` needs `T: Display`, and `EnumIter` needs `T: Default`.
+#[derive(Debug, strum_macros::Display, Copy, Clone, PartialEq, Eq, EnumIter)]
 #[non_exhaustive]
 #[must_use]
 pub enum StackInstruction<T>
 where
-    T: Display,
+    T: Default + Display,
 {
     Pop(Pop<T>),
     #[strum(to_string = "{0}")]
@@ -36,7 +35,7 @@ where
 
 impl<T> StackInstruction<T>
 where
-    T: Display,
+    T: Default + Display,
 {
     pub const fn pop() -> Self {
         Self::Pop(Pop::new())
@@ -61,34 +60,14 @@ where
     }
 }
 
-impl<T> IntoEnumIterator for StackInstruction<T>
-where
-    T: Clone + Default + Display,
-{
-    type Iterator = std::array::IntoIter<Self, 7>;
+impl<T> NumOpens for StackInstruction<T> where T: Default + Display {}
 
-    fn iter() -> Self::Iterator {
-        [
-            Self::pop(),
-            Self::push(T::default()),
-            Self::dup(),
-            Self::swap(),
-            Self::is_empty(),
-            Self::stack_depth(),
-            Self::flush(),
-        ]
-        .into_iter()
-    }
-}
-
-impl<T> NumOpens for StackInstruction<T> where T: Display {}
-
-impl<T> Instruction for StackInstruction<T> where T: Display {}
+impl<T> Instruction for StackInstruction<T> where T: Default + Display {}
 
 impl<S, T> Perform<S> for StackInstruction<T>
 where
     S: Clone + HasStack<T> + HasStack<bool> + HasStack<i64>,
-    T: Clone + Display,
+    T: Clone + Default + Display,
 {
     type Error = StackError;
 
