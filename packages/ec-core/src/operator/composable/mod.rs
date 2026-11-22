@@ -3,6 +3,9 @@ mod map;
 mod repeat_with;
 mod then;
 
+#[cfg(test)]
+pub(crate) mod test_operators;
+
 pub use and::*;
 // derive macro
 #[doc(hidden)]
@@ -300,52 +303,6 @@ pub trait Wrappable<T> {
     ///
     /// [`Operator`]: super::Operator
     fn construct(wrapped: T, context: Self::Context) -> Self;
-}
-
-#[cfg(test)]
-#[expect(
-    clippy::arithmetic_side_effects,
-    reason = "The tradeoff safety <> ease of writing arguably lies on the ease of writing side \
-              for test code."
-)]
-mod test_operators {
-    use std::convert::Infallible;
-
-    use rand::Rng;
-
-    use super::{super::Operator, Composable};
-
-    #[derive(Composable)]
-    pub(super) struct Increment;
-
-    impl Operator<i32> for Increment {
-        type Output = i32;
-        type Error = Infallible;
-
-        fn apply<R: Rng + ?Sized>(
-            &self,
-            input: i32,
-            _: &mut R,
-        ) -> Result<Self::Output, Self::Error> {
-            Ok(input + 1)
-        }
-    }
-
-    #[derive(Composable)]
-    pub(super) struct Double;
-
-    impl Operator<i32> for Double {
-        type Output = i32;
-        type Error = Infallible;
-
-        fn apply<R: Rng + ?Sized>(
-            &self,
-            input: i32,
-            _: &mut R,
-        ) -> Result<Self::Output, Self::Error> {
-            Ok(input * 2)
-        }
-    }
 }
 
 #[cfg(test)]
