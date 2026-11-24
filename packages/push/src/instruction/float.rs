@@ -181,9 +181,10 @@ where
             Self::Print(print) => print.perform(state).map_err_into(),
             Self::PrintLn(println) => println.perform(state).map_err_into(),
 
-            // All these instructions pop at least one value from the float stack, so we're
-            // guaranteed that there will be space for the result. So we don't have to check that
-            // any stacks are full before we start.
+            // All these instructions pop at least one value from the float
+            // stack, so we're guaranteed that there will be space for the
+            // result. So we don't have to check that any stacks are full before
+            // we start.
             Self::Add => Self::binary_arithmetic(state, std::ops::Add::add),
             Self::Subtract => Self::binary_arithmetic(state, std::ops::Sub::sub),
             Self::Multiply => Self::binary_arithmetic(state, std::ops::Mul::mul),
@@ -195,10 +196,11 @@ where
                 if y == 0.0 { OrderedFloat(1.0) } else { x / y }
             }),
 
-            // None of these instructions pop anything off the boolean stack, but
-            // they will push a result onto that stack. Thus before we start performing
-            // the instruction, we need to check for the case that the boolean stack is
-            // already full, and return an `Overflow` error if it is.
+            // None of these instructions pop anything off the boolean stack,
+            // but they will push a result onto that stack. Thus before we start
+            // performing the instruction, we need to check for the case that
+            // the boolean stack is already full, and return an `Overflow` error
+            // if it is.
             Self::Equal => Self::binary_predicate(state, std::cmp::PartialEq::eq),
             Self::NotEqual => Self::binary_predicate(state, std::cmp::PartialEq::ne),
             Self::GreaterThan => Self::binary_predicate(state, std::cmp::PartialOrd::gt),

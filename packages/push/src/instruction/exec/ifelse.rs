@@ -108,15 +108,15 @@ where
         let r#else = top_2_blocks.map(|(_, b)| b);
 
         match (condition, r#then, r#else) {
-            // If there is a boolean that is false and two blocks, discard the boolean
-            // and the first (then) block, leaving the second (else) block so that it may be
-            // performed next.
+            // If there is a boolean that is false and two blocks, discard the
+            // boolean and the first (then) block, leaving the second (else)
+            // block so that it may be performed next.
             (Ok(false), Ok(_), Ok(_)) => Ok(state)
                 .with_stack_discard::<bool>(1)
                 .with_stack_discard::<PushProgram<_>>(1),
-            // If there is a boolean that is true and two blocks, discard the boolean
-            // and the second (else) block, leaving the first (then) block so that it may be
-            // performed next.
+            // If there is a boolean that is true and two blocks, discard the
+            // boolean and the second (else) block, leaving the first (then)
+            // block so that it may be performed next.
             (Ok(true), Ok(_), Ok(_)) => {
                 if let Err(e) = state.stack_mut::<bool>().pop() {
                     // This should never happen since we just checked that the
@@ -125,37 +125,39 @@ where
                 }
                 let r#then = match state.stack_mut::<PushProgram<_>>().pop2() {
                     Ok((r#then, _)) => r#then,
-                    // This case should never happen since we just checked that there are two blocks
-                    // on the exec stack.
+                    // This case should never happen since we just checked that
+                    // there are two blocks on the exec stack.
                     Err(e) => return Err(Error::fatal(state, e)),
                 };
                 Ok(state).with_stack_push(r#then)
             }
-            // If there is a boolean and only one block, then `IfThen` is equivalent to `When`
-            // so we'll just call that.
+            // If there is a boolean and only one block, then `IfThen` is
+            // equivalent to `When` so we'll just call that.
             (Ok(_), Ok(_), Err(StackError::Underflow { .. })) => When.perform(state),
-            // If there is no boolean but one (then) block, discard the then block but keep the
-            // rest of the exec stack unchanged. If there is a second (else) block, this makes the
-            // logic here consistent with the logic in `Unless`, where we perform that
-            // block when there is no boolean.
+            // If there is no boolean but one (then) block, discard the then
+            // block but keep the rest of the exec stack unchanged. If there is
+            // a second (else) block, this makes the logic here consistent with
+            // the logic in `Unless`, where we perform that block when there is
+            // no boolean.
             (
                 Err(StackError::Underflow { .. }),
                 Ok(_),
                 Ok(_) | Err(StackError::Underflow { .. }),
             ) => Ok(state).with_stack_discard::<PushProgram<_>>(1),
-            // If there are no blocks, then we want to return some sort of error. Currently we're
-            // just returning the error for the "else" block.
-            // TODO: This ignores the fact that we underflowed on the exec stack twice. We should
-            // probably be able to accumulate/merge errors, and then we could merge the two errors
-            // from the exec stack, along the possible error from the boolean stack.
+            // If there are no blocks, then we want to return some sort of
+            // error. Currently we're just returning the error for the "else"
+            // block. TODO: This ignores the fact that we underflowed on the
+            // exec stack twice. We should probably be able to accumulate/merge
+            // errors, and then we could merge the two errors from the exec
+            // stack, along the possible error from the boolean stack.
             (
                 Ok(_) | Err(StackError::Underflow { .. }),
                 Err(StackError::Underflow { .. }),
                 Err(e @ StackError::Underflow { .. }),
             ) => Err(Error::recoverable(state, e)),
-            // We know that there can't be an "else" block without there also being a "then" block,
-            // i.e., this case can't happen, but the compiler doesn't know that so we have to handle
-            // it explicitly.
+            // We know that there can't be an "else" block without there also
+            // being a "then" block, i.e., this case can't happen, but the
+            // compiler doesn't know that so we have to handle it explicitly.
             (Ok(_) | Err(StackError::Underflow { .. }), Err(_), Ok(_)) => {
                 unreachable!("There can't be an `else` block without a `then` block")
             }

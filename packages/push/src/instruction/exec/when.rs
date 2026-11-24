@@ -94,8 +94,8 @@ where
         let condition = state.stack::<bool>().top();
         let block = state.stack::<PushProgram<_>>().top();
         match (condition, block) {
-            // If there is a boolean that is true and a block, discard the boolean
-            // and leave the block so that it may be
+            // If there is a boolean that is true and a block, discard the
+            // boolean and leave the block so that it may be
             // performed next.
             (Ok(true), Ok(_)) => Ok(state).with_stack_discard::<bool>(1),
             // If there is a boolean that is false and a block, discard both the
@@ -104,16 +104,17 @@ where
             (Ok(false), Ok(_)) => Ok(state)
                 .with_stack_discard::<bool>(1)
                 .with_stack_discard::<PushProgram<_>>(1),
-            // If there is no boolean but there is a block, discard the block since
-            // we only want to perform it if there is a
+            // If there is no boolean but there is a block, discard the block
+            // since we only want to perform it if there is a
             // boolean that is true.
             (Err(StackError::Underflow { .. }), Ok(_)) => {
                 Ok(state).with_stack_discard::<PushProgram<_>>(1)
             }
-            // If there is a boolean but no block, then we just skip this instruction.
+            // If there is a boolean but no block, then we just skip this
+            // instruction.
             (Ok(_), Err(StackError::Underflow { .. })) => Ok(state),
-            // If there is no boolean and no block, then we return an stack underflow
-            // error.
+            // If there is no boolean and no block, then we return an stack
+            // underflow error.
             (Err(StackError::Underflow { .. }), Err(e @ StackError::Underflow { .. })) => {
                 Err(Error::recoverable(state, e))
             }

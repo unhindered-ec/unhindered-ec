@@ -29,7 +29,8 @@ pub trait HasStack<T> {
             Err(Error::fatal(
                 self,
                 StackError::Overflow {
-                    // TODO: Should make sure to overflow a stack so we know what this looks like.
+                    // TODO: Should make sure to overflow a stack so we know
+                    // what this looks like.
                     stack_type: std::any::type_name::<T>(),
                     max_size,
                 },
@@ -625,9 +626,10 @@ where
         match self {
             Ok(mut state) => match state.stack_mut::<T>().push(value) {
                 Ok(()) => Ok(state),
-                // If this fails it's because we tried to push onto a full stack.
-                // We _should_ have previously checked that the stack wasn't full
-                // (using `not_full()` for example), so really this should never happen.
+                // If this fails it's because we tried to push onto a full
+                // stack. We _should_ have previously checked that the stack
+                // wasn't full (using `not_full()` for example), so really this
+                // should never happen.
                 Err(error) => Err(Error::fatal(state, error)),
             },
             Err(error) => Err(error),
@@ -659,10 +661,10 @@ where
         match self {
             Ok(mut state) => match state.stack_mut::<T>().discard(num_to_discard) {
                 Ok(()) => Ok(state),
-                // TODO: any::type_name::<T>() to get the type name – put this in Stack
-                // If this fails it's because we tried to pop too many things from the stack.
-                // We _should_ have previously checked that there were
-                // that many things (using `top()` for example),
+                // TODO: any::type_name::<T>() to get the type name – put this
+                // in Stack If this fails it's because we tried to pop too many
+                // things from the stack. We _should_ have previously checked
+                // that there were that many things (using `top()` for example),
                 // so really this should never happen.
                 Err(error) => Err(Error::fatal(state, error)),
             },
