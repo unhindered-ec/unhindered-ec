@@ -15,6 +15,10 @@ publish = { workspace = true }
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[features]
+default = ["macros"]
+macros = ["dep:push_macros"]
+
 [[bench]]
 harness = false
 name = "regression-evaluation"
@@ -44,10 +48,6 @@ proptest = { workspace = true }
 strsim = "0.11.1"
 test-case = { workspace = true }
 test-strategy = { workspace = true }
-
-[features]
-default = ["macros"]
-macros = ["dep:push_macros"]
 
 [lints]
 workspace = true
