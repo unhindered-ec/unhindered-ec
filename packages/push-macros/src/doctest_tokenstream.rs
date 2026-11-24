@@ -48,7 +48,7 @@ pub fn doctest<'a, 'b>(
     tokens: &str,
     outro: Option<&str>,
     attribute: Option<&'b str>,
-) -> TokenStream {
+) -> manyhow::Result<TokenStream> {
     let mut token_stream = TokenStream::new();
     if let Some(attr) = attribute {
         let doc_line = format!(" ```{attr}");
@@ -66,18 +66,18 @@ pub fn doctest<'a, 'b>(
     }
 
     if let Some(intro) = intro {
-        let _ = create_doc_attrs_from_string(intro, &mut token_stream, false);
+        create_doc_attrs_from_string(intro, &mut token_stream, false)?;
     }
-    let _ = create_doc_attrs_from_string(tokens, &mut token_stream, true);
+    create_doc_attrs_from_string(tokens, &mut token_stream, true)?;
 
     if let Some(outro) = outro {
-        let _ = create_doc_attrs_from_string(outro, &mut token_stream, false);
+        create_doc_attrs_from_string(outro, &mut token_stream, false)?;
     }
     token_stream.extend(quote! {
         /// ```
     });
 
-    token_stream
+    Ok(token_stream)
 }
 
 fn create_doc_attrs_from_string(
