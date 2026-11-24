@@ -60,13 +60,14 @@ pub fn generate_builder(
     exec_stack: &ExecStackInput,
     input_instructions: SingleFieldInput,
     max_instruction_steps: &SingleFieldInput,
-) -> syn::Result<TokenStream> {
+) -> manyhow::Result<TokenStream> {
     let Some((exec_stack_ident, _, exec_stack_ty)) = exec_stack else {
         return Err(syn::Error::new(
             macro_span,
             "Need to declare exactly one exec stack using #[stack(exec)] to use the builder \
              feature.",
-        ));
+        )
+        .into());
     };
 
     let utilities_mod_ident = struct_ident.unraw().to_snake_case();
@@ -250,7 +251,7 @@ pub fn generate_builder(
                     },
                     ty,
                 ),
-            )| {
+            )| ->  manyhow::Result<proc_macro2::TokenStream>{
                 let stack_ident = builder_methods_name
                     .as_ref()
                     .unwrap_or(field)
@@ -324,7 +325,7 @@ pub fn generate_builder(
                         .then_some("ignore");
 
                     Some(doctest(Some(&imports), None::<&str>, &doctest_code.to_string(), Some(outro), ignore_attr))
-                });
+                }).transpose()?;
 
                 let example_section = sample_values.is_some().then_some(quote! {
                         ///
@@ -333,7 +334,7 @@ pub fn generate_builder(
                         #doctest_tokenstream
                 });
 
-                quote! {
+                Ok(quote! {
                     impl<
                         __Exec: #utilities_mod_ident::StackState,
                         #max_instruction_steps_generic_with_state_bound
@@ -380,10 +381,10 @@ pub fn generate_builder(
                             })
                         }
                     }
-                }
+                })
             },
         )
-        .collect::<proc_macro2::TokenStream>();
+        .collect::<manyhow::Result<proc_macro2::TokenStream>>()?;
 
     let set_max_size_impl = stacks
         .iter()
@@ -485,7 +486,7 @@ pub fn generate_builder(
             .map(|(_, _, ty)| ty))
             .next()
             .map(|ty| (true, ty)))
-        .map(|(ignore, ty)| {
+        .map(|(ignore, ty)| -> manyhow::Result<proc_macro2::TokenStream> {
             let imports = [
                 Import::Path(
                     Some(syn::token::PathSep::default()),
@@ -522,15 +523,15 @@ pub fn generate_builder(
                 &doctest_code.to_string(),
                 Some(outro),
                 ignore_attr
-            );
+            )?;
 
-            quote! {
+            Ok(quote! {
                     ///
                     /// # Examples
                     ///
                     #doctest_tokenstream
-            }
-        });
+            })
+        }).transpose()?;
 
     Ok(quote! {
         impl #impl_generics #struct_ident #type_generics #where_clause {
