@@ -324,7 +324,8 @@ pub fn generate_builder(
                     )
                         .then_some("ignore");
 
-                    Some(doctest(Some(&imports), None::<&str>, &doctest_code.to_string(), Some(outro), ignore_attr))
+                    Some(doctest(Some(&imports), None::<&str>, &doctest_code.to_string(),
+                        Some(outro), ignore_attr))
                 }).transpose()?;
 
                 let example_section = sample_values.is_some().then_some(quote! {
