@@ -292,9 +292,9 @@ where
                 // we start.
                 let int_stack = state.stack_mut::<i64>();
                 match self {
-                    // This works, but is going to be nasty after we repeat a lot. There should
-                    // perhaps be another trait method somewhere that eliminates a lot of this
-                    // boilerplate.
+                    // This works, but is going to be nasty after we repeat a
+                    // lot. There should perhaps be another trait method
+                    // somewhere that eliminates a lot of this boilerplate.
                     Self::Inc => int_stack
                         .top()
                         .map_err(PushInstructionError::from)

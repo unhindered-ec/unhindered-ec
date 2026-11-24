@@ -76,14 +76,16 @@ pub fn sample_distinct_uniform_sorted<R: Rng + ?Sized, const N: usize>(
         // See if the selected value `t` is already in `result`, i.e., we've
         // already selected that value.
         match result[..filled].binary_search(&t) {
-            // We've selected this before, so we actually insert `i+start`, i.e., the current
-            // index. We place this at the end of the `result`, which ensures that `result`
-            // remains sorted since all the previous values must be < i+start.
+            // We've selected this before, so we actually insert `i+start`,
+            // i.e., the current index. We place this at the end of the
+            // `result`, which ensures that `result` remains sorted since all
+            // the previous values must be < i+start.
             Ok(_) => {
                 result[filled] = i + start;
             }
-            // We haven't selected this before, so we have to insert it into the correct location,
-            // shifting all the larger values one position to the right.
+            // We haven't selected this before, so we have to insert it into the
+            // correct location, shifting all the larger values one position to
+            // the right.
             Err(pos) => {
                 debug_assert!(pos <= filled);
                 debug_assert!(pos < N); // i.e., pos + 1 <= N

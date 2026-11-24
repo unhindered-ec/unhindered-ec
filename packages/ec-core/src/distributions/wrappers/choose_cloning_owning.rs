@@ -52,18 +52,20 @@ use crate::distributions::finite::Finite;
 /// ```
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 pub struct ChooseCloningOwning<T, U> {
-    // It is really important here that the fields `collection`, `range` and `num_choices` are
-    // never modified, since they all contain information about the length of the collection
-    // which need to be in sync for no panics to occur.
+    // It is really important here that the fields `collection`, `range` and
+    // `num_choices` are never modified, since they all contain information
+    // about the length of the collection which need to be in sync for no panics
+    // to occur.
     //
-    // Therefore, these fields may *never* be pub and no methods may be introduced which can modify
-    // fields without keeping this contract.
+    // Therefore, these fields may *never* be pub and no methods may be
+    // introduced which can modify fields without keeping this contract.
     //
     // Currently these fields are *never* modified at all.
     collection: T,
     range: Uniform<usize>,
-    // We store the NonZeroUsize in the struct here, since we need to check this invariant in the
-    // new anyways. As such it would make little sense to recompute that every time.
+    // We store the NonZeroUsize in the struct here, since we need to check this
+    // invariant in the new anyways. As such it would make little sense to
+    // recompute that every time.
     num_choices: NonZeroUsize,
     _p: PhantomData<U>,
 }
@@ -100,8 +102,8 @@ where
 
         Ok(Self {
             collection,
-            // This error can actually never occur since it's checked above, but erroring is the
-            // easiest option here.
+            // This error can actually never occur since it's checked above, but
+            // erroring is the easiest option here.
             range: Uniform::new(0, num_choices.get()).map_err(|_| Empty)?,
             num_choices,
             _p: PhantomData,

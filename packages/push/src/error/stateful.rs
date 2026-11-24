@@ -47,11 +47,11 @@ pub struct StatefulError<S, E, Severity: ErrorSeverity> {
     // Without the `Box` the size of this Error ended up being 156 bytes
     // with a `PushState` and a `PushInstructionError`. That led to a Clippy
     // warning (https://rust-lang.github.io/rust-clippy/master/index.html#/result_large_err)
-    // our `Error` was then larger than the 128 byte limit. They recommended boxing
-    // the big piece (the state in our case), and doing that brought the size down to
-    // 40 bytes. Since `Error`s are only constructed through `::fatal()` or `::recoverable()`,
-    // we'd nicely encapsulated this and only had to make changes in those two places to
-    // get things working.
+    // our `Error` was then larger than the 128 byte limit. They recommended
+    // boxing the big piece (the state in our case), and doing that brought the
+    // size down to 40 bytes. Since `Error`s are only constructed through
+    // `::fatal()` or `::recoverable()`, we'd nicely encapsulated this and only
+    // had to make changes in those two places to get things working.
     pub(super) state: Box<S>,
     pub(super) error: E,
     _p: PhantomData<Severity>,

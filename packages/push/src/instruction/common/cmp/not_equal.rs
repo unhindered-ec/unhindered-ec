@@ -172,8 +172,8 @@ where
         };
         let first = match state.stack_mut::<First>().pop() {
             Ok(value) => value,
-            // Because of the size checks above, this should actually never fail, so we'll return a
-            // `Fatal` error if for some reason it does.
+            // Because of the size checks above, this should actually never
+            // fail, so we'll return a `Fatal` error if for some reason it does.
             Err(error) => return Err(Error::fatal(state, error)),
         };
 
