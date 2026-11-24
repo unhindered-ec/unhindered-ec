@@ -1,0 +1,195 @@
+use std::{borrow::Borrow, fmt::Display};
+
+use strum_macros::EnumIter;
+
+use super::{Dup, Flush, IsEmpty, Pop, PushValue, StackDepth, Swap};
+use crate::{
+    error::{InstructionResult, MapInstructionError},
+    instruction::{Instruction, NumOpens, Perform},
+    push_vm::{HasStack, stack::StackError},
+};
+
+/// The instructions that every stack of type `T` has.
+///
+/// The typed instruction enums (for example
+/// [`BoolInstruction`](crate::instruction::BoolInstruction)) include these
+/// instructions instead of listing each one again.
+///
+/// `P` is the type that holds the value of the `Push` instruction. A stack can
+/// set `P` to `Box<PushValue<T>>` if `T` contains the instruction type itself.
+// The strum derives copy only the `where` clause of the enum into their
+// impls. `Display` needs `T: Display`, and `EnumIter` needs `T: Default`.
+#[derive(Debug, strum_macros::Display, Copy, Clone, PartialEq, Eq, EnumIter)]
+#[non_exhaustive]
+#[must_use]
+pub enum StackInstruction<T, P = PushValue<T>>
+where
+    T: Default + Display,
+    P: Default + Display,
+{
+    Pop(Pop<T>),
+    #[strum(to_string = "{0}")]
+    Push(P),
+    Dup(Dup<T>),
+    Swap(Swap<T>),
+    IsEmpty(IsEmpty<T>),
+    StackDepth(StackDepth<T>),
+    Flush(Flush<T>),
+}
+
+impl<T> StackInstruction<T>
+where
+    T: Default + Display,
+{
+    pub const fn push(value: T) -> Self {
+        Self::Push(PushValue::new(value))
+    }
+}
+
+impl<T, P> StackInstruction<T, P>
+where
+    T: Default + Display,
+    P: Default + Display,
+{
+    pub const fn pop() -> Self {
+        Self::Pop(Pop::new())
+    }
+    pub const fn dup() -> Self {
+        Self::Dup(Dup::new())
+    }
+    pub const fn swap() -> Self {
+        Self::Swap(Swap::new())
+    }
+    pub const fn is_empty() -> Self {
+        Self::IsEmpty(IsEmpty::new())
+    }
+    pub const fn stack_depth() -> Self {
+        Self::StackDepth(StackDepth::new())
+    }
+    pub const fn flush() -> Self {
+        Self::Flush(Flush::new())
+    }
+}
+
+impl<T, P> NumOpens for StackInstruction<T, P>
+where
+    T: Default + Display,
+    P: Default + Display,
+{
+}
+
+impl<T, P> Instruction for StackInstruction<T, P>
+where
+    T: Default + Display,
+    P: Default + Display,
+{
+}
+
+impl<S, T, P> Perform<S> for StackInstruction<T, P>
+where
+    S: Clone + HasStack<T> + HasStack<bool> + HasStack<i64>,
+    T: Clone + Default + Display,
+    P: Borrow<PushValue<T>> + Default + Display,
+{
+    type Error = StackError;
+
+    fn perform(&self, state: S) -> InstructionResult<S, Self::Error> {
+        match self {
+            Self::Pop(pop) => pop.perform(state),
+            Self::Push(push) => push.borrow().perform(state),
+            Self::Dup(dup) => dup.perform(state),
+            Self::Swap(swap) => swap.perform(state),
+            Self::IsEmpty(is_empty) => is_empty.perform(state),
+            Self::StackDepth(stack_depth) => stack_depth.perform(state),
+            Self::Flush(flush) => flush.perform(state).map_err_into(),
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use strum::IntoEnumIterator;
+
+    use super::StackInstruction;
+    use crate::{
+        instruction::Perform,
+        push_vm::{HasStack, push_state::PushState},
+    };
+
+    // The top of the bool stack is `true`, and the value below it is `false`.
+    fn state() -> PushState {
+        PushState::builder()
+            .with_max_stack_size(10)
+            .with_no_program()
+            .with_bool_values([true, false])
+            .unwrap()
+            .with_instruction_step_limit(1000)
+            .build()
+    }
+
+    fn perform(instruction: StackInstruction<bool>) -> PushState {
+        instruction.perform(state()).unwrap()
+    }
+
+    #[test]
+    fn iter_gives_each_instruction() {
+        assert_eq!(
+            StackInstruction::<bool>::iter().collect::<Vec<_>>(),
+            [
+                StackInstruction::pop(),
+                StackInstruction::push(false),
+                StackInstruction::dup(),
+                StackInstruction::swap(),
+                StackInstruction::is_empty(),
+                StackInstruction::stack_depth(),
+                StackInstruction::flush(),
+            ]
+        );
+    }
+
+    #[test]
+    fn pop_removes_top() {
+        let result = perform(StackInstruction::pop());
+        assert_eq!(result.stack::<bool>().size(), 1);
+        assert_eq!(result.stack::<bool>().top(), Ok(&false));
+    }
+
+    #[test]
+    fn push_adds_value() {
+        let result = perform(StackInstruction::push(false));
+        assert_eq!(result.stack::<bool>().size(), 3);
+        assert_eq!(result.stack::<bool>().top(), Ok(&false));
+    }
+
+    #[test]
+    fn dup_copies_top() {
+        let result = perform(StackInstruction::dup());
+        assert_eq!(result.stack::<bool>().size(), 3);
+        assert_eq!(result.stack::<bool>().top2(), Ok((&true, &true)));
+    }
+
+    #[test]
+    fn swap_exchanges_top_two() {
+        let result = perform(StackInstruction::swap());
+        assert_eq!(result.stack::<bool>().top2(), Ok((&false, &true)));
+    }
+
+    #[test]
+    fn is_empty_pushes_false_for_non_empty_stack() {
+        let result = perform(StackInstruction::is_empty());
+        assert_eq!(result.stack::<bool>().size(), 3);
+        assert_eq!(result.stack::<bool>().top(), Ok(&false));
+    }
+
+    #[test]
+    fn stack_depth_pushes_size() {
+        let result = perform(StackInstruction::stack_depth());
+        assert_eq!(result.stack::<i64>().top(), Ok(&2));
+    }
+
+    #[test]
+    fn flush_empties_stack() {
+        let result = perform(StackInstruction::flush());
+        assert_eq!(result.stack::<bool>().size(), 0);
+    }
+}

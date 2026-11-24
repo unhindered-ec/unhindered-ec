@@ -5,12 +5,12 @@ mod negate;
 use clamp::Clamp;
 use miette::Diagnostic;
 use ordered_float::OrderedFloat;
-use strum_macros::EnumIter;
+use strum::IntoEnumIterator;
 
 use self::{abs::Abs, negate::Negate};
 use super::{
     PushInstruction, PushInstructionError,
-    common::{Dup, Flush, IsEmpty, Pop, PushValue, StackDepth, Swap},
+    common::{Dup, Flush, IsEmpty, Pop, PushValue, StackDepth, StackInstruction, Swap},
     printing::{Print, PrintLn},
 };
 use crate::{
@@ -22,19 +22,15 @@ use crate::{
     },
 };
 
-#[derive(Debug, strum_macros::Display, Copy, Clone, PartialEq, Eq, EnumIter)]
+// `IntoEnumIterator` is written by hand below, because the `EnumIter`
+// derive gives only one instruction for the `Stack` variant.
+#[derive(Debug, strum_macros::Display, Copy, Clone, PartialEq, Eq)]
 #[non_exhaustive]
 #[must_use]
 pub enum IntInstruction {
-    // "Common" instructions specialized for the integer stack
-    Pop(Pop<i64>),
+    // The common stack instructions, for the integer stack
     #[strum(to_string = "{0}")]
-    Push(PushValue<i64>),
-    Dup(Dup<i64>),
-    Swap(Swap<i64>),
-    IsEmpty(IsEmpty<i64>),
-    StackDepth(StackDepth<i64>),
-    Flush(Flush<i64>),
+    Stack(StackInstruction<i64>),
     Print(Print<i64>),
     PrintLn(PrintLn<i64>),
 
@@ -74,25 +70,25 @@ pub enum IntInstruction {
 
 impl IntInstruction {
     pub const fn pop() -> Self {
-        Self::Pop(Pop::<i64>::new())
+        Self::Stack(StackInstruction::pop())
     }
     pub const fn push(value: i64) -> Self {
-        Self::Push(PushValue::<i64>::new(value))
+        Self::Stack(StackInstruction::push(value))
     }
     pub const fn dup() -> Self {
-        Self::Dup(Dup::<i64>::new())
+        Self::Stack(StackInstruction::dup())
     }
     pub const fn swap() -> Self {
-        Self::Swap(Swap::<i64>::new())
+        Self::Stack(StackInstruction::swap())
     }
     pub const fn is_empty() -> Self {
-        Self::IsEmpty(IsEmpty::<i64>::new())
+        Self::Stack(StackInstruction::is_empty())
     }
     pub const fn stack_depth() -> Self {
-        Self::StackDepth(StackDepth::<i64>::new())
+        Self::Stack(StackInstruction::stack_depth())
     }
     pub const fn flush() -> Self {
-        Self::Flush(Flush::<i64>::new())
+        Self::Stack(StackInstruction::flush())
     }
     pub const fn print() -> Self {
         Self::Print(Print::<i64>::new())
@@ -183,6 +179,49 @@ impl IntInstruction {
     }
 }
 
+// Keep this list in step with the variants of `IntInstruction`.
+impl IntoEnumIterator for IntInstruction {
+    type Iterator = std::vec::IntoIter<Self>;
+
+    fn iter() -> Self::Iterator {
+        StackInstruction::iter()
+            .map(Self::Stack)
+            .chain([
+                Self::Print(Print::new()),
+                Self::PrintLn(PrintLn::new()),
+                Self::Negate(Negate::new()),
+                Self::Abs(Abs::new()),
+                Self::Min,
+                Self::Max,
+                Self::Clamp(Clamp::new()),
+                Self::Inc,
+                Self::Dec,
+                Self::Add,
+                Self::Subtract,
+                Self::Multiply,
+                Self::ProtectedDivide,
+                Self::Mod,
+                Self::Power,
+                Self::Square,
+                Self::IsZero,
+                Self::IsPositive,
+                Self::IsNegative,
+                Self::IsEven,
+                Self::IsOdd,
+                Self::Equal,
+                Self::NotEqual,
+                Self::LessThan,
+                Self::LessThanEqual,
+                Self::GreaterThan,
+                Self::GreaterThanEqual,
+                Self::FromBoolean,
+                Self::FromFloatApprox,
+            ])
+            .collect::<Vec<_>>()
+            .into_iter()
+    }
+}
+
 impl From<IntInstruction> for PushInstruction {
     fn from(instr: IntInstruction) -> Self {
         Self::IntInstruction(instr)
@@ -191,43 +230,43 @@ impl From<IntInstruction> for PushInstruction {
 
 impl From<Pop<i64>> for IntInstruction {
     fn from(pop: Pop<i64>) -> Self {
-        Self::Pop(pop)
+        Self::Stack(StackInstruction::Pop(pop))
     }
 }
 
 impl From<PushValue<i64>> for IntInstruction {
     fn from(push: PushValue<i64>) -> Self {
-        Self::Push(push)
+        Self::Stack(StackInstruction::Push(push))
     }
 }
 
 impl From<Dup<i64>> for IntInstruction {
     fn from(dup: Dup<i64>) -> Self {
-        Self::Dup(dup)
+        Self::Stack(StackInstruction::Dup(dup))
     }
 }
 
 impl From<Swap<i64>> for IntInstruction {
     fn from(swap: Swap<i64>) -> Self {
-        Self::Swap(swap)
+        Self::Stack(StackInstruction::Swap(swap))
     }
 }
 
 impl From<IsEmpty<i64>> for IntInstruction {
     fn from(is_empty: IsEmpty<i64>) -> Self {
-        Self::IsEmpty(is_empty)
+        Self::Stack(StackInstruction::IsEmpty(is_empty))
     }
 }
 
 impl From<StackDepth<i64>> for IntInstruction {
     fn from(stack_depth: StackDepth<i64>) -> Self {
-        Self::StackDepth(stack_depth)
+        Self::Stack(StackInstruction::StackDepth(stack_depth))
     }
 }
 
 impl From<Flush<i64>> for IntInstruction {
     fn from(flush: Flush<i64>) -> Self {
-        Self::Flush(flush)
+        Self::Stack(StackInstruction::Flush(flush))
     }
 }
 
@@ -261,13 +300,7 @@ where
     )]
     fn perform(&self, mut state: S) -> InstructionResult<S, Self::Error> {
         match self {
-            Self::Pop(pop) => pop.perform(state).map_err_into(),
-            Self::Push(push) => push.perform(state).map_err_into(),
-            Self::Dup(dup) => dup.perform(state).map_err_into(),
-            Self::Swap(swap) => swap.perform(state).map_err_into(),
-            Self::IsEmpty(is_empty) => is_empty.perform(state).map_err_into(),
-            Self::StackDepth(stack_depth) => stack_depth.perform(state).map_err_into(),
-            Self::Flush(flush) => flush.perform(state).map_err_into(),
+            Self::Stack(instruction) => instruction.perform(state).map_err_into(),
             Self::Print(print) => print.perform(state).map_err_into(),
             Self::PrintLn(println) => println.perform(state).map_err_into(),
 
@@ -543,6 +576,32 @@ where
 #[cfg(test)]
 mod test {
     use super::IntInstruction;
+
+    #[test]
+    fn from_wraps_each_stack_instruction() {
+        use crate::instruction::common::{Dup, Flush, IsEmpty, Pop, PushValue, StackDepth, Swap};
+
+        assert_eq!(
+            [
+                IntInstruction::from(Pop::new()),
+                IntInstruction::from(PushValue::new(5)),
+                IntInstruction::from(Dup::new()),
+                IntInstruction::from(Swap::new()),
+                IntInstruction::from(IsEmpty::new()),
+                IntInstruction::from(StackDepth::new()),
+                IntInstruction::from(Flush::new()),
+            ],
+            [
+                IntInstruction::pop(),
+                IntInstruction::push(5),
+                IntInstruction::dup(),
+                IntInstruction::swap(),
+                IntInstruction::is_empty(),
+                IntInstruction::stack_depth(),
+                IntInstruction::flush(),
+            ]
+        );
+    }
 
     #[test]
     fn auto_display() {

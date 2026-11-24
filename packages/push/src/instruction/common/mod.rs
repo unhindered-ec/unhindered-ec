@@ -6,6 +6,7 @@ mod is_empty;
 mod pop;
 mod push_value;
 mod stack_depth;
+mod stack_instruction;
 mod swap;
 
 pub use dup::Dup;
@@ -14,4 +15,5 @@ pub use is_empty::IsEmpty;
 pub use pop::Pop;
 pub use push_value::PushValue;
 pub use stack_depth::StackDepth;
+pub use stack_instruction::StackInstruction;
 pub use swap::Swap;

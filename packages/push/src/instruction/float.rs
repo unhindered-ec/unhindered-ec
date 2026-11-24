@@ -1,9 +1,9 @@
 use ordered_float::OrderedFloat;
-use strum_macros::EnumIter;
+use strum::IntoEnumIterator;
 
 use super::{
     PushInstruction, PushInstructionError,
-    common::{Dup, Flush, IsEmpty, Pop, PushValue, StackDepth, Swap},
+    common::{Dup, Flush, IsEmpty, Pop, PushValue, StackDepth, StackInstruction, Swap},
     printing::{Print, PrintLn},
 };
 use crate::{
@@ -16,19 +16,15 @@ use crate::{
     },
 };
 
-#[derive(Debug, strum_macros::Display, Copy, Clone, EnumIter, Eq, PartialEq)]
+// `IntoEnumIterator` is written by hand below, because the `EnumIter`
+// derive gives only one instruction for the `Stack` variant.
+#[derive(Debug, strum_macros::Display, Copy, Clone, Eq, PartialEq)]
 #[non_exhaustive]
 #[must_use]
 pub enum FloatInstruction {
-    // "Common" instructions specialized for the integer stack
-    Pop(Pop<OrderedFloat<f64>>),
+    // The common stack instructions, for the float stack
     #[strum(to_string = "{0}")]
-    Push(PushValue<OrderedFloat<f64>>),
-    Dup(Dup<OrderedFloat<f64>>),
-    Swap(Swap<OrderedFloat<f64>>),
-    IsEmpty(IsEmpty<OrderedFloat<f64>>),
-    StackDepth(StackDepth<OrderedFloat<f64>>),
-    Flush(Flush<OrderedFloat<f64>>),
+    Stack(StackInstruction<OrderedFloat<f64>>),
     Print(Print<OrderedFloat<f64>>),
     PrintLn(PrintLn<OrderedFloat<f64>>),
 
@@ -49,28 +45,28 @@ pub enum FloatInstruction {
 
 impl FloatInstruction {
     pub const fn pop() -> Self {
-        Self::Pop(Pop::<OrderedFloat<f64>>::new())
+        Self::Stack(StackInstruction::pop())
     }
     pub const fn push(value: f64) -> Self {
-        Self::Push(PushValue::<OrderedFloat<f64>>::new(OrderedFloat(value)))
+        Self::Stack(StackInstruction::push(OrderedFloat(value)))
     }
     pub const fn push_ordered_float(value: OrderedFloat<f64>) -> Self {
-        Self::Push(PushValue::<OrderedFloat<f64>>::new(value))
+        Self::Stack(StackInstruction::push(value))
     }
     pub const fn dup() -> Self {
-        Self::Dup(Dup::<OrderedFloat<f64>>::new())
+        Self::Stack(StackInstruction::dup())
     }
     pub const fn swap() -> Self {
-        Self::Swap(Swap::<OrderedFloat<f64>>::new())
+        Self::Stack(StackInstruction::swap())
     }
     pub const fn is_empty() -> Self {
-        Self::IsEmpty(IsEmpty::<OrderedFloat<f64>>::new())
+        Self::Stack(StackInstruction::is_empty())
     }
     pub const fn stack_depth() -> Self {
-        Self::StackDepth(StackDepth::<OrderedFloat<f64>>::new())
+        Self::Stack(StackInstruction::stack_depth())
     }
     pub const fn flush() -> Self {
-        Self::Flush(Flush::<OrderedFloat<f64>>::new())
+        Self::Stack(StackInstruction::flush())
     }
     pub const fn print() -> Self {
         Self::Print(Print::<OrderedFloat<f64>>::new())
@@ -113,6 +109,33 @@ impl FloatInstruction {
     }
 }
 
+// Keep this list in step with the variants of `FloatInstruction`.
+impl IntoEnumIterator for FloatInstruction {
+    type Iterator = std::vec::IntoIter<Self>;
+
+    fn iter() -> Self::Iterator {
+        StackInstruction::iter()
+            .map(Self::Stack)
+            .chain([
+                Self::Print(Print::new()),
+                Self::PrintLn(PrintLn::new()),
+                Self::Add,
+                Self::Subtract,
+                Self::Multiply,
+                Self::ProtectedDivide,
+                Self::Equal,
+                Self::NotEqual,
+                Self::GreaterThan,
+                Self::LessThan,
+                Self::GreaterThanOrEqual,
+                Self::LessThanOrEqual,
+                Self::FromIntApprox,
+            ])
+            .collect::<Vec<_>>()
+            .into_iter()
+    }
+}
+
 impl From<FloatInstruction> for PushInstruction {
     fn from(instr: FloatInstruction) -> Self {
         Self::FloatInstruction(instr)
@@ -121,43 +144,43 @@ impl From<FloatInstruction> for PushInstruction {
 
 impl From<Pop<OrderedFloat<f64>>> for FloatInstruction {
     fn from(pop: Pop<OrderedFloat<f64>>) -> Self {
-        Self::Pop(pop)
+        Self::Stack(StackInstruction::Pop(pop))
     }
 }
 
 impl From<PushValue<OrderedFloat<f64>>> for FloatInstruction {
     fn from(push: PushValue<OrderedFloat<f64>>) -> Self {
-        Self::Push(push)
+        Self::Stack(StackInstruction::Push(push))
     }
 }
 
 impl From<Dup<OrderedFloat<f64>>> for FloatInstruction {
     fn from(dup: Dup<OrderedFloat<f64>>) -> Self {
-        Self::Dup(dup)
+        Self::Stack(StackInstruction::Dup(dup))
     }
 }
 
 impl From<Swap<OrderedFloat<f64>>> for FloatInstruction {
     fn from(swap: Swap<OrderedFloat<f64>>) -> Self {
-        Self::Swap(swap)
+        Self::Stack(StackInstruction::Swap(swap))
     }
 }
 
 impl From<IsEmpty<OrderedFloat<f64>>> for FloatInstruction {
     fn from(is_empty: IsEmpty<OrderedFloat<f64>>) -> Self {
-        Self::IsEmpty(is_empty)
+        Self::Stack(StackInstruction::IsEmpty(is_empty))
     }
 }
 
 impl From<StackDepth<OrderedFloat<f64>>> for FloatInstruction {
     fn from(stack_depth: StackDepth<OrderedFloat<f64>>) -> Self {
-        Self::StackDepth(stack_depth)
+        Self::Stack(StackInstruction::StackDepth(stack_depth))
     }
 }
 
 impl From<Flush<OrderedFloat<f64>>> for FloatInstruction {
     fn from(flush: Flush<OrderedFloat<f64>>) -> Self {
-        Self::Flush(flush)
+        Self::Stack(StackInstruction::Flush(flush))
     }
 }
 
@@ -171,13 +194,7 @@ where
 
     fn perform(&self, mut state: S) -> InstructionResult<S, Self::Error> {
         match self {
-            Self::Pop(pop) => pop.perform(state).map_err_into(),
-            Self::Push(push) => push.perform(state).map_err_into(),
-            Self::Dup(dup) => dup.perform(state).map_err_into(),
-            Self::Swap(swap) => swap.perform(state).map_err_into(),
-            Self::IsEmpty(is_empty) => is_empty.perform(state).map_err_into(),
-            Self::StackDepth(stack_depth) => stack_depth.perform(state).map_err_into(),
-            Self::Flush(flush) => flush.perform(state).map_err_into(),
+            Self::Stack(instruction) => instruction.perform(state).map_err_into(),
             Self::Print(print) => print.perform(state).map_err_into(),
             Self::PrintLn(println) => println.perform(state).map_err_into(),
 
@@ -272,6 +289,32 @@ impl FloatInstruction {
 #[cfg(test)]
 mod test {
     use super::FloatInstruction;
+
+    #[test]
+    fn from_wraps_each_stack_instruction() {
+        use crate::instruction::common::{Dup, Flush, IsEmpty, Pop, PushValue, StackDepth, Swap};
+
+        assert_eq!(
+            [
+                FloatInstruction::from(Pop::new()),
+                FloatInstruction::from(PushValue::new(ordered_float::OrderedFloat(1.5))),
+                FloatInstruction::from(Dup::new()),
+                FloatInstruction::from(Swap::new()),
+                FloatInstruction::from(IsEmpty::new()),
+                FloatInstruction::from(StackDepth::new()),
+                FloatInstruction::from(Flush::new()),
+            ],
+            [
+                FloatInstruction::pop(),
+                FloatInstruction::push(1.5),
+                FloatInstruction::dup(),
+                FloatInstruction::swap(),
+                FloatInstruction::is_empty(),
+                FloatInstruction::stack_depth(),
+                FloatInstruction::flush(),
+            ]
+        );
+    }
 
     #[test]
     fn auto_display() {
