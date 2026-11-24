@@ -1,3 +1,12 @@
+// The `#[phantom]` attribute from the `ghost` crate generates
+// the `clippy::empty_enums` warning as of Rust v1.100. This
+// is a known issue (see https://github.com/rust-lang/rust-clippy/issues/17297)
+// and so will hopefully be fixed sometime.
+#![expect(
+    clippy::empty_enums,
+    reason = "This is a known issue: https://github.com/rust-lang/rust-clippy/issues/17297"
+)]
+
 use ghost::phantom;
 
 use crate::{
