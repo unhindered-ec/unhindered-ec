@@ -447,7 +447,6 @@ dependencies = [
  "itertools 0.15.0",
  "macro_railroad_annotation",
  "miette",
- "num-traits",
  "polonius-the-crab",
  "proptest",
  "rand 0.10.3",
@@ -1030,7 +1029,6 @@ name = "push_macros"
 version = "0.1.0"
 dependencies = [
  "ident_case_conversions",
- "itertools 0.15.0",
  "macro_railroad_annotation",
  "manyhow 0.14.1",
  "prettyplease",
