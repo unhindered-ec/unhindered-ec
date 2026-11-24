@@ -87,8 +87,8 @@ fn build_state(
 }
 
 fn compute_error(final_state: &PushState, penalty_value: Of64, expected: Of64) -> Of64 {
-    final_state.stack::<Of64>().top().map_or_else(
-        |_| {
+    final_state.stack::<Of64>().top().map_or(
+        {
             // TODO: When we introduce proper logging, we probably want to bring
             // this message back at some (generally ignored) log
             // level. eprintln!("INFO: Int stack was empty at end of
