@@ -38,6 +38,7 @@ polonius-the-crab = { workspace = true }
 rand = { workspace = true, features = ["alloc"] }
 rayon = "1.12.0"
 static_assertions = { workspace = true }
+test-case.workspace = true
 thiserror = { workspace = true }
 
 [dev-dependencies]

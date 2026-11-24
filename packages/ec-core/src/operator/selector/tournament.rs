@@ -240,6 +240,7 @@ mod tests {
     use std::{num::NonZeroUsize, ops::Not};
 
     use rand::rng;
+    use test_case::test_case;
     use test_strategy::proptest;
 
     use super::Tournament;
@@ -275,6 +276,32 @@ mod tests {
                tournament_size,
                population_size: 1
             }) if tournament_size == NonZeroUsize::new(2).unwrap()));
+    }
+
+    #[test]
+    fn default_is_a_binary_tournament() {
+        assert_eq!(Tournament::default(), Tournament::binary());
+    }
+
+    #[test_case(3, 2, 5)]
+    #[test_case(10, 15, 25)]
+    fn new_diff_constructs_an_error_relative_to_the_population(
+        population_size: usize,
+        fewer: usize,
+        tournament_size: usize,
+    ) {
+        let error =
+            TournamentSizeError::new_diff(population_size, NonZeroUsize::new(fewer).unwrap());
+        assert_eq!(error.population_size, population_size);
+        assert_eq!(
+            error.tournament_size,
+            NonZeroUsize::new(tournament_size).unwrap()
+        );
+        // The constructed error satisfies the invariant checked by `new`.
+        assert_eq!(
+            TournamentSizeError::new(error.tournament_size, error.population_size),
+            Some(error)
+        );
     }
 
     #[test]
